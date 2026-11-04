@@ -108,7 +108,7 @@ export interface AppLiteHandles {
 export function applyInit<S extends Schema>(target: FieldsOf<S>, schema: S, init: PartialFieldsOf<S>): FieldsOf<S>;
 
 // @public
-export function applyOverridesToAsset(instance: SceneFileInstance, asset: SceneFile, selection?: PrefabOverrideSelection): Promise<PrefabApplyResult>;
+export function applyOverridesToAsset(instance: SceneFileInstance, asset: SceneFile, selection?: PrefabApplyOptions): Promise<PrefabApplyResult>;
 
 // @public
 export function approximately(a: number, b: number, epsilon?: number): boolean;
@@ -2672,12 +2672,26 @@ export class PostProcessStack extends Component implements ComponentHooks {
 }
 
 // @public
+export interface PrefabApplyOptions extends PrefabOverrideSelection {
+    readonly rootComponents?: readonly SceneFileComponent[];
+}
+
+// @public
 export interface PrefabApplyResult {
     readonly applied: readonly SceneFileOverride[];
+    readonly appliedComponents: readonly SceneFileComponent[];
     readonly asset: SceneFile;
     readonly hash: string;
     readonly instance: SceneFileInstance;
+    readonly rootComponents: readonly SceneFileComponent[];
     readonly skipped: readonly PrefabOverrideSkip[];
+    readonly skippedComponents: readonly PrefabComponentSkip[];
+}
+
+// @public
+export interface PrefabComponentSkip {
+    readonly component: SceneFileComponent;
+    readonly reason: string;
 }
 
 // @public

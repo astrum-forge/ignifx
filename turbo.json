@@ -68,7 +68,10 @@
     },
     "@ignifx/core#docs:api": {
       "dependsOn": ["build"],
-      "outputs": ["$TURBO_ROOT$/skills/ignifx/references/api/core.md"],
+      "outputs": [
+        "$TURBO_ROOT$/skills/ignifx/references/api/core.md",
+        "$TURBO_ROOT$/skills/ignifx/references/api/core-prefab.md"
+      ],
       "outputLogs": "errors-only"
     },
     "@ignifx/devtools#docs:api": {

@@ -28,6 +28,36 @@ export interface PrefabOverrideSelection {
 }
 
 /**
+ * What {@link applyOverridesToAsset} acts on: the selected overrides and, optionally, the components
+ * the instance root carries itself.
+ *
+ * @public
+ */
+export interface PrefabApplyOptions extends PrefabOverrideSelection {
+  /**
+   * The components the instance root carries itself: the `components` of the scene-file entity that
+   * holds the `instance` entry. They are not overrides (the serializer writes a component added on
+   * a single-root instance's root there), so they can only be applied when passed here. Each one
+   * that `paths` selects, at `<prefabRootUid>/components/<componentUid>`, is appended to the
+   * prefab's root after its own components, which is the order the instance already has them in.
+   * Omitted, none is applied.
+   */
+  readonly rootComponents?: readonly SceneFileComponent[];
+}
+
+/**
+ * A component of the instance root that {@link applyOverridesToAsset} left on the instance, and why.
+ *
+ * @public
+ */
+export interface PrefabComponentSkip {
+  /** The component, as the instance root holds it. */
+  readonly component: SceneFileComponent;
+  /** Why it could not be written into the prefab file. */
+  readonly reason: string;
+}
+
+/**
  * An override {@link applyOverridesToAsset} left on the instance, and why.
  *
  * @public
@@ -59,6 +89,18 @@ export interface PrefabApplyResult {
   readonly applied: readonly SceneFileOverride[];
   /** The selected overrides that stay on the instance, in instance order. */
   readonly skipped: readonly PrefabOverrideSkip[];
+  /**
+   * The {@link PrefabApplyOptions.rootComponents} written into the prefab's root. Remove them from
+   * the instance root: the prefab brings them now.
+   */
+  readonly appliedComponents: readonly SceneFileComponent[];
+  /**
+   * The {@link PrefabApplyOptions.rootComponents} that stay on the instance root, in their order:
+   * the unselected ones and the skipped ones.
+   */
+  readonly rootComponents: readonly SceneFileComponent[];
+  /** The selected {@link PrefabApplyOptions.rootComponents} that stay on the instance root, and why. */
+  readonly skippedComponents: readonly PrefabComponentSkip[];
 }
 
 /**
@@ -79,22 +121,30 @@ export interface PrefabApplyResult {
  *   names something the prefab file does not hold is skipped.
  * - An override is skipped when an earlier override that stays on the instance overlaps its path, so
  *   the instance keeps the value it had.
- * - A skipped override stays on the returned instance. The instance's own `components` are not
- *   overrides and are not touched.
+ * - A skipped override stays on the returned instance.
+ * - The instance root's own components are not overrides. Pass them as
+ *   {@link PrefabApplyOptions.rootComponents} to apply them too: on a prefab with exactly one root
+ *   each selected one is appended to that root, keeping its uid, and reported in
+ *   {@link PrefabApplyResult.appliedComponents}; one whose uid the prefab already uses, or any when
+ *   the prefab has several roots, is skipped.
  * - Other instances of the prefab keep their overrides, which still win over the new prefab values
  *   at the same path. Record {@link PrefabApplyResult.hash} on them, or loading them logs `IGX-0604`.
  * - References inside added components (`$entity`, `$component`) are copied unchanged.
+ * - A component an apply moved into the prefab gets a fresh uid per instance from then on, like every
+ *   prefab component; a scene reference to it uses the instance form
+ *   `{ "$component": "<instanceRootUid>/<componentUid>" }`.
  *
  * @param instance - The instance entry whose overrides to apply; its `scene` should name `asset`.
  * @param asset - The prefab file the entry instances.
- * @param selection - Which overrides to apply; all of them by default.
+ * @param selection - Which overrides to apply, all of them by default, and the instance root's own
+ * components to apply with them.
  * @returns The new prefab file and its hash, the instance entry without the applied overrides, and
  * what was applied or skipped.
  * @throws IgnifxError with code `IGX-0609` when a selected override path is outside the grammar.
  *
  * @example
  * ```ts
- * const result = await applyOverridesToAsset(spawn.instance, prefabFile);
+ * const result = await applyOverridesToAsset(spawn.instance, prefabFile, { rootComponents: spawn.components });
  * await app.storage.write("prefabs/enemy.prefab.json", stringifySceneFile(result.asset));
  * ```
  *
@@ -103,7 +153,7 @@ export interface PrefabApplyResult {
 export async function applyOverridesToAsset(
   instance: SceneFileInstance,
   asset: SceneFile,
-  selection?: PrefabOverrideSelection,
+  selection?: PrefabApplyOptions,
 ): Promise<PrefabApplyResult> {
   const overrides = instance.overrides ?? [];
   const records = new Map<string, MutableSceneEntity>();
@@ -120,6 +170,7 @@ export async function applyOverridesToAsset(
   }
   const singleRootUid = singleRootOf(asset);
   const touched = new Set<string>();
+  const own = applyRootComponents(selection, singleRootUid, records, uids, touched);
   const applied: SceneFileOverride[] = [];
   const skipped: PrefabOverrideSkip[] = [];
   const remaining: SceneFileOverride[] = [];
@@ -148,7 +199,7 @@ export async function applyOverridesToAsset(
     applied.push(override);
   }
   const next: SceneFile =
-    applied.length === 0
+    touched.size === 0
       ? asset
       : {
           ...asset,
@@ -158,7 +209,75 @@ export async function applyOverridesToAsset(
           }),
         };
   const hash = await computeSceneHash(next);
-  return { asset: next, hash, instance: withOverrides(instance, remaining, hash), applied, skipped };
+  return {
+    asset: next,
+    hash,
+    instance: withOverrides(instance, remaining, hash),
+    applied,
+    skipped,
+    appliedComponents: own.applied,
+    rootComponents: own.kept,
+    skippedComponents: own.skipped,
+  };
+}
+
+/** What {@link applyRootComponents} did with the instance root's own components. */
+interface RootComponentOutcome {
+  /** Written into the prefab's root. */
+  readonly applied: readonly SceneFileComponent[];
+  /** Staying on the instance root. */
+  readonly kept: readonly SceneFileComponent[];
+  /** Selected but staying on the instance root, and why. */
+  readonly skipped: readonly PrefabComponentSkip[];
+}
+
+/**
+ * Appends the selected components of the instance root to the prefab's single root.
+ *
+ * @param options - The apply options, holding the components and the selection.
+ * @param singleRootUid - The prefab's only root, or `null`.
+ * @param records - The prefab's mutable records, by uid.
+ * @param uids - Every uid the prefab uses; the appended components are added.
+ * @param touched - Filled with the root's uid when anything was appended.
+ * @returns What was applied, what stays on the instance root, and why the skipped ones were.
+ */
+function applyRootComponents(
+  options: PrefabApplyOptions | undefined,
+  singleRootUid: string | null,
+  records: ReadonlyMap<string, MutableSceneEntity>,
+  uids: Set<string>,
+  touched: Set<string>,
+): RootComponentOutcome {
+  const applied: SceneFileComponent[] = [];
+  const kept: SceneFileComponent[] = [];
+  const skipped: PrefabComponentSkip[] = [];
+  const root = singleRootUid === null ? undefined : records.get(singleRootUid);
+  for (const component of options?.rootComponents ?? []) {
+    const selected =
+      singleRootUid === null
+        ? options?.paths === undefined
+        : isPathSelected(`${singleRootUid}/components/${component.uid}`, options);
+    if (!selected) {
+      kept.push(component);
+      continue;
+    }
+    const reason =
+      root === undefined
+        ? `The prefab has no single root, so component ${component.uid} of the instance root has nowhere to go.`
+        : uids.has(component.uid)
+          ? `Component ${component.uid} of the instance root has a uid the prefab file already uses.`
+          : null;
+    if (root === undefined || reason !== null) {
+      skipped.push({ component, reason: reason ?? "" });
+      kept.push(component);
+      continue;
+    }
+    root.components.push(component);
+    uids.add(component.uid);
+    touched.add(root.uid);
+    applied.push(component);
+  }
+  return { applied, kept, skipped };
 }
 
 /**
@@ -197,11 +316,21 @@ export function revertOverrides(instance: SceneFileInstance, selection?: PrefabO
  * @returns `true` when the override's target is a selected path or lies below one.
  */
 function isSelected(override: SceneFileOverride, selection: PrefabOverrideSelection | undefined): boolean {
+  return isPathSelected(targetPath(override), selection);
+}
+
+/**
+ * Whether a selection covers a target path.
+ *
+ * @param target - The path acted on.
+ * @param selection - The selection; absent or without `paths`, everything.
+ * @returns `true` when the target is a selected path or lies below one.
+ */
+function isPathSelected(target: string, selection: PrefabOverrideSelection | undefined): boolean {
   const paths = selection?.paths;
   if (paths === undefined) {
     return true;
   }
-  const target = targetPath(override);
   return paths.some((path) => target === path || target.startsWith(`${path}/`));
 }
 

@@ -25528,6 +25528,44 @@ What WebGPU offers, or `null` in a headless app and on a host with no WebGPU.
 
 ***
 
+### PrefabApplyOptions
+
+What [applyOverridesToAsset](#applyoverridestoasset) acts on: the selected overrides and, optionally, the components
+the instance root carries itself.
+
+#### Extends
+
+- [`PrefabOverrideSelection`](#prefaboverrideselection)
+
+#### Properties
+
+##### paths?
+
+> `readonly` `optional` **paths?**: readonly `string`[]
+
+Override paths to act on. A path selects every override at that path or below it, so
+`"<entityUid>"` selects everything on that entity and `"<entityUid>/components/<componentUid>"`
+selects a component's removal, its `enabled` flag, and its props. An `add` to
+`<entityUid>/components` sits at `<entityUid>/components/<addedUid>`. Omitted, every override
+is selected.
+
+###### Inherited from
+
+[`PrefabOverrideSelection`](#prefaboverrideselection).[`paths`](#paths-1)
+
+##### rootComponents?
+
+> `readonly` `optional` **rootComponents?**: readonly [`SceneFileComponent`](#scenefilecomponent)[]
+
+The components the instance root carries itself: the `components` of the scene-file entity that
+holds the `instance` entry. They are not overrides (the serializer writes a component added on
+a single-root instance's root there), so they can only be applied when passed here. Each one
+that `paths` selects, at `<prefabRootUid>/components/<componentUid>`, is appended to the
+prefab's root after its own components, which is the order the instance already has them in.
+Omitted, none is applied.
+
+***
+
 ### PrefabApplyResult
 
 What [applyOverridesToAsset](#applyoverridestoasset) returns.
@@ -25539,6 +25577,13 @@ What [applyOverridesToAsset](#applyoverridestoasset) returns.
 > `readonly` **applied**: readonly [`SceneFileOverride`](#scenefileoverride)[]
 
 The overrides written into the prefab, in instance order.
+
+##### appliedComponents
+
+> `readonly` **appliedComponents**: readonly [`SceneFileComponent`](#scenefilecomponent)[]
+
+The [PrefabApplyOptions.rootComponents](#rootcomponents) written into the prefab's root. Remove them from
+the instance root: the prefab brings them now.
 
 ##### asset
 
@@ -25560,17 +25605,54 @@ The instance entry without the applied overrides, recording [PrefabApplyResult.h
 expands to the same values it did before the apply; a component an applied `add` brought now
 comes from the prefab, so like every prefab component it gets a fresh uid per instance.
 
+##### rootComponents
+
+> `readonly` **rootComponents**: readonly [`SceneFileComponent`](#scenefilecomponent)[]
+
+The [PrefabApplyOptions.rootComponents](#rootcomponents) that stay on the instance root, in their order:
+the unselected ones and the skipped ones.
+
 ##### skipped
 
 > `readonly` **skipped**: readonly [`PrefabOverrideSkip`](#prefaboverrideskip)[]
 
 The selected overrides that stay on the instance, in instance order.
 
+##### skippedComponents
+
+> `readonly` **skippedComponents**: readonly [`PrefabComponentSkip`](#prefabcomponentskip)[]
+
+The selected [PrefabApplyOptions.rootComponents](#rootcomponents) that stay on the instance root, and why.
+
+***
+
+### PrefabComponentSkip
+
+A component of the instance root that [applyOverridesToAsset](#applyoverridestoasset) left on the instance, and why.
+
+#### Properties
+
+##### component
+
+> `readonly` **component**: [`SceneFileComponent`](#scenefilecomponent)
+
+The component, as the instance root holds it.
+
+##### reason
+
+> `readonly` **reason**: `string`
+
+Why it could not be written into the prefab file.
+
 ***
 
 ### PrefabOverrideSelection
 
 Which overrides of an instance [applyOverridesToAsset](#applyoverridestoasset) and [revertOverrides](#revertoverrides) act on.
+
+#### Extended by
+
+- [`PrefabApplyOptions`](#prefabapplyoptions)
 
 #### Properties
 
@@ -34218,9 +34300,10 @@ The prefab file the entry instances.
 
 ##### selection?
 
-[`PrefabOverrideSelection`](#prefaboverrideselection)
+[`PrefabApplyOptions`](#prefabapplyoptions)
 
-Which overrides to apply; all of them by default.
+Which overrides to apply, all of them by default, and the instance root's own
+components to apply with them.
 
 #### Returns
 
@@ -34244,11 +34327,18 @@ byte-identical output through [stringifySceneFile](#stringifyscenefile). The rul
   names something the prefab file does not hold is skipped.
 - An override is skipped when an earlier override that stays on the instance overlaps its path, so
   the instance keeps the value it had.
-- A skipped override stays on the returned instance. The instance's own `components` are not
-  overrides and are not touched.
+- A skipped override stays on the returned instance.
+- The instance root's own components are not overrides. Pass them as
+  [PrefabApplyOptions.rootComponents](#rootcomponents) to apply them too: on a prefab with exactly one root
+  each selected one is appended to that root, keeping its uid, and reported in
+  [PrefabApplyResult.appliedComponents](#appliedcomponents); one whose uid the prefab already uses, or any when
+  the prefab has several roots, is skipped.
 - Other instances of the prefab keep their overrides, which still win over the new prefab values
   at the same path. Record [PrefabApplyResult.hash](#hash-1) on them, or loading them logs `IGX-0604`.
 - References inside added components (`$entity`, `$component`) are copied unchanged.
+- A component an apply moved into the prefab gets a fresh uid per instance from then on, like every
+  prefab component; a scene reference to it uses the instance form
+  `{ "$component": "<instanceRootUid>/<componentUid>" }`.
 
 #### Throws
 
@@ -34257,7 +34347,7 @@ IgnifxError with code `IGX-0609` when a selected override path is outside the gr
 #### Example
 
 ```ts
-const result = await applyOverridesToAsset(spawn.instance, prefabFile);
+const result = await applyOverridesToAsset(spawn.instance, prefabFile, { rootComponents: spawn.components });
 await app.storage.write("prefabs/enemy.prefab.json", stringifySceneFile(result.asset));
 ```
 
