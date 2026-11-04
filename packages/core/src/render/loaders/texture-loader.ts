@@ -1,5 +1,10 @@
 import { loadBasisTexture, loadKtx2Texture, loadTexture } from "../../lite/gpu/texture.js";
-import { assertDecoderIncluded, configureDecoders } from "../decoder-urls.js";
+import {
+  assertBasisLoadable,
+  assertDecoderIncluded,
+  basisTranscoderRemote,
+  configureDecoders,
+} from "../decoder-urls.js";
 import { readTextureImportOptions, TEXTURE_ASSET_TYPE, TextureAsset, toLiteTextureOptions } from "../texture-asset.js";
 import type { AssetLoader, LoaderContext } from "../../assets/types.js";
 import type { LiteTexture2D, LiteTexture2DOptions } from "../../lite/gpu/texture.js";
@@ -23,7 +28,8 @@ import type { LiteEngine } from "../../lite/scene.js";
  *
  * `.png`, `.jpg`, `.jpeg` and `.webp` go to `loadTexture2D` and the browser's image decoder.
  * `.ktx2` goes to Lite's KTX2 loader and `.basis` to its Basis loader, which transcode to the
- * device's best compressed format (`src/lite/gpu/decoders.ts` lists the targets); handing either
+ * device's best compressed format (a `.basis` file fails with `IGX-0509` wherever Lite's CDN-only
+ * transcoder cannot load, see `assertBasisLoadable`) (`src/lite/gpu/decoders.ts` lists the targets); handing either
  * to `createImageBitmap` fails with "The source image could not be decoded". The asset type stays
  * `texture` for all six, so the choice is made here, from the address's extension — the one name a
  * manifest entry, a hashed build URL and a hand-written `{ type: "texture" }` load all keep. Before
@@ -59,6 +65,9 @@ export function createTextureLoader(): AssetLoader<TextureAsset> {
       if (container === "ktx2") {
         assertDecoderIncluded(ctx.app, ctx.address, "ktx2");
       }
+      if (container === "basis") {
+        assertBasisLoadable(ctx.app, ctx.address);
+      }
       if (ctx.app.isHeadless) {
         // §5: "a loader must tolerate the null engine (return CPU-only data with `gpu: null`)".
         return new TextureAsset(ctx.address, null, options);
@@ -67,7 +76,13 @@ export function createTextureLoader(): AssetLoader<TextureAsset> {
       if (container !== "image") {
         await configureDecoders(ctx.app);
       }
-      const texture = await loadByContainer(container, ctx.lite.engine, ctx.url, toLiteTextureOptions(options));
+      const texture = await loadByContainer(
+        container,
+        ctx.address,
+        ctx.lite.engine,
+        ctx.url,
+        toLiteTextureOptions(options),
+      );
       ctx.reportProgress(1);
       return new TextureAsset(ctx.address, texture, options);
     },
@@ -131,6 +146,7 @@ export function textureContainerOf(address: string, url: string): TextureContain
  * Loads a texture with the Lite loader its container needs.
  *
  * @param container - What the file is.
+ * @param address - The asset address, for an error.
  * @param engine - The engine that owns the GPU texture.
  * @param url - Where to fetch it from.
  * @param options - Lite's texture options, from the sidecar.
@@ -138,6 +154,7 @@ export function textureContainerOf(address: string, url: string): TextureContain
  */
 function loadByContainer(
   container: TextureContainer,
+  address: string,
   engine: LiteEngine,
   url: string,
   options: LiteTexture2DOptions,
@@ -146,7 +163,13 @@ function loadByContainer(
     return loadKtx2Texture(engine, url, options);
   }
   if (container === "basis") {
-    return loadBasisTexture(engine, url, options);
+    return loadBasisTexture(engine, url, options).catch((error: unknown) => {
+      // Lite's own words when the page refused (or could not reach) its CDN transcoder script.
+      if (error instanceof Error && error.message.startsWith("Basis: failed to load")) {
+        throw basisTranscoderRemote(address, error);
+      }
+      throw error;
+    });
   }
   return loadTexture(engine, url, options);
 }
