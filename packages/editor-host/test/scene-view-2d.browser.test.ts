@@ -174,6 +174,9 @@ async function sceneView(): Promise<{ readonly view: EditorHost; readonly opened
     HostCapability.logRelay,
     HostCapability.hotReloadDefaults,
     HostCapability.gameView,
+    HostCapability.gameViewOnDemand,
+    HostCapability.gameViewSize,
+    HostCapability.gameView2d,
     HostCapability.thumbnails,
     HostCapability.grid,
     HostCapability.tilemapCells,
@@ -312,6 +315,32 @@ describe("the scene view's 2D mode", () => {
     expect(await call("setViewMode", { mode: "3d" })).toBeNull();
     await frames(2);
     expect(cameras(view).main).toBe(inTwoD.level);
+  }, 60_000);
+
+  it("renders the level's Camera2D into the game view at the requested size, beside the editor's 2D view", async () => {
+    await sceneView();
+    await call("setViewMode", { mode: "2d" });
+    await call("setGameView", { enabled: true, width: 64, height: 48 });
+    const frame = await call("gameViewFrame", { format: "png", width: 96, height: 48 });
+    expect(frame).toMatchObject({ width: 96, height: 48, camera: "CAMERA" });
+    const dataUrl: unknown = Reflect.get(Object(frame), "dataUrl");
+    expect(typeof dataUrl).toBe("string");
+    const bitmap = await createImageBitmap(await (await fetch(String(dataUrl))).blob());
+    const surface = new OffscreenCanvas(bitmap.width, bitmap.height);
+    const context = surface.getContext("2d");
+    context?.drawImage(bitmap, 0, 0);
+    const pixels = context?.getImageData(0, 0, bitmap.width, bitmap.height).data ?? new Uint8ClampedArray(0);
+    expect([bitmap.width, bitmap.height]).toEqual([96, 48]);
+    // The corner is the clear colour; the hero and the ghost are drawn over it.
+    let drawn = 0;
+    for (let index = 0; index < pixels.length; index += 4) {
+      const delta =
+        Math.abs((pixels[index] ?? 0) - (pixels[0] ?? 0)) +
+        Math.abs((pixels[index + 1] ?? 0) - (pixels[1] ?? 0)) +
+        Math.abs((pixels[index + 2] ?? 0) - (pixels[2] ?? 0));
+      drawn += delta > 24 ? 1 : 0;
+    }
+    expect(drawn).toBeGreaterThan(20);
   }, 60_000);
 
   it("draws the 2D grid over the view, swaps the ground grid out, and hides it on setGrid visible false", async () => {

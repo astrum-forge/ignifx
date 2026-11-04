@@ -55,6 +55,22 @@ describe("render textures on a headless app", () => {
     await expect(texture.readPixels()).rejects.toMatchObject({ code: "IGX-0729" });
   });
 
+  it("refuses nextFrame with IGX-0729, and a wait that is not a finite count of milliseconds with IGX-0733", async () => {
+    const h = await app();
+    const camera = h.world.createEntity("Eye").addComponent(Camera);
+    const texture = h.app.renderer.createRenderTexture(8, 8);
+    await expect(h.app.renderer.nextFrame()).rejects.toMatchObject({ code: "IGX-0729" });
+    await expect(h.app.renderer.nextFrame({ maxWaitMs: 0 })).rejects.toMatchObject({ code: "IGX-0729" });
+    for (const maxWaitMs of [-1, Number.NaN, Number.POSITIVE_INFINITY]) {
+      // oxlint-disable-next-line no-await-in-loop -- each refusal is checked in turn
+      await expect(h.app.renderer.nextFrame({ maxWaitMs })).rejects.toMatchObject({ code: "IGX-0733" });
+      // oxlint-disable-next-line no-await-in-loop -- each refusal is checked in turn
+      await expect(h.app.renderer.renderToTexture(camera, texture, { maxWaitMs })).rejects.toMatchObject({
+        code: "IGX-0733",
+      });
+    }
+  });
+
   it("refuses a detached camera with IGX-0732", async () => {
     const h = await app();
     const eye = h.world.createEntity("Eye");

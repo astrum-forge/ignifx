@@ -938,11 +938,25 @@ The parameters of `gameViewFrame`.
 
 The image format.
 
+##### height?
+
+> `readonly` `optional` **height?**: `number`
+
+The image height in pixels, as [GameViewFrameParams.width](#width-1).
+
 ##### quality?
 
 > `readonly` `optional` **quality?**: `number`
 
 The JPEG quality, from 0 to 1; the host's default (0.9) when absent. Ignored for PNG.
+
+##### width?
+
+> `readonly` `optional` **width?**: `number`
+
+The image width in pixels, 1 to [GAME\_VIEW\_MAX\_SIZE](#game_view_max_size): the view resizes to it first, as
+`setGameView` would, so the frame has the Game panel's aspect. Absent to keep the current one.
+Needs `HostCapability.gameViewSize`; an older host ignores it and answers its own size.
 
 ***
 
@@ -4337,6 +4351,30 @@ The scene host answers `setGameView` and `gameViewFrame`: the open scene through
 camera, rendered beside the editor camera (`RenderViewMethod`). From engine ask E8 (additive in
 0.3); without it, the host answers both with `RpcErrorCode.methodNotFound`.
 
+##### gameView2d
+
+> `readonly` **gameView2d**: `"gameView2d"` = `"gameView2d"`
+
+The scene host's `gameViewFrame` renders a document whose main camera is a `Camera2D`
+(`@ignifx/2d`): its sprites through that camera, at the view's size. Additive in 0.3; without
+it, such a document answers `dataUrl: null`.
+
+##### gameViewOnDemand
+
+> `readonly` **gameViewOnDemand**: `"gameViewOnDemand"` = `"gameViewOnDemand"`
+
+The scene host's `gameViewFrame` renders on demand: it does not wait for an animation frame,
+which a hidden host (a `visibility: hidden` iframe, a background tab) never gets, so it answers
+at full rate while hidden. Additive in 0.3; without it, a hidden host answers slowly or not
+at all.
+
+##### gameViewSize
+
+> `readonly` **gameViewSize**: `"gameViewSize"` = `"gameViewSize"`
+
+The scene host's `gameViewFrame` takes `width` and `height`, resizing the view first. Additive
+in 0.3; without it, send `setGameView` to resize.
+
 ##### gizmos
 
 > `readonly` **gizmos**: `"gizmos"` = `"gizmos"`
@@ -4452,9 +4490,9 @@ The scene host accepts `setViewMode` with `"2d"`: a 2D editor camera and planar 
 The play controls send `"heartbeat"`, `"playControls"`, `"logRelay"` and `"queryRuntime"`, plus
 `"screenshot"` when the game has a canvas and `"sendInput"` when it has `app.input`. The scene
 host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"`,
-`"pick2d"`, `"gameView"`, `"thumbnails"`, `"grid"`, `"tilemapCells"`, `"editorLines"` and
-`"spriteAnimation"` it supports; every `SceneMethod` not tied to one of them is required of a
-0.3 scene host.
+`"pick2d"`, `"gameView"`, `"gameViewOnDemand"`, `"gameViewSize"`, `"gameView2d"`, `"thumbnails"`,
+`"grid"`, `"tilemapCells"`, `"editorLines"` and `"spriteAnimation"` it supports; every
+`SceneMethod` not tied to one of them is required of a 0.3 scene host.
 
 ***
 
@@ -4761,6 +4799,10 @@ Renders the open scene through its own main camera, the one the game would use, 
 the image: [GameViewFrameResult](#gameviewframeresult). Fails with `RpcErrorCode.noScene` while no scene is
 open and `RpcErrorCode.invalidRequest` while the game view is off.
 
+A host with `HostCapability.gameViewOnDemand` answers without waiting for an animation frame
+(a hidden host gets none); one with `HostCapability.gameViewSize` takes the image size in the
+request; one with `HostCapability.gameView2d` renders a `Camera2D` document camera too.
+
 ##### renderThumbnail
 
 > `readonly` **renderThumbnail**: `"renderThumbnail"` = `"renderThumbnail"`
@@ -4777,7 +4819,9 @@ Turns the Game panel's view on, off, or to a new size. Answers [GameViewState](#
 
 A host lists `HostCapability.gameView` when it answers the first two and
 `HostCapability.thumbnails` when it answers the third; one that does not answers
-`RpcErrorCode.methodNotFound`. Additive in 0.3.
+`RpcErrorCode.methodNotFound`. Additive in 0.3. `HostCapability.gameViewOnDemand`,
+`HostCapability.gameViewSize` and `HostCapability.gameView2d` mark what a newer host's
+`gameViewFrame` does beyond that.
 
 ***
 
@@ -5572,7 +5616,7 @@ The received `params`.
 
 `value is GameViewFrameParams`
 
-True for a known format and a quality from 0 to 1 when given.
+True for a known format, a quality from 0 to 1 and sizes in range when given.
 
 ***
 

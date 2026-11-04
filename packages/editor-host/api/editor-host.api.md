@@ -256,7 +256,9 @@ export const GAME_VIEW_MAX_SIZE = 2048;
 // @public
 export interface GameViewFrameParams {
     readonly format: ScreenshotFormat;
+    readonly height?: number;
     readonly quality?: number;
+    readonly width?: number;
 }
 
 // @public
@@ -358,6 +360,9 @@ export const HostCapability: {
     readonly queryRuntime: "queryRuntime";
     readonly sendInput: "sendInput";
     readonly gameView: "gameView";
+    readonly gameViewOnDemand: "gameViewOnDemand";
+    readonly gameViewSize: "gameViewSize";
+    readonly gameView2d: "gameView2d";
     readonly thumbnails: "thumbnails";
     readonly grid: "grid";
     readonly tilemapCells: "tilemapCells";
