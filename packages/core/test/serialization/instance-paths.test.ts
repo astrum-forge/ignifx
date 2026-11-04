@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { instantiateScene } from "../../src/serialization/load.js";
+import { applyOverridesToAsset } from "../../src/serialization/prefab-overrides.js";
 import { createSceneAsset } from "../../src/serialization/scene-asset.js";
 import { serializeScene } from "../../src/serialization/serialize.js";
 import { Everything, Tagger, buildFile, createSerializationWorld, entityRecord, fakeHandle } from "./fixtures.js";
@@ -31,9 +32,34 @@ async function enemy(): Promise<SceneAsset> {
           uid: "R",
           components: [{ uid: "AI", type: "test/Everything", props: { target: { $entity: "C" } } }],
         }),
-        entityRecord({ uid: "C", name: "Weapon", parent: "R", components: [{ uid: "T", type: "test/Tagger" }] }),
+        entityRecord({
+          uid: "C",
+          name: "Weapon",
+          parent: "R",
+          components: [
+            { uid: "T", type: "test/Tagger" },
+            { uid: "BACK", type: "test/Everything", props: { target: { $entity: "R" } } },
+          ],
+        }),
       ],
     }),
+  );
+}
+
+/** A squad prefab: root Q aims at the weapon of the enemy instance N it holds. */
+async function squad(inner: SceneAsset): Promise<SceneAsset> {
+  return createSceneAsset(
+    SQUAD,
+    buildFile({
+      entities: [
+        entityRecord({
+          uid: "Q",
+          components: [{ uid: "QAI", type: "test/Everything", props: { target: { $entity: "N/C" } } }],
+        }),
+        entityRecord({ uid: "N", parent: "Q", instance: { scene: { $asset: ENEMY }, hash: inner.hash } }),
+      ],
+    }),
+    [fakeHandle(ENEMY, inner)],
   );
 }
 
@@ -74,31 +100,44 @@ describe("instance paths", () => {
   });
 
   it("walk into nested instances and keep working inside an instanced prefab", async () => {
-    const inner = await enemy();
-    const squad = await createSceneAsset(
-      SQUAD,
-      buildFile({
-        entities: [
-          entityRecord({
-            uid: "Q",
-            components: [{ uid: "QAI", type: "test/Everything", props: { target: { $entity: "N/C" } } }],
-          }),
-          entityRecord({ uid: "N", parent: "Q", instance: { scene: { $asset: ENEMY }, hash: inner.hash } }),
-        ],
-      }),
-      [fakeHandle(ENEMY, inner)],
-    );
-    const { built } = await level(squad, { target: { $entity: "L/N/C" }, follow: { $component: "L/N/T" } });
+    const { built, harness } = await level(await squad(await enemy()), {
+      target: { $entity: "L/N/C" },
+      follow: { $component: "L/N/T" },
+    });
     expect(built.issues).toEqual([]);
     const weapon = built.remap.entity("L")?.children[0]?.children[0];
     expect(weapon?.name).toBe("Weapon");
     expect(built.remap.entity("L")?.getComponent(Everything)?.target).toBe(weapon);
     expect(built.remap.entity("S")?.getComponent(Everything)?.target).toBe(weapon);
     expect(built.remap.entity("S")?.getComponent(Everything)?.follow).toBe(weapon?.getComponent(Tagger));
+
+    const file = serializeScene(harness.world.activeScene);
+    expect(file.entities[0]?.instance?.overrides).toBeUndefined();
+    expect(file.entities[1]?.components?.[0]?.props?.["target"]).toEqual({ $entity: "L/N/C" });
+  });
+
+  it("resolve inside a prefab instantiated on its own", async () => {
+    const harness = createSerializationWorld();
+    worlds.push(harness);
+    const built = instantiateScene(harness.world, await squad(await enemy()), { asInstance: true });
+    expect(built.issues).toEqual([]);
+    const root = built.roots[0];
+    expect(root?.getComponent(Everything)?.target).toBe(root?.children[0]?.children[0]);
   });
 
   it("still report a path that names nothing", async () => {
     const { built } = await level(await enemy(), { target: { $entity: "L/NOPE" } });
     expect(built.issues.map((issue) => issue.code)).toEqual(["IGX-0602"]);
+  });
+
+  it("leave the instance root's own components alone when no path selects them", async () => {
+    const file = buildFile({ entities: [entityRecord({ uid: "A" }), entityRecord({ uid: "B" })] });
+    const own = { uid: "OWN", type: "test/Tagger" };
+    const result = await applyOverridesToAsset({ scene: { $asset: ENEMY } }, file, {
+      paths: ["A"],
+      rootComponents: [own],
+    });
+    expect(result.rootComponents).toEqual([own]);
+    expect(result.skippedComponents).toEqual([]);
   });
 });
