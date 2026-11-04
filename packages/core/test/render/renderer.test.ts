@@ -427,3 +427,36 @@ describe("the start-up warm-up", () => {
     }).not.toThrow();
   });
 });
+
+describe("after disposal, and camera sources", () => {
+  it("refuses a render texture and an overlay once the app is disposed", async () => {
+    const h = await app();
+    const renderer = h.renderer;
+    h.dispose();
+    harness = null;
+    let code: string | null = null;
+    try {
+      renderer.createRenderTexture(4, 4);
+    } catch (error) {
+      code = isIgnifxError(error) ? error.code : null;
+    }
+    expect(code).toBe("IGX-0106");
+    await expect(renderer.openOverlay()).rejects.toMatchObject({ code: "IGX-0106" });
+  });
+
+  it("removes a camera source once, however often its disconnect runs", async () => {
+    const h = await app();
+    const disconnect = h.renderer.addCameraSource(() => true);
+    disconnect();
+    expect(() => {
+      disconnect();
+    }).not.toThrow();
+  });
+
+  it("records the render loop starting and stopping", async () => {
+    const h = await app();
+    h.renderer.setLoopRunning(true);
+    h.renderer.setLoopRunning(false);
+    await expect(h.renderer.nextFrame()).rejects.toMatchObject({ code: "IGX-0729" });
+  });
+});
