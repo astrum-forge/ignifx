@@ -86,11 +86,13 @@ describe("LightProbeVolume", () => {
     async (hdr) => {
       const plain = await sphere(false, hdr);
       const lit = await sphere(true, hdr);
+      // The message carries the colours, so a CI failure shows them, not only the failed comparison.
+      const colours = JSON.stringify({ hdr, plain, lit });
       // Under the studio environment the ball is near grey; inside red probes it turns red. Green
       // keeps only the environment's specular, which the LDR gamma encode lifts, so compare gaps.
-      expect(Math.abs(plain.r - plain.g)).toBeLessThan(40);
-      expect(lit.r - lit.g).toBeGreaterThan(60);
-      expect(lit.g).toBeLessThan(plain.g);
+      expect(Math.abs(plain.r - plain.g), colours).toBeLessThan(40);
+      expect(lit.r - lit.g, colours).toBeGreaterThan(60);
+      expect(lit.g, colours).toBeLessThan(plain.g);
     },
     120_000,
   );
