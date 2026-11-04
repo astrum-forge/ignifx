@@ -300,6 +300,9 @@ export interface AutoExposureSettings {
     readonly speedUp: number;
 }
 
+// @beta
+export function bakeLightProbes(world: World, options: LightProbeBakeOptions): Promise<LightProbeBakeResult>;
+
 // @public
 export interface BatchHandle {
     cancel(): void;
@@ -726,6 +729,7 @@ export const CoreErrorCode: {
     readonly renderTextureUnusable: "IGX-0731";
     readonly renderTextureCameraDetached: "IGX-0732";
     readonly invalidFrameWait: "IGX-0733";
+    readonly invalidLightProbeBake: "IGX-0734";
     readonly cryptoUnavailable: "IGX-1420";
     readonly storageInvalidNamespace: "IGX-1421";
     readonly storageInvalidKey: "IGX-1422";
@@ -1875,6 +1879,29 @@ export class LightProbeAsset {
     readonly data: LightProbeData;
 }
 
+// @beta
+export interface LightProbeBakeOptions {
+    readonly cellSize: Vec3Like;
+    readonly counts: {
+        readonly x: number;
+        readonly y: number;
+        readonly z: number;
+    };
+    readonly maxDistance?: number;
+    readonly onProgress?: (done: number, total: number) => void;
+    readonly origin: Vec3Like;
+    readonly rays?: number;
+    readonly signal?: AbortSignal;
+    readonly sky?: ColorLike;
+}
+
+// @beta
+export interface LightProbeBakeResult {
+    readonly data: LightProbeData;
+    readonly skipped: number;
+    readonly triangles: number;
+}
+
 // @public
 export interface LightProbeData {
     readonly cellSize: Vec3Like;
@@ -2312,6 +2339,8 @@ export class MeshAsset {
     static assetType: string;
     static box(app: App, options?: BoxMeshOptions): AssetHandle<MeshAsset>;
     static capsule(app: App, options?: CapsuleMeshOptions): AssetHandle<MeshAsset>;
+    // @internal
+    get cpuGeometry(): MeshGeometryData | null;
     static cylinder(app: App, options?: CylinderMeshOptions): AssetHandle<MeshAsset>;
     dispose(): void;
     static fromData(app: App, name: string, data: MeshGeometryData): AssetHandle<MeshAsset>;

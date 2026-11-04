@@ -49,6 +49,10 @@ const FLOATS_PER_PROBE = 12;
 const MAX_X = 1024;
 const MAX_YZ = 4096;
 
+/** The bounds that keep the generated shader constants valid 32-bit floats. */
+const MAX_COORDINATE = 1e20;
+const MIN_CELL = 1e-30;
+
 /**
  * A grid of light probes, as a `.probes.json` stores it.
  *
@@ -172,18 +176,11 @@ export function readLightProbeData(value: unknown, address: string): LightProbeD
   if (record === null) {
     throw invalid(address, "it is not an object");
   }
-  const origin = readVec3(record["origin"], (n) => Number.isFinite(n));
-  const cellSize = readVec3(record["cellSize"], (n) => Number.isFinite(n) && n > 0);
-  const counts = readVec3(record["counts"], (n) => Number.isSafeInteger(n) && n >= 1);
-  if (origin === null || cellSize === null || counts === null) {
-    throw invalid(address, "origin, cellSize (positive) and counts (whole, at least 1) must each be { x, y, z }");
+  const grid = readLightProbeGrid(record);
+  if (typeof grid === "string") {
+    throw invalid(address, grid);
   }
-  if (counts.x > MAX_X || counts.y * counts.z > MAX_YZ) {
-    throw invalid(
-      address,
-      `counts.x must be at most ${String(MAX_X)} and counts.y × counts.z at most ${String(MAX_YZ)}`,
-    );
-  }
+  const { origin, cellSize, counts } = grid;
   const coefficients = record["coefficients"];
   const expected = counts.x * counts.y * counts.z * FLOATS_PER_PROBE;
   if (
@@ -194,6 +191,42 @@ export function readLightProbeData(value: unknown, address: string): LightProbeD
     throw invalid(address, `coefficients must be ${String(expected)} finite numbers (12 per probe)`);
   }
   return { origin, cellSize, counts, coefficients: coefficients.map(Number) };
+}
+
+/**
+ * The grid part of a light-probe grid: where it is, how far apart the probes are, and how many.
+ *
+ * @internal
+ */
+export interface LightProbeGrid {
+  readonly origin: { x: number; y: number; z: number };
+  readonly cellSize: { x: number; y: number; z: number };
+  readonly counts: { x: number; y: number; z: number };
+}
+
+/**
+ * Checks the grid fields of a candidate grid, for a file and for a bake alike.
+ *
+ * @remarks
+ * Besides the format's count limits, `origin` stays below 1e20 in size and `cellSize` between
+ * 1e-30 and 1e20, so the constants the shader is generated with stay valid 32-bit floats.
+ *
+ * @param record - An object with `origin`, `cellSize` and `counts`.
+ * @returns The checked copies, or what is wrong with them.
+ *
+ * @internal
+ */
+export function readLightProbeGrid(record: Readonly<Record<string, unknown>>): LightProbeGrid | string {
+  const origin = readVec3(record["origin"], (n) => Number.isFinite(n) && Math.abs(n) < MAX_COORDINATE);
+  const cellSize = readVec3(record["cellSize"], (n) => Number.isFinite(n) && n > MIN_CELL && n < MAX_COORDINATE);
+  const counts = readVec3(record["counts"], (n) => Number.isSafeInteger(n) && n >= 1);
+  if (origin === null || cellSize === null || counts === null) {
+    return "origin (finite, below 1e20), cellSize (from 1e-30 to 1e20) and counts (whole, at least 1) must each be { x, y, z }";
+  }
+  if (counts.x > MAX_X || counts.y * counts.z > MAX_YZ) {
+    return `counts.x must be at most ${String(MAX_X)} and counts.y × counts.z at most ${String(MAX_YZ)}`;
+  }
+  return { origin, cellSize, counts };
 }
 
 /**

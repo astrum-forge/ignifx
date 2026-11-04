@@ -138,7 +138,11 @@ what they mean.
 
 - A `LightProbeVolume` replaces the `Environment`'s diffuse light with a baked grid of light probes:
   every lit PBR material blends the eight probes around each pixel, so moving objects are lit by the
-  room they are in. Reflections still come from the `Environment` or a `ReflectionProbe`. A grid is a
+  room they are in. Reflections still come from the `Environment` or a `ReflectionProbe`. With a
+  `PostProcessStack`'s `ssgi` on, which removes `1 − environmentDiffuse` of the environment's
+  diffuse light, the diffuse term becomes `P − (1 − environmentDiffuse)·E` (`P − 0.5·E` at the
+  default) plus the screen-space bounce: the probes are not discounted, so a dim volume under a
+  bright environment can read darker than the environment alone. A grid is a
   `.probes.json` (`format: "ignifx-probes"`): `origin`, `cellSize`, `counts`, and 12 linear-RGB
   floats per probe, `c0, c1, c2, c3`, so a white surface with normal `n` receives
   `c0 + c1·n.y + c2·n.z + c3·n.x` (X fastest, then Y, then Z). Load it with
@@ -160,6 +164,32 @@ what they mean.
       coefficients: Array.from({ length: 8 }, () => warm).flat(),
     });
     return world.createEntity("Room probes").addComponent(LightProbeVolume, { probes });
+  }
+  ```
+
+- `await bakeLightProbes(world, { origin, cellSize, counts, rays?, maxDistance?, sky?, signal?,
+onProgress? })` bakes a grid on the CPU, headless included, yielding after each probe: one bounce, from the world's lights and the triangles of every
+  enabled `MeshRenderer` whose mesh was built with `MeshAsset.fromData`. Primitives and glTF models
+  keep their triangles on the GPU and are skipped (`result.skipped` counts them). `sky` is the
+  linear radiance of rays that hit nothing; hemispheric lights add to it. Save `result.data` with
+  `writeLightProbeFile` or use it at once with `createLightProbeAsset`. It costs probes × rays ×
+  triangles, so bake small scenes, in a tool or at load, never per frame. A bad grid, `rays` outside
+  1–4096 or a non-finite `maxDistance` is `IGX-0734` before any tracing; an aborted `signal` rejects
+  with its reason between probes.
+
+  ```ts
+  import type { App, World } from "@ignifx/core";
+  import { bakeLightProbes, createLightProbeAsset, LightProbeVolume } from "@ignifx/core";
+
+  export async function bakeRoom(app: App, world: World): Promise<LightProbeVolume> {
+    const baked = await bakeLightProbes(world, {
+      origin: { x: -4, y: 0.5, z: -4 },
+      cellSize: { x: 4, y: 2, z: 4 },
+      counts: { x: 3, y: 2, z: 3 },
+      rays: 64,
+    });
+    const probes = createLightProbeAsset(app, baked.data);
+    return world.createEntity("Baked probes").addComponent(LightProbeVolume, { probes });
   }
   ```
 

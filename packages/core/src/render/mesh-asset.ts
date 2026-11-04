@@ -311,6 +311,17 @@ export class MeshAsset {
   }
 
   /**
+   * The vertex arrays the asset was built from, for CPU-side work such as a light-probe bake.
+   *
+   * @returns The arrays for a mesh built with {@link MeshAsset.fromData}; `null` for a primitive.
+   *
+   * @internal
+   */
+  get cpuGeometry(): MeshGeometryData | null {
+    return this.#geometry;
+  }
+
+  /**
    * How many vertices the geometry has.
    *
    * @remarks

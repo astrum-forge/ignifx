@@ -3,9 +3,11 @@ import {
   createLightProbePlugin,
   createLightProbeTexture,
   enableLightProbePlugins,
+  refreshLightProbeUniforms,
   swapLightProbePlugin,
 } from "../../lite/gpu/light-probes.js";
 import { packLightProbeTexels } from "../light-probe-asset.js";
+import type { LightProbeUniforms } from "../../lite/gpu/light-probes.js";
 import type { LiteMaterialPlugin } from "../../lite/gpu/material-plugin.js";
 import type { LiteEngine, LiteScene } from "../../lite/scene.js";
 import type { LightProbeAsset } from "../light-probe-asset.js";
@@ -23,7 +25,7 @@ const RETIRE_FRAMES = 8;
 /** What is applied: which grid, at which intensity, through which plugin. */
 interface Applied {
   readonly asset: LightProbeAsset;
-  readonly intensity: number;
+  readonly uniforms: LightProbeUniforms;
   readonly plugin: LiteMaterialPlugin;
   readonly destroy: () => void;
 }
@@ -67,16 +69,17 @@ export function createLightProbeRuntime(engine: LiteEngine, scene: LiteScene): L
     if (texture === null) {
       return null;
     }
+    const uniforms: LightProbeUniforms = { intensity };
     const plugin = createLightProbePlugin(
       {
         origin: [data.origin.x, data.origin.y, data.origin.z],
         cellSize: [data.cellSize.x, data.cellSize.y, data.cellSize.z],
         counts: [data.counts.x, data.counts.y, data.counts.z],
-        intensity,
       },
       texture,
+      uniforms,
     );
-    return { asset, intensity, plugin, destroy: () => texture.texture.destroy() };
+    return { asset, uniforms, plugin, destroy: () => texture.texture.destroy() };
   };
 
   const replace = (next: Applied | null): void => {
@@ -117,9 +120,13 @@ export function createLightProbeRuntime(engine: LiteEngine, scene: LiteScene): L
         }
         return;
       }
-      if (applied === null || applied.asset !== asset || applied.intensity !== winner.intensity) {
+      if (applied === null || applied.asset !== asset) {
         replace(apply(asset, winner.intensity));
         return;
+      }
+      if (applied.uniforms.intensity !== winner.intensity) {
+        applied.uniforms.intensity = winner.intensity;
+        refreshLightProbeUniforms(scene, applied.plugin);
       }
       // Meshes created since the last frame get the plugin too; nothing is rebuilt otherwise.
       swapLightProbePlugin(scene, null, applied.plugin);
