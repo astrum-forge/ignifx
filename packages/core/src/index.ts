@@ -411,6 +411,19 @@ export {
   type ReflectionProbeRefreshMode,
 } from "./render/reflection-probe.js";
 export {
+  createLightProbeAsset,
+  LIGHT_PROBE_ASSET_TYPE,
+  LIGHT_PROBE_FILE_EXTENSIONS,
+  LIGHT_PROBE_FILE_FORMAT,
+  LIGHT_PROBE_FORMAT_VERSION,
+  LightProbeAsset,
+  sampleLightProbes,
+  writeLightProbeFile,
+  type LightProbeData,
+} from "./render/light-probe-asset.js";
+export { LightProbeVolume } from "./render/light-probe-volume.js";
+export { createLightProbeLoader } from "./render/loaders/light-probe-loader.js";
+export {
   forceRendererDeviceLossForTesting,
   RENDER_DIAGNOSTICS_COUNTERS,
   type FrameWaitOptions,
@@ -446,6 +459,7 @@ export {
 } from "./render/rendering-settings.js";
 export {
   describeEnvironmentFileFormat,
+  describeLightProbeFileFormat,
   describeMaterialFileFormat,
   describeMeshFileFormat,
   describeSchemas,

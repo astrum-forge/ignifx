@@ -7,6 +7,8 @@ import { Camera } from "./camera.js";
 import { ENVIRONMENT_FILE_FORMAT, ENVIRONMENT_FORMAT_VERSION } from "./environment-asset.js";
 import { Environment } from "./environment.js";
 import { InstancedMeshRenderer } from "./instanced-mesh-renderer.js";
+import { LIGHT_PROBE_FILE_FORMAT, LIGHT_PROBE_FORMAT_VERSION } from "./light-probe-asset.js";
+import { LightProbeVolume } from "./light-probe-volume.js";
 import { Light } from "./light.js";
 import { MATERIAL_FILE_FORMAT, MATERIAL_FORMAT_VERSION, MATERIAL_KINDS } from "./material-asset.js";
 import { MESH_PRIMITIVES } from "./mesh-asset.js";
@@ -92,9 +94,13 @@ export function describeSchemas(): Readonly<Record<string, SchemaDescription>> {
     "ignifx/ReflectionProbe": describeSchema("ignifx/ReflectionProbe", ReflectionProbe.schema, {
       description: ReflectionProbe.description,
     }),
+    "ignifx/LightProbeVolume": describeSchema("ignifx/LightProbeVolume", LightProbeVolume.schema, {
+      description: LightProbeVolume.description,
+    }),
     "ignifx/scene-file": describeSceneFileFormat(),
     "ignifx/material-file": describeMaterialFileFormat(),
     "ignifx/environment-file": describeEnvironmentFileFormat(),
+    "ignifx/light-probe-file": describeLightProbeFileFormat(),
     "ignifx/mesh-file": describeMeshFileFormat(),
   };
 }
@@ -262,6 +268,47 @@ export function describeMeshFileFormat(): SchemaDescription {
         kind: "record",
         default: {},
         description: `The factory's options; omitted ones take its defaults. Lengths are metres, zero or more; counts are whole numbers, one or more; uvScale is two numbers. An unknown option or a bad value is IGX-0507. By primitive: ${optionsByPrimitive}.`,
+      },
+    },
+  };
+}
+
+/**
+ * Describes the `.probes.json` light-probe grid format (GI Phase 2, step B2).
+ *
+ * @returns The description of the top-level file fields.
+ *
+ * @beta
+ */
+export function describeLightProbeFileFormat(): SchemaDescription {
+  return {
+    title: "Light probe file",
+    format: LIGHT_PROBE_FILE_FORMAT,
+    description:
+      "A regular grid of baked light probes: first-order spherical harmonics of the diffuse light at each probe.",
+    fields: {
+      format: { kind: "str", default: LIGHT_PROBE_FILE_FORMAT, description: `Always "${LIGHT_PROBE_FILE_FORMAT}".` },
+      formatVersion: {
+        kind: "u32",
+        default: LIGHT_PROBE_FORMAT_VERSION,
+        description: "The file format version; 1 before ignifx 1.0.",
+      },
+      origin: { kind: "vec3", default: { x: 0, y: 0, z: 0 }, description: "World position of probe (0, 0, 0)." },
+      cellSize: {
+        kind: "vec3",
+        default: { x: 1, y: 1, z: 1 },
+        description: "Distance between neighbouring probes per axis, in metres; positive.",
+      },
+      counts: {
+        kind: "vec3",
+        default: { x: 1, y: 1, z: 1 },
+        description: "Probes per axis, whole numbers from 1; counts.x at most 1024, counts.y × counts.z at most 4096.",
+      },
+      coefficients: {
+        kind: "array",
+        default: [],
+        description:
+          "12 linear-RGB floats per probe (c0, c1, c2, c3; diffuse light for normal n is c0 + c1·n.y + c2·n.z + c3·n.x), X fastest, then Y, then Z.",
       },
     },
   };

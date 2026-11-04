@@ -16,6 +16,7 @@ import { assertRenderingFeatureAvailable } from "../lite/render-features.js";
 import { sceneLightCount } from "../lite/scene.js";
 import { createMaterialCacheResets } from "../lite/shadow.js";
 import { clamp } from "../math/math-utils.js";
+import { LightProbeHost } from "./gpu/light-probe-host.js";
 import { ReflectionProbeHost } from "./gpu/reflection-probe-host.js";
 import {
   applySurfaceScale,
@@ -50,6 +51,7 @@ import {
   toRenderingFeatures,
 } from "./rendering-settings.js";
 import type { Camera } from "./camera.js";
+import type { LightProbeVolume } from "./light-probe-volume.js";
 import type { MaterialAsset } from "./material-asset.js";
 import type { ReflectionProbe } from "./reflection-probe.js";
 import type { RenderTexture, RenderTextureOwner } from "./render-texture.js";
@@ -733,6 +735,9 @@ export class RendererImpl implements Renderer {
 
   /** The reflection probes' host, created on the first frame of a canvas-backed app (GI B1). */
   #reflectionProbes: ReflectionProbeHost | null = null;
+
+  /** The light probes' host, created with the reflection probes' one (GI B2). */
+  #lightProbes: LightProbeHost | null = null;
 
   /** The TAA passes (`../lite/gpu/taa.ts`), when `rendering.taa` installed them. */
   #taa: TaaHandle | null = null;
@@ -1718,36 +1723,53 @@ export class RendererImpl implements Renderer {
   }
 
   /**
-   * The reflection probes' per-frame work (`ReflectionProbe`, GI B1): loads their chunk the first
-   * time a world has one, then captures what is due and points each lit PBR material at its probe.
-   * The `PreRender` system calls it every frame; it does nothing until a probe exists, and nothing
-   * on a headless app.
+   * The baked-lighting components' per-frame work (GI Phase 2): `ReflectionProbe` (B1) captures
+   * what is due and points each lit PBR material at its probe; `LightProbeVolume` (B2) keeps the
+   * winning grid on every lit PBR material. Each loads its own chunk the first time a world has one
+   * of its components. The `PreRender` system calls it every frame; it does nothing on a headless
+   * app.
    *
    * @param world - The world being reconciled.
    * @param probes - Every `ReflectionProbe` in it.
+   * @param volumes - Every `LightProbeVolume` in it.
    *
    * @internal
    */
-  updateReflectionProbes(world: World, probes: readonly ReflectionProbe[]): void {
+  updateBakedLighting(world: World, probes: readonly ReflectionProbe[], volumes: readonly LightProbeVolume[]): void {
     if (!this.isHeadless) {
-      this.#updateReflectionProbes(world, probes);
+      this.#updateBakedLighting(world, probes, volumes);
     }
   }
 
   /**
-   * {@link RendererImpl.updateReflectionProbes} on a canvas-backed app.
+   * {@link RendererImpl.updateBakedLighting} on a canvas-backed app.
    *
    * @param world - The world being reconciled.
    * @param probes - Every `ReflectionProbe` in it.
+   * @param volumes - Every `LightProbeVolume` in it.
    */
-  #updateReflectionProbes(world: World, probes: readonly ReflectionProbe[]): void {
+  #updateBakedLighting(world: World, probes: readonly ReflectionProbe[], volumes: readonly LightProbeVolume[]): void {
     if (this.#isDisposed || !this.#isSceneRegistered) {
       return;
     }
-    this.#reflectionProbes ??= new ReflectionProbeHost(this.engine, this.scene, (error: unknown): void => {
+    const onError = (error: unknown): void => {
       this.#app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });
-    });
+    };
+    this.#reflectionProbes ??= new ReflectionProbeHost(this.engine, this.scene, onError);
+    this.#lightProbes ??= new LightProbeHost(this.engine, this.scene, onError);
     this.#reflectionProbes.update(world, probes, (this.#presenter?.hdr ?? null) !== null);
+    this.#lightProbes.update(volumes);
+  }
+
+  /**
+   * The light probes' host, for tests and diagnostics.
+   *
+   * @returns The host, or `null` on a headless app and before the first frame.
+   *
+   * @internal
+   */
+  get lightProbeHost(): LightProbeHost | null {
+    return this.#lightProbes;
   }
 
   /**
@@ -2021,6 +2043,8 @@ export class RendererImpl implements Renderer {
     this.#ambientOcclusion = null;
     this.#reflectionProbes?.dispose();
     this.#reflectionProbes = null;
+    this.#lightProbes?.dispose();
+    this.#lightProbes = null;
     this.#sceneInputsHost?.dispose();
     this.#sceneInputsHost = null;
     this.#taa = null;
