@@ -100,10 +100,11 @@ export class ReflectionProbe extends Component {
   #isRefreshRequested = false;
 
   /**
-   * Asks the probe to capture again on the next frame, whatever its `refreshMode`.
+   * Asks the probe to capture again from the next frame, whatever its `refreshMode`.
    *
    * @remarks
-   * Call it after the static scene around the probe changed, such as a door opening.
+   * Call it after the static scene around the probe changed, such as a door opening. A capture
+   * repeats over a few frames, so meshes whose materials are still compiling are caught.
    */
   refresh(): void {
     this.#isRefreshRequested = true;

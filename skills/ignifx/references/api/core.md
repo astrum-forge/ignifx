@@ -11837,7 +11837,7 @@ The first match in attach order, or `null`.
 
 **`Beta`**
 
-Asks the probe to capture again on the next frame, whatever its `refreshMode`.
+Asks the probe to capture again from the next frame, whatever its `refreshMode`.
 
 ###### Returns
 
@@ -11845,7 +11845,8 @@ Asks the probe to capture again on the next frame, whatever its `refreshMode`.
 
 ###### Remarks
 
-Call it after the static scene around the probe changed, such as a door opening.
+Call it after the static scene around the probe changed, such as a door opening. A capture
+repeats over a few frames, so meshes whose materials are still compiling are caught.
 
 ##### requireComponent()
 

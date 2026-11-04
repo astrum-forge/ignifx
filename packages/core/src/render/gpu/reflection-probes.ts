@@ -20,12 +20,19 @@ import type { ReflectionProbe, ReflectionProbeCandidate } from "../reflection-pr
  * `../../lite/gpu/reflection-probe.ts` as one chunk, only once a world has a `ReflectionProbe`.
  */
 
+/**
+ * How many consecutive frames one capture request renders. Lite compiles material pipelines
+ * asynchronously, so a single frame right after start or after a scene change can miss meshes that
+ * are still compiling; repeating it for a few frames catches them.
+ */
+const CAPTURE_FRAMES = 8;
+
 /** One component's GPU probe and what it last captured with. */
 interface ProbeState {
   /** The GPU probe. */
   lite: LiteReflectionProbe;
-  /** Whether a capture has been requested at least once. */
-  hasCaptured: boolean;
+  /** How many more frames capture before the probe rests. */
+  framesToCapture: number;
   /** The binding materials use, rebuilt when the probe moves or its box changes. */
   binding: LiteProbeBinding | null;
 }
@@ -123,7 +130,7 @@ export async function createReflectionProbeRuntime(
               EDITOR_ONLY_METADATA_KEY,
               cullingFilter(world, probe),
             ),
-            hasCaptured: false,
+            framesToCapture: probe.refreshMode === "once" ? CAPTURE_FRAMES : 0,
             binding: null,
           };
           states.set(probe, state);
@@ -133,11 +140,12 @@ export async function createReflectionProbeRuntime(
         const x = matrix[12] ?? 0;
         const y = matrix[13] ?? 0;
         const z = matrix[14] ?? 0;
-        const due =
-          wantsRefresh || probe.refreshMode === "everyFrame" || (probe.refreshMode === "once" && !state.hasCaptured);
-        if (due) {
+        if (wantsRefresh) {
+          state.framesToCapture = CAPTURE_FRAMES;
+        }
+        if (state.framesToCapture > 0 || probe.refreshMode === "everyFrame") {
           state.lite.capture(x, y, z, probe.near, probe.far);
-          state.hasCaptured = true;
+          state.framesToCapture = Math.max(0, state.framesToCapture - 1);
         }
         const environment = state.lite.environment;
         if (environment === null) {
