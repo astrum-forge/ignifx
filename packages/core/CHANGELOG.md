@@ -1,5 +1,24 @@
 # @ignifx/core
 
+## 0.17.0
+
+### Minor Changes
+
+- ee4425f: A texture or model that needs a decoder turned off with the vite plugin's `decoders` option now fails with `IGX-0508` before loading, instead of fetching the decoder from `cdn.babylonjs.com` or the page root. The message names the option to set back to `true`.
+- 45df4aa: Add `maxWaitMs` to `app.renderer.renderToTexture` and a new `app.renderer.nextFrame`, so a page that gets no animation frames (a hidden tab or iframe) still renders the frame a request waits for.
+  
+  The editor host's game view now answers at full rate while hidden (`gameViewOnDemand`), takes the image size in `gameViewFrame` (`gameViewSize`), and renders a 2D scene through its `Camera2D` (`gameView2d`).
+- 9b6b741: Add `instanceEntityAt` and `instanceComponentAt`, which find the live entity or component an instance path names inside a built prefab instance.
+  The scene view keeps a reference by instance path (`"<instanceRootUid>/<uid>"`) when the instance it points into is rebuilt after an override edit or a prefab reload; it no longer clears it and saves `null`.
+- 212a922: Add `@ignifx/core/prefab`, which exports `applyOverridesToAsset`, `revertOverrides` and the scene-file helpers without loading the renderer or Babylon Lite.
+  `applyOverridesToAsset` can now apply the components added on an instance root: pass them as `rootComponents`, and read `appliedComponents`, `rootComponents` and `skippedComponents` in the result.
+  A scene can now reference an entity or component inside one of its prefab instances with an instance path, `{ "$entity": "<instanceRootUid>/<uidInThePrefab>" }`; `serializeScene` writes such references this way instead of `null`.
+- 7dafb6d: Add the `ReflectionProbe` component (beta), which captures the scene around it into a cube map that nearby shiny PBR materials reflect, with an optional box projection, a culling mask and `once`, `onDemand` or `everyFrame` refresh. It needs a loaded `Environment`.
+
+### Patch Changes
+
+- a0ce8c6: `app.renderer.nextFrame` now settles when the render loop stops, and the editor host's 2D game view no longer keeps an offscreen surface or old scene layers alive between frames and picks up a changed `rendering.clearColor`.
+
 ## 0.16.0
 
 ### Minor Changes

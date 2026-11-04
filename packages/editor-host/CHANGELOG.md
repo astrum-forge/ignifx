@@ -1,5 +1,29 @@
 # @ignifx/editor-host
 
+## 0.17.0
+
+### Minor Changes
+
+- 45df4aa: Add `maxWaitMs` to `app.renderer.renderToTexture` and a new `app.renderer.nextFrame`, so a page that gets no animation frames (a hidden tab or iframe) still renders the frame a request waits for.
+  
+  The editor host's game view now answers at full rate while hidden (`gameViewOnDemand`), takes the image size in `gameViewFrame` (`gameViewSize`), and renders a 2D scene through its `Camera2D` (`gameView2d`).
+
+### Patch Changes
+
+- bf485fc: `setTilemapCells` now rejects an `asset` address or a layer name longer than 256 characters with `invalidParams`, like the other bounded names in the editor protocol.
+- a0ce8c6: `app.renderer.nextFrame` now settles when the render loop stops, and the editor host's 2D game view no longer keeps an offscreen surface or old scene layers alive between frames and picks up a changed `rendering.clearColor`.
+- 9b6b741: Add `instanceEntityAt` and `instanceComponentAt`, which find the live entity or component an instance path names inside a built prefab instance.
+  The scene view keeps a reference by instance path (`"<instanceRootUid>/<uid>"`) when the instance it points into is rebuilt after an override edit or a prefab reload; it no longer clears it and saves `null`.
+- Updated dependencies [ee4425f]
+- Updated dependencies [a0ce8c6]
+- Updated dependencies [45df4aa]
+- Updated dependencies [9b6b741]
+- Updated dependencies [212a922]
+- Updated dependencies [7dafb6d]
+- Updated dependencies [f305b2e]
+  - @ignifx/core@0.17.0
+  - @ignifx/vite-plugin@0.17.0
+
 ## 0.16.0
 
 ### Minor Changes

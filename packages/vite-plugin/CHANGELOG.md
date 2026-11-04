@@ -1,5 +1,22 @@
 # @ignifx/vite-plugin
 
+## 0.17.0
+
+### Minor Changes
+
+- f305b2e: Add a `decoders` option that leaves unused Babylon Lite decoders out of a build: `ignifx({ decoders: { draco: false } })` keeps the 251 KB Draco decoder out of `dist/` (also `meshopt` and `ktx2`). Every decoder is still copied by default, and loading a file that needs one you left out fails with `IGX-0508`, naming the option to turn back on.
+
+### Patch Changes
+
+- ee4425f: A texture or model that needs a decoder turned off with the vite plugin's `decoders` option now fails with `IGX-0508` before loading, instead of fetching the decoder from `cdn.babylonjs.com` or the page root. The message names the option to set back to `true`.
+- Updated dependencies [ee4425f]
+- Updated dependencies [a0ce8c6]
+- Updated dependencies [45df4aa]
+- Updated dependencies [9b6b741]
+- Updated dependencies [212a922]
+- Updated dependencies [7dafb6d]
+  - @ignifx/core@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes
