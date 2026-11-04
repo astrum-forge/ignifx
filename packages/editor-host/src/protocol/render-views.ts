@@ -38,7 +38,11 @@ export const RenderViewMethod = {
    * request; one with `HostCapability.gameView2d` renders a `Camera2D` document camera too.
    */
   gameViewFrame: "gameViewFrame",
-  /** Renders one model or prefab asset on its own and answers the image: {@link ThumbnailResult}. */
+  /**
+   * Renders one model or prefab asset on its own and answers the image: {@link ThumbnailResult}.
+   * It runs beside the one-at-a-time queue of the other methods, so a thumbnail never holds them
+   * up; thumbnails are answered in the order they were asked for.
+   */
   renderThumbnail: "renderThumbnail",
 } as const;
 

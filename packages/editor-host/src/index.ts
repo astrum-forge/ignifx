@@ -31,6 +31,7 @@ export {
   EDITOR_LINES_MAX_SETS,
   GizmoMode,
   GizmoSpace,
+  GRID_MAX_HEIGHT,
   GRID_MAX_SIZE,
   GRID_MIN_SIZE,
   HandshakeMethod,

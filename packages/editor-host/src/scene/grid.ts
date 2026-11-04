@@ -38,8 +38,12 @@ interface Point3 {
 
 /** One frame's grid. */
 export interface GridPlacement {
-  /** `"ground"`: the `y = 0` plane of the 3D view. `"screen"`: the `z = 0` plane, over the 2D view. */
+  /** `"ground"`: a horizontal plane of the 3D view. `"screen"`: the `z = 0` plane, over the 2D view. */
   readonly plane: "ground" | "screen";
+  /** The ground plane's world y, in metres; `0` on the screen plane. */
+  readonly height: number;
+  /** Whether the grid draws over the scene rather than depth-tested against it; the screen plane always does. */
+  readonly overlay: boolean;
   /** The centre's world x, in metres. */
   readonly centerX: number;
   /** The centre's other coordinate, in metres: world z on the ground, world y on the screen plane. */
@@ -53,20 +57,37 @@ export interface GridPlacement {
 }
 
 /**
- * The 3D view's ground grid: centred under the eye, coarser the higher the eye is, and large enough
- * that it fades out before its edge is in view.
+ * The 3D view's ground grid: centred under the eye, coarser the higher the eye is above the plane,
+ * and large enough that it fades out before its edge is in view.
  *
  * @param eye - The editor camera's position, in metres.
  * @param size - The spacing `setGrid` asked for, in metres.
  * @param far - The camera's far plane, in metres; the grid stays inside it.
+ * @param height - The plane's world y, in metres.
+ * @param overlay - Whether the grid draws over the scene.
  * @returns The placement.
  */
-export function groundGridPlacement(eye: Point3, size: number, far: number): GridPlacement {
-  const height = Math.max(Math.abs(eye.y), size);
-  const decades = Math.max(0, Math.floor(Math.log10(height / (size * GROUND_LINES_PER_HEIGHT))));
+export function groundGridPlacement(
+  eye: Point3,
+  size: number,
+  far: number,
+  height = 0,
+  overlay = false,
+): GridPlacement {
+  const above = Math.max(Math.abs(eye.y - height), size);
+  const decades = Math.max(0, Math.floor(Math.log10(above / (size * GROUND_LINES_PER_HEIGHT))));
   const step = size * 10 ** decades;
-  const reach = Math.min(Math.max(height * GROUND_REACH_PER_HEIGHT, step * GROUND_MIN_REACH_LINES), far * 0.9);
-  return { plane: "ground", centerX: eye.x, centerY: eye.z, extent: reach * 2, step, majorEvery: MAJOR_EVERY };
+  const reach = Math.min(Math.max(above * GROUND_REACH_PER_HEIGHT, step * GROUND_MIN_REACH_LINES), far * 0.9);
+  return {
+    plane: "ground",
+    height,
+    overlay,
+    centerX: eye.x,
+    centerY: eye.z,
+    extent: reach * 2,
+    step,
+    majorEvery: MAJOR_EVERY,
+  };
 }
 
 /**
@@ -81,7 +102,14 @@ export function groundGridPlacement(eye: Point3, size: number, far: number): Gri
 export function screenGridPlacement(view: View2D, size: number): GridPlacement {
   const pixelsPerMetre = Math.max(view.zoom * view.pixelsPerUnit, Number.MIN_VALUE);
   const extent = (2 * Math.max(view.widthPx, view.heightPx)) / pixelsPerMetre;
-  const base = { plane: "screen", centerX: view.centerX, centerY: view.centerY, extent } as const;
+  const base = {
+    plane: "screen",
+    height: 0,
+    overlay: true,
+    centerX: view.centerX,
+    centerY: view.centerY,
+    extent,
+  } as const;
   if (view.zoom >= PIXEL_GRID_ZOOM && view.pixelsPerUnit > 0) {
     const step = 1 / view.pixelsPerUnit;
     return { ...base, step, majorEvery: Math.max(1, Math.round(size / step)) };

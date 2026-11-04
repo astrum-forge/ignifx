@@ -393,10 +393,13 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
 - **The grid.** With a canvas the scene host lists the `grid` capability and draws a grid: a
   ground grid at `y = 0` in 3D view mode (depth-tested, centred under the eye, coarser the higher
   the eye, faded out before its edge) and a faint grid over the 2D view (one line per layer pixel
-  from zoom 8). `setGrid { visible?, size? }` sets the whole grid each call; a field left out takes
+  from zoom 8). `setGrid { visible?, size?, overlay?, height? }` sets the whole grid each call; a field left out takes
   its default (`visible: true`, `size: 1` metre, 0.001 to 1000). The grid starts visible at every
   load, so re-send the editor's state after `ready`. It is never picked or saved, and never in the
-  play view; `screenshot` includes it while it is visible.
+  play view; `screenshot` includes it while it is visible. With the `gridOverlay` capability,
+  `setGrid` also takes `overlay` (default `false`: the 3D grid draws over the scene, fainter, so a
+  floor mesh does not hide it) and `height` (default `0`: the 3D grid plane's world y, -100 000 to
+  100 000 metres); an older host ignores both.
 - **Live tilemap painting.** With a canvas the scene host lists `tilemapCells` and answers
   `setTilemapCells { asset, layer, cells }`: `cells` are flat `[index, tile, …]` pairs in the
   `.tilemap.json` file's order (row-major, top row first), `layer` a layer name or index. Every

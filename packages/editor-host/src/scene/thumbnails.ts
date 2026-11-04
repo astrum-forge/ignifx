@@ -5,6 +5,9 @@
  * The stage is a separate app on a 1x1 `OffscreenCanvas`, built from the project's own options, so
  * a thumbnail never shows the open document, never lights it, and is never lit by it. It is
  * created on the first request and lives until the host is disposed.
+ *
+ * The channel runs `renderThumbnail` beside its one-at-a-time queue, so the frames a thumbnail
+ * waits for hold up no other request; thumbnails queue among themselves here, one stage at a time.
  */
 
 import { Camera, Light } from "@ignifx/core";
@@ -31,6 +34,13 @@ const MAX_SETTLE_FRAMES = 120;
 
 /** How many frames in a row the bounds must hold still before the thumbnail is taken. */
 const STILL_FRAMES = 2;
+
+/**
+ * How many frames in a row nothing may draw, with no asset of the stage still loading, before the
+ * subject is taken to be empty (a failed model, a prefab without meshes). A loaded model builds its
+ * meshes in the first frame.
+ */
+const EMPTY_FRAMES = 4;
 
 /** The direction from the subject to the camera: in front, above and to the right. */
 const VIEW_DIRECTION = { x: 0.55, y: 0.45, z: -0.7 };
@@ -116,6 +126,12 @@ export class ThumbnailRenderer {
 
   #loads = 0;
 
+  /** The previous thumbnail, which the next waits for: the stage shows one subject at a time. */
+  #queue: Promise<unknown> = Promise.resolve();
+
+  /** Whether the stage's assets have a load in flight, from their last progress report. */
+  #isLoading = false;
+
   #isDisposed = false;
 
   /**
@@ -131,9 +147,21 @@ export class ThumbnailRenderer {
    * `renderThumbnail`: loads the asset alone on the stage, frames it, renders it and encodes it.
    *
    * @param params - `{ asset, size?, format, quality? }`.
-   * @returns The image.
+   * @returns The image, once the thumbnails asked for before it are done.
    */
   async render(params: unknown): Promise<ThumbnailResult> {
+    const run = this.#queue.then(async () => this.#render(params));
+    this.#queue = run.catch(() => undefined);
+    return run;
+  }
+
+  /**
+   * Renders one thumbnail; {@link ThumbnailRenderer.render} runs them one at a time.
+   *
+   * @param params - The request's `params`.
+   * @returns The image.
+   */
+  async #render(params: unknown): Promise<ThumbnailResult> {
     if (!isRenderThumbnailParams(params)) {
       throw new InvalidParamsError(
         'renderThumbnail takes { asset: address | { $asset, type? }, size?: 1 to 1024, format: "png" | "jpeg", quality? }.',
@@ -148,7 +176,7 @@ export class ThumbnailRenderer {
       mode: "single",
     });
     try {
-      const bounds = await settledBounds(app, instance);
+      const bounds = await settledBounds(app, instance, () => this.#isLoading);
       frameCamera(camera, bounds);
       await nextFrame();
       const size = params.size ?? THUMBNAIL_DEFAULT_SIZE;
@@ -186,6 +214,9 @@ export class ThumbnailRenderer {
    */
   async #open(): Promise<Stage> {
     const app = await this.#createApp();
+    app.assets.onProgress.connect((progress) => {
+      this.#isLoading = progress.loaded < progress.total;
+    });
     const scene = app.world.createScene("thumbnail-stage", { persistent: true });
     const eye = app.world.createEntity("Thumbnail Camera", { scene });
     const camera = eye.addComponent(Camera, { fov: STAGE_FOV, near: 0.01, far: 1000 });
@@ -235,23 +266,47 @@ function nextFrame(): Promise<void> {
 }
 
 /**
- * Waits until a loaded subject's meshes exist and hold still, then measures them.
+ * Waits until a loaded subject's meshes exist and hold still, then measures them. It stops early
+ * when nothing has drawn for a few frames and nothing is loading, as nothing will.
  *
  * @param app - The stage app.
  * @param instance - The loaded subject.
+ * @param isLoading - Whether the stage still has an asset load in flight.
  * @returns Its world bounds; a unit box at the origin when nothing draws.
  */
-async function settledBounds(app: App, instance: SceneInstance): Promise<WorldBounds> {
+async function settledBounds(app: App, instance: SceneInstance, isLoading: () => boolean): Promise<WorldBounds> {
+  const settle = boundsSettler();
   let last: WorldBounds | null = null;
-  let still = 0;
-  for (let frame = 0; frame < MAX_SETTLE_FRAMES && still < STILL_FRAMES; frame += 1) {
+  for (let frame = 0; frame < MAX_SETTLE_FRAMES; frame += 1) {
     // oxlint-disable-next-line no-await-in-loop -- one frame at a time is the point
     await nextFrame();
-    const bounds = unionBounds(app, instance.roots);
-    still = bounds !== null && last !== null && sameBounds(bounds, last) ? still + 1 : 0;
-    last = bounds;
+    last = unionBounds(app, instance.roots);
+    if (settle(last, isLoading())) {
+      break;
+    }
   }
   return last ?? { min: { x: -0.5, y: -0.5, z: -0.5 }, max: { x: 0.5, y: 0.5, z: 0.5 } };
+}
+
+/**
+ * Decides, frame by frame, when a thumbnail's subject has settled: its bounds held still for
+ * `STILL_FRAMES` frames, or nothing has drawn for `EMPTY_FRAMES` frames with nothing loading.
+ *
+ * @returns A function that takes each frame's bounds (`null` when nothing draws) and whether an
+ * asset is loading, and answers true once the subject has settled.
+ *
+ * @internal
+ */
+export function boundsSettler(): (bounds: WorldBounds | null, isLoading: boolean) => boolean {
+  let last: WorldBounds | null = null;
+  let still = 0;
+  let empty = 0;
+  return (bounds, isLoading) => {
+    still = bounds !== null && last !== null && sameBounds(bounds, last) ? still + 1 : 0;
+    empty = bounds === null && !isLoading ? empty + 1 : 0;
+    last = bounds;
+    return still >= STILL_FRAMES || empty >= EMPTY_FRAMES;
+  };
 }
 
 /**

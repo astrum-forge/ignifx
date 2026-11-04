@@ -19,6 +19,13 @@ describe("the 3D view's ground grid", () => {
     expect(groundGridPlacement({ x: 0, y: 3000, z: 0 }, 1, 5000).extent).toBeLessThanOrEqual(2 * 0.9 * 5000);
     expect(groundGridPlacement({ x: 0, y: 2, z: 0 }, 0.5, 5000).step).toBe(0.5);
   });
+
+  it("measures the eye's height from a raised plane and carries the overlay flag", () => {
+    const placement = groundGridPlacement({ x: 0, y: 302, z: 0 }, 1, 5000, 300, true);
+    expect(placement).toMatchObject({ plane: "ground", height: 300, overlay: true, step: 1 });
+    expect(groundGridPlacement({ x: 0, y: 0, z: 0 }, 1, 5000, 300).step).toBe(10);
+    expect(groundGridPlacement({ x: 0, y: 6, z: 0 }, 1, 5000)).toMatchObject({ height: 0, overlay: false });
+  });
 });
 
 describe("the 2D view's grid", () => {

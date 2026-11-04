@@ -156,6 +156,13 @@ export const HostCapability = {
    */
   grid: "grid",
   /**
+   * The scene host's `setGrid` takes `overlay` (the 3D grid draws over the scene, so a floor mesh
+   * does not hide it) and `height` (the world `y` of the 3D grid's plane). From the editor's ask of
+   * 2026-11-04 (additive in 0.3); without it, the host ignores both fields and draws the grid
+   * depth-tested at `y = 0`.
+   */
+  gridOverlay: "gridOverlay",
+  /**
    * The scene host answers `setTilemapCells`: it writes cells into the open scene's live tilemaps,
    * so a tilemap editor's painting shows without a save. Additive in 0.3; without it, the scene
    * host answers `setTilemapCells` with `RpcErrorCode.methodNotFound`.
