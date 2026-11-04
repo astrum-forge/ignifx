@@ -10,6 +10,7 @@ import {
   KTX2_DECODER_FILE,
   KTX2_TRANSCODER_FILES,
   LEFT_OUT_DECODER_META_KEY,
+  leftOutDecoders,
   MESHOPT_DECODER_FILE,
 } from "../../src/render/decoder-urls.js";
 import { textureContainerOf } from "../../src/render/loaders/texture-loader.js";
@@ -248,5 +249,22 @@ describe("a decoder the vite plugin left out", () => {
     expect(gltfExtensionsUsed(glb)).toEqual(["EXT_meshopt_compression", "KHR_texture_basisu"]);
     expect(gltfExtensionsUsed(json.slice().buffer)).toEqual(["EXT_meshopt_compression", "KHR_texture_basisu"]);
     expect(gltfExtensionsUsed(new TextEncoder().encode("not json").buffer)).toEqual([]);
+    expect(gltfExtensionsUsed(new TextEncoder().encode("3").buffer)).toEqual([]);
+    expect(gltfExtensionsUsed(new TextEncoder().encode('{"extensionsUsed":[1,"KHR_x"]}').buffer)).toEqual(["KHR_x"]);
+    // A .glb whose first chunk is not JSON, and one whose chunk runs past the end.
+    const binaryChunk = glb.slice(0);
+    new DataView(binaryChunk).setUint32(16, 0x00_4e_49_42, true);
+    expect(gltfExtensionsUsed(binaryChunk)).toEqual([]);
+    const truncated = glb.slice(0, glb.byteLength - 1);
+    expect(gltfExtensionsUsed(truncated)).toEqual([]);
+  });
+
+  it("reads only the three option keys as left-out marks", () => {
+    const manifest = createAssetManifest([
+      { address: "a.js", url: "/assets/a.js", meta: { [LEFT_OUT_DECODER_META_KEY]: "basis" } },
+      { address: "b.js", url: "/assets/b.js", meta: { [LEFT_OUT_DECODER_META_KEY]: "meshopt" } },
+      { address: "c.js", url: "/assets/c.js" },
+    ]);
+    expect([...leftOutDecoders(manifest)]).toEqual(["meshopt"]);
   });
 });
