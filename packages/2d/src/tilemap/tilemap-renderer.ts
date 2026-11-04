@@ -12,8 +12,10 @@ import type { AssetHandle, ComponentHooks, MutableVec2, Schema } from "@ignifx/c
 
 /**
  * Draw visible tilemap chunks through the shared sprite-layer registry so tiles sort with characters.
- * Chunk sprites are written when built and removed when out of view. Tiles have no individual
- * entities; use `Tilemap.worldToCell` to locate a tile rather than `app.twoD.pickAt`.
+ * Chunk sprites are written when built and removed when out of view. Each tilemap layer draws in
+ * the order its `orderInLayer`, then its index in the document, sets, whichever chunks were rebuilt
+ * (`SpriteLayerRegistry.placeTile`). Tiles have no individual entities; use `Tilemap.worldToCell`
+ * to locate a tile rather than `app.twoD.pickAt`.
  */
 
 /** One materialised chunk. */
@@ -334,7 +336,7 @@ export class TilemapRenderer extends Component implements ComponentHooks {
           const worldY = originY + (y + 0.5) * cellSize;
           const centre = worldToPixelsToRef(worldX, worldY, pixelsPerUnit, this.#pixels);
           writeScratch(this.#scratch, centre.x, centre.y, sizePx, sizePx, frame, 0, 1, 1, 1, alpha, false, false, true);
-          sprites.push(registry.placeRaw(sortingLayer, atlas, "alpha", false, this.#scratch));
+          sprites.push(registry.placeTile(sortingLayer, atlas, layer.orderInLayer, layerIndex, this.#scratch));
         }
       }
     }

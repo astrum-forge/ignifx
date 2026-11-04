@@ -262,6 +262,38 @@ describe("component-less sprites", () => {
   });
 });
 
+describe("tilemap tiles", () => {
+  it("gives each tilemap layer its own layer, ordered around the sprites by orderInLayer", async () => {
+    const rig = createRegistry();
+    const atlas = atlasAsset("a.json");
+    const scratch = createSpriteScratch();
+    writeScratch(scratch, 0, 0, 8, 8, 0, 0, 1, 1, 1, 1, false, false, true);
+    // Created in the worst order: the sprite first, then the front tile layer, then the back one.
+    rig.registry.place(await createSprite(), atlas, scratch);
+    const front = rig.registry.placeTile("Default", atlas, 1, 0, scratch);
+    const back = rig.registry.placeTile("Default", atlas, 0, 1, scratch);
+    expect(rig.registry.describe().map((entry) => entry.key)).toEqual([
+      back.key,
+      "Default|a.json|alpha|world",
+      front.key,
+    ]);
+    // Every layer stays inside the Default sorting layer's slice.
+    expect(rig.registry.describe().map((entry) => entry.layer.order)).toEqual([1000, 1001, 1002]);
+  });
+
+  it("shares the sprites' layer on a Y-sorted sorting layer", async () => {
+    const rig = createRegistry({ Default: true });
+    const atlas = atlasAsset("a.json");
+    const scratch = createSpriteScratch();
+    writeScratch(scratch, 0, 0, 8, 8, 0, 0, 1, 1, 1, 1, false, false, true);
+    rig.registry.place(await createSprite(), atlas, scratch);
+    const tile = rig.registry.placeTile("Default", atlas, 1, 0, scratch);
+    expect(tile.key).toBe("Default|a.json|alpha|world");
+    expect(rig.registry.describe()).toHaveLength(1);
+    expect(rig.registry.describe()[0]?.count).toBe(2);
+  });
+});
+
 describe("collection and teardown", () => {
   it("collects world layers only when asked", async () => {
     const rig = createRegistry();
