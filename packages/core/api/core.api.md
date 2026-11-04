@@ -682,6 +682,7 @@ export const CoreErrorCode: {
     readonly assetLoadFailed: "IGX-0505";
     readonly duplicateAssetLoader: "IGX-0506";
     readonly invalidMeshFile: "IGX-0507";
+    readonly decoderLeftOut: "IGX-0508";
     readonly nonFiniteNumber: "IGX-0601";
     readonly unresolvedReference: "IGX-0602";
     readonly unsupportedFormatVersion: "IGX-0603";

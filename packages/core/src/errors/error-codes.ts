@@ -206,6 +206,8 @@ export const CoreErrorCode = {
   duplicateAssetLoader: "IGX-0506",
   /** A `.mesh.json` file names an unknown primitive, or an option the primitive does not take or cannot use. */
   invalidMeshFile: "IGX-0507",
+  /** An asset needs a Lite decoder that `@ignifx/vite-plugin`'s `decoders` option left out of the build. */
+  decoderLeftOut: "IGX-0508",
   /** A serialized number was `NaN` or infinite. */
   nonFiniteNumber: "IGX-0601",
   /** A serialized `$entity`/`$component` reference could not be resolved. */
@@ -385,6 +387,7 @@ export const CORE_ERROR_MESSAGES: Readonly<Record<CoreErrorCode, string>> = {
   "IGX-0505": "Loading {asset} from {url} failed after {attempts} attempts.",
   "IGX-0506": "A loader for the asset type {type} is already registered.",
   "IGX-0507": "{file} is not a valid mesh file: {problem}",
+  "IGX-0508": "{asset} needs the {decoder} decoder, which the build left out.",
   "IGX-0601": "{field} must be a finite number.",
   "IGX-0602": "The reference {reference} in {scene} could not be resolved.",
   "IGX-0603": "{file} declares format version {version}, which this build cannot read.",

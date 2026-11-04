@@ -3,7 +3,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build, createServer } from "vite";
 import { afterAll, describe, expect, it } from "vitest";
-import { isLeftOutDecoder } from "../src/decoders.js";
+import { LEFT_OUT_DECODER_META_KEY, leftOutDecoderGroup } from "../src/decoders.js";
 import { ignifx } from "../src/plugin.js";
 import { createFixtureTree, disposeFixtures } from "./support/fixtures.js";
 import type { AssetManifest } from "../src/manifest.js";
@@ -95,7 +95,10 @@ describe("Lite's decoders in a vite build", () => {
     const allOff = { draco: false, meshopt: false, ktx2: false };
     // Every file core declares belongs to a group, so turning all three off leaves nothing behind.
     for (const fileName of files) {
-      expect(isLeftOutDecoder({ packageName: "@ignifx/core", fileName, filePath: "" }, allOff), fileName).toBe(true);
+      expect(
+        leftOutDecoderGroup({ packageName: "@ignifx/core", fileName, filePath: "" }, allOff),
+        fileName,
+      ).not.toBeNull();
     }
 
     const root = await projectWithCore();
@@ -111,7 +114,11 @@ describe("Lite's decoders in a vite build", () => {
     const built = await readdir(join(outDir, "assets"));
     for (const file of ["draco_decoder.js", "draco_decoder_gltf.wasm"]) {
       expect(built, file).not.toContain(file);
-      expect(manifest.entries.some((entry) => entry.address === file)).toBe(false);
+      // Still listed, at a local URL that serves nothing, and marked so core's loaders fail with
+      // IGX-0508 instead of letting Lite fetch the decoder from its CDN or the page root.
+      const entry = manifest.entries.find((candidate) => candidate.address === file);
+      expect(entry?.url).toBe(`/assets/${file}`);
+      expect(entry?.meta?.[LEFT_OUT_DECODER_META_KEY]).toBe("draco");
     }
     expect(built).toContain("meshopt_decoder.js");
     expect(manifest.entries.some((entry) => entry.address === "babylon.ktx2Decoder.js")).toBe(true);

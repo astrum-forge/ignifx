@@ -1,5 +1,5 @@
 import { loadGltfFromBytes } from "../../lite/gpu/gltf.js";
-import { configureDecoders } from "../decoder-urls.js";
+import { assertModelDecodersIncluded, configureDecoders } from "../decoder-urls.js";
 import { createModelAsset, MODEL_ASSET_TYPE, MODEL_FILE_EXTENSIONS } from "../model-asset.js";
 import type { AssetLoader, LoaderContext } from "../../assets/types.js";
 import type { ModelAsset } from "../model-asset.js";
@@ -56,6 +56,7 @@ export function createModelLoader(): AssetLoader<ModelAsset> {
     extensions: MODEL_FILE_EXTENSIONS,
     async load(ctx: LoaderContext): Promise<ModelAsset> {
       const bytes = await ctx.fetchBytes();
+      assertModelDecodersIncluded(ctx.app, ctx.address, bytes);
       if (ctx.app.isHeadless) {
         return createModelAsset(ctx.address, null, null);
       }

@@ -1,5 +1,5 @@
 import { loadBasisTexture, loadKtx2Texture, loadTexture } from "../../lite/gpu/texture.js";
-import { configureDecoders } from "../decoder-urls.js";
+import { assertDecoderIncluded, configureDecoders } from "../decoder-urls.js";
 import { readTextureImportOptions, TEXTURE_ASSET_TYPE, TextureAsset, toLiteTextureOptions } from "../texture-asset.js";
 import type { AssetLoader, LoaderContext } from "../../assets/types.js";
 import type { LiteTexture2D, LiteTexture2DOptions } from "../../lite/gpu/texture.js";
@@ -55,12 +55,15 @@ export function createTextureLoader(): AssetLoader<TextureAsset> {
     extensions: [".png", ".jpg", ".jpeg", ".webp", ".ktx2", ".basis"],
     async load(ctx: LoaderContext): Promise<TextureAsset> {
       const options = readTextureImportOptions(ctx.meta);
+      const container = textureContainerOf(ctx.address, ctx.url);
+      if (container === "ktx2") {
+        assertDecoderIncluded(ctx.app, ctx.address, "ktx2");
+      }
       if (ctx.app.isHeadless) {
         // §5: "a loader must tolerate the null engine (return CPU-only data with `gpu: null`)".
         return new TextureAsset(ctx.address, null, options);
       }
       ctx.reportProgress(0);
-      const container = textureContainerOf(ctx.address, ctx.url);
       if (container !== "image") {
         await configureDecoders(ctx.app);
       }
