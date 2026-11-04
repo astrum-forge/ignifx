@@ -3239,6 +3239,7 @@ The parameters of `setTilemapCells`.
 
 The tilemap document's asset address, as a `Tilemap`'s `map` reference names it
 (`"levels/level-1.tilemap.json"`). Every `Tilemap` of the open scene loaded from it is written.
+At most 256 code units.
 
 ##### cells
 
@@ -3253,7 +3254,7 @@ Applied in order, so a cell named twice ends with the later tile. At most
 
 > `readonly` **layer**: `string` \| `number`
 
-The layer: its name in the document, or its index (`0` at the back).
+The layer: its name in the document (at most 256 code units), or its index (`0` at the back).
 
 ***
 
@@ -6707,8 +6708,8 @@ The received `params`.
 
 `value is SetTilemapCellsParams`
 
-True for a non-empty `asset`, a layer name or index, and an even-length list of at most
-[TILEMAP\_CELLS\_MAX\_NUMBERS](#tilemap_cells_max_numbers) non-negative integers.
+True for a non-empty `asset` and a layer name or index, each name at most 256 code
+units, and an even-length list of at most [TILEMAP\_CELLS\_MAX\_NUMBERS](#tilemap_cells_max_numbers) non-negative integers.
 
 ***
 
