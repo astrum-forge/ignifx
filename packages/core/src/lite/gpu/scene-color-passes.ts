@@ -22,10 +22,12 @@ import type { EngineContext, RenderTarget, SceneContext, Task } from "@babylonjs
  *
  * `S` is the presenter's {@link ScenePresenter.scenePass} target: `sceneColor` on the plain path,
  * the linear `rgba16float` target under `rendering.hdr`, so the passes see linear colour ahead of
- * the output pass there. Lite's composite cannot write its own source, so the passes ping-pong
- * between `S` and one scratch target of the same format, and a copy brings an odd count back into
- * `S`. Every task sits right after the scene task, ahead of the present blit, the HDR output pass
- * and a `PostProcessStack` chain alike, which therefore need no change.
+ * the output pass there. Lite's composite cannot write its own source, so under HDR the passes
+ * ping-pong between `S` and one scratch target of the same format, and a copy brings an odd count
+ * back into `S`. On the plain path no pass may write `S` (`ScenePass.isTargetWritable` in `./render-path.ts`): the
+ * passes ping-pong between two scratch targets and the copy always runs. Every task sits right after
+ * the scene task, ahead of the present blit, the HDR output pass and a `PostProcessStack` chain
+ * alike, which therefore need no change.
  */
 
 /**
@@ -75,19 +77,26 @@ export function installSceneColorPasses(
   passes: readonly SceneColorPass[],
   isFrameGraphBuilt: boolean,
 ): InstalledSceneColorPasses {
-  const { task: sceneTask, target: sceneTarget, format } = presenter.scenePass;
-  const scratch = createRenderTarget({ lbl: "ignifx:scene-color-scratch", format, samples: 1, size: engine });
+  const { task: sceneTask, target: sceneTarget, format, isTargetWritable } = presenter.scenePass;
+  const scratches: RenderTarget[] = [];
   const tasks: Task[] = [];
   let source = sceneTarget;
   for (const pass of passes) {
-    const target = source === sceneTarget ? scratch : sceneTarget;
+    const target = sceneColorPassTarget(source, sceneTarget, isTargetWritable, scratches, (index) =>
+      createRenderTarget({
+        lbl: index === 0 ? "ignifx:scene-color-scratch" : "ignifx:scene-color-scratch-2",
+        format,
+        samples: 1,
+        size: engine,
+      }),
+    );
     tasks.push(pass.create(source, target));
     source = target;
   }
   if (source !== sceneTarget) {
     tasks.push(
       createCopyToTextureTask(
-        { name: "ignifx:scene-color-copy", sourceTexture: scratch, targetTexture: sceneTarget },
+        { name: "ignifx:scene-color-copy", sourceTexture: source, targetTexture: sceneTarget },
         engine,
         scene,
       ),
@@ -122,7 +131,41 @@ export function installSceneColorPasses(
         }
         task.dispose();
       }
-      disposeRenderTarget(scratch);
+      for (const scratch of scratches) {
+        disposeRenderTarget(scratch);
+      }
     },
   };
+}
+
+/**
+ * Picks where the next scene-colour pass writes: back into the scene target when that is allowed
+ * and the pass does not read it, otherwise the scratch target the pass does not read.
+ *
+ * @param source - What the pass reads.
+ * @param sceneTarget - The scene's colour target.
+ * @param isTargetWritable - Whether a pass may write `sceneTarget` (`ScenePass.isTargetWritable` in `./render-path.ts`).
+ * @param scratches - The scratch targets made so far; a new one is appended when needed.
+ * @param createScratch - Makes the scratch target at an index, 0 or 1.
+ * @returns The target, never `source`.
+ *
+ * @internal
+ */
+export function sceneColorPassTarget<T>(
+  source: T,
+  sceneTarget: T,
+  isTargetWritable: boolean,
+  scratches: T[],
+  createScratch: (index: number) => T,
+): T {
+  if (source !== sceneTarget && isTargetWritable) {
+    return sceneTarget;
+  }
+  const index = source === scratches[0] ? 1 : 0;
+  let scratch = scratches[index];
+  if (scratch === undefined) {
+    scratch = createScratch(index);
+    scratches[index] = scratch;
+  }
+  return scratch;
 }

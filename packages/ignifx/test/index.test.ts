@@ -4,6 +4,30 @@ import * as barrel from "../src/index.js";
 
 // The full value surface of @ignifx/core. Types carry no runtime key, so they are not listed.
 const expectedExports = [
+  "addComponentFromRecord",
+  "AMBIENT_OCCLUSION_QUALITIES",
+  "applyOverridesToAsset",
+  "createLightProbeAsset",
+  "createLightProbeLoader",
+  "defaultAutoExposureSettings",
+  "describeLightProbeFileFormat",
+  "EDITOR_ONLY_METADATA_KEY",
+  "instanceComponentAt",
+  "instanceEntityAt",
+  "LIGHT_PROBE_ASSET_TYPE",
+  "LIGHT_PROBE_FILE_EXTENSIONS",
+  "LIGHT_PROBE_FILE_FORMAT",
+  "LIGHT_PROBE_FORMAT_VERSION",
+  "LightProbeAsset",
+  "LightProbeVolume",
+  "loadSceneDependencies",
+  "REFLECTION_PROBE_REFRESH_MODES",
+  "ReflectionProbe",
+  "RENDER_TEXTURE_MAX_SIZE",
+  "RENDERING_QUALITIES",
+  "revertOverrides",
+  "sampleLightProbes",
+  "writeLightProbeFile",
   "applyInit",
   "approximately",
   "array",
@@ -480,6 +504,7 @@ const expectedPhysics2DExports = [
 
 // The @ignifx/2d value surface (same VERSION/describeSchemas rule as the other extensions).
 const expectedTwoDExports = [
+  "spriteClipFrameAtTime",
   "Camera2D",
   "Camera2DFollow",
   "DEFAULT_CHUNK_SIZE",

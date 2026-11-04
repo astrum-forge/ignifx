@@ -250,7 +250,7 @@ The layer `play` and `currentState` default to; empty means the document's base 
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -331,7 +331,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -444,7 +444,7 @@ The animation manager, or `null` under a headless app or before the model loaded
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -452,7 +452,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -461,7 +461,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -474,13 +474,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **onEvent**(): [`Signal`](#signal-3)\<`string`\>
+> **get** **onEvent**(): [`Signal`](#signal-5)\<`string`\>
 
 Fires with the name of every animation event the playing states cross.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<`string`\>
+[`Signal`](#signal-5)\<`string`\>
 
 Fires with the name of every animation event the playing states cross.
 
@@ -488,13 +488,13 @@ Fires with the name of every animation event the playing states cross.
 
 ###### Get Signature
 
-> **get** **onStateEntered**(): [`Signal`](#signal-3)\<`string`\>
+> **get** **onStateEntered**(): [`Signal`](#signal-5)\<`string`\>
 
 Fires with a state's name each time a layer enters it.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<`string`\>
+[`Signal`](#signal-5)\<`string`\>
 
 Fires with a state's name each time a layer enters it.
 
@@ -502,13 +502,13 @@ Fires with a state's name each time a layer enters it.
 
 ###### Get Signature
 
-> **get** **onStateExited**(): [`Signal`](#signal-3)\<`string`\>
+> **get** **onStateExited**(): [`Signal`](#signal-5)\<`string`\>
 
 Fires with a state's name each time a layer leaves it, after any crossfade has finished.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<`string`\>
+[`Signal`](#signal-5)\<`string`\>
 
 Fires with a state's name each time a layer leaves it, after any crossfade has finished.
 
@@ -530,13 +530,13 @@ The machine.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -566,13 +566,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -2069,7 +2069,7 @@ Creates a component. The engine constructs components; game code never calls `ne
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`constructor`](#constructor-95)
+[`Script`](#abstract-script).[`constructor`](#constructor-97)
 
 #### Properties
 
@@ -2087,7 +2087,7 @@ What the component does, in one line, for an inspector.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations (ADR-0004). A listener has none: which listener is active is
 decided by which one is enabled, and a scene file records that on the component itself.
@@ -2116,7 +2116,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-49)
+[`Script`](#abstract-script).[`app`](#app-51)
 
 ##### enabled
 
@@ -2151,7 +2151,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-61)
+[`Script`](#abstract-script).[`enabled`](#enabled-66)
 
 ##### entity
 
@@ -2169,7 +2169,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-50)
+[`Script`](#abstract-script).[`entity`](#entity-52)
 
 ##### handle
 
@@ -2187,7 +2187,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-45)
+[`Script`](#abstract-script).[`handle`](#handle-47)
 
 ##### isDestroyed
 
@@ -2207,7 +2207,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-47)
 
 ##### isEnabledInHierarchy
 
@@ -2225,13 +2225,13 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-46)
 
 ##### onDestroyed
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -2239,7 +2239,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -2248,14 +2248,14 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-47)
 
 ##### spatialTarget
 
@@ -2276,19 +2276,19 @@ The entity's Lite node, which exposes the `worldMatrix` a `SpatialTarget` needs.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-46)
+[`Script`](#abstract-script).[`transform`](#transform-48)
 
 ##### uid
 
@@ -2306,25 +2306,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-49)
+[`Script`](#abstract-script).[`uid`](#uid-51)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-48)
+[`Script`](#abstract-script).[`world`](#world-50)
 
 #### Methods
 
@@ -2372,7 +2372,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-44)
+[`Script`](#abstract-script).[`define`](#define-46)
 
 ##### destroy()
 
@@ -2388,7 +2388,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-45)
+[`Script`](#abstract-script).[`destroy`](#destroy-47)
 
 ##### getComponent()
 
@@ -2420,7 +2420,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-47)
 
 ##### onDisable()
 
@@ -2485,7 +2485,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-47)
 
 ##### startCoroutine()
 
@@ -3213,7 +3213,7 @@ Applies the schema defaults, exactly as `Script.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-95)
+[`Script`](#abstract-script).[`constructor`](#constructor-97)
 
 #### Properties
 
@@ -3297,7 +3297,7 @@ How steeply the sound falls off with distance.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations (ADR-0004).
 
@@ -3337,7 +3337,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-49)
+[`Script`](#abstract-script).[`app`](#app-51)
 
 ##### enabled
 
@@ -3372,7 +3372,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-61)
+[`Script`](#abstract-script).[`enabled`](#enabled-66)
 
 ##### entity
 
@@ -3390,7 +3390,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-50)
+[`Script`](#abstract-script).[`entity`](#entity-52)
 
 ##### handle
 
@@ -3408,7 +3408,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-45)
+[`Script`](#abstract-script).[`handle`](#handle-47)
 
 ##### instance
 
@@ -3456,7 +3456,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-47)
 
 ##### isEnabledInHierarchy
 
@@ -3474,7 +3474,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-46)
 
 ##### isPlaying
 
@@ -3494,7 +3494,7 @@ Whether the source is making a sound.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -3502,7 +3502,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -3511,14 +3511,14 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-47)
 
 ##### onEnded
 
@@ -3539,19 +3539,19 @@ The signal.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-46)
+[`Script`](#abstract-script).[`transform`](#transform-48)
 
 ##### uid
 
@@ -3569,25 +3569,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-49)
+[`Script`](#abstract-script).[`uid`](#uid-51)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-48)
+[`Script`](#abstract-script).[`world`](#world-50)
 
 #### Methods
 
@@ -3649,7 +3649,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-44)
+[`Script`](#abstract-script).[`define`](#define-46)
 
 ##### destroy()
 
@@ -3665,7 +3665,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-45)
+[`Script`](#abstract-script).[`destroy`](#destroy-47)
 
 ##### getComponent()
 
@@ -3697,7 +3697,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-47)
 
 ##### onDestroy()
 
@@ -3846,7 +3846,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-47)
 
 ##### resume()
 
@@ -4026,7 +4026,7 @@ Whether the billboard is free or locked upright.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -4095,7 +4095,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -4175,7 +4175,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -4183,7 +4183,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -4192,7 +4192,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -4205,13 +4205,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -4241,13 +4241,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -4423,7 +4423,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system-1).[`name`](#name-65)
+[`System`](#system-1).[`name`](#name-67)
 
 #### Methods
 
@@ -4701,7 +4701,7 @@ A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inline
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations (ADR-0004).
 
@@ -4768,7 +4768,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`enabled`](#enabled-17)
+[`Collider`](#abstract-collider).[`enabled`](#enabled-19)
 
 ##### entity
 
@@ -4848,7 +4848,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -4856,7 +4856,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -4865,7 +4865,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -4878,13 +4878,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -4914,13 +4914,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -5356,7 +5356,7 @@ How this surface's restitution combines with the one it touches.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations (ADR-0004).
 
@@ -5423,7 +5423,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Collider2D`](#abstract-collider2d).[`enabled`](#enabled-18)
+[`Collider2D`](#abstract-collider2d).[`enabled`](#enabled-20)
 
 ##### entity
 
@@ -5503,7 +5503,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -5511,7 +5511,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -5520,7 +5520,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -5533,13 +5533,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -5569,13 +5569,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -5904,7 +5904,7 @@ What the component does, in one line, for an inspector.
 
 ##### renderTarget
 
-> **renderTarget**: `RenderTexture` \| `null`
+> **renderTarget**: [`RenderTexture`](#rendertexture) \| `null`
 
 **`Beta`**
 
@@ -5928,7 +5928,7 @@ const pixels = await minimap.readPixels();
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations (ADR-0004).
 
@@ -6011,7 +6011,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -6110,7 +6110,7 @@ The camera, or `null` before the component is attached.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -6118,7 +6118,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -6127,7 +6127,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -6140,13 +6140,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -6176,13 +6176,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -6675,7 +6675,7 @@ The design resolution a pixel-perfect camera fits an integer zoom to, in pixels.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -6752,7 +6752,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -6832,7 +6832,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -6840,7 +6840,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -6849,7 +6849,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -6862,13 +6862,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -6912,13 +6912,13 @@ A read-only view of the size.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -7183,7 +7183,7 @@ Creates a component. The engine constructs components; game code never calls `ne
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`constructor`](#constructor-95)
+[`Script`](#abstract-script).[`constructor`](#constructor-97)
 
 #### Properties
 
@@ -7217,7 +7217,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-49)
+[`Script`](#abstract-script).[`app`](#app-51)
 
 ##### enabled
 
@@ -7252,7 +7252,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-61)
+[`Script`](#abstract-script).[`enabled`](#enabled-66)
 
 ##### entity
 
@@ -7270,7 +7270,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-50)
+[`Script`](#abstract-script).[`entity`](#entity-52)
 
 ##### handle
 
@@ -7288,7 +7288,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-45)
+[`Script`](#abstract-script).[`handle`](#handle-47)
 
 ##### isDestroyed
 
@@ -7308,7 +7308,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-47)
 
 ##### isEnabledInHierarchy
 
@@ -7326,13 +7326,13 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-46)
 
 ##### onDestroyed
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -7340,7 +7340,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -7349,32 +7349,32 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-47)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-46)
+[`Script`](#abstract-script).[`transform`](#transform-48)
 
 ##### uid
 
@@ -7392,25 +7392,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-49)
+[`Script`](#abstract-script).[`uid`](#uid-51)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-48)
+[`Script`](#abstract-script).[`world`](#world-50)
 
 #### Methods
 
@@ -7468,7 +7468,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-44)
+[`Script`](#abstract-script).[`define`](#define-46)
 
 ##### destroy()
 
@@ -7484,7 +7484,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-45)
+[`Script`](#abstract-script).[`destroy`](#destroy-47)
 
 ##### getComponent()
 
@@ -7516,7 +7516,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-47)
 
 ##### lateUpdate()
 
@@ -7577,7 +7577,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-47)
 
 ##### startCoroutine()
 
@@ -7773,7 +7773,7 @@ A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inline
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations.
 
@@ -7836,7 +7836,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`enabled`](#enabled-17)
+[`Collider`](#abstract-collider).[`enabled`](#enabled-19)
 
 ##### entity
 
@@ -7916,7 +7916,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -7924,7 +7924,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -7933,7 +7933,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -7946,13 +7946,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -7982,13 +7982,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -8436,7 +8436,7 @@ How this surface's restitution combines with the one it touches.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations.
 
@@ -8499,7 +8499,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Collider2D`](#abstract-collider2d).[`enabled`](#enabled-18)
+[`Collider2D`](#abstract-collider2d).[`enabled`](#enabled-20)
 
 ##### entity
 
@@ -8579,7 +8579,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -8587,7 +8587,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -8596,7 +8596,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -8609,13 +8609,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -8645,13 +8645,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -8972,7 +8972,7 @@ What the component does, in one line, for an inspector.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations (ADR-0004).
 
@@ -9043,7 +9043,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -9151,13 +9151,13 @@ Whether the character is standing on a walkable surface.
 
 ###### Get Signature
 
-> **get** **onCollided**(): [`Signal`](#signal-3)\<[`CharacterCollision`](#charactercollision)\>
+> **get** **onCollided**(): [`Signal`](#signal-5)\<[`CharacterCollision`](#charactercollision)\>
 
 Emitted once per dynamic body the character pushed during a step.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`CharacterCollision`](#charactercollision)\>
+[`Signal`](#signal-5)\<[`CharacterCollision`](#charactercollision)\>
 
 The signal, created on first access.
 
@@ -9165,7 +9165,7 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -9173,7 +9173,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -9182,7 +9182,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -9209,13 +9209,13 @@ How the character was supported at the end of the last step.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -9259,13 +9259,13 @@ A freshly allocated vector.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -9632,7 +9632,7 @@ What the component does, in one line, for an inspector.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations (ADR-0004).
 
@@ -9715,7 +9715,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -9823,7 +9823,7 @@ Rapier's `computedGrounded` from the last move.
 
 ###### Get Signature
 
-> **get** **onCollided**(): [`Signal`](#signal-3)\<[`CharacterCollision2D`](#charactercollision2d)\>
+> **get** **onCollided**(): [`Signal`](#signal-5)\<[`CharacterCollision2D`](#charactercollision2d)\>
 
 Emitted once per obstacle the character hit during a step.
 
@@ -9834,7 +9834,7 @@ never appears here. Listen for `onTriggerEnter`/`onTriggerExit` on the entity's 
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`CharacterCollision2D`](#charactercollision2d)\>
+[`Signal`](#signal-5)\<[`CharacterCollision2D`](#charactercollision2d)\>
 
 The signal, created on first access.
 
@@ -9842,7 +9842,7 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -9850,7 +9850,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -9859,7 +9859,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -9872,13 +9872,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -9922,13 +9922,13 @@ A freshly allocated vector in metres per second.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -10304,7 +10304,7 @@ How this surface's restitution combines with the one it touches.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations.
 
@@ -10367,7 +10367,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Collider2D`](#abstract-collider2d).[`enabled`](#enabled-18)
+[`Collider2D`](#abstract-collider2d).[`enabled`](#enabled-20)
 
 ##### entity
 
@@ -10447,7 +10447,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -10455,7 +10455,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -10464,7 +10464,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -10477,13 +10477,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -10513,13 +10513,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -10893,7 +10893,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -10973,7 +10973,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -10981,7 +10981,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -10990,7 +10990,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -11003,13 +11003,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -11039,13 +11039,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -11430,7 +11430,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -11510,7 +11510,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -11518,7 +11518,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -11527,7 +11527,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -11540,13 +11540,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -11576,13 +11576,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -12579,7 +12579,9 @@ class Health extends Component.define({ maximum: f32(100) }) {
 - [`Model`](#model)
 - [`PostProcessStack`](#postprocessstack)
 - [`Script`](#abstract-script)
-- [`Transform`](#transform-59)
+- [`Transform`](#transform-61)
+- [`LightProbeVolume`](#lightprobevolume)
+- [`ReflectionProbe`](#reflectionprobe)
 - [`InstancedMeshRenderer`](#instancedmeshrenderer)
 - [`PlayerInput`](#playerinput)
 - [`CharacterController`](#charactercontroller)
@@ -12717,7 +12719,7 @@ Whether the owner has already been destroyed.
 
 ###### Implementation of
 
-[`SignalOwner`](#signalowner).[`isDestroyed`](#isdestroyed-46)
+[`SignalOwner`](#signalowner).[`isDestroyed`](#isdestroyed-48)
 
 ##### isEnabledInHierarchy
 
@@ -12737,7 +12739,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -12745,7 +12747,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -12754,26 +12756,26 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
 
 ###### Implementation of
 
-[`SignalOwner`](#signalowner).[`onDestroyed`](#ondestroyed-46)
+[`SignalOwner`](#signalowner).[`onDestroyed`](#ondestroyed-48)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -12795,13 +12797,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -13480,7 +13482,7 @@ A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inline
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations.
 
@@ -13543,7 +13545,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`enabled`](#enabled-17)
+[`Collider`](#abstract-collider).[`enabled`](#enabled-19)
 
 ##### entity
 
@@ -13623,7 +13625,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -13631,7 +13633,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -13640,7 +13642,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -13653,13 +13655,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -13689,13 +13691,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -14425,7 +14427,7 @@ worth knowing: when the group already exists it is returned **as it was register
 `counterNames` is ignored rather than merged — Lite-style counter arrays are indexed, and
 growing one under a subsystem that already holds indices into it would silently renumber its
 counters. A caller that then asks for a counter the first registration did not declare gets
-`IGX-1504` from [DiagnosticsGroup.index](#index-1), which names the group and the counter.
+`IGX-1504` from [DiagnosticsGroup.index](#index-2), which names the group and the counter.
 
 ###### Example
 
@@ -14523,7 +14525,7 @@ The counter names, in the order their indices are assigned.
 
 [`DiagnosticsGroup`](#diagnosticsgroup-1)
 
-The group, whose indices are resolved once with [DiagnosticsGroup.index](#index-1).
+The group, whose indices are resolved once with [DiagnosticsGroup.index](#index-2).
 
 ###### Remarks
 
@@ -14857,7 +14859,7 @@ How this surface's restitution combines with the one it touches.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations.
 
@@ -14920,7 +14922,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Collider2D`](#abstract-collider2d).[`enabled`](#enabled-18)
+[`Collider2D`](#abstract-collider2d).[`enabled`](#enabled-20)
 
 ##### entity
 
@@ -15000,7 +15002,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -15008,7 +15010,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -15017,7 +15019,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -15030,13 +15032,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -15066,13 +15068,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -15362,7 +15364,7 @@ The identifier that appears in error context.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`name`](#name-60)
+[`StorageBackend`](#storagebackend).[`name`](#name-62)
 
 #### Methods
 
@@ -15829,14 +15831,14 @@ The name.
 
 ###### Get Signature
 
-> **get** **onActiveChanged**(): [`Signal`](#signal-3)\<`boolean`\>
+> **get** **onActiveChanged**(): [`Signal`](#signal-5)\<`boolean`\>
 
 Emitted with the new value when the entity's **own** active flag changes. An ancestor's change
 does not emit it; read `activeInHierarchy` for the effective state.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<`boolean`\>
+[`Signal`](#signal-5)\<`boolean`\>
 
 The signal, created on first access.
 
@@ -15844,13 +15846,13 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onChildAdded**(): [`Signal`](#signal-3)\<[`Entity`](#entity-19)\>
+> **get** **onChildAdded**(): [`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
 
 Emitted after a child is added, whether by creation or by reparenting.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Entity`](#entity-19)\>
+[`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
 
 The signal, created on first access.
 
@@ -15858,13 +15860,13 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onChildRemoved**(): [`Signal`](#signal-3)\<[`Entity`](#entity-19)\>
+> **get** **onChildRemoved**(): [`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
 
 Emitted after a child is removed.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Entity`](#entity-19)\>
+[`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
 
 The signal, created on first access.
 
@@ -15872,7 +15874,7 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onComponentAdded**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onComponentAdded**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted with each component attached to this entity, synchronously at the end of
 `addComponent`, after the component's `onAttach` has run
@@ -15882,7 +15884,7 @@ than polling `entity.components`. Costs nothing until something connects.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal, created on first access.
 
@@ -15890,7 +15892,7 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onComponentRemoved**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onComponentRemoved**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted with each component the destroy flush removes from this entity, after it has left
 `entity.components` and before its `onDetach` runs. Removal is deferred, so this fires in the
@@ -15898,7 +15900,7 @@ destroy flush rather than inside `removeComponent`.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal, created on first access.
 
@@ -15906,14 +15908,14 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Entity`](#entity-19)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
 
 Emitted in the destroy flush, after the entity's components have run `onDestroy`. `Signal`'s
 `{ owner }` option uses it to detach handlers automatically.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Entity`](#entity-19)\>
+[`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
 
 The signal, created on first access.
 
@@ -15921,13 +15923,13 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onParentChanged**(): [`Signal`](#signal-3)\<[`Entity`](#entity-19) \| `null`\>
+> **get** **onParentChanged**(): [`Signal`](#signal-5)\<[`Entity`](#entity-19) \| `null`\>
 
 Emitted with the new parent after this entity is reparented.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Entity`](#entity-19) \| `null`\>
+[`Signal`](#signal-5)\<[`Entity`](#entity-19) \| `null`\>
 
 The signal, created on first access.
 
@@ -16009,13 +16011,13 @@ The tag set.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform. Every entity has one; it can be neither removed nor disabled.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The transform.
 
@@ -16037,13 +16039,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world that owns the entity.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -16608,13 +16610,13 @@ What the component does, in one line, for an inspector.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations (ADR-0004).
 
 ##### skybox
 
-> **skybox**: `EnvironmentSkyboxSettings`
+> **skybox**: [`EnvironmentSkyboxSettings`](#environmentskyboxsettings)
 
 ##### typeId
 
@@ -16675,7 +16677,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -16776,7 +16778,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -16784,7 +16786,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -16793,7 +16795,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -16806,13 +16808,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -16842,13 +16844,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -17127,7 +17129,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-95)
+[`Script`](#abstract-script).[`constructor`](#constructor-97)
 
 #### Properties
 
@@ -17241,7 +17243,7 @@ The `CharacterController` this drives.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -17317,7 +17319,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-49)
+[`Script`](#abstract-script).[`app`](#app-51)
 
 ##### enabled
 
@@ -17352,7 +17354,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-61)
+[`Script`](#abstract-script).[`enabled`](#enabled-66)
 
 ##### entity
 
@@ -17370,7 +17372,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-50)
+[`Script`](#abstract-script).[`entity`](#entity-52)
 
 ##### handle
 
@@ -17388,7 +17390,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-45)
+[`Script`](#abstract-script).[`handle`](#handle-47)
 
 ##### isCrouched
 
@@ -17422,7 +17424,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-47)
 
 ##### isEnabledInHierarchy
 
@@ -17440,7 +17442,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-46)
 
 ##### isGrounded
 
@@ -17474,7 +17476,7 @@ Whether the sprint action is held and the character is moving.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -17482,7 +17484,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -17491,14 +17493,14 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-47)
 
 ##### pitch
 
@@ -17532,19 +17534,19 @@ The character's horizontal speed this step.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-46)
+[`Script`](#abstract-script).[`transform`](#transform-48)
 
 ##### uid
 
@@ -17562,7 +17564,7 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-49)
+[`Script`](#abstract-script).[`uid`](#uid-51)
 
 ##### verticalVelocity
 
@@ -17582,19 +17584,19 @@ The character's vertical speed, positive upwards.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-48)
+[`Script`](#abstract-script).[`world`](#world-50)
 
 ##### yaw
 
@@ -17666,7 +17668,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-44)
+[`Script`](#abstract-script).[`define`](#define-46)
 
 ##### destroy()
 
@@ -17682,7 +17684,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-45)
+[`Script`](#abstract-script).[`destroy`](#destroy-47)
 
 ##### fixedUpdate()
 
@@ -17732,7 +17734,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-47)
 
 ##### onDisable()
 
@@ -17789,7 +17791,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-47)
 
 ##### startCoroutine()
 
@@ -19844,7 +19846,7 @@ A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inline
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations.
 
@@ -19911,7 +19913,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`enabled`](#enabled-17)
+[`Collider`](#abstract-collider).[`enabled`](#enabled-19)
 
 ##### entity
 
@@ -19991,7 +19993,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -19999,7 +20001,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -20008,7 +20010,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -20021,13 +20023,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -20057,13 +20059,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -20640,7 +20642,7 @@ Builds a HUD label with the schema's defaults.
 
 ###### Overrides
 
-[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-108)
+[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-110)
 
 #### Properties
 
@@ -20756,7 +20758,7 @@ The offset from the anchor, in render-target pixels; x grows right, y grows down
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -20794,7 +20796,7 @@ The app.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`app`](#app-56)
+[`TextComponent`](#abstract-textcomponent).[`app`](#app-58)
 
 ##### enabled
 
@@ -20829,7 +20831,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-73)
+[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-79)
 
 ##### entity
 
@@ -20847,7 +20849,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-59)
+[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-61)
 
 ##### handle
 
@@ -20865,7 +20867,7 @@ The handle.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`handle`](#handle-52)
+[`TextComponent`](#abstract-textcomponent).[`handle`](#handle-54)
 
 ##### isDestroyed
 
@@ -20885,7 +20887,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`isDestroyed`](#isdestroyed-53)
+[`TextComponent`](#abstract-textcomponent).[`isDestroyed`](#isdestroyed-55)
 
 ##### isEnabledInHierarchy
 
@@ -20903,7 +20905,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`isEnabledInHierarchy`](#isenabledinhierarchy-51)
+[`TextComponent`](#abstract-textcomponent).[`isEnabledInHierarchy`](#isenabledinhierarchy-53)
 
 ##### lite
 
@@ -20959,7 +20961,7 @@ The size.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -20967,7 +20969,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -20976,32 +20978,32 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`onDestroyed`](#ondestroyed-53)
+[`TextComponent`](#abstract-textcomponent).[`onDestroyed`](#ondestroyed-55)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`transform`](#transform-53)
+[`TextComponent`](#abstract-textcomponent).[`transform`](#transform-55)
 
 ##### uid
 
@@ -21019,25 +21021,25 @@ The identifier.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`uid`](#uid-56)
+[`TextComponent`](#abstract-textcomponent).[`uid`](#uid-58)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`world`](#world-56)
+[`TextComponent`](#abstract-textcomponent).[`world`](#world-58)
 
 #### Methods
 
@@ -21090,7 +21092,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`define`](#define-51)
+[`TextComponent`](#abstract-textcomponent).[`define`](#define-53)
 
 ##### destroy()
 
@@ -21106,7 +21108,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`destroy`](#destroy-52)
+[`TextComponent`](#abstract-textcomponent).[`destroy`](#destroy-54)
 
 ##### getComponent()
 
@@ -21138,7 +21140,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`getComponent`](#getcomponent-52)
+[`TextComponent`](#abstract-textcomponent).[`getComponent`](#getcomponent-54)
 
 ##### onDetach()
 
@@ -21189,7 +21191,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`requireComponent`](#requirecomponent-52)
+[`TextComponent`](#abstract-textcomponent).[`requireComponent`](#requirecomponent-54)
 
 ##### resolveText()
 
@@ -21564,7 +21566,7 @@ The identifier that appears in error context.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`name`](#name-60)
+[`StorageBackend`](#storagebackend).[`name`](#name-62)
 
 #### Methods
 
@@ -21634,7 +21636,7 @@ Closes the connection. The next call opens a new one.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`dispose`](#dispose-26)
+[`StorageBackend`](#storagebackend).[`dispose`](#dispose-30)
 
 ##### get()
 
@@ -21816,19 +21818,19 @@ The action name game code asks for.
 
 ##### onCanceled
 
-> `readonly` **onCanceled**: [`Signal`](#signal-3)\<[`InputActionEvent`](#inputactionevent)\>
+> `readonly` **onCanceled**: [`Signal`](#signal-5)\<[`InputActionEvent`](#inputactionevent)\>
 
 Emitted the frame the action returns to rest.
 
 ##### onPerformed
 
-> `readonly` **onPerformed**: [`Signal`](#signal-3)\<[`InputActionEvent`](#inputactionevent)\>
+> `readonly` **onPerformed**: [`Signal`](#signal-5)\<[`InputActionEvent`](#inputactionevent)\>
 
 Emitted when the action is pressed and whenever its value changes while actuated.
 
 ##### onStarted
 
-> `readonly` **onStarted**: [`Signal`](#signal-3)\<[`InputActionEvent`](#inputactionevent)\>
+> `readonly` **onStarted**: [`Signal`](#signal-5)\<[`InputActionEvent`](#inputactionevent)\>
 
 Emitted the frame the action is first actuated.
 
@@ -23180,7 +23182,7 @@ The `lod` partner needs it: with culling off the partner draws nothing (`IGX-072
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations (ADR-0004).
 
@@ -23257,7 +23259,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -23367,7 +23369,7 @@ The instanced mesh and its LOD partner, either of which may be `null`.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -23375,7 +23377,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -23384,7 +23386,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -23397,13 +23399,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -23433,13 +23435,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -24387,7 +24389,7 @@ What the component does, in one line, for an inspector.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations (ADR-0004).
 
@@ -24466,7 +24468,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -24584,7 +24586,7 @@ The light and its shadow generator, either of which may be `null`.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -24592,7 +24594,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -24601,7 +24603,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -24614,13 +24616,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -24650,13 +24652,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -24796,6 +24798,505 @@ Removes the light from the scene and releases its shadow generator.
 ##### requireComponent()
 
 > **requireComponent**\<`T`\>(`type`): `T`
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-16)
+
+***
+
+### LightProbeAsset
+
+**`Beta`**
+
+A loaded light-probe grid.
+
+#### Example
+
+```ts
+const probes = await app.assets.loadAsync<LightProbeAsset>("lighting/hall.probes.json");
+world.createEntity("Probes").addComponent(LightProbeVolume, { probes });
+```
+
+#### Properties
+
+##### assetType
+
+> `static` **assetType**: `string`
+
+**`Beta`**
+
+The type name the asset service registers light-probe grids under.
+
+##### data
+
+> `readonly` **data**: [`LightProbeData`](#lightprobedata)
+
+**`Beta`**
+
+The grid.
+
+***
+
+### LightProbeVolume
+
+**`Beta`**
+
+Lights PBR materials with a baked light-probe grid instead of the scene environment's diffuse
+light (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B2).
+
+#### Remarks
+
+Every lit PBR material samples the grid per pixel, blending the eight probes around it, so moving
+objects and shared materials need nothing extra. Outside the grid the nearest edge probes apply.
+Reflections still come from the `Environment` or a `ReflectionProbe`. The volume needs a loaded
+`Environment` and a canvas; its GPU code loads only once a world has one, and headless it does
+nothing. When several volumes are enabled, the most recently created one wins.
+
+#### Example
+
+```ts
+const probes = await app.assets.loadAsync<LightProbeAsset>("lighting/hall.probes.json");
+world.createEntity("Probes").addComponent(LightProbeVolume, { probes });
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Constructors
+
+##### Constructor
+
+> **new LightProbeVolume**(): [`LightProbeVolume`](#lightprobevolume)
+
+**`Beta`**
+
+Applies the schema defaults, exactly as `Component.define` would.
+
+###### Returns
+
+[`LightProbeVolume`](#lightprobevolume)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-25)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+**`Beta`**
+
+One volume per entity.
+
+##### description
+
+> `static` **description**: `string`
+
+**`Beta`**
+
+What the component does, in one line, for an inspector.
+
+##### intensity
+
+> **intensity**: `number`
+
+**`Beta`**
+
+A multiplier on the probes' light. Defaults to `1`.
+
+##### probes
+
+> **probes**: [`AssetHandle`](#assethandle)\<[`LightProbeAsset`](#lightprobeasset)\> \| `null`
+
+**`Beta`**
+
+The `.probes.json` grid, or `null` (default) for none.
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-46)
+
+**`Beta`**
+
+The serialized field declarations (ADR-0004).
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+**`Beta`**
+
+The namespaced registration id.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app-1)
+
+**`Beta`**
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app-1)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-18)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+**`Beta`**
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+**`Beta`**
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-19)
+
+**`Beta`**
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-19)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-16)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+**`Beta`**
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-16)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+**`Beta`**
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-16)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+**`Beta`**
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-16)
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+
+**`Beta`**
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-16)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-61)
+
+**`Beta`**
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-61)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-16)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+**`Beta`**
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-16)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-65)
+
+**`Beta`**
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-65)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-17)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+**`Beta`**
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-16)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+**`Beta`**
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-16)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+**`Beta`**
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-16)
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+**`Beta`**
 
 Finds another component on the same entity, requiring it to be there — the supported way to
 link components (`docs/architecture/03-scripting-and-components.md` §8).
@@ -25132,7 +25633,7 @@ The levels, nearest first.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -25201,7 +25702,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -25295,7 +25796,7 @@ Which level is showing, or `-1` when the group is past its last threshold.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -25303,7 +25804,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -25312,7 +25813,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -25325,13 +25826,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **onLevelChanged**(): [`Signal`](#signal-3)\<`number`\>
+> **get** **onLevelChanged**(): [`Signal`](#signal-5)\<`number`\>
 
 Fires with the new level index each time the group switches; `-1` means culled.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<`number`\>
+[`Signal`](#signal-5)\<`number`\>
 
 Fires with the new level index each time the group switches; `-1` means culled.
 
@@ -25339,13 +25840,13 @@ Fires with the new level index each time the group switches; `-1` means culled.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -25375,13 +25876,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -25573,7 +26074,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system-1).[`name`](#name-65)
+[`System`](#system-1).[`name`](#name-67)
 
 #### Methods
 
@@ -27257,7 +27758,7 @@ The identifier that appears in error context.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`name`](#name-60)
+[`StorageBackend`](#storagebackend).[`name`](#name-62)
 
 #### Methods
 
@@ -27327,7 +27828,7 @@ Drops every namespace.
 
 ###### Implementation of
 
-[`StorageBackend`](#storagebackend).[`dispose`](#dispose-26)
+[`StorageBackend`](#storagebackend).[`dispose`](#dispose-30)
 
 ##### get()
 
@@ -28725,7 +29226,7 @@ A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inline
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations.
 
@@ -28788,7 +29289,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`enabled`](#enabled-17)
+[`Collider`](#abstract-collider).[`enabled`](#enabled-19)
 
 ##### entity
 
@@ -28868,7 +29369,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -28876,7 +29377,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -28885,7 +29386,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -28898,13 +29399,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -28934,13 +29435,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -29326,7 +29827,7 @@ What the component does, in one line, for an inspector.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations (ADR-0004).
 
@@ -29443,7 +29944,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -29558,7 +30059,7 @@ The clone, or `null` when there is nothing to draw.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -29566,7 +30067,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -29575,7 +30076,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -29588,13 +30089,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -29624,13 +30125,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -29945,7 +30446,7 @@ What the component does, in one line, for an inspector.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations (ADR-0004).
 
@@ -30029,7 +30530,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -30147,7 +30648,7 @@ The nodes, keyed by glTF node name.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -30155,7 +30656,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -30164,7 +30665,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -30194,13 +30695,13 @@ The skeletons.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -30230,13 +30731,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -30637,7 +31138,7 @@ Applies the schema defaults, exactly as `Script.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-95)
+[`Script`](#abstract-script).[`constructor`](#constructor-97)
 
 #### Properties
 
@@ -30697,7 +31198,7 @@ Whether to start the first playlist entry as soon as the entity is alive.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations (ADR-0004).
 
@@ -30731,7 +31232,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-49)
+[`Script`](#abstract-script).[`app`](#app-51)
 
 ##### current
 
@@ -30780,7 +31281,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-61)
+[`Script`](#abstract-script).[`enabled`](#enabled-66)
 
 ##### entity
 
@@ -30798,7 +31299,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-50)
+[`Script`](#abstract-script).[`entity`](#entity-52)
 
 ##### handle
 
@@ -30816,7 +31317,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-45)
+[`Script`](#abstract-script).[`handle`](#handle-47)
 
 ##### index
 
@@ -30850,7 +31351,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-47)
 
 ##### isEnabledInHierarchy
 
@@ -30868,7 +31369,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-46)
 
 ##### isPlaying
 
@@ -30888,7 +31389,7 @@ Whether music is sounding.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -30896,7 +31397,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -30905,14 +31406,14 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-47)
 
 ##### previous
 
@@ -30932,19 +31433,19 @@ The outgoing sound, or `null`.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-46)
+[`Script`](#abstract-script).[`transform`](#transform-48)
 
 ##### uid
 
@@ -30962,25 +31463,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-49)
+[`Script`](#abstract-script).[`uid`](#uid-51)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-48)
+[`Script`](#abstract-script).[`world`](#world-50)
 
 #### Methods
 
@@ -31074,7 +31575,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-44)
+[`Script`](#abstract-script).[`define`](#define-46)
 
 ##### destroy()
 
@@ -31090,7 +31591,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-45)
+[`Script`](#abstract-script).[`destroy`](#destroy-47)
 
 ##### getComponent()
 
@@ -31122,7 +31623,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-47)
 
 ##### next()
 
@@ -31217,7 +31718,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-47)
 
 ##### startCoroutine()
 
@@ -31353,13 +31854,13 @@ Whether Recast has finished loading.
 
 ###### Get Signature
 
-> **get** **onReady**(): [`Signal`](#signal-3)\<[`NavigationService`](#navigationservice)\>
+> **get** **onReady**(): [`Signal`](#signal-5)\<[`NavigationService`](#navigationservice)\>
 
 Fires the first time Recast has finished loading.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`NavigationService`](#navigationservice)\>
+[`Signal`](#signal-5)\<[`NavigationService`](#navigationservice)\>
 
 Fires the first time Recast has finished loading.
 
@@ -31527,7 +32028,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system-1).[`name`](#name-65)
+[`System`](#system-1).[`name`](#name-67)
 
 #### Methods
 
@@ -31619,7 +32120,7 @@ The agent's radius, in metres.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -31752,7 +32253,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -31860,13 +32361,13 @@ Whether the agent is holding still rather than heading somewhere.
 
 ###### Get Signature
 
-> **get** **onArrived**(): [`Signal`](#signal-3)\<[`NavMeshAgent`](#navmeshagent)\>
+> **get** **onArrived**(): [`Signal`](#signal-5)\<[`NavMeshAgent`](#navmeshagent)\>
 
 Fires once each time the agent reaches its destination.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`NavMeshAgent`](#navmeshagent)\>
+[`Signal`](#signal-5)\<[`NavMeshAgent`](#navmeshagent)\>
 
 Fires once each time the agent reaches its destination.
 
@@ -31874,7 +32375,7 @@ Fires once each time the agent reaches its destination.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -31882,7 +32383,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -31891,7 +32392,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -31924,13 +32425,13 @@ The distance in metres; `Infinity` when the agent is not on a navmesh.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -31974,13 +32475,13 @@ The agent's current world velocity, as the crowd reports it. Reused each frame.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -32234,7 +32735,7 @@ The cylinder's radius, in metres.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -32321,7 +32822,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -32415,7 +32916,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -32423,7 +32924,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -32432,7 +32933,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -32445,13 +32946,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -32481,13 +32982,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -32819,7 +33320,7 @@ The seed Recast's randomized queries use.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -32914,7 +33415,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -33045,13 +33546,13 @@ The Recast plugin and the crowd, or `null` before the bake.
 
 ###### Get Signature
 
-> **get** **onBaked**(): [`Signal`](#signal-3)\<[`NavMeshSurface`](#navmeshsurface)\>
+> **get** **onBaked**(): [`Signal`](#signal-5)\<[`NavMeshSurface`](#navmeshsurface)\>
 
 Fires once each time the surface finishes baking.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`NavMeshSurface`](#navmeshsurface)\>
+[`Signal`](#signal-5)\<[`NavMeshSurface`](#navmeshsurface)\>
 
 Fires once each time the surface finishes baking.
 
@@ -33059,7 +33560,7 @@ Fires once each time the surface finishes baking.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -33067,7 +33568,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -33076,7 +33577,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -33131,13 +33632,13 @@ How many geometry sources have been added by hand.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -33167,13 +33668,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -33576,7 +34077,7 @@ Whether the layer's sprites repeat vertically.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -33645,7 +34146,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -33725,7 +34226,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -33733,7 +34234,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -33742,7 +34243,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -33755,13 +34256,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -33791,13 +34292,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -34410,7 +34911,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system-1).[`name`](#name-65)
+[`System`](#system-1).[`name`](#name-67)
 
 #### Methods
 
@@ -34798,7 +35299,7 @@ The `.particles.json`, as a loaded handle.
 
 ##### onStopped
 
-> `readonly` **onStopped**: [`Signal`](#signal-3)\<[`ParticleSystem`](#particlesystem)\>
+> `readonly` **onStopped**: [`Signal`](#signal-5)\<[`ParticleSystem`](#particlesystem)\>
 
 Emitted once when a non-looping system runs out of cycle and particles.
 
@@ -34810,7 +35311,7 @@ Whether the system plays the first frame it is enabled; the definition's `playOn
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -34956,7 +35457,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -35064,7 +35565,7 @@ Whether the system is playing, paused or not.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -35072,7 +35573,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -35081,7 +35582,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -35126,13 +35627,13 @@ The clock.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -35162,13 +35663,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -35546,7 +36047,7 @@ What the component does, in one line, for an inspector.
 
 ##### onStopped
 
-> `readonly` **onStopped**: [`Signal`](#signal-3)\<[`ParticleSystem2D`](#particlesystem2d)\>
+> `readonly` **onStopped**: [`Signal`](#signal-5)\<[`ParticleSystem2D`](#particlesystem2d)\>
 
 Emitted once when a non-looping system runs out of cycle and particles.
 
@@ -35558,7 +36059,7 @@ Whether the system plays the first frame it is enabled; the definition's `playOn
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -35675,7 +36176,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -35783,7 +36284,7 @@ Whether the system is playing, paused or not.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -35791,7 +36292,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -35800,7 +36301,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -35841,13 +36342,13 @@ The clock.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -35877,13 +36378,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -36228,7 +36729,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system-1).[`name`](#name-65)
+[`System`](#system-1).[`name`](#name-67)
 
 #### Methods
 
@@ -36323,7 +36824,7 @@ The world.
 
 ##### colliderOutlines()
 
-> **colliderOutlines**(`entity`): readonly `ColliderOutline2D`[]
+> **colliderOutlines**(`entity`): readonly [`ColliderOutline2D`](#collideroutline2d)[]
 
 The outlines of an entity's 2D colliders, as world-space line segments: what an editor draws as
 collider gizmos (ADR-0028, amendment of 2026-10-20).
@@ -36338,7 +36839,7 @@ The entity whose colliders to outline.
 
 ###### Returns
 
-readonly `ColliderOutline2D`[]
+readonly [`ColliderOutline2D`](#collideroutline2d)[]
 
 One outline per collider that produced a shape, in component order; empty when none.
 
@@ -36902,7 +37403,7 @@ The Havok world and the simulation scene.
 
 ##### colliderOutlines()
 
-> **colliderOutlines**(`entity`): readonly `ColliderOutline`[]
+> **colliderOutlines**(`entity`): readonly [`ColliderOutline`](#collideroutline)[]
 
 The outlines of an entity's enabled colliders, as world-space line segments: what an editor
 draws as collider gizmos (ADR-0028, amendment of 2026-10-20).
@@ -36917,7 +37418,7 @@ The entity whose colliders to outline.
 
 ###### Returns
 
-readonly `ColliderOutline`[]
+readonly [`ColliderOutline`](#collideroutline)[]
 
 One outline per enabled collider, in component order; empty when it has none or the
 entity is inactive in the hierarchy, which builds no body.
@@ -37153,7 +37654,7 @@ The end position.
 
 ###### options?
 
-`ShapeCastOptions`
+[`ShapeCastOptions`](#shapecastoptions)
 
 Layer mask, trigger behaviour, and the one entity to sweep through.
 
@@ -37222,7 +37723,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-95)
+[`Script`](#abstract-script).[`constructor`](#constructor-97)
 
 #### Properties
 
@@ -37258,7 +37759,7 @@ The kinematic `Rigidbody` this drives.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -37298,7 +37799,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-49)
+[`Script`](#abstract-script).[`app`](#app-51)
 
 ##### deltaThisStep
 
@@ -37347,7 +37848,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-61)
+[`Script`](#abstract-script).[`enabled`](#enabled-66)
 
 ##### entity
 
@@ -37365,7 +37866,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-50)
+[`Script`](#abstract-script).[`entity`](#entity-52)
 
 ##### handle
 
@@ -37383,7 +37884,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-45)
+[`Script`](#abstract-script).[`handle`](#handle-47)
 
 ##### isDestroyed
 
@@ -37403,7 +37904,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-47)
 
 ##### isEnabledInHierarchy
 
@@ -37421,13 +37922,13 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-46)
 
 ##### onDestroyed
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -37435,7 +37936,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -37444,14 +37945,14 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-47)
 
 ##### riderCount
 
@@ -37471,19 +37972,19 @@ How many characters are currently riding.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-46)
+[`Script`](#abstract-script).[`transform`](#transform-48)
 
 ##### uid
 
@@ -37501,25 +38002,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-49)
+[`Script`](#abstract-script).[`uid`](#uid-51)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-48)
+[`Script`](#abstract-script).[`world`](#world-50)
 
 #### Methods
 
@@ -37577,7 +38078,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-44)
+[`Script`](#abstract-script).[`define`](#define-46)
 
 ##### destroy()
 
@@ -37593,7 +38094,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-45)
+[`Script`](#abstract-script).[`destroy`](#destroy-47)
 
 ##### fixedUpdate()
 
@@ -37643,7 +38144,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-47)
 
 ##### requireComponent()
 
@@ -37680,7 +38181,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-47)
 
 ##### startCoroutine()
 
@@ -37835,7 +38336,7 @@ Which gamepad slot the player's `<Gamepad>/…` bindings are pinned to.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations (ADR-0004).
 
@@ -37904,7 +38405,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -37998,7 +38499,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -38006,7 +38507,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -38015,7 +38516,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -38028,13 +38529,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -38064,13 +38565,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -38484,7 +38985,7 @@ How this surface's restitution combines with the one it touches.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations.
 
@@ -38547,7 +39048,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Collider2D`](#abstract-collider2d).[`enabled`](#enabled-18)
+[`Collider2D`](#abstract-collider2d).[`enabled`](#enabled-20)
 
 ##### entity
 
@@ -38627,7 +39128,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -38635,7 +39136,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -38644,7 +39145,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -38657,13 +39158,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -38693,13 +39194,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -39021,7 +39522,7 @@ What the component does, in one line, for an inspector.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations (ADR-0004).
 
@@ -39096,7 +39597,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -39176,7 +39677,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -39184,7 +39685,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -39193,7 +39694,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -39221,13 +39722,13 @@ The task count; `0` before the chain is built, under a headless app, and when th
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -39257,13 +39758,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -39470,7 +39971,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-95)
+[`Script`](#abstract-script).[`constructor`](#constructor-97)
 
 #### Properties
 
@@ -39512,7 +40013,7 @@ The `Rigidbody` that carries it.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -39566,7 +40067,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-49)
+[`Script`](#abstract-script).[`app`](#app-51)
 
 ##### enabled
 
@@ -39601,7 +40102,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-61)
+[`Script`](#abstract-script).[`enabled`](#enabled-66)
 
 ##### entity
 
@@ -39619,7 +40120,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-50)
+[`Script`](#abstract-script).[`entity`](#entity-52)
 
 ##### handle
 
@@ -39637,7 +40138,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-45)
+[`Script`](#abstract-script).[`handle`](#handle-47)
 
 ##### isDestroyed
 
@@ -39657,7 +40158,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-47)
 
 ##### isEnabledInHierarchy
 
@@ -39675,13 +40176,13 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-46)
 
 ##### onDestroyed
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -39689,7 +40190,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -39698,32 +40199,32 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-47)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-46)
+[`Script`](#abstract-script).[`transform`](#transform-48)
 
 ##### uid
 
@@ -39741,25 +40242,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-49)
+[`Script`](#abstract-script).[`uid`](#uid-51)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-48)
+[`Script`](#abstract-script).[`world`](#world-50)
 
 #### Methods
 
@@ -39817,7 +40318,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-44)
+[`Script`](#abstract-script).[`define`](#define-46)
 
 ##### destroy()
 
@@ -39833,7 +40334,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-45)
+[`Script`](#abstract-script).[`destroy`](#destroy-47)
 
 ##### fixedUpdate()
 
@@ -39883,7 +40384,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-47)
 
 ##### onCollisionEnter()
 
@@ -39938,7 +40439,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-47)
 
 ##### startCoroutine()
 
@@ -41178,6 +41679,524 @@ The vector to write, in radians.
 
 ***
 
+### ReflectionProbe
+
+**`Beta`**
+
+A point that captures the scene around it into a cube map, which nearby shiny PBR materials then
+reflect instead of the scene environment.
+
+#### Remarks
+
+Each lit PBR material reflects the nearest enabled probe that has captured: a probe whose
+`boxProjection` box holds the mesh wins over one that does not, then the closer probe wins. With no
+probe, materials reflect the `Environment` again. A material shared by several meshes follows the
+first of them. Diffuse lighting still comes from the scene environment.
+
+The probe needs a loaded `Environment` (it reuses its lighting tables) and a canvas-backed app.
+Mip levels are box-filtered, so very rough materials look blurrier than with a prefiltered `.env`.
+
+#### Example
+
+```ts
+const probe = world.createEntity("Room probe", { position: { x: 0, y: 1.5, z: 0 } });
+probe.addComponent(ReflectionProbe, { size: 128, boxProjection: { x: 8, y: 3, z: 8 } });
+```
+
+#### Extends
+
+- [`Component`](#abstract-component)
+
+#### Constructors
+
+##### Constructor
+
+> **new ReflectionProbe**(): [`ReflectionProbe`](#reflectionprobe)
+
+**`Beta`**
+
+Applies the schema defaults, exactly as `Component.define` would.
+
+###### Returns
+
+[`ReflectionProbe`](#reflectionprobe)
+
+###### Overrides
+
+[`Component`](#abstract-component).[`constructor`](#constructor-25)
+
+#### Properties
+
+##### allowMultiple
+
+> `static` **allowMultiple**: `boolean`
+
+**`Beta`**
+
+One probe per entity.
+
+##### boxProjection
+
+> **boxProjection**: [`Vec3Like`](#vec3like) \| `null`
+
+**`Beta`**
+
+The full size, in metres, of the box (centred on the probe) that reflections are projected onto,
+or `null` (default) for no box: reflections then look infinitely far away.
+
+##### cullingMask
+
+> **cullingMask**: readonly `string`[]
+
+**`Beta`**
+
+The layer names the probe captures; empty (default) captures every layer.
+
+##### description
+
+> `static` **description**: `string`
+
+**`Beta`**
+
+What the component does, in one line, for an inspector.
+
+##### far
+
+> **far**: `number`
+
+**`Beta`**
+
+The far clip distance of the capture, in metres. Defaults to `1000`.
+
+##### near
+
+> **near**: `number`
+
+**`Beta`**
+
+The near clip distance of the capture, in metres. Defaults to `0.1`.
+
+##### refreshMode
+
+> **refreshMode**: `"once"` \| `"onDemand"` \| `"everyFrame"`
+
+**`Beta`**
+
+When the probe captures again. Defaults to `"once"`.
+
+##### schema
+
+> `static` **schema**: [`Schema`](#schema-46)
+
+**`Beta`**
+
+The serialized field declarations (ADR-0004).
+
+##### size
+
+> **size**: `number`
+
+**`Beta`**
+
+Cube face size in pixels, rounded down to a power of two from 16 to 1024. Defaults to `128`.
+
+##### typeId
+
+> `static` **typeId**: `string`
+
+**`Beta`**
+
+The namespaced registration id.
+
+#### Accessors
+
+##### app
+
+###### Get Signature
+
+> **get** **app**(): [`App`](#app-1)
+
+**`Beta`**
+
+The app that owns the world.
+
+###### Returns
+
+[`App`](#app-1)
+
+The app.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`app`](#app-18)
+
+##### enabled
+
+###### Get Signature
+
+> **get** **enabled**(): `boolean`
+
+**`Beta`**
+
+The component's own enabled flag; `true` by default. Setting it runs the enable or disable
+transition (`docs/architecture/01-lifecycle-and-time.md` §6): `onDisable` runs immediately,
+`awake`/`onEnable` run in the next lifecycle flush — or immediately and nested when the change
+happens inside a callback.
+
+###### Returns
+
+`boolean`
+
+`true` when the component's own flag is set.
+
+###### Set Signature
+
+> **set** **enabled**(`value`): `void`
+
+**`Beta`**
+
+###### Parameters
+
+###### value
+
+`boolean`
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
+
+##### entity
+
+###### Get Signature
+
+> **get** **entity**(): [`Entity`](#entity-19)
+
+**`Beta`**
+
+The entity this component is attached to.
+
+###### Returns
+
+[`Entity`](#entity-19)
+
+The owning entity.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`entity`](#entity-16)
+
+##### handle
+
+###### Get Signature
+
+> **get** **handle**(): [`ComponentHandle`](#componenthandle-1)
+
+**`Beta`**
+
+The dense runtime handle; invalid after destruction.
+
+###### Returns
+
+[`ComponentHandle`](#componenthandle-1)
+
+The handle.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`handle`](#handle-16)
+
+##### isDestroyed
+
+###### Get Signature
+
+> **get** **isDestroyed**(): `boolean`
+
+**`Beta`**
+
+`true` from the moment `destroy()` is called, long before the destroy flush runs.
+
+###### Returns
+
+`boolean`
+
+`true` once the component has been queued for destruction.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isDestroyed`](#isdestroyed-16)
+
+##### isEnabledInHierarchy
+
+###### Get Signature
+
+> **get** **isEnabledInHierarchy**(): `boolean`
+
+**`Beta`**
+
+`true` when the component's own flag is set **and** its entity is active in the hierarchy.
+
+###### Returns
+
+`boolean`
+
+`true` when the component is effectively enabled.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`isEnabledInHierarchy`](#isenabledinhierarchy-16)
+
+##### onDestroyed
+
+###### Get Signature
+
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+
+**`Beta`**
+
+Emitted once when the component is destroyed, in the destroy flush. Connecting with
+`{ owner: this }` elsewhere uses it to detach handlers automatically
+(`docs/architecture/02-scene-graph.md` §8).
+
+###### Returns
+
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+
+The signal. It is created on first access, so a component nobody listens to allocates
+nothing.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`onDestroyed`](#ondestroyed-16)
+
+##### transform
+
+###### Get Signature
+
+> **get** **transform**(): [`Transform`](#transform-61)
+
+**`Beta`**
+
+The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
+
+###### Returns
+
+[`Transform`](#transform-61)
+
+The entity's transform.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`transform`](#transform-16)
+
+##### uid
+
+###### Get Signature
+
+> **get** **uid**(): `string`
+
+**`Beta`**
+
+The stable ULID; the key files use to reference this component.
+
+###### Returns
+
+`string`
+
+The identifier.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`uid`](#uid-16)
+
+##### world
+
+###### Get Signature
+
+> **get** **world**(): [`World`](#world-65)
+
+**`Beta`**
+
+The world the entity belongs to.
+
+###### Returns
+
+[`World`](#world-65)
+
+The world.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`world`](#world-17)
+
+#### Methods
+
+##### define()
+
+> `static` **define**\<`S`\>(`schema`): [`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+**`Beta`**
+
+Declares a component's serialized fields and returns the base class to extend (ADR-0004,
+`docs/architecture/03-scripting-and-components.md` §3). The returned class exposes every field
+as a typed instance property, applies the defaults in its constructor, and carries the schema
+for the serializer, the inspector, and the docs harness.
+
+###### Type Parameters
+
+###### S
+
+`S` *extends* `Readonly`\<`Record`\<`string`, [`FieldDefinition`](#fielddefinition)\<`unknown`\>\>\>
+
+The schema being declared.
+
+###### Parameters
+
+###### schema
+
+`S`
+
+The field definitions, keyed by the property name they become.
+
+###### Returns
+
+[`ComponentDefinition`](#componentdefinition)\<`S`\>
+
+An abstract class to extend.
+
+###### Throws
+
+IgnifxError with code `IGX-0607` when a field name is not identifier-like, collides
+with a `Component`/`Script` member, or names an `Object.prototype` member such as `constructor`.
+
+###### Example
+
+```ts
+class Spinner extends Component.define({
+  degreesPerSecond: f32(90, { min: -360, max: 360 }),
+  axis: vec3({ x: 0, y: 1, z: 0 }),
+}) {
+  static typeId = "mygame/Spinner";
+}
+```
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`define`](#define-16)
+
+##### destroy()
+
+> **destroy**(): `void`
+
+**`Beta`**
+
+Queues this component for destruction. It stays usable until the destroy flush of the current
+frame, but reports `isDestroyed === true` immediately
+(`docs/architecture/01-lifecycle-and-time.md` §6). Calling it twice is a no-op.
+
+###### Returns
+
+`void`
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`destroy`](#destroy-16)
+
+##### getComponent()
+
+> **getComponent**\<`T`\>(`type`): `T` \| `null`
+
+**`Beta`**
+
+Finds another component on the same entity — sugar for `this.entity.getComponent`.
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class; matching is by class identity **and** inheritance.
+
+###### Returns
+
+`T` \| `null`
+
+The first match in attach order, or `null`.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`getComponent`](#getcomponent-16)
+
+##### refresh()
+
+> **refresh**(): `void`
+
+**`Beta`**
+
+Asks the probe to capture again from the next frame, whatever its `refreshMode`.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+Call it after the static scene around the probe changed, such as a door opening. A capture
+repeats over a few frames, so meshes whose materials are still compiling are caught.
+
+##### requireComponent()
+
+> **requireComponent**\<`T`\>(`type`): `T`
+
+**`Beta`**
+
+Finds another component on the same entity, requiring it to be there — the supported way to
+link components (`docs/architecture/03-scripting-and-components.md` §8).
+
+###### Type Parameters
+
+###### T
+
+`T` *extends* [`Component`](#abstract-component)
+
+The component type to look for.
+
+###### Parameters
+
+###### type
+
+[`ComponentType`](#componenttype-1)\<`T`\>
+
+The component class.
+
+###### Returns
+
+`T`
+
+The first match in attach order.
+
+###### Throws
+
+IgnifxError with code `IGX-0201` when the entity has no such component.
+
+###### Inherited from
+
+[`Component`](#abstract-component).[`requireComponent`](#requirecomponent-16)
+
+***
+
 ### Rigidbody
 
 Makes an entity's colliders a Havok body (`09-physics.md` §2.1).
@@ -41255,7 +42274,7 @@ What the component does, in one line, for an inspector.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations (ADR-0004).
 
@@ -41354,7 +42373,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -41480,7 +42499,7 @@ The Havok body, or `null` before the first fixed step built it.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -41488,7 +42507,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -41497,7 +42516,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -41510,13 +42529,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -41546,13 +42565,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -41968,7 +42987,7 @@ What the component does, in one line, for an inspector.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations (ADR-0004).
 
@@ -42077,7 +43096,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -42189,7 +43208,7 @@ Metres per second, world space.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -42197,7 +43216,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -42206,7 +43225,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -42233,13 +43252,13 @@ The body, or `null` before the first fixed step built it.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -42269,13 +43288,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -42636,7 +43655,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-95)
+[`Script`](#abstract-script).[`constructor`](#constructor-97)
 
 #### Properties
 
@@ -42678,7 +43697,7 @@ The `Rigidbody` this pushes.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -42718,7 +43737,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-49)
+[`Script`](#abstract-script).[`app`](#app-51)
 
 ##### enabled
 
@@ -42753,7 +43772,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-61)
+[`Script`](#abstract-script).[`enabled`](#enabled-66)
 
 ##### entity
 
@@ -42771,7 +43790,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-50)
+[`Script`](#abstract-script).[`entity`](#entity-52)
 
 ##### handle
 
@@ -42789,7 +43808,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-45)
+[`Script`](#abstract-script).[`handle`](#handle-47)
 
 ##### isDestroyed
 
@@ -42809,7 +43828,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-47)
 
 ##### isEnabledInHierarchy
 
@@ -42827,13 +43846,13 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-46)
 
 ##### onDestroyed
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -42841,7 +43860,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -42850,32 +43869,32 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-47)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-46)
+[`Script`](#abstract-script).[`transform`](#transform-48)
 
 ##### uid
 
@@ -42893,25 +43912,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-49)
+[`Script`](#abstract-script).[`uid`](#uid-51)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-48)
+[`Script`](#abstract-script).[`world`](#world-50)
 
 #### Methods
 
@@ -42969,7 +43988,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-44)
+[`Script`](#abstract-script).[`define`](#define-46)
 
 ##### destroy()
 
@@ -42985,7 +44004,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-45)
+[`Script`](#abstract-script).[`destroy`](#destroy-47)
 
 ##### fixedUpdate()
 
@@ -43035,7 +44054,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-47)
 
 ##### requireComponent()
 
@@ -43072,7 +44091,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-47)
 
 ##### startCoroutine()
 
@@ -43232,13 +44251,13 @@ Whether every entity of the instance has been constructed and its references res
 
 ###### Get Signature
 
-> **get** **onUnloading**(): [`Signal`](#signal-3)
+> **get** **onUnloading**(): [`Signal`](#signal-5)
 
 Emitted just before the instance is unloaded, while its entities are still valid.
 
 ###### Returns
 
-[`Signal`](#signal-3)
+[`Signal`](#signal-5)
 
 The signal.
 
@@ -43414,7 +44433,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -43494,7 +44513,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -43502,7 +44521,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -43511,7 +44530,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -43524,13 +44543,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -43560,13 +44579,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -43888,7 +44907,7 @@ health.onDied.connect((entity) => this.spawnLoot(entity), { owner: this, once: t
 
 ##### Constructor
 
-> **new Signal**\<`T`\>(`options?`): [`Signal`](#signal-3)\<`T`\>
+> **new Signal**\<`T`\>(`options?`): [`Signal`](#signal-5)\<`T`\>
 
 Creates a signal.
 
@@ -43903,7 +44922,7 @@ supplied by the app for engine signals; a signal a script owns usually needs nei
 
 ###### Returns
 
-[`Signal`](#signal-3)\<`T`\>
+[`Signal`](#signal-5)\<`T`\>
 
 #### Accessors
 
@@ -44973,7 +45992,7 @@ A `.physicsmaterial.json` reference; wins over [Collider.inlineMaterial](#inline
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations.
 
@@ -45036,7 +46055,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Collider`](#abstract-collider).[`enabled`](#enabled-17)
+[`Collider`](#abstract-collider).[`enabled`](#enabled-19)
 
 ##### entity
 
@@ -45116,7 +46135,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -45124,7 +46143,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -45133,7 +46152,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -45146,13 +46165,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -45182,13 +46201,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -45693,7 +46712,7 @@ Whether the default clip starts as soon as the document has loaded.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -45790,7 +46809,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -45898,13 +46917,13 @@ Whether a clip is currently advancing.
 
 ###### Get Signature
 
-> **get** **onClipEnded**(): [`Signal`](#signal-3)\<`string`\>
+> **get** **onClipEnded**(): [`Signal`](#signal-5)\<`string`\>
 
 Emitted with a clip's name when a non-looping clip reaches its last frame.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<`string`\>
+[`Signal`](#signal-5)\<`string`\>
 
 The signal.
 
@@ -45912,7 +46931,7 @@ The signal.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -45920,7 +46939,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -45929,7 +46948,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -45942,7 +46961,7 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **onEvent**(): [`Signal`](#signal-3)\<`string`\>
+> **get** **onEvent**(): [`Signal`](#signal-5)\<`string`\>
 
 Emitted with an event's name when playback passes the frame that declares it.
 
@@ -45954,7 +46973,7 @@ so a footstep is never silently dropped.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<`string`\>
+[`Signal`](#signal-5)\<`string`\>
 
 The signal.
 
@@ -45976,13 +46995,13 @@ The elapsed time.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -46012,13 +47031,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -46559,7 +47578,7 @@ The `fx.params` vec4 a `custom` shader reads.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -46656,7 +47675,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -46736,7 +47755,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -46744,7 +47763,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -46753,7 +47772,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -46766,13 +47785,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -46802,13 +47821,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -47165,7 +48184,7 @@ The pivot in `[0, 1]` of the frame, overriding the frame's own; `null` uses the 
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -47290,7 +48309,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -47467,7 +48486,7 @@ The sprite handle, or `null` when the sprite is not in a layer.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -47475,7 +48494,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -47484,7 +48503,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -47497,13 +48516,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -47533,13 +48552,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -47802,7 +48821,7 @@ Whether the GPU allocation has been given up.
 
 `boolean`
 
-`true` once [StorageBufferAsset.dispose](#dispose-27) has run.
+`true` once [StorageBufferAsset.dispose](#dispose-31) has run.
 
 ##### lite
 
@@ -48068,7 +49087,7 @@ Whether shadow maps darken the terrain. Chunks never **cast**; see the skill's g
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -48180,7 +49199,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -48307,7 +49326,7 @@ The material, or `null` headless and before the asset loads.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -48315,7 +49334,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -48324,7 +49343,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -48337,14 +49356,14 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **onHeightsChanged**(): [`Signal`](#signal-3)\<[`TerrainRegion`](#terrainregion)\>
+> **get** **onHeightsChanged**(): [`Signal`](#signal-5)\<[`TerrainRegion`](#terrainregion)\>
 
 Fires after [Terrain.setHeights](#setheights-1) with the sample rectangle that changed, so a collider
 and a scatter can follow.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`TerrainRegion`](#terrainregion)\>
+[`Signal`](#signal-5)\<[`TerrainRegion`](#terrainregion)\>
 
 The signal.
 
@@ -48388,13 +49407,13 @@ The size.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -48438,13 +49457,13 @@ The count.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -49130,7 +50149,7 @@ The layer shape the shader was generated for.
 
 > **get** **isDisposed**(): `boolean`
 
-Whether [TerrainAsset.dispose](#dispose-29) has run.
+Whether [TerrainAsset.dispose](#dispose-33) has run.
 
 ###### Returns
 
@@ -49200,7 +50219,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system-1).[`name`](#name-65)
+[`System`](#system-1).[`name`](#name-67)
 
 #### Methods
 
@@ -49363,7 +50382,7 @@ The random uniform scale range.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -49458,7 +50477,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -49538,7 +50557,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -49546,7 +50565,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -49555,7 +50574,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -49568,13 +50587,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -49604,13 +50623,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -49944,7 +50963,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -50051,7 +51070,7 @@ The size.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -50059,7 +51078,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -50068,7 +51087,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -50081,13 +51100,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -50117,13 +51136,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -50336,7 +51355,7 @@ The texture's height, in texels.
 
 `number`
 
-The height, or `0`; see [TextureAsset.width](#width-12).
+The height, or `0`; see [TextureAsset.width](#width-13).
 
 ##### isReleased
 
@@ -50602,7 +51621,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-95)
+[`Script`](#abstract-script).[`constructor`](#constructor-97)
 
 #### Properties
 
@@ -50695,7 +51714,7 @@ The lowest pitch, in degrees.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -50753,7 +51772,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-49)
+[`Script`](#abstract-script).[`app`](#app-51)
 
 ##### currentDistance
 
@@ -50803,7 +51822,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-61)
+[`Script`](#abstract-script).[`enabled`](#enabled-66)
 
 ##### entity
 
@@ -50821,7 +51840,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-50)
+[`Script`](#abstract-script).[`entity`](#entity-52)
 
 ##### handle
 
@@ -50839,7 +51858,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-45)
+[`Script`](#abstract-script).[`handle`](#handle-47)
 
 ##### isDestroyed
 
@@ -50859,7 +51878,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-47)
 
 ##### isEnabledInHierarchy
 
@@ -50877,13 +51896,13 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-46)
 
 ##### onDestroyed
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -50891,7 +51910,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -50900,14 +51919,14 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-47)
 
 ##### pitch
 
@@ -50941,19 +51960,19 @@ The point the camera is orbiting, in world space. Reused each frame.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-46)
+[`Script`](#abstract-script).[`transform`](#transform-48)
 
 ##### uid
 
@@ -50971,25 +51990,25 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-49)
+[`Script`](#abstract-script).[`uid`](#uid-51)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-48)
+[`Script`](#abstract-script).[`world`](#world-50)
 
 ##### yaw
 
@@ -51069,7 +52088,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-44)
+[`Script`](#abstract-script).[`define`](#define-46)
 
 ##### destroy()
 
@@ -51085,7 +52104,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-45)
+[`Script`](#abstract-script).[`destroy`](#destroy-47)
 
 ##### getComponent()
 
@@ -51117,7 +52136,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-47)
 
 ##### lateUpdate()
 
@@ -51182,7 +52201,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-47)
 
 ##### snap()
 
@@ -51307,7 +52326,7 @@ Applies the schema defaults, exactly as `Component.define` would.
 
 ###### Overrides
 
-[`Script`](#abstract-script).[`constructor`](#constructor-95)
+[`Script`](#abstract-script).[`constructor`](#constructor-97)
 
 #### Properties
 
@@ -51373,7 +52392,7 @@ Whether the entity turns to face the way it is moving.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -51443,7 +52462,7 @@ The app.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`app`](#app-49)
+[`Script`](#abstract-script).[`app`](#app-51)
 
 ##### enabled
 
@@ -51478,7 +52497,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`enabled`](#enabled-61)
+[`Script`](#abstract-script).[`enabled`](#enabled-66)
 
 ##### entity
 
@@ -51496,7 +52515,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-50)
+[`Script`](#abstract-script).[`entity`](#entity-52)
 
 ##### handle
 
@@ -51514,7 +52533,7 @@ The handle.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`handle`](#handle-45)
+[`Script`](#abstract-script).[`handle`](#handle-47)
 
 ##### isDestroyed
 
@@ -51534,7 +52553,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-45)
+[`Script`](#abstract-script).[`isDestroyed`](#isdestroyed-47)
 
 ##### isEnabledInHierarchy
 
@@ -51552,7 +52571,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-44)
+[`Script`](#abstract-script).[`isEnabledInHierarchy`](#isenabledinhierarchy-46)
 
 ##### isGrounded
 
@@ -51600,7 +52619,7 @@ The direction the character is being pushed this step, normalized. Reused each s
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -51608,7 +52627,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -51617,14 +52636,14 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-45)
+[`Script`](#abstract-script).[`onDestroyed`](#ondestroyed-47)
 
 ##### speed
 
@@ -51644,19 +52663,19 @@ The character's horizontal speed this step, in metres per second.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`transform`](#transform-46)
+[`Script`](#abstract-script).[`transform`](#transform-48)
 
 ##### uid
 
@@ -51674,7 +52693,7 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-49)
+[`Script`](#abstract-script).[`uid`](#uid-51)
 
 ##### verticalVelocity
 
@@ -51694,19 +52713,19 @@ The character's vertical speed, positive upwards.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`world`](#world-48)
+[`Script`](#abstract-script).[`world`](#world-50)
 
 #### Methods
 
@@ -51764,7 +52783,7 @@ class Patrol extends Script.define({ waypoints: array(vec3()), speed: f32(3) }) 
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`define`](#define-44)
+[`Script`](#abstract-script).[`define`](#define-46)
 
 ##### destroy()
 
@@ -51780,7 +52799,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`destroy`](#destroy-45)
+[`Script`](#abstract-script).[`destroy`](#destroy-47)
 
 ##### fixedUpdate()
 
@@ -51830,7 +52849,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`getComponent`](#getcomponent-45)
+[`Script`](#abstract-script).[`getComponent`](#getcomponent-47)
 
 ##### rebind()
 
@@ -51877,7 +52896,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-45)
+[`Script`](#abstract-script).[`requireComponent`](#requirecomponent-47)
 
 ##### resetMomentum()
 
@@ -52000,7 +53019,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system-1).[`name`](#name-65)
+[`System`](#system-1).[`name`](#name-67)
 
 #### Methods
 
@@ -52108,7 +53127,7 @@ The `.tilemap.json` document.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -52233,7 +53252,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -52327,7 +53346,7 @@ The layer count.
 
 ###### Get Signature
 
-> **get** **onCollisionChanged**(): [`Signal`](#signal-3)
+> **get** **onCollisionChanged**(): [`Signal`](#signal-5)
 
 Emitted after the merged collision surface has been rebuilt.
 
@@ -52340,7 +53359,7 @@ frame pays for one merge.
 
 ###### Returns
 
-[`Signal`](#signal-3)
+[`Signal`](#signal-5)
 
 The signal.
 
@@ -52348,7 +53367,7 @@ The signal.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -52356,7 +53375,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -52365,7 +53384,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -52378,13 +53397,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **onTileChanged**(): [`Signal`](#signal-3)\<[`TileChange`](#tilechange)\>
+> **get** **onTileChanged**(): [`Signal`](#signal-5)\<[`TileChange`](#tilechange)\>
 
 Emitted whenever `setTile` or `setCells` changes a cell.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`TileChange`](#tilechange)\>
+[`Signal`](#signal-5)\<[`TileChange`](#tilechange)\>
 
 The signal.
 
@@ -52392,13 +53411,13 @@ The signal.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -52428,13 +53447,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -53052,7 +54071,7 @@ How this surface's restitution combines with the one it touches.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The serialized field declarations; the geometry itself comes from the tilemap asset.
 
@@ -53155,7 +54174,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Collider2D`](#abstract-collider2d).[`enabled`](#enabled-18)
+[`Collider2D`](#abstract-collider2d).[`enabled`](#enabled-20)
 
 ##### entity
 
@@ -53235,7 +54254,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -53243,7 +54262,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -53252,7 +54271,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -53265,13 +54284,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -53301,13 +54320,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -53624,7 +54643,7 @@ What the component does, in one line, for an inspector.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -53707,7 +54726,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -53801,7 +54820,7 @@ The atlas.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -53809,7 +54828,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -53818,7 +54837,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -53845,13 +54864,13 @@ The count.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -53881,13 +54900,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -54256,13 +55275,13 @@ class Follow extends Script implements ScriptCallbacks {
 
 ##### Constructor
 
-> **new Transform**(): [`Transform`](#transform-59)
+> **new Transform**(): [`Transform`](#transform-61)
 
 Creates an unbound transform. The entity constructor binds it to a Lite node immediately.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 ###### Overrides
 
@@ -54351,7 +55370,7 @@ happens inside a callback.
 
 ###### Overrides
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -54651,7 +55670,7 @@ A freshly allocated vector. Use `Transform.lossyScaleToRef` in hot code.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -54659,7 +55678,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -54668,7 +55687,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -54808,13 +55827,13 @@ The angle in degrees.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -54858,13 +55877,13 @@ A freshly allocated vector. Use `Transform.upToRef` in hot code.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -55521,7 +56540,7 @@ tween.onComplete.connect(() => app.log.info("arrived"));
 
 ##### onComplete
 
-> `readonly` **onComplete**: [`Signal`](#signal-3)\<[`Tween`](#tween)\>
+> `readonly` **onComplete**: [`Signal`](#signal-5)\<[`Tween`](#tween)\>
 
 Fires once when the tween finishes, with the tween itself. Never fires after `stop`.
 
@@ -55688,7 +56707,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system-1).[`name`](#name-65)
+[`System`](#system-1).[`name`](#name-67)
 
 #### Methods
 
@@ -55871,7 +56890,7 @@ The count.
 
 ##### createSpriteBatch()
 
-> **createSpriteBatch**(`options`): `SpriteBatch`
+> **createSpriteBatch**(`options`): [`SpriteBatch`](#spritebatch)
 
 **`Beta`**
 
@@ -55882,13 +56901,13 @@ Claims a fixed-capacity crowd of sprites that no entity owns
 
 ###### options
 
-`SpriteBatchOptions`
+[`SpriteBatchOptions`](#spritebatchoptions)
 
 The atlas, the capacity, the sorting layer, the blend, and the space.
 
 ###### Returns
 
-`SpriteBatch`
+[`SpriteBatch`](#spritebatch)
 
 The batch.
 
@@ -55896,7 +56915,7 @@ The batch.
 
 Use it when the sprites are not *things* — bullets, sparks, debris, 2D particles — and the
 per-entity cost of a `SpriteRenderer` would dominate. The batch is not picked and does not sort
-its own slots; see SpriteBatch. Dispose it when the crowd is gone, or take it with
+its own slots; see [SpriteBatch](#spritebatch). Dispose it when the crowd is gone, or take it with
 `using`.
 
 ###### Throws
@@ -56126,7 +57145,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system-1).[`name`](#name-65)
+[`System`](#system-1).[`name`](#name-67)
 
 #### Methods
 
@@ -56140,7 +57159,7 @@ Connects the scene hook to a new world.
 
 ###### world
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The new world.
 
@@ -56168,7 +57187,7 @@ Drops every layer when the world goes away.
 
 ###### \_world
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world being disposed.
 
@@ -56716,7 +57735,7 @@ The name diagnostics and error reports use.
 
 ###### Implementation of
 
-[`System`](#system-1).[`name`](#name-65)
+[`System`](#system-1).[`name`](#name-67)
 
 #### Methods
 
@@ -56730,7 +57749,7 @@ Builds the overlay, now that the engine and its canvas exist.
 
 ###### \_world
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The new world, which the overlay does not need.
 
@@ -61284,7 +62303,7 @@ The app.
 
 > **get** **isDisposed**(): `boolean`
 
-`true` once [World.dispose](#dispose-34) has run.
+`true` once [World.dispose](#dispose-38) has run.
 
 ###### Returns
 
@@ -61358,13 +62377,13 @@ The main camera, or `null` when the world has none.
 
 ###### Get Signature
 
-> **get** **onEntityCreated**(): [`Signal`](#signal-3)\<[`Entity`](#entity-19)\>
+> **get** **onEntityCreated**(): [`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
 
 Emitted for every entity the world creates.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Entity`](#entity-19)\>
+[`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
 
 The signal.
 
@@ -61372,13 +62391,13 @@ The signal.
 
 ###### Get Signature
 
-> **get** **onEntityDestroyed**(): [`Signal`](#signal-3)\<[`Entity`](#entity-19)\>
+> **get** **onEntityDestroyed**(): [`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
 
 Emitted for every entity the destroy flush releases.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Entity`](#entity-19)\>
+[`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
 
 The signal.
 
@@ -61386,13 +62405,13 @@ The signal.
 
 ###### Get Signature
 
-> **get** **onSceneLoaded**(): [`Signal`](#signal-3)\<[`SceneInstance`](#sceneinstance)\>
+> **get** **onSceneLoaded**(): [`Signal`](#signal-5)\<[`SceneInstance`](#sceneinstance)\>
 
 Emitted when a scene instance finishes loading.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`SceneInstance`](#sceneinstance)\>
+[`Signal`](#signal-5)\<[`SceneInstance`](#sceneinstance)\>
 
 The signal.
 
@@ -61400,13 +62419,13 @@ The signal.
 
 ###### Get Signature
 
-> **get** **onSceneUnloaded**(): [`Signal`](#signal-3)\<[`SceneInstance`](#sceneinstance)\>
+> **get** **onSceneUnloaded**(): [`Signal`](#signal-5)\<[`SceneInstance`](#sceneinstance)\>
 
 Emitted when a scene instance is unloaded.
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`SceneInstance`](#sceneinstance)\>
+[`Signal`](#signal-5)\<[`SceneInstance`](#sceneinstance)\>
 
 The signal.
 
@@ -61446,13 +62465,13 @@ The live scene list.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world itself; `WorldHost` names it so entities can reach it.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 This world.
 
@@ -61541,7 +62560,7 @@ The instance's name.
 
 ###### options?
 
-`CreateSceneOptions`
+[`CreateSceneOptions`](#createsceneoptions)
 
 Whether it is persistent.
 
@@ -61860,7 +62879,7 @@ The scene file object, as `serializeScene` or `JSON.parse` produces it.
 
 ###### options
 
-`LoadSceneFileOptions`
+[`LoadSceneFileOptions`](#loadscenefileoptions)
 
 The address to publish it at, the mode, cancellation, and an issue collector.
 
@@ -62113,7 +63132,7 @@ Whether the element shrinks with distance.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -62176,7 +63195,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`Component`](#abstract-component).[`enabled`](#enabled-19)
+[`Component`](#abstract-component).[`enabled`](#enabled-21)
 
 ##### entity
 
@@ -62256,7 +63275,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -62264,7 +63283,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -62273,7 +63292,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -62300,13 +63319,13 @@ The placement; `visible` is `false` before the first sync.
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
@@ -62336,13 +63355,13 @@ The identifier.
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
@@ -62539,7 +63558,7 @@ Builds a sign with the schema's defaults.
 
 ###### Overrides
 
-[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-108)
+[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-110)
 
 #### Properties
 
@@ -62661,7 +63680,7 @@ How many pixels of laid-out text span one world metre.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -62699,7 +63718,7 @@ The app.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`app`](#app-56)
+[`TextComponent`](#abstract-textcomponent).[`app`](#app-58)
 
 ##### enabled
 
@@ -62734,7 +63753,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-73)
+[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-79)
 
 ##### entity
 
@@ -62752,7 +63771,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-59)
+[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-61)
 
 ##### handle
 
@@ -62770,7 +63789,7 @@ The handle.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`handle`](#handle-52)
+[`TextComponent`](#abstract-textcomponent).[`handle`](#handle-54)
 
 ##### isDestroyed
 
@@ -62790,7 +63809,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`isDestroyed`](#isdestroyed-53)
+[`TextComponent`](#abstract-textcomponent).[`isDestroyed`](#isdestroyed-55)
 
 ##### isEnabledInHierarchy
 
@@ -62808,7 +63827,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`isEnabledInHierarchy`](#isenabledinhierarchy-51)
+[`TextComponent`](#abstract-textcomponent).[`isEnabledInHierarchy`](#isenabledinhierarchy-53)
 
 ##### lite
 
@@ -62863,7 +63882,7 @@ The size.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -62871,7 +63890,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -62880,32 +63899,32 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`onDestroyed`](#ondestroyed-53)
+[`TextComponent`](#abstract-textcomponent).[`onDestroyed`](#ondestroyed-55)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`transform`](#transform-53)
+[`TextComponent`](#abstract-textcomponent).[`transform`](#transform-55)
 
 ##### uid
 
@@ -62923,25 +63942,25 @@ The identifier.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`uid`](#uid-56)
+[`TextComponent`](#abstract-textcomponent).[`uid`](#uid-58)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`world`](#world-56)
+[`TextComponent`](#abstract-textcomponent).[`world`](#world-58)
 
 #### Methods
 
@@ -62994,7 +64013,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`define`](#define-51)
+[`TextComponent`](#abstract-textcomponent).[`define`](#define-53)
 
 ##### destroy()
 
@@ -63010,7 +64029,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`destroy`](#destroy-52)
+[`TextComponent`](#abstract-textcomponent).[`destroy`](#destroy-54)
 
 ##### getComponent()
 
@@ -63042,7 +64061,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`getComponent`](#getcomponent-52)
+[`TextComponent`](#abstract-textcomponent).[`getComponent`](#getcomponent-54)
 
 ##### onDetach()
 
@@ -63093,7 +64112,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`requireComponent`](#requirecomponent-52)
+[`TextComponent`](#abstract-textcomponent).[`requireComponent`](#requirecomponent-54)
 
 ##### resolveText()
 
@@ -63156,7 +64175,7 @@ Builds a floating label with the schema's defaults.
 
 ###### Overrides
 
-[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-108)
+[`TextComponent`](#abstract-textcomponent).[`constructor`](#constructor-110)
 
 #### Properties
 
@@ -63278,7 +64297,7 @@ Which point of the block sits on the projected position.
 
 ##### schema
 
-> `static` **schema**: [`Schema`](#schema-44)
+> `static` **schema**: [`Schema`](#schema-46)
 
 The declarative fields (ADR-0004).
 
@@ -63322,7 +64341,7 @@ The app.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`app`](#app-56)
+[`TextComponent`](#abstract-textcomponent).[`app`](#app-58)
 
 ##### enabled
 
@@ -63357,7 +64376,7 @@ happens inside a callback.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-73)
+[`TextComponent`](#abstract-textcomponent).[`enabled`](#enabled-79)
 
 ##### entity
 
@@ -63375,7 +64394,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-59)
+[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-61)
 
 ##### handle
 
@@ -63393,7 +64412,7 @@ The handle.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`handle`](#handle-52)
+[`TextComponent`](#abstract-textcomponent).[`handle`](#handle-54)
 
 ##### isDestroyed
 
@@ -63413,7 +64432,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`isDestroyed`](#isdestroyed-53)
+[`TextComponent`](#abstract-textcomponent).[`isDestroyed`](#isdestroyed-55)
 
 ##### isEnabledInHierarchy
 
@@ -63431,7 +64450,7 @@ Whether the owner has already been destroyed.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`isEnabledInHierarchy`](#isenabledinhierarchy-51)
+[`TextComponent`](#abstract-textcomponent).[`isEnabledInHierarchy`](#isenabledinhierarchy-53)
 
 ##### lite
 
@@ -63486,7 +64505,7 @@ The size.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -63494,7 +64513,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-3)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -63503,32 +64522,32 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`onDestroyed`](#ondestroyed-53)
+[`TextComponent`](#abstract-textcomponent).[`onDestroyed`](#ondestroyed-55)
 
 ##### transform
 
 ###### Get Signature
 
-> **get** **transform**(): [`Transform`](#transform-59)
+> **get** **transform**(): [`Transform`](#transform-61)
 
 The entity's transform — sugar for `this.entity.transform`, the most-used lookup there is.
 
 ###### Returns
 
-[`Transform`](#transform-59)
+[`Transform`](#transform-61)
 
 The entity's transform.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`transform`](#transform-53)
+[`TextComponent`](#abstract-textcomponent).[`transform`](#transform-55)
 
 ##### uid
 
@@ -63546,25 +64565,25 @@ The identifier.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`uid`](#uid-56)
+[`TextComponent`](#abstract-textcomponent).[`uid`](#uid-58)
 
 ##### world
 
 ###### Get Signature
 
-> **get** **world**(): [`World`](#world-63)
+> **get** **world**(): [`World`](#world-65)
 
 The world the entity belongs to.
 
 ###### Returns
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`world`](#world-56)
+[`TextComponent`](#abstract-textcomponent).[`world`](#world-58)
 
 #### Methods
 
@@ -63617,7 +64636,7 @@ class Spinner extends Component.define({
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`define`](#define-51)
+[`TextComponent`](#abstract-textcomponent).[`define`](#define-53)
 
 ##### destroy()
 
@@ -63633,7 +64652,7 @@ frame, but reports `isDestroyed === true` immediately
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`destroy`](#destroy-52)
+[`TextComponent`](#abstract-textcomponent).[`destroy`](#destroy-54)
 
 ##### getComponent()
 
@@ -63665,7 +64684,7 @@ The first match in attach order, or `null`.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`getComponent`](#getcomponent-52)
+[`TextComponent`](#abstract-textcomponent).[`getComponent`](#getcomponent-54)
 
 ##### onDetach()
 
@@ -63716,7 +64735,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`requireComponent`](#requirecomponent-52)
+[`TextComponent`](#abstract-textcomponent).[`requireComponent`](#requirecomponent-54)
 
 ##### resolveText()
 
@@ -63813,6 +64832,77 @@ The gamepad slot every `<Gamepad>/…` path is pinned to. Defaults to `0`.
 > `readonly` `optional` **scheme?**: `string`
 
 The control scheme to keep; `""` keeps every binding whatever its tag.
+
+***
+
+### AddComponentFromRecordOptions
+
+Options accepted by [addComponentFromRecord](#addcomponentfromrecord).
+
+#### Properties
+
+##### index?
+
+> `readonly` `optional` **index?**: `number`
+
+The component's index among the entity's components as a scene file lists them (the transform
+and the components an instanced scene put on the entity do not count). Defaults to the end; a
+value past the end is clamped to it.
+
+##### references?
+
+> `readonly` `optional` **references?**: [`ReferenceDecoder`](#referencedecoder)
+
+How `$entity`, `$component` and `$asset` values in the record's `props` resolve. Without one
+every reference decodes as `null` and is reported (`IGX-0602`). An asset must already be loaded:
+decoding never starts a load.
+
+***
+
+### AmbientOcclusionSettings
+
+Screen-space ambient occlusion (GTAO) on indirect light: `rendering.ambientOcclusion`
+(`docs/architecture/07-rendering.md` §2.14).
+
+#### Remarks
+
+Off by default, and nothing of it loads while it is off. On, a compute pass estimates how much of
+each pixel's hemisphere the depth buffer hides, a depth-aware blur smooths it, and every lit PBR
+material multiplies its ambient occlusion by the result. It darkens environment (IBL) light only:
+direct lights, emissive colour, Standard materials and custom shaders are unchanged, so a scene
+with no `Environment` cube map shows no difference. Works with and without `rendering.hdr`.
+
+#### Properties
+
+##### enabled
+
+> `readonly` **enabled**: `boolean`
+
+Turns the effect on. Read once, when the app starts.
+
+##### falloff
+
+> `readonly` **falloff**: `number`
+
+The fraction of `radius`, from its far end, over which occluders fade out. 0 cuts off hard.
+
+##### intensity
+
+> `readonly` **intensity**: `number`
+
+An exponent on the visibility: 1 is physically based, larger is darker.
+
+##### quality
+
+> `readonly` **quality**: `"half"` \| `"full"`
+
+`"half"` (default) or `"full"` resolution, which also sets the slice and step counts.
+
+##### radius
+
+> `readonly` **radius**: `number`
+
+How far an occluder may be from the surface it darkens, in world units (metres).
 
 ***
 
@@ -63950,7 +65040,7 @@ Advances every animated tile by one frame's worth of scaled time.
 
 ###### world
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world holding the tilemaps.
 
@@ -64498,7 +65588,7 @@ the world, and the lazily loaded Recast module behind both.
 
 ##### onError
 
-> `readonly` **onError**: [`Signal`](#signal-3)\<[`ErrorReport`](#errorreport)\>
+> `readonly` **onError**: [`Signal`](#signal-5)\<[`ErrorReport`](#errorreport)\>
 
 Every failure the engine caught at a boundary rather than rethrowing.
 
@@ -64591,7 +65681,7 @@ The `@ignifx/core` version this app was built from.
 
 ##### world
 
-> `readonly` **world**: [`World`](#world-63)
+> `readonly` **world**: [`World`](#world-65)
 
 The running simulation.
 
@@ -66860,6 +67950,57 @@ Whether `play()` calls made before the first unlock are queued and flushed on un
 
 ***
 
+### AutoExposureSettings
+
+Auto exposure under `rendering.hdr` (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G14):
+a compute pass meters the HDR scene and eases the exposure towards middle grey.
+
+#### Remarks
+
+EV here is `log2` of the scene's metered luminance (the average of a `log2` luminance histogram,
+the darkest 10% and brightest 10% dropped). The exposure maps that average to 0.18 and multiplies
+the scene before the `Environment`'s own exposure and curve, so the two compose.
+
+#### Properties
+
+##### compensation
+
+> `readonly` **compensation**: `number`
+
+Stops added to the computed exposure; positive is brighter.
+
+##### enabled
+
+> `readonly` **enabled**: `boolean`
+
+Meter the scene and adapt the exposure. Off by default; needs `rendering.hdr`.
+
+##### maxEv
+
+> `readonly` **maxEv**: `number`
+
+The brightest metered EV the exposure follows: a brighter scene is not darkened further.
+
+##### minEv
+
+> `readonly` **minEv**: `number`
+
+The darkest metered EV the exposure follows: a darker scene is not brightened further.
+
+##### speedDown
+
+> `readonly` **speedDown**: `number`
+
+Adaptation rate, per second, when the scene gets darker.
+
+##### speedUp
+
+> `readonly` **speedUp**: `number`
+
+Adaptation rate, per second, when the scene gets brighter.
+
+***
+
 ### BackendBus
 
 A mixer bus as the backend knows it: an opaque token the service hands back with every sound it
@@ -67708,6 +68849,62 @@ Milliseconds since an unspecified epoch; only differences are meaningful.
 
 ***
 
+### ColliderOutline
+
+One collider's outline, from `app.physics.colliderOutlines`: what an editor draws as a collider
+gizmo (ADR-0028, amendment of 2026-10-20).
+
+#### Properties
+
+##### collider
+
+> `readonly` **collider**: [`Collider`](#abstract-collider)
+
+The collider the outline is of.
+
+##### isTrigger
+
+> `readonly` **isTrigger**: `boolean`
+
+Whether the collider is a trigger, which an editor usually draws in another colour.
+
+##### lines
+
+> `readonly` **lines**: `Float32Array`
+
+The outline as world-space line segments: every six numbers are one segment, the `x, y, z` of
+its two ends, in metres.
+
+***
+
+### ColliderOutline2D
+
+One 2D collider's outline, from `app.physics2d.colliderOutlines`: what an editor draws as a
+collider gizmo (ADR-0028, amendment of 2026-10-20).
+
+#### Properties
+
+##### collider
+
+> `readonly` **collider**: [`Collider2D`](#abstract-collider2d)
+
+The collider the outline is of.
+
+##### isTrigger
+
+> `readonly` **isTrigger**: `boolean`
+
+Whether the collider is a trigger, which an editor usually draws in another colour.
+
+##### lines
+
+> `readonly` **lines**: `Float32Array`
+
+The outline as world-space line segments in the XY plane: every four numbers are one segment,
+the `x, y` of its two ends, in metres.
+
+***
+
 ### Collision
 
 What a script's `onCollisionEnter`/`onCollisionStay`/`onCollisionExit` is handed. Both entities in
@@ -67879,6 +69076,26 @@ The green channel.
 > `readonly` **r**: `number`
 
 The red channel.
+
+***
+
+### ComponentBuildResult
+
+What [addComponentFromRecord](#addcomponentfromrecord) built.
+
+#### Properties
+
+##### component
+
+> `readonly` **component**: [`Component`](#abstract-component)
+
+The attached component, carrying the record's uid.
+
+##### issues
+
+> `readonly` **issues**: readonly [`SceneLoadIssue`](#sceneloadissue)[]
+
+Every recoverable problem found while decoding `props`, in discovery order.
 
 ***
 
@@ -69118,6 +70335,20 @@ scene never collide (`02-scene-graph.md` §10).
 
 ***
 
+### CreateSceneOptions
+
+Options accepted by [World.createScene](#createscene).
+
+#### Properties
+
+##### persistent?
+
+> `readonly` `optional` **persistent?**: `boolean`
+
+Whether the instance survives a `"single"` scene load. Defaults to `false`.
+
+***
+
 ### CurveFieldSpec
 
 Kind-specific data for `curve`.
@@ -70064,7 +71295,7 @@ Adds to a counter. Out-of-range indices are ignored.
 
 `number`
 
-The index from [DiagnosticsGroup.index](#index-1).
+The index from [DiagnosticsGroup.index](#index-2).
 
 ###### delta
 
@@ -70088,7 +71319,7 @@ Reads a counter.
 
 `number`
 
-The index from [DiagnosticsGroup.index](#index-1).
+The index from [DiagnosticsGroup.index](#index-2).
 
 ###### Returns
 
@@ -70142,7 +71373,7 @@ Replaces a counter's value. Out-of-range indices are ignored.
 
 `number`
 
-The index from [DiagnosticsGroup.index](#index-1).
+The index from [DiagnosticsGroup.index](#index-2).
 
 ###### value
 
@@ -70547,6 +71778,34 @@ The falloff, or `"none"` to disable fog.
 > **start**: `number`
 
 Where linear fog begins, in metres.
+
+***
+
+### EnvironmentSkyboxSettings
+
+The `skybox` record an `Environment` declares (`docs/architecture/07-rendering.md` §2.5).
+
+#### Remarks
+
+Babylon Lite 1.27.0 builds the background inside `loadEnvironment` and hands back no handle on
+it, so both fields are decided when the environment **loads** and cannot be changed afterwards.
+Declare them in the `.environment.json` (`skyboxEnabled`, `skyboxSize`); a component that asks
+for something else logs `IGX-0711` once. The defaults match the file format's, so the ordinary
+case is silent.
+
+#### Properties
+
+##### enabled
+
+> **enabled**: `boolean`
+
+Whether a background is drawn behind the scene.
+
+##### size
+
+> **size**: `number`
+
+The background cube's size, in metres.
 
 ***
 
@@ -71142,7 +72401,7 @@ The section name as it appears in `ignifx.config.ts`.
 
 ###### schema
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The schema the section is validated against.
 
@@ -71681,6 +72940,31 @@ and whether `destroyImmediate` is legal.
 > `readonly` **isInsideFixedStep**: `boolean`
 
 `true` while the fixed loop is running (`time.inFixedStep`).
+
+***
+
+### FrameWaitOptions
+
+**`Beta`**
+
+How long a frame request waits for an animation frame before the renderer renders one itself.
+
+#### Remarks
+
+A page that gets no animation frames (a hidden tab, or a `visibility: hidden` iframe such as an
+editor's) would otherwise never serve the request.
+
+#### Properties
+
+##### maxWaitMs?
+
+> `readonly` `optional` **maxWaitMs?**: `number`
+
+**`Beta`**
+
+The longest wait, in milliseconds, for an animation frame; after it, and again every
+`maxWaitMs` until the request is served, the renderer renders a frame itself with a delta of
+zero. A finite number of 0 or more.
 
 ***
 
@@ -73667,6 +74951,56 @@ The sorting layer every layer lands in. Defaults to `"Default"`.
 
 ***
 
+### LightProbeData
+
+A grid of light probes, as a `.probes.json` stores it.
+
+#### Remarks
+
+Probe `(i, j, k)` sits at `origin + (i, j, k) · cellSize`. `coefficients` holds 12 floats per probe,
+probes ordered X fastest, then Y, then Z (`index = i + countX·(j + countY·k)`); each probe's floats
+are `c0.rgb, c1.rgb, c2.rgb, c3.rgb` in linear RGB (see the module remarks).
+
+#### Properties
+
+##### cellSize
+
+> `readonly` **cellSize**: [`Vec3Like`](#vec3like)
+
+The distance between neighbouring probes along each axis, in metres.
+
+##### coefficients
+
+> `readonly` **coefficients**: readonly `number`[]
+
+12 floats per probe, `countX · countY · countZ · 12` in all.
+
+##### counts
+
+> `readonly` **counts**: `object`
+
+How many probes along X, Y and Z; each at least 1.
+
+###### x
+
+> `readonly` **x**: `number`
+
+###### y
+
+> `readonly` **y**: `number`
+
+###### z
+
+> `readonly` **z**: `number`
+
+##### origin
+
+> `readonly` **origin**: [`Vec3Like`](#vec3like)
+
+The world position of probe `(0, 0, 0)`.
+
+***
+
 ### LightShadowSettings
 
 The `shadows` record a `Light` declares (`docs/architecture/07-rendering.md` §2.2).
@@ -74009,6 +75343,84 @@ The address being loaded.
 > `readonly` **fraction**: `number`
 
 How far along, in `[0, 1]`, counting every dependency the scene pulls in.
+
+***
+
+### LoadSceneDependenciesOptions
+
+Options accepted by [loadSceneDependencies](#loadscenedependencies).
+
+#### Properties
+
+##### signal?
+
+> `readonly` `optional` **signal?**: `AbortSignal`
+
+Aborts every request; the handles already loaded are released before the promise rejects.
+
+***
+
+### LoadSceneFileOptions
+
+Options accepted by [World.loadSceneFile](#loadscenefile).
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address the scene is published at in `app.assets`, for example
+`"levels/level01.scene.json"`, or a `memory:` address for a file that was never saved. It
+replaces whatever the cache held there. The file is never fetched from it.
+
+##### mode?
+
+> `readonly` `optional` **mode?**: `"single"` \| `"additive"`
+
+`"single"` (the default) unloads every instance that is not `persistent` first; `"additive"`
+keeps them.
+
+##### name?
+
+> `readonly` `optional` **name?**: `string`
+
+The instance's name; defaults to the file's `name`.
+
+##### onIssue?
+
+> `readonly` `optional` **onIssue?**: (`issue`) => `void`
+
+Receives every recoverable problem the build found (`SceneBuildResult.issues`), in order. They
+are also written to the app log as warnings, as for `loadScene`.
+
+###### Parameters
+
+###### issue
+
+[`SceneLoadIssue`](#sceneloadissue)
+
+###### Returns
+
+`void`
+
+##### setActive?
+
+> `readonly` `optional` **setActive?**: `boolean`
+
+Makes the instance `world.activeScene`. Defaults to `true` for `"single"`, `false` for `"additive"`.
+
+##### signal?
+
+> `readonly` `optional` **signal?**: `AbortSignal`
+
+Cancels the dependency loads; an abort rejects with `IGX-0502`.
+
+##### strictInstanceHashes?
+
+> `readonly` `optional` **strictInstanceHashes?**: `boolean`
+
+`true` turns an `IGX-0604` instance hash mismatch from a logged warning into a throw.
 
 ***
 
@@ -74850,7 +76262,7 @@ Whether the row can be selected. A row that answers `false` is drawn dimmed and 
 
 ###### Inherited from
 
-[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-38)
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-42)
 
 ##### id
 
@@ -74914,7 +76326,7 @@ Whether the row can be selected. A row that answers `false` is drawn dimmed and 
 
 ###### Inherited from
 
-[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-38)
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-42)
 
 ##### id
 
@@ -75010,7 +76422,7 @@ Whether the row can be selected. A row that answers `false` is drawn dimmed and 
 
 ###### Inherited from
 
-[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-38)
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-42)
 
 ##### format?
 
@@ -75301,7 +76713,7 @@ Whether the row can be selected. A row that answers `false` is drawn dimmed and 
 
 ###### Inherited from
 
-[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-38)
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-42)
 
 ##### format?
 
@@ -75478,7 +76890,7 @@ Whether the row can be selected. A row that answers `false` is drawn dimmed and 
 
 ###### Inherited from
 
-[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-38)
+[`MenuRowBase`](#menurowbase).[`enabled`](#enabled-42)
 
 ##### format?
 
@@ -77312,7 +78724,7 @@ See [ParticleShape.length](#length-4). Defaults to `1`.
 
 > `readonly` `optional` **radius?**: `number`
 
-See [ParticleShape.radius](#radius-10). Defaults to `0.2`.
+See [ParticleShape.radius](#radius-11). Defaults to `0.2`.
 
 ##### randomDirection?
 
@@ -77324,7 +78736,7 @@ See [ParticleShape.randomDirection](#randomdirection). Defaults to `0`.
 
 > `readonly` `optional` **size?**: [`Vec3Like`](#vec3like)
 
-See [ParticleShape.size](#size-10). Defaults to `(1, 1, 1)`.
+See [ParticleShape.size](#size-11). Defaults to `(1, 1, 1)`.
 
 ##### spherizeDirection?
 
@@ -78274,6 +79686,166 @@ Whether `app.input.pointerLock.request()` is allowed to ask the browser. Default
 
 ***
 
+### PrefabApplyOptions
+
+What [applyOverridesToAsset](#applyoverridestoasset) acts on: the selected overrides and, optionally, the components
+the instance root carries itself.
+
+#### Extends
+
+- [`PrefabOverrideSelection`](#prefaboverrideselection)
+
+#### Properties
+
+##### paths?
+
+> `readonly` `optional` **paths?**: readonly `string`[]
+
+Override paths to act on. A path selects every override at that path or below it, so
+`"<entityUid>"` selects everything on that entity and `"<entityUid>/components/<componentUid>"`
+selects a component's removal, its `enabled` flag, and its props. An `add` to
+`<entityUid>/components` sits at `<entityUid>/components/<addedUid>`. Omitted, every override
+is selected.
+
+###### Inherited from
+
+[`PrefabOverrideSelection`](#prefaboverrideselection).[`paths`](#paths-6)
+
+##### rootComponents?
+
+> `readonly` `optional` **rootComponents?**: readonly [`SceneFileComponent`](#scenefilecomponent)[]
+
+The components the instance root carries itself: the `components` of the scene-file entity that
+holds the `instance` entry. They are not overrides (the serializer writes a component added on
+a single-root instance's root there), so they can only be applied when passed here. Each one
+that `paths` selects, at `<prefabRootUid>/components/<componentUid>`, is appended to the
+prefab's root after its own components, which is the order the instance already has them in.
+Omitted, none is applied.
+
+***
+
+### PrefabApplyResult
+
+What [applyOverridesToAsset](#applyoverridestoasset) returns.
+
+#### Properties
+
+##### applied
+
+> `readonly` **applied**: readonly [`SceneFileOverride`](#scenefileoverride)[]
+
+The overrides written into the prefab, in instance order.
+
+##### appliedComponents
+
+> `readonly` **appliedComponents**: readonly [`SceneFileComponent`](#scenefilecomponent)[]
+
+The [PrefabApplyOptions.rootComponents](#rootcomponents) written into the prefab's root. Remove them from
+the instance root: the prefab brings them now.
+
+##### asset
+
+> `readonly` **asset**: [`SceneFile`](#scenefile)
+
+The new prefab file, with the applied overrides written into it.
+
+##### hash
+
+> `readonly` **hash**: `string`
+
+The content hash of [PrefabApplyResult.asset](#asset-7), as [computeSceneHash](#computescenehash) writes it.
+
+##### instance
+
+> `readonly` **instance**: [`SceneFileInstance`](#scenefileinstance)
+
+The instance entry without the applied overrides, recording [PrefabApplyResult.hash](#hash-1). It
+expands to the same values it did before the apply; a component an applied `add` brought now
+comes from the prefab, so like every prefab component it gets a fresh uid per instance.
+
+##### rootComponents
+
+> `readonly` **rootComponents**: readonly [`SceneFileComponent`](#scenefilecomponent)[]
+
+The [PrefabApplyOptions.rootComponents](#rootcomponents) that stay on the instance root, in their order:
+the unselected ones and the skipped ones.
+
+##### skipped
+
+> `readonly` **skipped**: readonly [`PrefabOverrideSkip`](#prefaboverrideskip)[]
+
+The selected overrides that stay on the instance, in instance order.
+
+##### skippedComponents
+
+> `readonly` **skippedComponents**: readonly [`PrefabComponentSkip`](#prefabcomponentskip)[]
+
+The selected [PrefabApplyOptions.rootComponents](#rootcomponents) that stay on the instance root, and why.
+
+***
+
+### PrefabComponentSkip
+
+A component of the instance root that [applyOverridesToAsset](#applyoverridestoasset) left on the instance, and why.
+
+#### Properties
+
+##### component
+
+> `readonly` **component**: [`SceneFileComponent`](#scenefilecomponent)
+
+The component, as the instance root holds it.
+
+##### reason
+
+> `readonly` **reason**: `string`
+
+Why it could not be written into the prefab file.
+
+***
+
+### PrefabOverrideSelection
+
+Which overrides of an instance [applyOverridesToAsset](#applyoverridestoasset) and [revertOverrides](#revertoverrides) act on.
+
+#### Extended by
+
+- [`PrefabApplyOptions`](#prefabapplyoptions)
+
+#### Properties
+
+##### paths?
+
+> `readonly` `optional` **paths?**: readonly `string`[]
+
+Override paths to act on. A path selects every override at that path or below it, so
+`"<entityUid>"` selects everything on that entity and `"<entityUid>/components/<componentUid>"`
+selects a component's removal, its `enabled` flag, and its props. An `add` to
+`<entityUid>/components` sits at `<entityUid>/components/<addedUid>`. Omitted, every override
+is selected.
+
+***
+
+### PrefabOverrideSkip
+
+An override [applyOverridesToAsset](#applyoverridestoasset) left on the instance, and why.
+
+#### Properties
+
+##### override
+
+> `readonly` **override**: [`SceneFileOverride`](#scenefileoverride)
+
+The override, as the instance entry holds it.
+
+##### reason
+
+> `readonly` **reason**: `string`
+
+Why it could not be written into the prefab file.
+
+***
+
 ### Processor
 
 One parsed processor: its kind and its two numeric parameters, already defaulted.
@@ -78368,6 +79940,10 @@ The z component of the vector part.
 ### QueryOptions
 
 Options every query accepts.
+
+#### Extended by
+
+- [`ShapeCastOptions`](#shapecastoptions)
 
 #### Properties
 
@@ -78605,7 +80181,7 @@ Kind-specific data for `record`.
 
 ##### fields
 
-> `readonly` **fields**: [`Schema`](#schema-44)
+> `readonly` **fields**: [`Schema`](#schema-46)
 
 The sub-fields, in declaration order.
 
@@ -78792,7 +80368,7 @@ Options accepted by `ExtensionContext.registerSystem`.
 
 ##### editMode?
 
-> `readonly` `optional` **editMode?**: `SystemEditMode`
+> `readonly` `optional` **editMode?**: [`SystemEditMode`](#systemeditmode)
 
 What the system does in an edit-mode app (ADR-0028). Defaults to `"run"`. Ignored when the app
 is not in edit mode.
@@ -78953,7 +80529,7 @@ would never settle.
 
 ##### createRenderTexture()
 
-> **createRenderTexture**(`width`, `height`): `RenderTexture`
+> **createRenderTexture**(`width`, `height`): [`RenderTexture`](#rendertexture)
 
 **`Beta`**
 
@@ -78976,7 +80552,7 @@ The height, in pixels: a whole number from 1 to 4096.
 
 ###### Returns
 
-`RenderTexture`
+[`RenderTexture`](#rendertexture)
 
 The texture. Dispose it when done; `app.dispose()` disposes any still open.
 
@@ -79003,7 +80579,7 @@ Waits for the next frame to be submitted (`docs/architecture/07-rendering.md` §
 
 ###### options?
 
-`FrameWaitOptions`
+[`FrameWaitOptions`](#framewaitoptions)
 
 How long to wait for an animation frame; absent to wait for one forever.
 
@@ -79026,7 +80602,7 @@ IgnifxError with code `IGX-0729` on a headless app or while no render loop runs.
 
 ##### openOverlay()
 
-> **openOverlay**(): `Promise`\<`RenderOverlay`\>
+> **openOverlay**(): `Promise`\<[`RenderOverlay`](#renderoverlay)\>
 
 **`Beta`**
 
@@ -79035,7 +80611,7 @@ and selection outlines (`docs/architecture/07-rendering.md` §2.10).
 
 ###### Returns
 
-`Promise`\<`RenderOverlay`\>
+`Promise`\<[`RenderOverlay`](#renderoverlay)\>
 
 The overlay, drawing from the next frame.
 
@@ -79126,13 +80702,13 @@ A camera attached to an entity of this app's world.
 
 ###### texture
 
-`RenderTexture`
+[`RenderTexture`](#rendertexture)
 
 A texture from this renderer's [Renderer.createRenderTexture](#createrendertexture).
 
 ###### options?
 
-`FrameWaitOptions`
+[`FrameWaitOptions`](#framewaitoptions)
 
 How long to wait for an animation frame; absent to wait for one forever.
 
@@ -79146,7 +80722,7 @@ A promise that settles once the frame that rendered it has been submitted.
 
 The camera need not be the main one, and stays a candidate for it. Requests queued for the
 same texture render one camera per frame, oldest first. The camera's aspect is the texture's.
-Read the result with RenderTexture.readPixels.
+Read the result with [RenderTexture.readPixels](#readpixels).
 
 A page that gets no animation frames (a hidden tab, or a `visibility: hidden` iframe) never
 runs that frame; pass `options.maxWaitMs` and the renderer renders it itself when none comes.
@@ -79368,13 +80944,13 @@ How the canvas composites with the page. `"premultiplied"` lets HTML show throug
 
 ##### ambientOcclusion
 
-> `readonly` **ambientOcclusion**: `AmbientOcclusionSettings`
+> `readonly` **ambientOcclusion**: [`AmbientOcclusionSettings`](#ambientocclusionsettings)
 
 Screen-space ambient occlusion on indirect light (GTAO). Off by default.
 
 ##### autoExposure
 
-> `readonly` **autoExposure**: `AutoExposureSettings`
+> `readonly` **autoExposure**: [`AutoExposureSettings`](#autoexposuresettings)
 
 Auto exposure, read once at `app.start()`. Ignored unless [RenderingSettings.hdr](#hdr) is on;
 off, nothing of it loads.
@@ -79456,7 +81032,7 @@ A named tier sets `hdr`, `taa.enabled`, `ambientOcclusion.enabled` and
 `ambientOcclusion.quality`, and caps which screen-space effects a `PostProcessStack` may run
 (contact shadows from `"medium"`, SSGI at `"high"`). A field the project writes itself wins over
 its tier, so `{ quality: "high", taa: { enabled: false } }` is `"high"` without TAA. Bloom, tone
-mapping and auto exposure stay as authored. See RENDERING\_QUALITIES.
+mapping and auto exposure stay as authored. See [RENDERING\_QUALITIES](#rendering_qualities).
 
 ##### requiredLimits
 
@@ -79472,7 +81048,7 @@ Render through an sRGB swapchain view so alpha blending is gamma-correct.
 
 ##### taa
 
-> `readonly` **taa**: `TaaSettings`
+> `readonly` **taa**: [`TaaSettings`](#taasettings)
 
 Temporal anti-aliasing; needs [RenderingSettings.hdr](#hdr). Off by default.
 
@@ -79487,6 +81063,78 @@ Eye-relative upload for large-world coordinates. Requires `useHighPrecisionMatri
 > `readonly` **useHighPrecisionMatrix**: `boolean`
 
 Float64 intermediate precision for world matrices, for large worlds.
+
+***
+
+### RenderOverlay
+
+**`Beta`**
+
+A Babylon Lite scene drawn over the finished frame, for an editor's gizmos, selection outlines,
+and grids (`docs/architecture/07-rendering.md` §2.10, ADR-0031).
+
+#### Remarks
+
+The overlay draws after everything else on the canvas, the render scene, its post-processing,
+sprites and text included, at every `rendering.msaaSamples` setting. It has a depth buffer of its
+own, cleared every frame, so what it holds is never hidden by the scene; within the overlay,
+depth testing works as usual. It is drawn without MSAA. Screenshots include it.
+
+#### Properties
+
+##### lite
+
+> `readonly` **lite**: [`RenderOverlayLiteHandles`](#renderoverlaylitehandles)
+
+**`Beta`**
+
+The overlay's Lite scenes (unstable, `CONSTITUTION.md` §3.4).
+
+#### Methods
+
+##### dispose()
+
+> **dispose**(): `void`
+
+**`Beta`**
+
+Stops drawing the overlay and releases its scene and everything in it. Calling it again does nothing.
+
+###### Returns
+
+`void`
+
+***
+
+### RenderOverlayLiteHandles
+
+**`Beta`**
+
+The Babylon Lite scenes behind a [RenderOverlay](#renderoverlay): the escape hatch an editor hands to Lite's
+gizmo constructors, which take this shape as a `UtilityLayer` (`CONSTITUTION.md` §3.4).
+
+#### Remarks
+
+Unstable: these are Lite's own objects, excluded from the stability guarantees of
+`CONSTITUTION.md` Article IV.
+
+#### Properties
+
+##### mainScene
+
+> `readonly` **mainScene**: `SceneContext`
+
+**`Beta`**
+
+The render scene. The overlay scene uses its camera.
+
+##### scene
+
+> `readonly` **scene**: `SceneContext`
+
+**`Beta`**
+
+The overlay's own scene. What is added to it draws over the frame.
 
 ***
 
@@ -79578,7 +81226,7 @@ The candidate.
 
 ##### ignore?
 
-> `readonly` `optional` **ignore?**: readonly `RenderPickIgnore`[]
+> `readonly` `optional` **ignore?**: readonly [`RenderPickIgnore`](#renderpickignore)[]
 
 What to look through: each entity, component or earlier hit listed neither occludes nor
 returns. Passing the previous hit each time walks through the objects under one pixel from
@@ -79636,6 +81284,89 @@ when it failed, `"available"` otherwise.
 > `readonly` **tasks**: readonly [`RenderTaskTiming`](#rendertasktiming)[]
 
 The tasks, in frame execution order. Empty unless `status` is `"available"`.
+
+***
+
+### RenderTexture
+
+**`Beta`**
+
+An offscreen colour target a camera renders into (`docs/architecture/07-rendering.md` §2.11).
+
+#### Remarks
+
+Create one with `app.renderer.createRenderTexture(width, height)`. Fill it once with
+`app.renderer.renderToTexture(camera, texture)`, or every frame by setting a camera's
+`renderTarget`. It holds a GPU pass of the render scene and its target from the first render
+on; `dispose()` frees both, and `app.dispose()` disposes every texture still open.
+
+#### Example
+
+```ts
+const texture = app.renderer.createRenderTexture(256, 256);
+await app.renderer.renderToTexture(minimapCamera, texture);
+const pixels = await texture.readPixels();
+texture.dispose();
+```
+
+#### Properties
+
+##### height
+
+> `readonly` **height**: `number`
+
+**`Beta`**
+
+The height, in pixels.
+
+##### isDisposed
+
+> `readonly` **isDisposed**: `boolean`
+
+**`Beta`**
+
+Whether `dispose()` has run.
+
+##### width
+
+> `readonly` **width**: `number`
+
+**`Beta`**
+
+The width, in pixels.
+
+#### Methods
+
+##### dispose()
+
+> **dispose**(): `void`
+
+**`Beta`**
+
+Frees the texture's GPU pass and target. Idempotent; a camera rendering into it stops.
+
+###### Returns
+
+`void`
+
+##### readPixels()
+
+> **readPixels**(): `Promise`\<[`RenderCapture`](#rendercapture)\>
+
+**`Beta`**
+
+Reads the texture as the last rendered frame left it.
+
+###### Returns
+
+`Promise`\<[`RenderCapture`](#rendercapture)\>
+
+Tightly packed RGBA8, top row first. All zeros before anything was rendered into it.
+
+###### Throws
+
+IgnifxError with code `IGX-0729` on a headless app or while no render loop runs, and
+`IGX-0731` once the texture is disposed.
 
 ***
 
@@ -81131,7 +82862,7 @@ The vertex attributes the vertex stage reads. A `"shader"` file always includes 
 
 ##### defines
 
-> `readonly` **defines**: readonly `ShaderDefineDeclaration`[]
+> `readonly` **defines**: readonly [`ShaderDefineDeclaration`](#shaderdefinedeclaration)[]
 
 The WGSL `const` declarations a material may override.
 
@@ -81185,6 +82916,26 @@ The samplers, each generating `<name>` and `<name>Sampler`.
 > `readonly` **uniforms**: readonly [`ShaderUniformDeclaration`](#shaderuniformdeclaration)[]
 
 The custom uniforms, read as `shaderUniforms.<name>`.
+
+***
+
+### ShaderDefineDeclaration
+
+One `// @ignifx define …` line: a WGSL `const` a material may override.
+
+#### Properties
+
+##### name
+
+> `readonly` **name**: `string`
+
+The WGSL identifier.
+
+##### value
+
+> `readonly` **value**: `number` \| `boolean`
+
+The value; a boolean compiles to `bool`, a number to `f32`.
 
 ***
 
@@ -81522,9 +83273,58 @@ The world-space contact point on the hit collider.
 
 ***
 
+### ShapeCastOptions
+
+Options a shape sweep accepts, on top of [QueryOptions](#queryoptions).
+
+#### Remarks
+
+`ignore` exists because a sweep that starts at or inside a body — a camera boom leaving its
+target's capsule, a step probe leaving the character's own feet — reports that body at fraction
+zero and nothing else. Lite's sweep can exclude exactly one body, and cannot filter by layer at
+all (`ShapeCastQuery` has `ignoreBody` and no collision masks, unlike `physicsRaycast`), so
+`layerMask` decides which hit is *attributed* an entity while `ignore` is the one body the
+geometry itself passes through. Added 2026-09-08.
+
+#### Extends
+
+- [`QueryOptions`](#queryoptions)
+
+#### Properties
+
+##### hitTriggers?
+
+> `readonly` `optional` **hitTriggers?**: `boolean`
+
+Whether trigger volumes count as hits. Defaults to `false`.
+
+###### Inherited from
+
+[`QueryOptions`](#queryoptions).[`hitTriggers`](#hittriggers)
+
+##### ignore?
+
+> `readonly` `optional` **ignore?**: [`Entity`](#entity-19) \| `null`
+
+An entity whose body the sweep passes through — usually the caller's own. A `Rigidbody`, a
+collider-only static, and a `CharacterController` capsule are all accepted; an entity with no
+body is ignored.
+
+##### layerMask?
+
+> `readonly` `optional` **layerMask?**: [`LayerMask`](#layermask-4)
+
+Which layers the query may hit. Defaults to everything.
+
+###### Inherited from
+
+[`QueryOptions`](#queryoptions).[`layerMask`](#layermask-5)
+
+***
+
 ### SignalLike
 
-The read-only half of a [Signal](#signal-3): what a public API exposes when callers may subscribe but
+The read-only half of a [Signal](#signal-5): what a public API exposes when callers may subscribe but
 must not emit, where `T` is the payload the signal emits.
 
 #### Example
@@ -81581,7 +83381,7 @@ A function that detaches the handler.
 
 ### SignalOptions
 
-Options for the [Signal](#signal-3) constructor, where `T` is the payload the signal emits.
+Options for the [Signal](#signal-5) constructor, where `T` is the payload the signal emits.
 
 #### Type Parameters
 
@@ -81613,7 +83413,7 @@ passes a reporter that routes to `app.onError`. It must not throw.
 
 ###### signal
 
-[`Signal`](#signal-3)\<`T`\>
+[`Signal`](#signal-5)\<`T`\>
 
 ###### Returns
 
@@ -81644,7 +83444,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-3) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -82172,6 +83972,298 @@ The min/mag filter. Defaults to `"linear"`.
 
 ***
 
+### SpriteBatch
+
+**`Beta`**
+
+A fixed-capacity crowd of sprites addressed by index, for bullet hells, debris, and 2D particles.
+
+#### Remarks
+
+Under a headless app the batch is state only: it validates indices and remembers `count`, and
+writes nothing, because there is no uploaded atlas to draw from
+(`docs/architecture/07-rendering.md` §6).
+
+#### Example
+
+```ts
+using batch = app.twoD.createSpriteBatch({ atlas, capacity: 1024, blend: "additive" });
+batch.count = 3;
+batch.write(0, 0, 0, 0.32, 0.32, 0, 0, 1, 1, 1, 1);
+```
+
+#### Properties
+
+##### capacity
+
+> `readonly` **capacity**: `number`
+
+**`Beta`**
+
+How many slots the batch claimed. Fixed for its life.
+
+##### count
+
+> **count**: `number`
+
+**`Beta`**
+
+How many leading slots draw. Slots at an index of `count` or above are hidden.
+
+###### Remarks
+
+Lowering `count` hides the slots that fall out of range; raising it again reveals those that
+have been written since the batch was created and not explicitly hidden, with the geometry they
+last carried. A slot that was never written stays invisible until it is.
+
+###### Throws
+
+IgnifxError with code `IGX-1115` when the value is not a whole number in
+`0 .. capacity`, or `IGX-1116` when the batch is disposed.
+
+##### lite
+
+> `readonly` **lite**: [`SpriteBatchLiteHandles`](#spritebatchlitehandles)
+
+**`Beta`**
+
+The Babylon Lite objects the batch owns. Unstable escape hatch
+(`CONSTITUTION.md` §3.4).
+
+#### Methods
+
+##### \[dispose\]()
+
+> **\[dispose\]**(): `void`
+
+**`Beta`**
+
+Disposes the batch when it leaves a `using` block — exactly [SpriteBatch.dispose](#dispose-29).
+
+###### Returns
+
+`void`
+
+##### dispose()
+
+> **dispose**(): `void`
+
+**`Beta`**
+
+Releases every slot back to its Lite layer. Idempotent; the batch cannot be reused afterwards.
+
+###### Returns
+
+`void`
+
+##### hide()
+
+> **hide**(`index`): `void`
+
+**`Beta`**
+
+Hides one slot until it is written again, whatever `count` says.
+
+###### Parameters
+
+###### index
+
+`number`
+
+The slot.
+
+###### Returns
+
+`void`
+
+###### Throws
+
+IgnifxError with code `IGX-1115` for a slot outside the capacity, or `IGX-1116` when
+the batch is disposed.
+
+##### write()
+
+> **write**(`index`, `x`, `y`, `width`, `height`, `frame`, `rotation`, `r`, `g`, `b`, `a`, `flipX?`, `flipY?`): `void`
+
+**`Beta`**
+
+Writes one slot, in **world** units: metres, +Y up, exactly as a `SpriteRenderer`'s transform
+and frame mean them. The batch applies `pixelsPerUnit` and the +Y-down flip itself.
+
+###### Parameters
+
+###### index
+
+`number`
+
+The slot, in `0 .. capacity - 1`.
+
+###### x
+
+`number`
+
+The sprite's centre, in world metres.
+
+###### y
+
+`number`
+
+The sprite's centre, in world metres, +Y up.
+
+###### width
+
+`number`
+
+The drawn width, in world metres.
+
+###### height
+
+`number`
+
+The drawn height, in world metres.
+
+###### frame
+
+`number`
+
+The atlas frame index; floored, and replaced by frame 0 when out of range.
+
+###### rotation
+
+`number`
+
+The rotation, in degrees counter-clockwise, as `Transform.rotation2D` reads.
+
+###### r
+
+`number`
+
+The red tint, `0` to `1`.
+
+###### g
+
+`number`
+
+The green tint.
+
+###### b
+
+`number`
+
+The blue tint.
+
+###### a
+
+`number`
+
+The alpha.
+
+###### flipX?
+
+`boolean`
+
+Whether the sprite is mirrored horizontally. Defaults to `false`.
+
+###### flipY?
+
+`boolean`
+
+Whether the sprite is mirrored vertically. Defaults to `false`.
+
+###### Returns
+
+`void`
+
+###### Remarks
+
+`pixelsPerUnit` is read at the moment of the write, so a scene that changes it does not move
+slots written before the change; rewrite them.
+
+###### Throws
+
+IgnifxError with code `IGX-1115` for a slot outside the capacity, or `IGX-1116` when
+the batch is disposed.
+
+***
+
+### SpriteBatchLiteHandles
+
+**`Beta`**
+
+The Babylon Lite objects a [SpriteBatch](#spritebatch) owns. Unstable escape hatch
+(`CONSTITUTION.md` §3.4).
+
+#### Properties
+
+##### handles
+
+> `readonly` **handles**: readonly `Sprite2DHandle`[]
+
+**`Beta`**
+
+One handle per slot, in slot order; empty under a headless app and after `dispose()`.
+
+###### Remarks
+
+Unstable; excluded from the stability guarantees of `CONSTITUTION.md` Article IV.
+
+***
+
+### SpriteBatchOptions
+
+**`Beta`**
+
+What [TwoDService.createSpriteBatch](#createspritebatch) accepts.
+
+#### Properties
+
+##### atlas
+
+> `readonly` **atlas**: [`AssetHandle`](#assethandle)\<[`SpriteAtlasAsset`](#spriteatlasasset)\>
+
+**`Beta`**
+
+The atlas every sprite in the batch draws a frame of. It must already be loaded.
+
+###### Remarks
+
+The batch does not retain the handle: hold it for as long as the batch lives, exactly as a
+`SpriteRenderer.sprite` holder does.
+
+##### blend?
+
+> `readonly` `optional` **blend?**: `"opaque"` \| `"premultiplied"` \| `"alpha"` \| `"additive"` \| `"multiply"`
+
+**`Beta`**
+
+How the sprites' colour combines with the background. Defaults to `"alpha"`.
+
+##### capacity
+
+> `readonly` **capacity**: `number`
+
+**`Beta`**
+
+How many sprite slots to claim. Fixed for the batch's life; a whole number of at least 1.
+
+##### screenSpace?
+
+> `readonly` `optional` **screenSpace?**: `boolean`
+
+**`Beta`**
+
+Whether the batch keeps the identity view instead of following the `Camera2D`.
+
+##### sortingLayer?
+
+> `readonly` `optional` **sortingLayer?**: `string`
+
+**`Beta`**
+
+Which sorting layer the batch draws on. Defaults to `"Default"`.
+
+***
+
 ### SpriteClip
 
 One clip, resolved against an atlas.
@@ -82283,6 +84375,32 @@ range backwards.
 
 ***
 
+### SpriteClipTiming
+
+The parts of a clip [spriteClipFrameAtTime](#spriteclipframeattime) reads.
+
+#### Properties
+
+##### fps
+
+> `readonly` **fps**: `number`
+
+Frames per second.
+
+##### frameCount
+
+> `readonly` **frameCount**: `number`
+
+How many frames the clip has.
+
+##### loop
+
+> `readonly` **loop**: `boolean`
+
+Whether the clip restarts at its end.
+
+***
+
 ### SpriteFrameDefinition
 
 One frame rectangle, in image pixels with a top-left origin.
@@ -82376,7 +84494,7 @@ Its pivot in `[0, 1]` of the frame, `[0, 0]` top-left; of the untrimmed source w
 
 ##### trim
 
-> `readonly` **trim**: `SpriteFrameTrim` \| `null`
+> `readonly` **trim**: [`SpriteFrameTrim`](#spriteframetrim) \| `null`
 
 Where the trimmed frame sits in its untrimmed source, from the document's `sourceOffset` and
 `sourceSize`; `null` for a frame the document does not place as trimmed.
@@ -82386,6 +84504,38 @@ Where the trimmed frame sits in its untrimmed source, from the document's `sourc
 > `readonly` **widthPx**: `number`
 
 Its drawn width, in image pixels: the trimmed width when `trim` is set.
+
+***
+
+### SpriteFrameTrim
+
+Where a trimmed frame sits inside the image it was cut from, before the packer trimmed it.
+
+#### Properties
+
+##### offsetXPx
+
+> `readonly` **offsetXPx**: `number`
+
+The trimmed rectangle's left edge inside the untrimmed source, in pixels.
+
+##### offsetYPx
+
+> `readonly` **offsetYPx**: `number`
+
+The trimmed rectangle's top edge inside the untrimmed source, in pixels.
+
+##### sourceHeightPx
+
+> `readonly` **sourceHeightPx**: `number`
+
+The untrimmed source height, in pixels.
+
+##### sourceWidthPx
+
+> `readonly` **sourceWidthPx**: `number`
+
+The untrimmed source width, in pixels.
 
 ***
 
@@ -83443,7 +85593,7 @@ Called once when the world the system belongs to has been created.
 
 ###### world
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The new world.
 
@@ -83461,7 +85611,7 @@ Called once when the world the system belongs to is being disposed.
 
 ###### world
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world going away.
 
@@ -83526,9 +85676,60 @@ The app clock.
 
 ##### world
 
-> `readonly` **world**: [`World`](#world-63)
+> `readonly` **world**: [`World`](#world-65)
 
 The world the system operates on.
+
+***
+
+### TaaSettings
+
+Temporal anti-aliasing, the `rendering.taa` record (`docs/architecture/07-rendering.md` §2.13).
+
+#### Remarks
+
+Needs `rendering.hdr`: TAA runs on the linear scene colour between the scene pass and the HDR
+output pass. With `hdr` off it stays off and the app logs a warning. Nothing of it loads while
+`enabled` is `false`.
+
+#### Example
+
+```ts
+const app = await createApp({ canvas, settings: { rendering: { hdr: true, taa: { enabled: true } } } });
+```
+
+#### Properties
+
+##### blend
+
+> `readonly` **blend**: `number`
+
+Weight of the current frame, 0.01–1. Lower is smoother but slower to follow change. Default 0.1.
+
+##### clamp
+
+> `readonly` **clamp**: `boolean`
+
+Clip history to the current pixel's neighbourhood, which prevents ghosting. Default `true`.
+
+##### cutDistance
+
+> `readonly` **cutDistance**: `number`
+
+How far, in world units, the camera may move in one frame before the history is dropped as a
+camera cut. A turn of more than 60° in one frame is a cut too. Default 10.
+
+##### enabled
+
+> `readonly` **enabled**: `boolean`
+
+Turn TAA on. Off by default.
+
+##### sharpness
+
+> `readonly` **sharpness**: `number`
+
+Output sharpening, 0–1, to offset the softening TAA brings. Default 0.
 
 ***
 
@@ -85748,7 +87949,7 @@ Entities whose sprites are skipped, as if `filter` had rejected them.
 
 ###### Inherited from
 
-[`TwoDPickOptions`](#twodpickoptions).[`ignore`](#ignore-2)
+[`TwoDPickOptions`](#twodpickoptions).[`ignore`](#ignore-3)
 
 ##### includeUnpickable?
 
@@ -86753,6 +88954,14 @@ or `null` when no extension has set one.
 
 ## Type Aliases
 
+### AmbientOcclusionQuality
+
+> **AmbientOcclusionQuality** = *typeof* [`AMBIENT_OCCLUSION_QUALITIES`](#ambient_occlusion_qualities)\[`number`\]
+
+The union of the ambient-occlusion qualities.
+
+***
+
 ### AnimatorConditionOp
 
 > **AnimatorConditionOp** = *typeof* [`ANIMATOR_CONDITION_OPS`](#animator_condition_ops)\[`number`\]
@@ -86998,7 +89207,7 @@ able to write a plain `static typeId` without the `override` keyword.
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-44)
+`S` *extends* [`Schema`](#schema-46)
 
 The schema the class was defined from.
 
@@ -87189,7 +89398,7 @@ The edge of the canvas the overlay is docked to.
 
 > **Disconnect** = () => `void`
 
-Detaches a handler from a [Signal](#signal-3). Calling it more than once is a no-op.
+Detaches a handler from a [Signal](#signal-5). Calling it more than once is a no-op.
 
 #### Returns
 
@@ -87359,7 +89568,7 @@ what gives `this.speed` its `number` type inside a component declared with
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-44)
+`S` *extends* [`Schema`](#schema-46)
 
 The schema to project.
 
@@ -88384,7 +90593,7 @@ mean "take the schema default" here, so both are accepted (`applyInit`, `encodeP
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-44)
+`S` *extends* [`Schema`](#schema-46)
 
 The schema to project.
 
@@ -88569,12 +90778,44 @@ the Havok shape for the call and releases it afterwards.
 
 ***
 
+### ReflectionProbeRefreshMode
+
+> **ReflectionProbeRefreshMode** = *typeof* [`REFLECTION_PROBE_REFRESH_MODES`](#reflection_probe_refresh_modes)\[`number`\]
+
+When a reflection probe renders its cube map again.
+
+#### Remarks
+
+- `"once"` (default): when the probe is first ready, and again on [ReflectionProbe.refresh](#refresh-2).
+- `"onDemand"`: only on [ReflectionProbe.refresh](#refresh-2); until then the probe reflects nothing.
+- `"everyFrame"`: every frame, six extra scene passes each frame. Use it for one probe at most, and
+  only on desktop at the `high` quality tier (nothing caps it yet).
+
+***
+
 ### RenderingFeature
 
 > **RenderingFeature** = keyof [`RenderingFeatureSettings`](#renderingfeaturesettings)
 
 A rendering feature a project or an extension asks for
 (`docs/architecture/07-rendering.md` §1.1).
+
+***
+
+### RenderingQuality
+
+> **RenderingQuality** = *typeof* [`RENDERING_QUALITIES`](#rendering_qualities)\[`number`\]
+
+The union of the rendering quality tiers.
+
+***
+
+### RenderPickIgnore
+
+> **RenderPickIgnore** = [`Entity`](#entity-19) \| [`Component`](#abstract-component) \| [`RenderPick`](#renderpick)
+
+Something a pick looks through: an entity (every mesh it owns), a component (every mesh it
+created), or an earlier hit (that mesh, or that one instance of an instanced mesh).
 
 ***
 
@@ -88635,7 +90876,7 @@ The union of script callback ordinals.
 
 > **ScriptDefinition**\<`S`\> = () => [`Script`](#abstract-script) & [`FieldsOf`](#fieldsof)\<`S`\> & `object`
 
-The abstract base class [Script.define](#define-44) returns: a `Script` that also carries every field
+The abstract base class [Script.define](#define-46) returns: a `Script` that also carries every field
 the schema declares, typed.
 
 #### Type Declaration
@@ -88658,7 +90899,7 @@ to write a plain `static typeId` or `static executionOrder` without the `overrid
 
 ##### S
 
-`S` *extends* [`Schema`](#schema-44)
+`S` *extends* [`Schema`](#schema-46)
 
 The schema the class was defined from.
 
@@ -88806,7 +91047,7 @@ The union of the shadow techniques a directional light can use.
 
 > **SignalHandler**\<`T`\> = (`value`) => `void`
 
-A listener attached to a [Signal](#signal-3).
+A listener attached to a [Signal](#signal-5).
 
 #### Type Parameters
 
@@ -88948,6 +91189,30 @@ One of the three surface-shader hooks.
 
 The material family a surface shader is compiled against. The generated WGSL differs: the two
 templates name their variables differently and Standard has fewer injection points.
+
+***
+
+### SystemEditMode
+
+> **SystemEditMode** = `"run"` \| `"hold"` \| `"skip"`
+
+What a system does in an edit-mode app (`createApp({ editMode: true })`, ADR-0028).
+
+- `"run"`: runs as it does in a game. Right for systems that turn component data into what is
+  drawn, heard, or laid out.
+- `"hold"`: runs with `ctx.dt` set to `0` and `ctx.isClockHeld` set to `true`, so it shows its
+  current state without moving it forward.
+- `"skip"`: does not run. Right for simulation, and for systems that would overwrite authored
+  data such as a transform.
+
+A `FixedUpdate` system never runs in edit mode, whatever it declares, because the fixed loop does
+not run.
+
+#### Example
+
+```ts
+ctx.registerSystem(new WindSystem(), { phase: Phase.Update, editMode: "skip" });
+```
 
 ***
 
@@ -89279,6 +91544,15 @@ A 2D value as a document may write it: `[x, y]`, the form `@ignifx/core` encodes
 field into a file as (`schema/encode.ts` line 393), or `{ x, y }`, the form an importer emits.
 
 ## Variables
+
+### AMBIENT\_OCCLUSION\_QUALITIES
+
+> `const` **AMBIENT\_OCCLUSION\_QUALITIES**: readonly \[`"half"`, `"full"`\]
+
+The ambient-occlusion qualities, in the order the inspector lists them: `"half"` computes GTAO at
+half resolution with 2 slices of 4 steps a side, `"full"` at full resolution with 3 slices of 6.
+
+***
 
 ### ANIMATOR\_ASSET\_TYPE
 
@@ -91028,6 +93302,23 @@ const halfway = EASINGS.cubicInOut(0.5); // 0.5
 
 ***
 
+### EDITOR\_ONLY\_METADATA\_KEY
+
+> `const` **EDITOR\_ONLY\_METADATA\_KEY**: `"ignifxEditorOnly"` = `"ignifxEditorOnly"`
+
+**`Beta`**
+
+The Babylon Lite `metadata` key that keeps a render-scene mesh out of every render texture.
+
+#### Remarks
+
+A mesh whose `metadata[EDITOR_ONLY_METADATA_KEY]` is `true` draws in the main view but never in
+a [RenderTexture](#rendertexture): an editor's grid or helper that must not show in its game view or
+thumbnails. Set it on a mesh reached through a `.lite` escape hatch, such as
+`RenderOverlay.lite.mainScene` (no stability guarantee, `CONSTITUTION.md` §3.4).
+
+***
+
 ### electron
 
 > `const` **electron**: (`options?`) => [`Extension`](#extension)
@@ -92055,6 +94346,38 @@ not collide.
 > `const` **LDTK\_INTGRID\_TILESET\_NAME**: `"intgrid"` = `"intgrid"`
 
 The name given to the synthetic tileset that carries IntGrid colliders.
+
+***
+
+### LIGHT\_PROBE\_ASSET\_TYPE
+
+> `const` **LIGHT\_PROBE\_ASSET\_TYPE**: `"lightprobes"` = `"lightprobes"`
+
+The asset type light-probe grids are registered under.
+
+***
+
+### LIGHT\_PROBE\_FILE\_EXTENSIONS
+
+> `const` **LIGHT\_PROBE\_FILE\_EXTENSIONS**: readonly `string`[]
+
+The address extensions that select the light-probe loader.
+
+***
+
+### LIGHT\_PROBE\_FILE\_FORMAT
+
+> `const` **LIGHT\_PROBE\_FILE\_FORMAT**: `"ignifx-probes"` = `"ignifx-probes"`
+
+The `format` header every `.probes.json` carries.
+
+***
+
+### LIGHT\_PROBE\_FORMAT\_VERSION
+
+> `const` **LIGHT\_PROBE\_FORMAT\_VERSION**: `1` = `1`
+
+The `formatVersion` this engine reads and writes.
 
 ***
 
@@ -93441,6 +95764,14 @@ The float index of `velocity.x` inside a record.
 
 ***
 
+### REFLECTION\_PROBE\_REFRESH\_MODES
+
+> `const` **REFLECTION\_PROBE\_REFRESH\_MODES**: readonly \[`"once"`, `"onDemand"`, `"everyFrame"`\]
+
+The `as const` name table behind [ReflectionProbeRefreshMode](#reflectionproberefreshmode-1).
+
+***
+
 ### RENDER\_DIAGNOSTICS\_COUNTERS
 
 > `const` **RENDER\_DIAGNOSTICS\_COUNTERS**: readonly `string`[]
@@ -93454,6 +95785,30 @@ The counters the `render` diagnostics group publishes, in index order.
 > `const` **RENDER\_DIAGNOSTICS\_GROUP**: `"render"` = `"render"`
 
 The render diagnostics group name (`docs/architecture/15-devtools-and-diagnostics.md` §3).
+
+***
+
+### RENDER\_TEXTURE\_MAX\_SIZE
+
+> `const` **RENDER\_TEXTURE\_MAX\_SIZE**: `4096` = `4096`
+
+The largest side of a render texture, in pixels.
+
+***
+
+### RENDERING\_QUALITIES
+
+> `const` **RENDERING\_QUALITIES**: readonly \[`"custom"`, `"low"`, `"medium"`, `"high"`\]
+
+The rendering quality tiers, in the order the inspector lists them
+(`docs/standards/coding-standards.md` §7 gives each tier's GPU budget).
+
+#### Remarks
+
+- `"custom"` (default): every effect is exactly as the section and the `PostProcessStack`s say.
+- `"low"`: GTAO at half resolution; no HDR, TAA, contact shadows or SSGI.
+- `"medium"`: adds HDR and TAA, and lets a stack run contact shadows.
+- `"high"`: GTAO at full resolution, and lets a stack run SSGI.
 
 ***
 
@@ -95200,15 +97555,71 @@ Where something faces when the world has no enabled camera at all.
 
 ## Functions
 
+### addComponentFromRecord()
+
+> **addComponentFromRecord**(`entity`, `record`, `options?`): [`ComponentBuildResult`](#componentbuildresult)
+
+Attaches one component to a live entity from its scene file record, the way the scene loader
+builds it: the record's registered type, its uid, its `enabled` flag, and its `props` decoded
+against the schema (`docs/architecture/06-serialization-and-scene-format.md` §4).
+
+#### Parameters
+
+##### entity
+
+[`Entity`](#entity-19)
+
+The entity to attach to.
+
+##### record
+
+[`SceneFileComponent`](#scenefilecomponent)
+
+The component record, as a scene file writes it.
+
+##### options?
+
+[`AddComponentFromRecordOptions`](#addcomponentfromrecordoptions)
+
+Where it goes among the entity's components, and how references resolve.
+
+#### Returns
+
+[`ComponentBuildResult`](#componentbuildresult)
+
+The component and the decoding problems.
+
+#### Remarks
+
+This is the per-component step of [instantiateScene](#instantiatescene) for a world that already exists, which
+is what an editor mirroring a document into a live world needs. The component is attached with
+`entity.addComponent`, so `awake` follows that method's rules. The record's uid is adopted as is;
+keeping it unique within the scene is the caller's job. Decoding never throws: a value that does
+not match its field takes the field's default and is reported in `issues`.
+
+#### Throws
+
+IgnifxError with code `IGX-0307` when the record's type is not registered, and whatever
+`entity.addComponent` throws (`IGX-0202` for a second instance of a single-instance class,
+`IGX-0101` for a destroyed entity).
+
+#### Example
+
+```ts
+const { component } = addComponentFromRecord(player, { uid: "01J9Z6M7E5S3A0V2Q4R8T1Y6WY", type: "game/Health", props: { max: 120 } });
+```
+
+***
+
 ### animatorFileSchema()
 
-> **animatorFileSchema**(): [`Schema`](#schema-44)
+> **animatorFileSchema**(): [`Schema`](#schema-46)
 
 The `ignifx.animator` document schema.
 
 #### Returns
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -95290,6 +97701,82 @@ The document from [collectOverrides](#collectoverrides).
 
 IgnifxError with code `IGX-0808` when the document is not an `ignifx.inputoverrides`
 document this build can read, or names a map, action, or binding that does not exist.
+
+***
+
+### applyOverridesToAsset()
+
+> **applyOverridesToAsset**(`instance`, `asset`, `selection?`): `Promise`\<[`PrefabApplyResult`](#prefabapplyresult)\>
+
+Writes an instance's overrides into the prefab file it instances, so every instance of the prefab
+gets them — Unity's "Apply to prefab" (ADR-0005).
+
+#### Parameters
+
+##### instance
+
+[`SceneFileInstance`](#scenefileinstance)
+
+The instance entry whose overrides to apply; its `scene` should name `asset`.
+
+##### asset
+
+[`SceneFile`](#scenefile)
+
+The prefab file the entry instances.
+
+##### selection?
+
+[`PrefabApplyOptions`](#prefabapplyoptions)
+
+Which overrides to apply, all of them by default, and the instance root's own
+components to apply with them.
+
+#### Returns
+
+`Promise`\<[`PrefabApplyResult`](#prefabapplyresult)\>
+
+The new prefab file and its hash, the instance entry without the applied overrides, and
+what was applied or skipped.
+
+#### Remarks
+
+A pure function over the two files: nothing is loaded, and the same input always gives
+byte-identical output through [stringifySceneFile](#stringifyscenefile). The rules:
+
+- Property, `enabled`, transform, and entity-field overrides change the prefab's record. An `add`
+  appends the component, keeping its uid; a `remove` deletes the component.
+- On a prefab with exactly one root, the instance root's own `name`, `transform`, and other entity
+  fields are its placement, not prefab content, so overrides of the root's entity fields and
+  transform are skipped.
+- Overrides reach only the prefab's own entities. Content of a scene the prefab itself instances
+  is not addressable by an override path, so a nested prefab is never edited: an override that
+  names something the prefab file does not hold is skipped.
+- An override is skipped when an earlier override that stays on the instance overlaps its path, so
+  the instance keeps the value it had.
+- A skipped override stays on the returned instance.
+- The instance root's own components are not overrides. Pass them as
+  [PrefabApplyOptions.rootComponents](#rootcomponents) to apply them too: on a prefab with exactly one root
+  each selected one is appended to that root, keeping its uid, and reported in
+  [PrefabApplyResult.appliedComponents](#appliedcomponents); one whose uid the prefab already uses, or any when
+  the prefab has several roots, is skipped.
+- Other instances of the prefab keep their overrides, which still win over the new prefab values
+  at the same path. Record [PrefabApplyResult.hash](#hash-1) on them, or loading them logs `IGX-0604`.
+- References inside added components (`$entity`, `$component`) are copied unchanged.
+- A component an apply moved into the prefab gets a fresh uid per instance from then on, like every
+  prefab component; a scene reference to it uses the instance form
+  `{ "$component": "<instanceRootUid>/<componentUid>" }`.
+
+#### Throws
+
+IgnifxError with code `IGX-0609` when a selected override path is outside the grammar.
+
+#### Example
+
+```ts
+const result = await applyOverridesToAsset(spawn.instance, prefabFile, { rootComponents: spawn.components });
+await app.storage.write("prefabs/enemy.prefab.json", stringifySceneFile(result.asset));
+```
 
 ***
 
@@ -95734,13 +98221,13 @@ throw audioError(AudioErrorCode.unknownBus, "Ambience is not a registered bus.",
 
 ### audioSettingsSchema()
 
-> **audioSettingsSchema**(): [`Schema`](#schema-44)
+> **audioSettingsSchema**(): [`Schema`](#schema-46)
 
 The schema the `audio` section is validated against.
 
 #### Returns
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -96241,13 +98728,13 @@ The document to persist.
 
 ### collider2DFields()
 
-> **collider2DFields**(): [`Schema`](#schema-44)
+> **collider2DFields**(): [`Schema`](#schema-46)
 
 The fields every 2D collider declares.
 
 #### Returns
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The shared field declarations, ready to spread into a collider's own schema.
 
@@ -96255,14 +98742,14 @@ The shared field declarations, ready to spread into a collider's own schema.
 
 ### colliderFields()
 
-> **colliderFields**(): [`Schema`](#schema-44)
+> **colliderFields**(): [`Schema`](#schema-46)
 
 The fields every collider declares. It is a function because a field kind is a function call and
 module scope holds declarations only (`CONSTITUTION.md` §3.5).
 
 #### Returns
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The shared field declarations, ready to spread into a collider's own schema.
 
@@ -97301,6 +99788,57 @@ The texture handles.
 
 Headless both handles wrap `null` GPU textures and nothing is uploaded; the assets still report
 their size. Each handle has one holder — the `TerrainAsset`, which releases it when it unloads.
+
+***
+
+### createLightProbeAsset()
+
+> **createLightProbeAsset**(`app`, `data`): [`AssetHandle`](#assethandle)\<[`LightProbeAsset`](#lightprobeasset)\>
+
+**`Beta`**
+
+Publishes a grid built in code, such as the result of a bake, as an asset.
+
+#### Parameters
+
+##### app
+
+[`App`](#app-1)
+
+The app.
+
+##### data
+
+[`LightProbeData`](#lightprobedata)
+
+The grid.
+
+#### Returns
+
+[`AssetHandle`](#assethandle)\<[`LightProbeAsset`](#lightprobeasset)\>
+
+A handle a `LightProbeVolume` can take.
+
+#### Throws
+
+IgnifxError with code `IGX-0709` when the grid is malformed.
+
+***
+
+### createLightProbeLoader()
+
+> **createLightProbeLoader**(): [`AssetLoader`](#assetloader)\<[`LightProbeAsset`](#lightprobeasset)\>
+
+**`Beta`**
+
+Builds the loader for `.probes.json` light-probe grids (GI Phase 2, step B2). It needs no device,
+so a grid loads in Node too.
+
+#### Returns
+
+[`AssetLoader`](#assetloader)\<[`LightProbeAsset`](#lightprobeasset)\>
+
+The loader to register with `ctx.registerAssetLoader`.
 
 ***
 
@@ -98531,6 +101069,21 @@ The default `audio` section.
 
 ***
 
+### defaultAutoExposureSettings()
+
+> **defaultAutoExposureSettings**(): [`AutoExposureSettings`](#autoexposuresettings)
+
+The auto exposure a project that names none gets: off, metering EV −6 to 6, adapting at 2 per
+second towards brighter scenes and 1 towards darker ones, with no compensation.
+
+#### Returns
+
+[`AutoExposureSettings`](#autoexposuresettings)
+
+A fresh record.
+
+***
+
 ### defaultDevtoolsSettings()
 
 > **defaultDevtoolsSettings**(): [`DevtoolsSettings`](#devtoolssettings)
@@ -99253,6 +101806,22 @@ describeInputSchemas()["ignifx/PlayerInput"].fields["deviceSlot"].default; // 0
 
 ***
 
+### describeLightProbeFileFormat()
+
+> **describeLightProbeFileFormat**(): [`SchemaDescription`](#schemadescription)
+
+**`Beta`**
+
+Describes the `.probes.json` light-probe grid format (GI Phase 2, step B2).
+
+#### Returns
+
+[`SchemaDescription`](#schemadescription)
+
+The description of the top-level file fields.
+
+***
+
 ### describeLocaleFileFormat()
 
 > **describeLocaleFileFormat**(): [`SchemaDescription`](#schemadescription)
@@ -99421,7 +101990,7 @@ The component's namespaced registration id, for example `mygame/Mover`.
 
 ##### schema
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The component's declared fields.
 
@@ -99647,13 +102216,13 @@ throw devtoolsError(DevtoolsErrorCode.unknownPanel, "physics2d is not a devtools
 
 ### devtoolsSettingsSchema()
 
-> **devtoolsSettingsSchema**(): [`Schema`](#schema-44)
+> **devtoolsSettingsSchema**(): [`Schema`](#schema-46)
 
 The schema the `devtools` section is validated against.
 
 #### Returns
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -101349,15 +103918,93 @@ throw inputError(InputErrorCode.unknownActionMap, "UI is not a registered action
 
 ### inputSettingsSchema()
 
-> **inputSettingsSchema**(): [`Schema`](#schema-44)
+> **inputSettingsSchema**(): [`Schema`](#schema-46)
 
 The schema the `input` section is validated against.
 
 #### Returns
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
+
+***
+
+### instanceComponentAt()
+
+> **instanceComponentAt**(`root`, `path`): [`Component`](#abstract-component) \| `null`
+
+Finds the live component an instance path names inside an instance, as the loader resolves
+`{ "$component": "<instanceRootUid>/<uidInThePrefab>" }`.
+
+#### Parameters
+
+##### root
+
+[`Entity`](#entity-19)
+
+The entity carrying the `instance` entry: the path's first segment.
+
+##### path
+
+`string`
+
+The rest of the path, without the root's uid: `"<componentUidInThePrefab>"`, with
+one segment before it per nested prefab.
+
+#### Returns
+
+[`Component`](#abstract-component) \| `null`
+
+The component, or `null` when the path names nothing in this instance.
+
+#### Example
+
+```ts
+const ai = instanceComponentAt(enemy, "01J9Z…AI");
+```
+
+***
+
+### instanceEntityAt()
+
+> **instanceEntityAt**(`root`, `path`): [`Entity`](#entity-19) \| `null`
+
+Finds the live entity an instance path names inside an instance, as the loader resolves
+`{ "$entity": "<instanceRootUid>/<uidInThePrefab>" }` while it builds a scene.
+
+#### Parameters
+
+##### root
+
+[`Entity`](#entity-19)
+
+The entity carrying the `instance` entry: the path's first segment.
+
+##### path
+
+`string`
+
+The rest of the path, without the root's uid: `"<uidInThePrefab>"` or
+`"<nestedInstanceUidInThePrefab>/<uidInTheNestedPrefab>"`.
+
+#### Returns
+
+[`Entity`](#entity-19) \| `null`
+
+The entity, or `null` when the path names nothing in this instance.
+
+#### Remarks
+
+For tools that hold such a reference after the scene was built, such as an editor that rebuilt
+one instance and points the rest of the document at it again. The path is read from `root` down:
+the uid the prefab file gives the target, with one segment before it per nested prefab.
+
+#### Example
+
+```ts
+const weapon = instanceEntityAt(enemy, "01J9Z…WEAPON");
+```
 
 ***
 
@@ -101373,7 +104020,7 @@ every asset the file references is already loaded, which is what a `SceneAsset` 
 
 ##### world
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world to build into.
 
@@ -102034,15 +104681,71 @@ const shader = await loadGeneratedShader(app, terrainSplatShaderSource(spec));
 
 ***
 
+### loadSceneDependencies()
+
+> **loadSceneDependencies**(`assets`, `file`, `options?`): `Promise`\<readonly [`AssetHandle`](#assethandle)\<`unknown`\>[]\>
+
+Loads every asset a scene file references — in `settings`, in every component's `props`, and in
+every `instance.scene`, recursively through the scenes those pull in — the walk the scene loader
+runs before it builds anything (`docs/architecture/06-serialization-and-scene-format.md` §4
+step 2).
+
+#### Parameters
+
+##### assets
+
+[`Assets`](#assets-1)
+
+The asset service to load through, normally `app.assets`.
+
+##### file
+
+[`SceneFile`](#scenefile)
+
+The scene file.
+
+##### options?
+
+[`LoadSceneDependenciesOptions`](#loadscenedependenciesoptions)
+
+Cancellation.
+
+#### Returns
+
+`Promise`\<readonly [`AssetHandle`](#assethandle)\<`unknown`\>[]\>
+
+The loaded handles, deduplicated by address, in the loader's order.
+
+#### Remarks
+
+It is the half of the scene loader a file that is already in memory needs: pass the result to
+`createSceneAsset` and the asset can be built synchronously with `instantiateScene`. Each handle
+is returned with one holder, which the caller owns: release them all when the scene they serve
+is gone. `world.loadSceneFile` does that for a whole scene.
+
+#### Throws
+
+Whatever the asset service rejects a load with (an `AssetLoadError`); every handle
+loaded by then is released first.
+
+#### Example
+
+```ts
+const dependencies = await loadSceneDependencies(app.assets, file);
+const asset = await createSceneAsset("memory:scene/draft", file, dependencies);
+```
+
+***
+
 ### localeFileSchema()
 
-> **localeFileSchema**(): [`Schema`](#schema-44)
+> **localeFileSchema**(): [`Schema`](#schema-46)
 
 The schema a translation document is described and validated against for tooling.
 
 #### Returns
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -102112,7 +104815,7 @@ The camera the player is looking through.
 
 ##### world
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world to look in.
 
@@ -102140,7 +104843,7 @@ The main camera's forward vector.
 
 ##### world
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world to look in.
 
@@ -103268,7 +105971,7 @@ See [ParticleShape.length](#length-4). Defaults to `1`.
 
 `number`
 
-See [ParticleShape.radius](#radius-10). Defaults to `0.2`.
+See [ParticleShape.radius](#radius-11). Defaults to `0.2`.
 
 ###### shape.randomDirection?
 
@@ -103280,7 +105983,7 @@ See [ParticleShape.randomDirection](#randomdirection). Defaults to `0`.
 
 \{ `x?`: `number`; `y?`: `number`; `z?`: `number`; \}
 
-See [ParticleShape.size](#size-10). Defaults to `(1, 1, 1)`.
+See [ParticleShape.size](#size-11). Defaults to `(1, 1, 1)`.
 
 ###### shape.size.x?
 
@@ -103491,13 +106194,13 @@ throw particlesError(ParticlesErrorCode.unknownPreset, "lava is not a particle p
 
 ### particlesFileSchema()
 
-> **particlesFileSchema**(): [`Schema`](#schema-44)
+> **particlesFileSchema**(): [`Schema`](#schema-46)
 
 The `ignifx.particles` document schema.
 
 #### Returns
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -103531,13 +106234,13 @@ A `data:text/plain;base64,…` URL.
 
 ### particlesSettingsSchema()
 
-> **particlesSettingsSchema**(): [`Schema`](#schema-44)
+> **particlesSettingsSchema**(): [`Schema`](#schema-46)
 
 The schema the `particles` section is validated against.
 
 #### Returns
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -103694,13 +106397,13 @@ throw physics2DError(Physics2DErrorCode.unknownLayer, "physics2d.collisionMatrix
 
 ### physics2DSettingsSchema()
 
-> **physics2DSettingsSchema**(): [`Schema`](#schema-44)
+> **physics2DSettingsSchema**(): [`Schema`](#schema-46)
 
 Builds the schema the `physics2d` section is validated against.
 
 #### Returns
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The schema.
 
@@ -103755,13 +106458,13 @@ throw physicsError(PhysicsErrorCode.unknownLayer, "physics.collisionMatrix names
 
 ### physicsSettingsSchema()
 
-> **physicsSettingsSchema**(): [`Schema`](#schema-44)
+> **physicsSettingsSchema**(): [`Schema`](#schema-46)
 
 Builds the schema the `physics` section is validated against.
 
 #### Returns
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The schema.
 
@@ -104728,6 +107431,46 @@ resolveTerrainAddress("levels/island.terrain.json", "../shared/grass.png"); // "
 
 ***
 
+### revertOverrides()
+
+> **revertOverrides**(`instance`, `selection?`): [`SceneFileInstance`](#scenefileinstance)
+
+Drops an instance's overrides so it follows its prefab again — Unity's "Revert".
+
+#### Parameters
+
+##### instance
+
+[`SceneFileInstance`](#scenefileinstance)
+
+The instance entry.
+
+##### selection?
+
+[`PrefabOverrideSelection`](#prefaboverrideselection)
+
+Which overrides to drop; all of them by default.
+
+#### Returns
+
+[`SceneFileInstance`](#scenefileinstance)
+
+The entry without the selected overrides, or `instance` itself when none was selected.
+
+#### Remarks
+
+A pure function: the entry's `scene` and `hash` are kept, and `overrides` is omitted when none
+remain. Reverting an `add` also reverts the overrides below the added component when the
+selection path covers them (`<entityUid>/components/<addedUid>` does).
+
+#### Example
+
+```ts
+const reverted = revertOverrides(spawn.instance, { paths: [`${rootUid}/components/${aiUid}`] });
+```
+
+***
+
 ### sampleControlWeight()
 
 > **sampleControlWeight**(`control`, `layer`, `u`, `v`): `number`
@@ -104765,6 +107508,55 @@ The terrain-wide coordinate along Z, `0..1`.
 `number`
 
 The weight.
+
+***
+
+### sampleLightProbes()
+
+> **sampleLightProbes**(`data`, `x`, `y`, `z`, `normal`): \[`number`, `number`, `number`\]
+
+**`Beta`**
+
+The diffuse light a white surface receives at a point, read from the grid on the CPU the same way
+the shader reads it: trilinear between the eight surrounding probes, clamped at the grid's edges.
+
+#### Parameters
+
+##### data
+
+[`LightProbeData`](#lightprobedata)
+
+The grid.
+
+##### x
+
+`number`
+
+World X.
+
+##### y
+
+`number`
+
+World Y.
+
+##### z
+
+`number`
+
+World Z.
+
+##### normal
+
+[`Vec3Like`](#vec3like)
+
+The surface normal, unit length.
+
+#### Returns
+
+\[`number`, `number`, `number`\]
+
+Linear RGB.
 
 ***
 
@@ -104964,7 +107756,7 @@ Picks the camera the frame draws through: the highest-priority enabled `Camera2D
 
 ##### world
 
-[`World`](#world-63)
+[`World`](#world-65)
 
 The world to search.
 
@@ -105521,13 +108313,13 @@ The maps.
 
 ### spriteAnimationFileSchema()
 
-> **spriteAnimationFileSchema**(): [`Schema`](#schema-44)
+> **spriteAnimationFileSchema**(): [`Schema`](#schema-46)
 
 The `ignifx.spriteanimation` document schema.
 
 #### Returns
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -105549,13 +108341,13 @@ The JSON Schema object.
 
 ### spriteAtlasFileSchema()
 
-> **spriteAtlasFileSchema**(): [`Schema`](#schema-44)
+> **spriteAtlasFileSchema**(): [`Schema`](#schema-46)
 
 The `ignifx.spriteatlas` document schema.
 
 #### Returns
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -105572,6 +108364,53 @@ The JSON Schema a tool validates a `.atlas.json` document against.
 [`JsonObject`](#jsonobject)
 
 The JSON Schema object.
+
+***
+
+### spriteClipFrameAtTime()
+
+> **spriteClipFrameAtTime**(`clip`, `seconds`, `speed?`): `number`
+
+The frame within a clip that shows `seconds` into it, counting from `0`.
+
+#### Parameters
+
+##### clip
+
+[`SpriteClipTiming`](#spritecliptiming)
+
+The clip's frame count, frame rate and loop flag.
+
+##### seconds
+
+`number`
+
+How far into the clip, in seconds.
+
+##### speed?
+
+`number`
+
+A multiplier on the clip's frame rate, as `SpriteAnimator.speed`. Defaults to `1`.
+
+#### Returns
+
+`number`
+
+The frame index within the clip, in `[0, frameCount - 1]`.
+
+#### Remarks
+
+Frame `n` shows from `n / (fps × speed)` seconds until the next one starts, as in playback. Past
+the end a looping clip wraps and a one-shot clip holds its last frame; before `0` a looping clip
+wraps backwards and a one-shot clip holds its first. A clip with no frames, or a rate of `0` or
+less, answers `0`.
+
+#### Example
+
+```ts
+spriteClipFrameAtTime({ frameCount: 4, fps: 8, loop: true }, 0.6); // 0 (wrapped from frame 4)
+```
 
 ***
 
@@ -105919,13 +108758,13 @@ throw terrainError(TerrainErrorCode.unknownLayer, "island.terrain.json names no 
 
 ### terrainFileSchema()
 
-> **terrainFileSchema**(): [`Schema`](#schema-44)
+> **terrainFileSchema**(): [`Schema`](#schema-46)
 
 The `ignifx.terrain` document schema.
 
 #### Returns
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -106010,13 +108849,13 @@ throw threeDError(ThreeDErrorCode.unknownParameter, "hero.animator.json declares
 
 ### threeDSettingsSchema()
 
-> **threeDSettingsSchema**(): [`Schema`](#schema-44)
+> **threeDSettingsSchema**(): [`Schema`](#schema-46)
 
 The schema the `threeD` section is validated against.
 
 #### Returns
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -106142,13 +108981,13 @@ tileFrameName(map, 1); // "hero_0"
 
 ### tilemapFileSchema()
 
-> **tilemapFileSchema**(): [`Schema`](#schema-44)
+> **tilemapFileSchema**(): [`Schema`](#schema-46)
 
 The `ignifx.tilemap` document schema.
 
 #### Returns
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -106180,7 +109019,7 @@ editor autocompletion (`docs/architecture/06-serialization-and-scene-format.md` 
 
 ##### schema
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The schema to convert.
 
@@ -106208,7 +109047,7 @@ readonly `string`[]
 
 ### transformSchema()
 
-> **transformSchema**(): [`Schema`](#schema-44)
+> **transformSchema**(): [`Schema`](#schema-46)
 
 The entity transform as a schema: the fields of a scene file's `transform` block, so an
 inspector and its ops can treat the transform like any component
@@ -106216,7 +109055,7 @@ inspector and its ops can treat the transform like any component
 
 #### Returns
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 A new schema: `position` (`vec3`, origin, step 0.01), `rotation` (`quat`, identity,
 step 0.5 degrees), `scale` (`vec3`, one, step 0.01).
@@ -106332,14 +109171,14 @@ throw twoDError(TwoDErrorCode.unknownClip, "hero.spriteanim.json declares no cli
 
 ### twoDSettingsSchema()
 
-> **twoDSettingsSchema**(): [`Schema`](#schema-44)
+> **twoDSettingsSchema**(): [`Schema`](#schema-46)
 
 The schema the `twoD` section is validated against, in `ignifx.config.ts` and in a scene file
 alike.
 
 #### Returns
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -106418,13 +109257,13 @@ throw uiError(UiErrorCode.unknownLocale, "fr is not a locale strings.i18n.json d
 
 ### uiSettingsSchema()
 
-> **uiSettingsSchema**(): [`Schema`](#schema-44)
+> **uiSettingsSchema**(): [`Schema`](#schema-46)
 
 The schema the `ui` section is validated against.
 
 #### Returns
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The schema, built fresh so no module holds state (`CONSTITUTION.md` §3.5).
 
@@ -106480,7 +109319,7 @@ as `IGX-0607`; names the caller omits are legal, because omitted props take sche
 
 ##### schema
 
-[`Schema`](#schema-44)
+[`Schema`](#schema-46)
 
 The schema to check against.
 
@@ -107033,6 +109872,30 @@ Receives two floats per vertex, or omitted to leave UVs alone.
 #### Returns
 
 `void`
+
+***
+
+### writeLightProbeFile()
+
+> **writeLightProbeFile**(`data`): `Record`\<`string`, `unknown`\>
+
+**`Beta`**
+
+Turns a grid into the JSON a `.probes.json` file holds.
+
+#### Parameters
+
+##### data
+
+[`LightProbeData`](#lightprobedata)
+
+The grid.
+
+#### Returns
+
+`Record`\<`string`, `unknown`\>
+
+The file contents, with the format header.
 
 ***
 

@@ -147,6 +147,24 @@ describe("PostProcessStack scene-colour passes", () => {
     }
   }, 90_000);
 
+  it("contact shadows and SSGI together keep the frame lit without HDR", async () => {
+    const device = gpuDeviceErrors();
+    try {
+      // Two passes: on the plain path the second one used to write the lazily allocated scene
+      // colour, which Lite reallocates under the scene task: "Destroyed texture" and a black frame.
+      const { running, stack } = await buildScene(false);
+      const before = await meanLuminance(running);
+      stack.contactShadows.enabled = true;
+      Object.assign(stack.ssgi, { enabled: true, intensity: 3, radius: 3, environmentDiffuse: 1 });
+      await running.advance(SETTLE_FRAMES * 6);
+      expect(running.renderer.sceneInputsUserCount).toBe(1);
+      expect(await meanLuminance(running)).toBeGreaterThan(before * 0.5);
+      expect(device.errors).toEqual([]);
+    } finally {
+      device.stop();
+    }
+  }, 90_000);
+
   it("turns the environment's diffuse light down while SSGI runs", async () => {
     const device = gpuDeviceErrors();
     try {
