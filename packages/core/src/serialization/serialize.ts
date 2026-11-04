@@ -251,7 +251,7 @@ function planEntities(
     order.push({ entity, parentUid, origin: asInstance ? origin : null });
     entities.add(entity);
     if (asInstance) {
-      addComponentPaths(entity, entity.uid, origin.instanced?.root?.componentSourceUids, paths);
+      addComponentPaths(entity, entity.uid, origin.instanced.root?.componentSourceUids, paths);
     }
     const own = entity.components;
     for (let index = 0; index < own.length; index += 1) {

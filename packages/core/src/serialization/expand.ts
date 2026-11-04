@@ -1,9 +1,9 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
 import { setOwnJsonProperty } from "../schema/json.js";
+import { remapInstancePath } from "./instance-paths.js";
 import { asJsonArray, asJsonObject } from "./json-view.js";
 import { applyOverrides } from "./overrides.js";
-import { remapInstancePath } from "./instance-paths.js";
 import { findSceneDependency } from "./scene-asset.js";
 import type { MutableSceneEntity, OverrideTarget } from "./overrides.js";
 import type { SceneAsset } from "./scene-asset.js";
