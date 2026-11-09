@@ -102,9 +102,16 @@ world **once**, when it starts:
   diffuse colour (Standard); textures are not read.
 - **Lights.** Every enabled `Light`: directional, point and spot (cones ignored) with a shadow ray;
   hemispheric unshadowed. Rays that miss return `sky` plus the hemispheric lights. One bounce.
+- **`directLight`** (`"exclude"` by default, or `"include"`): whether each probe also stores the light
+  it receives straight from directional, point and spot lights. Those lights keep lighting the scene
+  in real time while a `LightProbeVolume` is on, so a baked direct lobe would count their light
+  twice; `"exclude"` keeps only their bounce, plus the sky and hemispheric lights. Use `"include"`
+  when the baked lights are disabled at run time, or to read a probe's total light with
+  `sampleLightProbes`. Before 0.19.0 the bake always included it, so a re-bake of an older
+  `.probes.json` comes out darker unless you pass `"include"`.
 - **Options.** The grid (`origin`, `cellSize`, `counts`, as in the file), `rays` per probe (1–4096,
-  default 128), `maxDistance` (default 100 m) and `sky` (linear radiance, default black); see
-  `LightProbeBakeOptions` in [`../api/core.md`](../api/core.md) for every bake option. A bad grid or
+  default 128), `maxDistance` (default 100 m), `sky` (linear radiance, default black) and
+  `directLight`; `LightProbeBakeOptions` in [`../api/core.md`](../api/core.md) has their signatures. A bad grid or
   option is `IGX-0734` before anything is traced.
 - **Progress and abort.** It yields to the host about every 8 ms of work, calls
   `onProgress(done, total)` after each probe, and checks `signal` after each probe; an aborted bake

@@ -69,15 +69,15 @@ Order: B1 and B3 are independent; B2 starts with spike P1; B4 needs B2's asset; 
 
 All six steps are done (2026-11-09). The user guide is `skills/ignifx/references/concepts/baked-lighting.md`; the design record is `docs/architecture/07-rendering.md` §2.15.
 
-| Step                             | State | PR                                            |
-| -------------------------------- | ----- | --------------------------------------------- |
-| **B1** Reflection probes         | Done  | #151                                          |
-| **B1b** Probe blending           | Open  | (see Remaining)                               |
-| **B2** Light probes              | Done  | #156                                          |
-| **B3** Lightmaps                 | Done  | #164 (identity placement only; spike P2 open) |
-| **B4** Headless bake             | Done  | #160 (yield every ~8 ms added in #163)        |
-| **B5** Tiers, goldens, templates | Done  | #163 (goldens not recorded, see Remaining)    |
-| **B6** Schemas and skill pages   | Done  | #169                                          |
+| Step                             | State | PR                                                      |
+| -------------------------------- | ----- | ------------------------------------------------------- |
+| **B1** Reflection probes         | Done  | #151                                                    |
+| **B1b** Probe blending           | Open  | (see Remaining)                                         |
+| **B2** Light probes              | Done  | #156                                                    |
+| **B3** Lightmaps                 | Done  | #164 (identity placement only; spike P2 open)           |
+| **B4** Headless bake             | Done  | #160 (yield every ~8 ms in #163, `directLight` in #168) |
+| **B5** Tiers, goldens, templates | Done  | #163 (goldens not recorded, see Remaining)              |
+| **B6** Schemas and skill pages   | Done  | #169                                                    |
 
 **Remaining**
 

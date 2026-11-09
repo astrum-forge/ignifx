@@ -39,7 +39,7 @@ function addWall(app: App, name: string, corners: number[], normal: number[], ba
     normals: Float32Array.from([...normal, ...normal, ...normal, ...normal]),
     indices: Uint32Array.from([0, 1, 2, 0, 2, 3]),
   });
-  const material = createMaterialAsset(app, pbrMaterialDefinition({ baseColor, roughness: 1 }), []);
+  const material = createMaterialAsset(app, pbrMaterialDefinition({ baseColor, metallic: 0, roughness: 1 }), []);
   app.world.createEntity(name).addComponent(MeshRenderer, { mesh, materials: [material] });
 }
 
