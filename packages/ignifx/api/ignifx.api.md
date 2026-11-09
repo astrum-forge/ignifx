@@ -134,6 +134,7 @@ import { BackendSoundRequest } from '@ignifx/audio';
 import { BackendSpatialRequest } from '@ignifx/audio';
 import { bakeCurve } from '@ignifx/particles';
 import { bakeGradient } from '@ignifx/particles';
+import { bakeLightProbes } from '@ignifx/core';
 import { BatchHandle } from '@ignifx/core';
 import { Billboard } from '@ignifx/3d';
 import { BILLBOARD_MODES } from '@ignifx/3d';
@@ -715,6 +716,8 @@ import { LIGHT_PROBE_FILE_FORMAT } from '@ignifx/core';
 import { LIGHT_PROBE_FORMAT_VERSION } from '@ignifx/core';
 import { LIGHT_TYPES } from '@ignifx/core';
 import { LightProbeAsset } from '@ignifx/core';
+import { LightProbeBakeOptions } from '@ignifx/core';
+import { LightProbeBakeResult } from '@ignifx/core';
 import { LightProbeData } from '@ignifx/core';
 import { LightProbeVolume } from '@ignifx/core';
 import { LightShadowSettings } from '@ignifx/core';
@@ -1855,6 +1858,8 @@ export { BackendSpatialRequest }
 export { bakeCurve }
 
 export { bakeGradient }
+
+export { bakeLightProbes }
 
 export { BatchHandle }
 
@@ -3017,6 +3022,10 @@ export { LIGHT_PROBE_FORMAT_VERSION }
 export { LIGHT_TYPES }
 
 export { LightProbeAsset }
+
+export { LightProbeBakeOptions }
+
+export { LightProbeBakeResult }
 
 export { LightProbeData }
 
