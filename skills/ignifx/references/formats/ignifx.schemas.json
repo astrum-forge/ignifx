@@ -2611,14 +2611,14 @@
         "size": {
           "kind": "u32",
           "default": "128",
-          "description": "Cube face size in pixels, rounded down to a power of two. Larger is sharper and slower to capture.",
+          "description": "Cube face size in pixels, rounded down to a power of two. Larger is sharper and slower to capture. Quality tiers cap it (low 64, medium 128, high 256).",
           "min": 16,
           "max": 1024
         },
         "refreshMode": {
           "kind": "enum",
           "default": "\"once\"",
-          "description": "once: capture when ready and on refresh(); onDemand: only on refresh(); everyFrame: every frame (costly; one probe, desktop high tier only).",
+          "description": "once: capture when ready and on refresh(); onDemand: only on refresh(); everyFrame: every frame (costly; one probe; the low and medium quality tiers treat it as once).",
           "values": [
             "once",
             "onDemand",
