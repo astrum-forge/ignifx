@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { isIgnifxError } from "../../src/errors/ignifx-error.js";
 import { bakeLightProbes } from "../../src/render/light-probe-bake.js";
 import { Light } from "../../src/render/light.js";
@@ -20,6 +20,7 @@ import type { RenderHarness } from "./support/render-harness.js";
 let harness: RenderHarness | null = null;
 
 afterEach(() => {
+  vi.restoreAllMocks();
   harness?.dispose();
   harness = null;
 });
@@ -206,5 +207,32 @@ describe("bakeLightProbes", () => {
     const early = new AbortController();
     early.abort(new Error("never started"));
     await expect(bakeLightProbes(harness.world, { ...grid, signal: early.signal })).rejects.toThrow("never started");
+  });
+
+  it("yields to the host only once a slice of work is spent", async () => {
+    harness = await createRenderHarness();
+    const grid = { ...ONE_PROBE, counts: { x: 3, y: 1, z: 1 }, rays: 4 };
+    const timeout = vi.spyOn(globalThis, "setTimeout");
+    let step = 0;
+    let now = 0;
+    vi.spyOn(performance, "now").mockImplementation(() => (now += step));
+    await bakeLightProbes(harness.world, grid);
+    expect(timeout).not.toHaveBeenCalled();
+    step = 10;
+    const controller = new AbortController();
+    const baked = bakeLightProbes(harness.world, {
+      ...grid,
+      signal: controller.signal,
+      onProgress: (done) => {
+        if (done === 1) {
+          // Lands at the yield after the first probe: the slice is spent, so the bake checks again.
+          queueMicrotask(() => {
+            controller.abort(new Error("stop"));
+          });
+        }
+      },
+    });
+    await expect(baked).rejects.toThrow("stop");
+    expect(timeout).toHaveBeenCalledTimes(1);
   });
 });
