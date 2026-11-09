@@ -1,5 +1,19 @@
 # @ignifx/particles-2d
 
+## 0.18.0
+
+### Patch Changes
+
+- Updated dependencies [1d6ee43]
+- Updated dependencies [e6655e0]
+- Updated dependencies [89c2f6b]
+- Updated dependencies [5f2ae72]
+- Updated dependencies [d41217c]
+- Updated dependencies [02ab4a2]
+  - @ignifx/core@0.18.0
+  - @ignifx/2d@0.18.0
+  - @ignifx/particles@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes
