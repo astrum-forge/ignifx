@@ -249,7 +249,8 @@ function readBakeOptions(options: LightProbeBakeOptions): BakeSettings {
   if (!Number.isFinite(maxDistance) || maxDistance <= 0) {
     throw fail("maxDistance must be a finite number above 0");
   }
-  const directLight = options.directLight ?? "exclude";
+  // Widened: a JavaScript caller or a parsed file can pass anything.
+  const directLight: string = options.directLight ?? "exclude";
   if (directLight !== "include" && directLight !== "exclude") {
     throw fail('directLight must be "include" or "exclude"');
   }
