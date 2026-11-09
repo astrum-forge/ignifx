@@ -1,5 +1,17 @@
 # @ignifx/2d
 
+## 0.18.0
+
+### Patch Changes
+
+- 02ab4a2: Fix tilemap layers swapping their draw order after a chunk is rebuilt (by `setCells`, `setTile` or a camera pan), which drew ground over walls. A tilemap layer's `orderInLayer` now applies, then its place in the file. On a sorting layer without Y-sort, tiles draw behind that layer's sprites when the orders tie.
+- Updated dependencies [1d6ee43]
+- Updated dependencies [e6655e0]
+- Updated dependencies [89c2f6b]
+- Updated dependencies [5f2ae72]
+- Updated dependencies [d41217c]
+  - @ignifx/core@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes
