@@ -731,6 +731,7 @@ import { LightmapFileData } from '@ignifx/core';
 import { LightmapMode } from '@ignifx/core';
 import { LightmapPlacement } from '@ignifx/core';
 import { LightProbeAsset } from '@ignifx/core';
+import { LightProbeBakeDirectLight } from '@ignifx/core';
 import { LightProbeBakeOptions } from '@ignifx/core';
 import { LightProbeBakeResult } from '@ignifx/core';
 import { LightProbeData } from '@ignifx/core';
@@ -3069,6 +3070,8 @@ export { LightmapMode }
 export { LightmapPlacement }
 
 export { LightProbeAsset }
+
+export { LightProbeBakeDirectLight }
 
 export { LightProbeBakeOptions }
 

@@ -547,6 +547,7 @@ export {
   LIGHT_PROBE_FILE_FORMAT,
   LIGHT_PROBE_FORMAT_VERSION,
   LightProbeAsset,
+  type LightProbeBakeDirectLight,
   type LightProbeBakeOptions,
   type LightProbeBakeResult,
   type LightProbeData,

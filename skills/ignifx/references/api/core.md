@@ -24858,6 +24858,23 @@ How many probes along X, Y and Z.
 
 > `readonly` **z**: `number`
 
+##### directLight?
+
+> `readonly` `optional` **directLight?**: [`LightProbeBakeDirectLight`](#lightprobebakedirectlight)
+
+**`Beta`**
+
+Whether each probe also stores the light it receives straight from the directional, point and
+spot lights it sees. Defaults to `"exclude"`.
+
+###### Remarks
+
+Those lights keep lighting the scene in real time while a `LightProbeVolume` is on, so a probe
+that also holds their direct light counts it twice. `"exclude"` bakes only the bounce: the
+light that reached surfaces from those lights (shadowed) and came back, plus the sky and the
+hemispheric lights. Use `"include"` when the baked lights will be disabled at run time, or to
+read a probe's total light with `sampleLightProbes`.
+
 ##### maxDistance?
 
 > `readonly` `optional` **maxDistance?**: `number`
@@ -32393,6 +32410,17 @@ One of [LIGHTMAP\_MODES](#lightmap_modes).
 
 ***
 
+### LightProbeBakeDirectLight
+
+> **LightProbeBakeDirectLight** = `"include"` \| `"exclude"`
+
+**`Beta`**
+
+Whether a light-probe bake adds the light a probe receives straight from directional, point and
+spot lights. See [LightProbeBakeOptions.directLight](#directlight).
+
+***
+
 ### LightType
 
 > **LightType** = *typeof* [`LIGHT_TYPES`](#light_types)\[`number`\]
@@ -36193,7 +36221,9 @@ The grid and what was traced.
 #### Remarks
 
 One bounce, first-order harmonics, deterministic. Only meshes built with `MeshAsset.fromData`
-cast and bounce light (see [LightProbeBakeResult.skipped](#skipped)). Cost grows with probes × rays ×
+cast and bounce light (see [LightProbeBakeResult.skipped](#skipped)). By default a probe holds the
+bounce but not the direct light of directional, point and spot lights, which keep lighting the
+scene in real time (see [LightProbeBakeOptions.directLight](#directlight)). Cost grows with probes × rays ×
 triangles; it is meant for small scenes and tools, not for every frame.
 
 The bake is asynchronous: it yields to the host after every ~8 ms of work, reports progress
@@ -36203,8 +36233,8 @@ through `onProgress` after each probe, and stops at the next probe once `signal`
 
 IgnifxError with code `IGX-0734`, before tracing anything, for a grid the `.probes.json`
 format cannot hold (whole counts, `counts.x` ≤ 1024, `counts.y × counts.z` ≤ 4096, finite
-`origin` and positive `cellSize`), `rays` outside 1–4096, or a `maxDistance` that is not finite
-and positive. The promise rejects with `signal.reason` when the bake is aborted.
+`origin` and positive `cellSize`), `rays` outside 1–4096, a `maxDistance` that is not finite
+and positive, or a `directLight` other than `"include"` or `"exclude"`. The promise rejects with `signal.reason` when the bake is aborted.
 
 #### Example
 

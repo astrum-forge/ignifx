@@ -82,13 +82,16 @@ describe("bakeLightProbes", () => {
     }
   });
 
-  it("adds a visible directional light as a clamped-cosine lobe", async () => {
+  it("adds a visible directional light as a clamped-cosine lobe only when asked", async () => {
     harness = await createRenderHarness();
     addSun(harness);
     harness.frame();
-    const { data } = await bakeLightProbes(harness.world, ONE_PROBE);
+    const { data } = await bakeLightProbes(harness.world, { ...ONE_PROBE, directLight: "include" });
     expect(data.coefficients[0]).toBeCloseTo(0.25, 3);
     expect(data.coefficients[3]).toBeCloseTo(0.5, 3);
+    // The default leaves direct light to the real-time light, so an empty world bakes black.
+    const bounceOnly = await bakeLightProbes(harness.world, ONE_PROBE);
+    expect(bounceOnly.data.coefficients.every((value) => value === 0)).toBe(true);
   });
 
   it("drops a light a surface hides, and bounces one it lights", async () => {
@@ -96,7 +99,7 @@ describe("bakeLightProbes", () => {
     addSun(harness);
     addQuad(harness, 1, 1);
     harness.frame();
-    const shaded = await bakeLightProbes(harness.world, { ...ONE_PROBE, rays: 64 });
+    const shaded = await bakeLightProbes(harness.world, { ...ONE_PROBE, rays: 64, directLight: "include" });
     expect(shaded.triangles).toBe(2);
     expect(shaded.data.coefficients[0]).toBeCloseTo(0, 6);
     harness.dispose();
@@ -106,11 +109,16 @@ describe("bakeLightProbes", () => {
     addQuad(harness, -1, 1000);
     harness.world.createEntity("Box").addComponent(MeshRenderer, { mesh: MeshAsset.box(harness.app) });
     harness.frame();
-    const lit = await bakeLightProbes(harness.world, { ...ONE_PROBE, rays: 256, maxDistance: 1e6 });
+    const both = { ...ONE_PROBE, rays: 256, maxDistance: 1e6 };
+    const lit = await bakeLightProbes(harness.world, { ...both, directLight: "include" });
     expect(lit.skipped).toBe(1);
     // The lobe from above (c0 0.25, up 0.5) plus a white floor of radiance 1 below (c0 0.5, up -0.5).
     expect(lit.data.coefficients[0]).toBeCloseTo(0.75, 1);
     expect(Math.abs(lit.data.coefficients[3] ?? 1)).toBeLessThan(0.05);
+    // Without the lobe only the floor's bounce is left, and the floor still sees the sun.
+    const bounce = await bakeLightProbes(harness.world, both);
+    expect(bounce.data.coefficients[0]).toBeCloseTo(0.5, 1);
+    expect(bounce.data.coefficients[3]).toBeCloseTo(-0.5, 1);
   });
 
   it("adds hemispheric light as sky and ground, and point lights by distance", async () => {
@@ -151,7 +159,7 @@ describe("bakeLightProbes", () => {
     hidden.addComponent(MeshRenderer, { mesh: floor });
     hidden.active = false;
     h.frame();
-    const mixed = await bakeLightProbes(h.world, { ...ONE_PROBE, rays: 64 });
+    const mixed = await bakeLightProbes(h.world, { ...ONE_PROBE, rays: 64, directLight: "include" });
     expect(mixed.triangles).toBe(4);
     // The lamp 2 m above: intensity 4 / 2² = 1 as a lobe (c0 0.25, up 0.5), plus sky and bounce.
     expect(mixed.data.coefficients[0]).toBeGreaterThan(0.25);
@@ -167,6 +175,7 @@ describe("bakeLightProbes", () => {
     ["too many rays", { rays: 5000 }],
     ["fractional rays", { rays: 1.5 }],
     ["an infinite distance", { maxDistance: Number.POSITIVE_INFINITY }],
+    ["an unknown directLight", { directLight: "both" as "include" }],
   ])("refuses %s with IGX-0734 before tracing", async (_name, patch) => {
     harness = await createRenderHarness();
     const failure: unknown = await bakeLightProbes(harness.world, { ...ONE_PROBE, ...patch }).catch(
