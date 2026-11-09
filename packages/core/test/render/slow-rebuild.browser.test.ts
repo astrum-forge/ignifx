@@ -8,7 +8,7 @@ import {
 } from "../../src/render/material-asset.js";
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
-import { createBrowserApp, gpuDeviceErrors, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { createBrowserApp, gpuDeviceErrors, settle, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 
 /**
@@ -106,7 +106,7 @@ it("keeps every buffer a frame draws alive while a two-family rebuild spans seve
   box.transform.localPosition.set(0, 1.5, 0);
   box.addComponent(MeshRenderer, { mesh: MeshAsset.box(running.app, { size: 1 }), materials: [standard] });
   await running.start();
-  await running.advance(SETTLE_FRAMES);
+  await settle(running);
   const addLight = (name: string, x: number): void => {
     const entity = running.world.createEntity(name);
     entity.transform.localPosition.set(x, 8, 0.001);
@@ -114,10 +114,10 @@ it("keeps every buffer a frame draws alive while a two-family rebuild spans seve
     entity.addComponent(Light, { type: "directional", intensity: 0.6, shadows: { enabled: true, mapSize: 512 } });
   };
   addLight("Left", -6);
-  await running.advance(SETTLE_FRAMES);
+  await settle(running);
   // The Standard group was built at start; the PBR group is built now, after it.
   ground.materials = [pbr];
-  await running.advance(SETTLE_FRAMES * 4);
+  await settle(running, SETTLE_FRAMES * 4);
   expect(device.errors).toEqual([]);
 
   // Boundary assertion: the scene is a Lite 1.34.0 scene, which carries both fields.
@@ -128,7 +128,7 @@ it("keeps every buffer a frame draws alive while a two-family rebuild spans seve
   await running.advance(SETTLE_FRAMES * 2);
   expect(stall.isStalled()).toBe(true);
   stall.release();
-  await running.advance(SETTLE_FRAMES * 2);
+  await settle(running, SETTLE_FRAMES * 2);
 
   expect(device.errors).toEqual([]);
   expect(running.errors).toEqual([]);

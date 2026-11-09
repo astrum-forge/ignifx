@@ -7,6 +7,7 @@ import {
   createBrowserApp,
   fixtureUrl,
   pixelLuminance,
+  settle,
   SETTLE_FRAMES,
 } from "../render/support/browser-harness.js";
 import type { BrowserApp } from "../render/support/browser-harness.js";
@@ -66,7 +67,7 @@ async function drawModel(address: string): Promise<number> {
   expect(handle.value).toBeInstanceOf(ModelAsset);
   expect(handle.value.lite.container).not.toBeNull();
   running.world.createEntity("Box").addComponent(Model, { model: handle });
-  await running.advance(SETTLE_FRAMES * 2);
+  await settle(running, SETTLE_FRAMES * 2);
   expect(running.errors).toEqual([]);
   return pixelLuminance(await running.centrePixel());
 }

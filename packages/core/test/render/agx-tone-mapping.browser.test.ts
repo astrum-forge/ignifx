@@ -5,7 +5,7 @@ import { Light } from "../../src/render/light.js";
 import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/material-asset.js";
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
-import { createBrowserApp, gpuDeviceErrors, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { createBrowserApp, gpuDeviceErrors, settle, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 import type { PixelRgba } from "../../src/lite/screenshot.js";
 import type { ToneMappingCurve } from "../../src/render/environment.js";
@@ -57,7 +57,7 @@ async function centre(hdr: boolean, curve: ToneMappingCurve): Promise<PixelRgba>
     .createEntity("Cube")
     .addComponent(MeshRenderer, { mesh: MeshAsset.box(running.app, { size: 2 }), materials: [material] });
   await running.start();
-  await running.advance(SETTLE_FRAMES * 3);
+  await settle(running, SETTLE_FRAMES * 3);
   return running.centrePixel();
 }
 

@@ -6,7 +6,7 @@ import { Light } from "../../../src/render/light.js";
 import { createMaterialAsset, pbrMaterialDefinition } from "../../../src/render/material-asset.js";
 import { MeshAsset } from "../../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../../src/render/mesh-renderer.js";
-import { createBrowserApp, pixelLuminance, SETTLE_FRAMES } from "../../render/support/browser-harness.js";
+import { createBrowserApp, pixelLuminance, settle, SETTLE_FRAMES } from "../../render/support/browser-harness.js";
 import type { AssetHandle } from "../../../src/assets/types.js";
 import type { MaterialAsset } from "../../../src/render/material-asset.js";
 import type { BrowserApp } from "../../render/support/browser-harness.js";
@@ -156,11 +156,11 @@ describe("twenty thousand instances", () => {
     renderer.setCount(1);
 
     await running.start();
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
     const withOne = running.renderer.drawCalls;
 
     renderer.setCount(BIG_COUNT);
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
     const withAll = running.renderer.drawCalls;
 
     expect(withAll).toBe(withOne);
@@ -199,7 +199,7 @@ describe("the bounds an instanced caster publishes", () => {
     plain.addComponent(MeshRenderer, { mesh: box, materials: [material] });
 
     await running.start();
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
 
     expect([...(template?.boundMax ?? [])]).toStrictEqual(before);
     const instanced = renderer.lite.mesh;
@@ -222,12 +222,12 @@ describe("setCount", () => {
     renderer.setMatrices(gridSlab(4, 3), 4);
 
     await running.start();
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
     const withAll = pixelLuminance(await running.centrePixel());
     expect(withAll).toBeGreaterThan(BACKGROUND_LUMINANCE);
 
     renderer.setCount(0);
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
     const withNone = pixelLuminance(await running.centrePixel());
     expect(withNone).toBeLessThan(BACKGROUND_LUMINANCE);
   }, 120_000);
@@ -253,7 +253,7 @@ describe("GPU culling", () => {
     });
     renderer.setMatrices(gridSlab(9, 1.6), 9);
     await running.start();
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     const luminance = pixelLuminance(await running.centrePixel());
     running.dispose();
     harness = null;
@@ -298,7 +298,7 @@ describe("a LOD partner", () => {
     });
     renderer.setMatrices(gridSlab(1, 1), 1);
     await running.start();
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     expect(renderer.lite.lodMesh).not.toBeNull();
     const luminance = pixelLuminance(await running.centrePixel());
     running.dispose();
@@ -353,7 +353,7 @@ describe("shadows", () => {
     renderer.setMatrices(slab, 1);
 
     await running.start();
-    await running.advance(SETTLE_FRAMES * 4);
+    await settle(running, SETTLE_FRAMES * 4);
 
     const camera = running.world.mainCamera;
     expect(camera).not.toBeNull();
@@ -377,7 +377,7 @@ describe("shadows", () => {
     // bright as its mirror, which is what makes the assertion above about the instances and not
     // about the framing.
     renderer.castShadows = false;
-    await running.advance(SETTLE_FRAMES * 4);
+    await settle(running, SETTLE_FRAMES * 4);
     const relit = pixelLuminance(await running.pixelAt(shadowPixelX, shadowPixelY));
     expect(relit).toBeGreaterThan(100);
   }, 240_000);

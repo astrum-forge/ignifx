@@ -16,7 +16,7 @@ import { SHADER_ASSET_TYPE, ShaderAsset } from "../../src/render/shader-asset.js
 import { shaderMaterialDefinition } from "../../src/render/shader-material-definition.js";
 import { parseShaderDeclaration } from "../../src/render/shader-pragma.js";
 import { loadShaderSupport } from "../../src/render/shader-support.js";
-import { createBrowserApp, fixtureUrl, gpuDeviceErrors, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { createBrowserApp, fixtureUrl, gpuDeviceErrors, settle, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 import type { PixelRgba } from "../../src/lite/screenshot.js";
 import type { EnvironmentAsset } from "../../src/render/environment-asset.js";
@@ -154,7 +154,7 @@ async function render(options: SceneOptions): Promise<BrowserApp> {
     eye.addComponent(PostProcessStack).custom.push(customEffect({ shader }));
   }
   await running.start();
-  await running.advance(SETTLE_FRAMES * 3);
+  await settle(running, SETTLE_FRAMES * 3);
   expect(running.errors).toEqual([]);
   return running;
 }

@@ -20,7 +20,7 @@ import { Light } from "../../../src/render/light.js";
 import { createMaterialAsset, pbrMaterialDefinition } from "../../../src/render/material-asset.js";
 import { MeshAsset } from "../../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../../src/render/mesh-renderer.js";
-import { createBrowserApp, gpuDeviceErrors, SETTLE_FRAMES } from "../../render/support/browser-harness.js";
+import { createBrowserApp, gpuDeviceErrors, settle, SETTLE_FRAMES } from "../../render/support/browser-harness.js";
 import type { SceneInputs } from "../../../src/lite/gpu/scene-inputs.js";
 import type { BrowserApp } from "../../render/support/browser-harness.js";
 import type { Texture2D } from "@babylonjs/lite";
@@ -63,7 +63,7 @@ async function buildCubeScene(): Promise<{ readonly running: BrowserApp }> {
   running.world
     .createEntity("Cube")
     .addComponent(MeshRenderer, { mesh: MeshAsset.box(running.app, { size: 2 }), materials: [material] });
-  await running.advance(SETTLE_FRAMES);
+  await settle(running);
   return { running };
 }
 
@@ -168,7 +168,7 @@ describe("scene inputs", () => {
     try {
       const { running } = await buildCubeScene();
       const inputs = await acquire(running);
-      await running.advance(SETTLE_FRAMES);
+      await settle(running);
       expect(taskNames(running).filter((name) => INPUT_NAMES.includes(name))).toEqual(INPUT_NAMES);
       const width = running.canvas.width;
       const height = running.canvas.height;
@@ -191,7 +191,7 @@ describe("scene inputs", () => {
   it("reads a plausible depth and a facing normal at the centre of hello-cube", async () => {
     const { running } = await buildCubeScene();
     const inputs = await acquire(running);
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     const centre = SIZE >> 1;
     const [depth = 0, nx = 0, ny = 0, nz = 0] = await readTexel(running, inputs.depth, inputs.normals, centre, centre);
     // Reverse-Z with an infinite-ish far plane: the front face at 3 m, near 0.1 m, is a small positive value.
@@ -211,7 +211,7 @@ describe("scene inputs", () => {
     // 0; camera motion is what this checks.
     const { running } = await buildCubeScene();
     const inputs = await acquire(running);
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     const eye = running.world.findByName("Main Camera");
     if (eye === null) {
       throw new Error("no camera");
@@ -241,7 +241,7 @@ describe("scene inputs", () => {
     expect(running.renderer.sceneInputsUserCount).toBe(2);
     expect(second.depth).toBe(first.depth);
     expect(taskNames(running).filter((name) => name === SCENE_INPUT_TASK_NAMES.geometry)).toHaveLength(1);
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
 
     first.release();
     first.release();
@@ -252,12 +252,12 @@ describe("scene inputs", () => {
     expect(running.renderer.sceneInputsUserCount).toBe(0);
     expect(second.isReleased).toBe(true);
     expect(taskNames(running)).toEqual(before);
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     expect(running.errors).toEqual([]);
 
     // A new user after the last release gets a fresh pass.
     const third = await acquire(running);
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     expect(taskNames(running).filter((name) => INPUT_NAMES.includes(name))).toEqual(INPUT_NAMES);
     third.release();
   }, 60_000);
@@ -271,14 +271,14 @@ describe("scene inputs", () => {
       inputs.onChange(() => {
         changes += 1;
       });
-      await running.advance(SETTLE_FRAMES);
+      await settle(running);
       const pyramidBefore = inputs.depthPyramid;
 
       // Lite's loop snaps a laid-out canvas to its CSS box, which rebuilds the frame graph.
       const grown = SIZE * 2;
       running.canvas.style.width = `${String(grown)}px`;
       running.canvas.style.height = `${String(grown)}px`;
-      await running.advance(SETTLE_FRAMES * 2);
+      await settle(running, SETTLE_FRAMES * 2);
 
       const width = running.canvas.width;
       expect(width).toBeGreaterThan(SIZE);

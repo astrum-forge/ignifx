@@ -7,6 +7,7 @@ import {
   fixtureUrl,
   gpuDeviceErrors,
   pixelLuminance,
+  settle,
   SETTLE_FRAMES,
 } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
@@ -48,7 +49,7 @@ it("draws the first skinned model a page loads after start", async () => {
 
   const handle = await running.app.assets.loadAsync<ModelAsset>("models/rig.glb");
   running.world.createEntity("Rig").addComponent(Model, { model: handle });
-  await running.advance(SETTLE_FRAMES * 3);
+  await settle(running, SETTLE_FRAMES * 3);
 
   expect(device.errors).toEqual([]);
   expect(running.errors).toEqual([]);

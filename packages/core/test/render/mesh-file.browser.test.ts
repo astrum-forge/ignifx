@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/material-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
-import { addCameraAndLight, createBrowserApp, pixelLuminance, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { addCameraAndLight, createBrowserApp, pixelLuminance, settle } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 import type { MeshAsset } from "../../src/render/mesh-asset.js";
 
@@ -42,7 +42,7 @@ describe("a mesh file", () => {
       [],
     );
     const renderer = running.world.createEntity("Crate").addComponent(MeshRenderer, { mesh, materials: [material] });
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     expect(renderer.lite.mesh).not.toBeNull();
     expect(pixelLuminance(await running.centrePixel())).toBeGreaterThan(10);
     mesh.release();

@@ -5,7 +5,7 @@ import { Light } from "../../src/render/light.js";
 import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/material-asset.js";
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
-import { createBrowserApp, pixelLuminance, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { createBrowserApp, pixelLuminance, settle, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 import type { ShadowTechniqueName } from "../../src/render/light.js";
 
@@ -87,7 +87,7 @@ async function buildScene(technique: ShadowTechniqueName): Promise<ShadowScene> 
   box.addComponent(MeshRenderer, { mesh: MeshAsset.box(running.app, { size: 1 }), materials: [white] });
 
   await running.start();
-  await running.advance(SETTLE_FRAMES * 4);
+  await settle(running, SETTLE_FRAMES * 4);
   return { running, sun: light };
 }
 
@@ -148,7 +148,7 @@ describe("a forced device loss with cascaded shadows", () => {
     expect(failures).toEqual([]);
     expect(recovered).toBe(1);
 
-    await running.advance(SETTLE_FRAMES * 4);
+    await settle(running, SETTLE_FRAMES * 4);
     const after = await luminances(running);
     const shadowBefore = darkPixels(before);
     const shadowAfter = darkPixels(after);
@@ -159,7 +159,7 @@ describe("a forced device loss with cascaded shadows", () => {
 
     // The dark pixels were the shadow: with casting switched off they go.
     sun.shadows.enabled = false;
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
     expect(darkPixels(await luminances(running))).toBeLessThan(shadowBefore / 4);
   }, 60_000);
 });

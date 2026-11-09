@@ -8,6 +8,7 @@ import {
   createBrowserApp,
   pixelLuminance,
   pixelsDiffer,
+  settle,
   SETTLE_FRAMES,
 } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
@@ -85,7 +86,7 @@ async function buildScene(
   running.world.createEntity("Cube").addComponent(MeshRenderer, { mesh, materials: [material] });
   options.beforeStart?.(running);
   await running.start();
-  await running.advance(SETTLE_FRAMES * 2);
+  await settle(running, SETTLE_FRAMES * 2);
   return running;
 }
 
@@ -171,7 +172,7 @@ describe("the postProcessing rendering feature", () => {
     const stack = running.world.createEntity("Post").addComponent(PostProcessStack);
     stack.bloom.enabled = true;
     stack.smaa.enabled = true;
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
 
     expect(stack.taskCount).toBe(0);
     expect(allMatch(before, await samples(running), 4)).toBe(true);
@@ -192,7 +193,7 @@ describe("an effect chain", () => {
     stack.imageProcessing.enabled = true;
     expect(stack.plannedChain()).toEqual(["bloom", "smaa", "imageProcessing"]);
 
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     expect(stack.taskCount).toBe(3);
     // The claim the old suite could not make: the cube is still there.
     expect(await centreLuminance(running)).toBeGreaterThan(BLACK * 4);
@@ -203,16 +204,16 @@ describe("an effect chain", () => {
     const running = await buildScene();
     const stack = running.world.createEntity("Post").addComponent(PostProcessStack);
     stack.imageProcessing.enabled = true;
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     expect(stack.taskCount).toBe(1);
 
     const scene = running.app.lite.scene;
     scene.imageProcessing.exposure = 1;
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
     const dim = await centreLuminance(running);
 
     scene.imageProcessing.exposure = 2;
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
     const bright = await centreLuminance(running);
 
     expect(dim).toBeGreaterThan(BLACK);
@@ -231,7 +232,7 @@ describe("an effect chain", () => {
     stack.bloom.weight = 1;
     stack.bloom.kernel = 64;
     stack.bloom.scale = 1;
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
 
     expect(await cornerLuminance(running)).toBeGreaterThan(dark);
     expect(await centreLuminance(running)).toBeGreaterThan(BLACK * 4);
@@ -243,7 +244,7 @@ describe("an effect chain", () => {
     const plain = await samples(running);
 
     const stack = running.world.createEntity("Post").addComponent(PostProcessStack);
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
 
     expect(stack.plannedChain()).toEqual([]);
     expect(stack.taskCount).toBe(0);
@@ -260,18 +261,18 @@ describe("an effect chain", () => {
     stack.bloom.weight = 1;
     stack.bloom.kernel = 64;
     stack.bloom.scale = 1;
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     const withEffect = await samples(running);
     expect(allMatch(plain, withEffect, 2)).toBe(false);
 
     stack.enabled = false;
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     // The compositing blit takes over, so the swapchain still gets a frame — not a stale one, and
     // certainly not a black one.
     expect(allMatch(plain, await samples(running), 4)).toBe(true);
 
     stack.enabled = true;
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     expect(await centreLuminance(running)).toBeGreaterThan(BLACK * 4);
     expect(running.errors).toEqual([]);
   });
@@ -280,11 +281,11 @@ describe("an effect chain", () => {
     const running = await buildScene();
     const stack = running.world.createEntity("Post").addComponent(PostProcessStack);
     stack.bloom.enabled = true;
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     expect(stack.taskCount).toBeGreaterThan(0);
 
     stack.destroy();
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     expect(stack.taskCount).toBe(0);
     expect(await centreLuminance(running)).toBeGreaterThan(BLACK * 4);
     expect(running.errors).toEqual([]);
@@ -318,7 +319,7 @@ describe("retuning a chain that is already recorded", () => {
     stack.bloom.weight = 1;
     stack.bloom.kernel = 64;
     stack.bloom.scale = 1;
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     return { running, stack, plain };
   }
 
@@ -329,11 +330,11 @@ describe("retuning a chain that is already recorded", () => {
 
     // Weight 0 merges none of the blur back, so the frame is the plain scene again.
     stack.bloom.weight = 0;
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     expect(allMatch(plain, await samples(running), 4)).toBe(true);
 
     stack.bloom.weight = 1;
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     expect(await cornerLuminance(running)).toBeGreaterThan(pixelLuminance(plain[1] ?? { r: 0, g: 0, b: 0, a: 255 }));
     expect(stack.taskCount).toBe(1);
     expect(running.errors).toEqual([]);
@@ -344,11 +345,11 @@ describe("retuning a chain that is already recorded", () => {
 
     // Nothing in the frame is brighter than 5, so nothing glows.
     stack.bloom.threshold = 5;
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     expect(allMatch(plain, await samples(running), 4)).toBe(true);
 
     stack.bloom.threshold = 0.2;
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     expect(await cornerLuminance(running)).toBeGreaterThan(pixelLuminance(plain[1] ?? { r: 0, g: 0, b: 0, a: 255 }));
     expect(running.errors).toEqual([]);
   });
@@ -357,13 +358,13 @@ describe("retuning a chain that is already recorded", () => {
     const { running, stack, plain } = await buildBloomingScene();
 
     stack.bloom.enabled = false;
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     // The chain is gone and the compositing blit is back, so the plain scene presents.
     expect(stack.taskCount).toBe(0);
     expect(allMatch(plain, await samples(running), 4)).toBe(true);
 
     stack.bloom.enabled = true;
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     expect(stack.taskCount).toBe(1);
     expect(await cornerLuminance(running)).toBeGreaterThan(pixelLuminance(plain[1] ?? { r: 0, g: 0, b: 0, a: 255 }));
     expect(running.errors).toEqual([]);
@@ -376,7 +377,7 @@ describe("retuning a chain that is already recorded", () => {
     // rather than reaching the far corner; what has to hold is that the rebuilt chain still glows
     // (the frame is not the plain scene), still presents, and recorded cleanly.
     stack.bloom.scale = 0.25;
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     expect(stack.taskCount).toBe(1);
     expect(allMatch(plain, await samples(running), 2)).toBe(false);
     expect(await centreLuminance(running)).toBeGreaterThan(BLACK * 4);
@@ -391,7 +392,7 @@ describe("an effect chain on a multisampled surface", () => {
     const stack = running.world.createEntity("Post").addComponent(PostProcessStack);
     stack.bloom.enabled = true;
     stack.smaa.enabled = true;
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
 
     expect(stack.taskCount).toBe(2);
     // SMAA refuses a multisampled source (Lite error 108), so this only works because the scene task
@@ -407,7 +408,7 @@ describe("resizing the canvas under a chain", () => {
     const stack = running.world.createEntity("Post").addComponent(PostProcessStack);
     stack.bloom.enabled = true;
     stack.smaa.enabled = true;
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     expect(await centreLuminance(running)).toBeGreaterThan(BLACK * 4);
 
     // A laid-out DOM canvas is resized by its CSS box: Lite's loop calls `resizeEngine` every frame
@@ -416,7 +417,7 @@ describe("resizing the canvas under a chain", () => {
     const grown = SIZE * 2;
     running.canvas.style.width = `${String(grown)}px`;
     running.canvas.style.height = `${String(grown)}px`;
-    await running.advance(SETTLE_FRAMES * 4);
+    await settle(running, SETTLE_FRAMES * 4);
 
     expect(running.canvas.width).toBeGreaterThan(SIZE);
     expect(await centreLuminance(running)).toBeGreaterThan(BLACK * 4);
@@ -501,7 +502,7 @@ describe("a stack configured before app.start()", () => {
         post.bloom.enabled = true;
       },
     });
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
 
     expect(stack.taskCount).toBe(0);
     expect(running.log.toArray().filter((record) => record.message.includes("IGX-0710"))).toHaveLength(1);

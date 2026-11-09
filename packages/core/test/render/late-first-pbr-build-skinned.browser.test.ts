@@ -10,6 +10,7 @@ import {
   fixtureUrl,
   gpuDeviceErrors,
   pixelLuminance,
+  settle,
   SETTLE_FRAMES,
 } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
@@ -48,10 +49,10 @@ it("draws a skinned model that arrives after the scene's first, late, PBR build"
   eye.transform.localPosition.set(0, 1, -3);
   eye.addComponent(Camera, { near: 0.1, far: 100 });
   await running.start();
-  await running.advance(SETTLE_FRAMES);
+  await settle(running);
 
   running.world.createEntity("Sky").addComponent(Light, { type: "hemispheric", intensity: 1 });
-  await running.advance(SETTLE_FRAMES);
+  await settle(running);
   const white = createMaterialAsset(
     running.app,
     pbrMaterialDefinition({ baseColor: { r: 1, g: 1, b: 1, a: 1 }, metallic: 0, roughness: 1 }),
@@ -60,12 +61,12 @@ it("draws a skinned model that arrives after the scene's first, late, PBR build"
   const box = running.world.createEntity("Box");
   box.transform.localPosition.set(3, 0, 2);
   box.addComponent(MeshRenderer, { mesh: MeshAsset.box(running.app, { size: 1 }), materials: [white] });
-  await running.advance(SETTLE_FRAMES * 3);
+  await settle(running, SETTLE_FRAMES * 3);
   expect(device.errors).toEqual([]);
 
   const handle = await running.app.assets.loadAsync<ModelAsset>("models/rig.glb");
   running.world.createEntity("Rig").addComponent(Model, { model: handle });
-  await running.advance(SETTLE_FRAMES * 3);
+  await settle(running, SETTLE_FRAMES * 3);
 
   expect(device.errors).toEqual([]);
   expect(running.errors).toEqual([]);

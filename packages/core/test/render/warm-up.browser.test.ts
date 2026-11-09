@@ -18,7 +18,7 @@ import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/mat
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
 import { advanceFrames, createRenderHarness } from "../lite/render/fixtures/gpu-harness.js";
-import { createBrowserApp, pixelLuminance, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { createBrowserApp, pixelLuminance, settle, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 import type { RenderHarness } from "../lite/render/fixtures/gpu-harness.js";
 
@@ -146,7 +146,7 @@ describe("the guard, through the app", () => {
     const material = createMaterialAsset(running.app, pbrMaterialDefinition({ metallic: 0, roughness: 1 }), []);
     running.world.createEntity("Cube").addComponent(MeshRenderer, { mesh, materials: [material] });
 
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
     expect(pixelLuminance(await running.centrePixel())).toBeGreaterThan(20);
     expect(running.errors).toEqual([]);
   });
@@ -163,7 +163,7 @@ describe("the guard, through the app", () => {
     const mesh = MeshAsset.box(running.app, { size: 2 });
     const material = createMaterialAsset(running.app, pbrMaterialDefinition({ metallic: 0, roughness: 1 }), []);
     running.world.createEntity("Cube").addComponent(MeshRenderer, { mesh, materials: [material] });
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
     expect(pixelLuminance(await running.centrePixel())).toBeGreaterThan(20);
   });
 });

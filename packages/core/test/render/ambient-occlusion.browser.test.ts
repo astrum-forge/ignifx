@@ -5,7 +5,7 @@ import { Light } from "../../src/render/light.js";
 import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/material-asset.js";
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
-import { createBrowserApp, fixtureUrl, pixelLuminance, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { createBrowserApp, fixtureUrl, pixelLuminance, settle, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 import type { EnvironmentAsset } from "../../src/render/environment-asset.js";
 
@@ -87,7 +87,7 @@ async function corner(options: {
     materials: [white],
   });
   await running.start();
-  await running.advance(SETTLE_FRAMES * 3);
+  await settle(running, SETTLE_FRAMES * 3);
   expect(running.errors).toEqual([]);
   expect(running.renderer.isAmbientOcclusionActive).toBe(options.ao);
   const near = pixelLuminance(await running.pixelAt(CORNER.x, CORNER.y));

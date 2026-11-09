@@ -6,7 +6,7 @@ import { LightProbeVolume } from "../../src/render/light-probe-volume.js";
 import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/material-asset.js";
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
-import { createBrowserApp, fixtureUrl, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { createBrowserApp, fixtureUrl, settle, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 import type { PixelRgba } from "../../src/lite/screenshot.js";
 import type { EnvironmentAsset } from "../../src/render/environment-asset.js";
@@ -71,7 +71,7 @@ async function sphere(withVolume: boolean, hdr: boolean): Promise<PixelRgba> {
     world.createEntity("Probes").addComponent(LightProbeVolume, { probes });
   }
   await running.start();
-  await running.advance(SETTLE_FRAMES * 3);
+  await settle(running, SETTLE_FRAMES * 3);
   expect(running.errors).toEqual([]);
   expect(running.renderer.lightProbeHost?.isLighting ?? false).toBe(withVolume);
   const centre = await running.centrePixel();

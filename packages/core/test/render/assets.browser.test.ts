@@ -14,6 +14,7 @@ import {
   fixtureUrl,
   pixelLuminance,
   pixelsDiffer,
+  settle,
   SETTLE_FRAMES,
 } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
@@ -71,7 +72,7 @@ describe("the model loader and the Model component", () => {
 
     const entity = running.world.createEntity("Box");
     const model = entity.addComponent(Model, { model: handle });
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
 
     expect(model.lite.root).not.toBeNull();
     expect(model.nodes.size).toBeGreaterThan(0);
@@ -89,7 +90,7 @@ describe("the model loader and the Model component", () => {
     const second = running.world.createEntity("B");
     second.transform.localPosition.set(1.5, 0, 0);
     second.addComponent(Model, { model: handle });
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
 
     expect(handle.value.instanceCount).toBe(2);
     // §6: the container itself is never added to a scene, so both instances are clones of one
@@ -103,7 +104,7 @@ describe("the model loader and the Model component", () => {
     const handle = await running.app.assets.loadAsync<ModelAsset>("models/Box.glb");
     const first = running.world.createEntity("A").addComponent(Model, { model: handle });
     const second = running.world.createEntity("B").addComponent(Model, { model: handle });
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     expect(first.nodes).not.toBe(second.nodes);
     expect([...first.nodes.keys()]).toEqual([...second.nodes.keys()]);
   });
@@ -113,7 +114,7 @@ describe("the model loader and the Model component", () => {
     addCameraAndLight(running, 6);
     const handle = await running.app.assets.loadAsync<ModelAsset>("models/Box.glb");
     const model = running.world.createEntity("Box").addComponent(Model, { model: handle });
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     const name = [...model.nodes.keys()][0] ?? "";
     expect(name).not.toBe("");
     expect(model.attachToNode(name, running.world.createEntity("Marker"))).toBe(true);
@@ -126,13 +127,13 @@ describe("the model loader and the Model component", () => {
     const handle = await running.app.assets.loadAsync<ModelAsset>("models/Box.glb");
     const entity = running.world.createEntity("Box");
     const model = entity.addComponent(Model, { model: handle });
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
     const withInstance = running.world.lite.scene.meshes.length;
     expect(withInstance).toBeGreaterThan(0);
     const lit = await running.centrePixel();
 
     model.destroy();
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
     expect(handle.value.instanceCount).toBe(0);
     expect(model.lite.root).toBeNull();
     expect(running.world.lite.scene.meshes.length).toBeLessThan(withInstance);
@@ -154,7 +155,7 @@ describe("the environment loader and the Environment component", () => {
   it("loads an .env with its BRDF table and changes what the background shows", async () => {
     const running = await fixtureApp();
     addCameraAndLight(running, 4);
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     const before = await running.pixelAt(2, 2);
 
     const handle = await running.app.assets.loadAsync<EnvironmentAsset>("environments/studio.env");
@@ -172,7 +173,7 @@ describe("the environment loader and the Environment component", () => {
       environment: handle,
       clearColor: { r: 0, g: 0, b: 1, a: 1 },
     });
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     expect(environment.installed).toBe(handle.value);
     const after = await running.pixelAt(2, 2);
     expect(pixelsDiffer(before, after, 8)).toBe(true);
@@ -190,12 +191,12 @@ describe("the environment loader and the Environment component", () => {
       [],
     );
     running.world.createEntity("Ball").addComponent(MeshRenderer, { mesh, materials: [material] });
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
     const unlit = await running.centrePixel();
 
     const handle = await running.app.assets.loadAsync<EnvironmentAsset>("environments/studio.env");
     running.world.createEntity("Environment").addComponent(Environment, { environment: handle });
-    await running.advance(SETTLE_FRAMES * 4);
+    await settle(running, SETTLE_FRAMES * 4);
     const lit = await running.centrePixel();
     // A metal sphere is almost entirely environment reflection, so installing an environment is
     // the difference between "black ball" and "something".
@@ -217,14 +218,14 @@ describe("the environment loader and the Environment component", () => {
     expect(second.value).not.toBe(first.value);
 
     const environment = running.world.createEntity("Environment").addComponent(Environment, { environment: first });
-    await running.advance(SETTLE_FRAMES * 4);
+    await settle(running, SETTLE_FRAMES * 4);
     expect(environment.installed).toBe(first.value);
     expect(readInstalledEnvironment(running.world.lite.scene)).toBe(first.value.lite.textures);
     const litByFirst = pixelLuminance(await running.centrePixel());
     expect(litByFirst).toBeGreaterThan(8);
 
     environment.environment = second;
-    await running.advance(SETTLE_FRAMES * 4);
+    await settle(running, SETTLE_FRAMES * 4);
     expect(environment.installed).toBe(second.value);
     expect(readInstalledEnvironment(running.world.lite.scene)).toBe(second.value.lite.textures);
     // The reflection has to survive the swap: the install reports a topology change, the render-sync
@@ -233,7 +234,7 @@ describe("the environment loader and the Environment component", () => {
     expect(pixelLuminance(await running.centrePixel())).toBeGreaterThan(8);
 
     environment.environment = first;
-    await running.advance(SETTLE_FRAMES * 4);
+    await settle(running, SETTLE_FRAMES * 4);
     expect(readInstalledEnvironment(running.world.lite.scene)).toBe(first.value.lite.textures);
     expect(pixelLuminance(await running.centrePixel())).toBeGreaterThan(8);
     expect(running.errors).toEqual([]);
@@ -247,7 +248,7 @@ describe("the environment loader and the Environment component", () => {
     });
     environment.fog.mode = "exp2";
     environment.fog.density = 0.05;
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
     const corner = await running.pixelAt(1, 1);
     expect(corner.g).toBeGreaterThan(corner.r + 20);
     expect(running.world.lite.scene.fog).not.toBeNull();

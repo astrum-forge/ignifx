@@ -3,7 +3,7 @@ import { createRay } from "../../src/render/camera.js";
 import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/material-asset.js";
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
-import { addCameraAndLight, createBrowserApp, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { addCameraAndLight, createBrowserApp, settle } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 import type { Entity } from "../../src/entity/entity.js";
 
@@ -41,7 +41,7 @@ async function buildPickableScene(): Promise<{
   const material = createMaterialAsset(running.app, pbrMaterialDefinition({ metallic: 0, roughness: 1 }), []);
   const cube = running.world.createEntity("Cube");
   const renderer = cube.addComponent(MeshRenderer, { mesh, materials: [material] });
-  await running.advance(SETTLE_FRAMES);
+  await settle(running);
   return { running, cube, renderer };
 }
 
@@ -73,7 +73,7 @@ describe("app.renderer.pickAsync", () => {
   it("misses a mesh whose renderer is not pickable", async () => {
     const scene = await buildPickableScene();
     scene.renderer.pickable = false;
-    await scene.running.advance(SETTLE_FRAMES);
+    await settle(scene.running);
     const centre = scene.running.canvas.width >> 1;
     expect(await scene.running.app.renderer.pickAsync(centre, centre)).toBeNull();
   });
@@ -111,7 +111,7 @@ describe("world.raycastRender", () => {
   it("still hits a hidden mesh, which is Lite's documented behaviour", async () => {
     const scene = await buildPickableScene();
     scene.renderer.enabled = false;
-    await scene.running.advance(SETTLE_FRAMES);
+    await settle(scene.running);
     const ray = createRay();
     ray.origin.z = -10;
     // §3: visibility is ignored by a CPU pick; only `pickable` and the predicate filter.
@@ -121,7 +121,7 @@ describe("world.raycastRender", () => {
   it("misses once the renderer is not pickable", async () => {
     const scene = await buildPickableScene();
     scene.renderer.pickable = false;
-    await scene.running.advance(SETTLE_FRAMES);
+    await settle(scene.running);
     const ray = createRay();
     ray.origin.z = -10;
     expect(scene.running.world.raycastRender(ray)).toBeNull();

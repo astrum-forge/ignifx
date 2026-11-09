@@ -3,7 +3,7 @@ import { forceDeviceLossForTesting } from "../../src/lite/gpu/device-loss.js";
 import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/material-asset.js";
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
-import { addCameraAndLight, createBrowserApp, pixelsDiffer, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { addCameraAndLight, createBrowserApp, pixelsDiffer, settle, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 import type { DeviceLostInfo } from "../../src/app/types.js";
 
@@ -52,7 +52,7 @@ async function buildScene(recovery = true): Promise<BrowserApp> {
   );
   running.world.createEntity("Cube").addComponent(MeshRenderer, { mesh, materials: [material] });
   await running.start();
-  await running.advance(SETTLE_FRAMES * 2);
+  await settle(running, SETTLE_FRAMES * 2);
   return running;
 }
 
@@ -89,7 +89,7 @@ describe("a forced device loss", () => {
     expect(recovered).toBe(1);
     expect(failures).toEqual([]);
 
-    await running.advance(SETTLE_FRAMES * 3);
+    await settle(running, SETTLE_FRAMES * 3);
     const after = await running.centrePixel();
     // §4: recovery is best effort, but for an untextured scene the picture is expected to come back
     // unchanged. The tolerance is one 8-bit step, for a software rasteriser's rounding.

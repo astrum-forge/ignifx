@@ -6,7 +6,7 @@ import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/mat
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
 import { Model } from "../../src/render/model.js";
-import { addCameraAndLight, createBrowserApp, fixtureUrl, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { addCameraAndLight, createBrowserApp, fixtureUrl, settle, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 import type { App } from "../../src/app/types.js";
 import type { Entity } from "../../src/entity/entity.js";
@@ -122,7 +122,7 @@ describe("pickAsync coordinates", () => {
     const box = addBox(running, "Corner", 0.6, 0);
     // Off-centre, so the backing pixel and the same number read as a CSS pixel land apart.
     box.entity.transform.localPosition.set(-1.1, -1.1, 0);
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     expect(running.canvas.clientWidth).toBe(CSS_SIZE);
     expect(running.canvas.width).toBe(CSS_SIZE * 2);
 
@@ -144,7 +144,7 @@ describe("pickAsync coordinates", () => {
     Object.defineProperty(globalThis, "devicePixelRatio", { configurable: true, value: 2 });
     const { running } = await pickApp();
     const wall = addBox(running, "Wall", 20, 2);
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     const last = running.canvas.width - 1;
     for (const [x, y] of [
       [0, 0],
@@ -173,7 +173,7 @@ describe("pickAsync on a glTF Model", () => {
     const handle = await running.app.assets.loadAsync<ModelAsset>("models/Box.glb");
     const entity = running.world.createEntity("Crate");
     const model = entity.addComponent(Model, { model: handle });
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
     return { running, entity, model };
   }
 
@@ -226,7 +226,7 @@ describe("pickAsync ignore", () => {
     const { running } = await pickApp();
     const front = addBox(running, "Front", 1, 0);
     const back = addBox(running, "Back", 4, 3);
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     return { running, front, back, centre: running.canvas.width >> 1 };
   }
 
@@ -286,7 +286,7 @@ describe("pickAsync ignore", () => {
       2,
     );
     await running.start();
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     const centre = running.canvas.width >> 1;
     const first = await running.app.renderer.pickAsync(centre, centre);
     expect(first?.entity).toBe(entity);
@@ -316,7 +316,7 @@ describe("pickAsync ignore", () => {
     // Front to back along the camera's axis: instance 0 (z = 0), 2 (z = 2), 1 (z = 4).
     instanced.setMatrices(Float32Array.from([...at(0), ...at(4), ...at(2)]), 3);
     await running.start();
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     const centre = running.canvas.width >> 1;
     const renderer = running.app.renderer;
 
