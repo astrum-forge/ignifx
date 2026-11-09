@@ -1,5 +1,38 @@
 # ignifx
 
+## 0.19.0
+
+### Minor Changes
+
+- b59a7c1: Add `directLight: "include" | "exclude"` to `bakeLightProbes` (`LightProbeBakeDirectLight`). It defaults to `"exclude"`, so a baked `LightProbeVolume` no longer doubles the direct light of the directional, point and spot lights that still light the scene in real time; the bounce off surfaces they light is still baked. Pass `"include"` for the previous result.
+- 0cf1e24: Add `createTilemapAsset(app, input, { address })`, which publishes a tilemap built in code at run time as an asset a `Tilemap` can hold. It takes the `.tilemap.json` shape and checks it the way the loader does, so a malformed map throws `IGX-1105`.
+- 8f134b2: Add lightmaps (beta): `MeshRenderer.lightmap` samples a baked `.lightmap.json` (`LightmapAsset`, or `createLightmapAsset` for a texture built in code) through the mesh's second UV set, adding to the shading (`mode: "add"`) or multiplying it (`"shadowmap"`), with `level`, `gamma` and `uv2`. Only a renderer on a static entity with a PBR material samples it, through its own copy of the material; anything else logs `IGX-0735` once. Per-entity atlas `scale`/`offset` are read and validated but not applied yet. The GPU code loads only once a renderer samples a lightmap, with or without `rendering.features.lightmaps`.
+- cd8f666: Prefab overrides can now reach a nested prefab's components through an instance path in the component segment (`"<nested>/components/<nested>/<componentUid>/props/<field>"`), and `applyOverridesToAsset` moves them onto the prefab's nested instance when given `readScene`.
+  
+  Add `resolveInstancePath` and `enumerateInstanceTargets` to `@ignifx/core/prefab`: pure helpers that resolve and list the entities and components inside a scene file's prefab instances, with labels and override paths.
+
+### Patch Changes
+
+- 29608a7: The ignifx skill gains a "Baked lighting" page on choosing between reflection probes, light probes, lightmaps and screen-space GI, with their file formats, the light-probe bake and the quality tiers, plus recipes that bake and load a probe grid and assign a lightmap.
+- Updated dependencies [b59a7c1]
+- Updated dependencies [0cf1e24]
+- Updated dependencies [60531bb]
+- Updated dependencies [8f134b2]
+- Updated dependencies [cd8f666]
+  - @ignifx/core@0.19.0
+  - @ignifx/2d@0.19.0
+  - @ignifx/3d@0.19.0
+  - @ignifx/audio@0.19.0
+  - @ignifx/devtools@0.19.0
+  - @ignifx/electron@0.19.0
+  - @ignifx/input@0.19.0
+  - @ignifx/particles@0.19.0
+  - @ignifx/particles-2d@0.19.0
+  - @ignifx/physics@0.19.0
+  - @ignifx/physics-2d@0.19.0
+  - @ignifx/terrain@0.19.0
+  - @ignifx/ui@0.19.0
+
 ## 0.18.0
 
 ### Minor Changes
