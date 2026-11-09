@@ -3,7 +3,7 @@ import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
 import { toComponentHandle, toEntityHandle } from "../handles/handle.js";
 import { forceDeviceLossForTesting } from "../lite/gpu/device-loss.js";
-import { readSceneImageProcessing, setSceneClearColor } from "../lite/gpu/environment.js";
+import { readSceneEnvironment, readSceneImageProcessing, setSceneClearColor } from "../lite/gpu/environment.js";
 import { disposeScenePicker } from "../lite/gpu/picker.js";
 import { setSurfaceSizePx } from "../lite/gpu/render-diagnostics-gpu.js";
 import { captureFrame } from "../lite/gpu/screenshot-capture.js";
@@ -738,6 +738,9 @@ export class RendererImpl implements Renderer {
 
   /** The reflection probes' host, created on the first frame of a canvas-backed app (GI B1). */
   #reflectionProbes: ReflectionProbeHost | null = null;
+
+  /** Detaches the reflection probes' `app.events.onDeviceLost` handler. */
+  #disconnectProbeDeviceLoss: Disconnect | null = null;
 
   /** The light probes' host, created with the reflection probes' one (GI B2). */
   #lightProbes: LightProbeHost | null = null;
@@ -1762,9 +1765,23 @@ export class RendererImpl implements Renderer {
     const onError = (error: unknown): void => {
       this.#app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });
     };
-    this.#reflectionProbes ??= new ReflectionProbeHost(this.engine, this.scene, onError);
+    if (this.#reflectionProbes === null) {
+      const host = new ReflectionProbeHost(this.engine, this.scene, onError, (message, entityName) => {
+        this.#app.log.warn(message, entityName);
+      });
+      this.#reflectionProbes = host;
+      this.#disconnectProbeDeviceLoss = this.#app.events.onDeviceLost.connect(() => {
+        host.handleDeviceLost();
+      });
+    }
     this.#lightProbes ??= new LightProbeHost(this.engine, this.scene, onError);
-    this.#reflectionProbes.update(world, probes, (this.#presenter?.hdr ?? null) !== null);
+    this.#reflectionProbes.update(
+      world,
+      probes,
+      (this.#presenter?.hdr ?? null) !== null,
+      this.qualityPreset,
+      readSceneEnvironment(this.scene) !== null,
+    );
     this.#lightProbes.update(volumes);
     this.#lightmaps?.flush();
   }
@@ -2089,6 +2106,8 @@ export class RendererImpl implements Renderer {
     this.#afterRebuild.length = 0;
     this.#ambientOcclusion?.dispose();
     this.#ambientOcclusion = null;
+    this.#disconnectProbeDeviceLoss?.();
+    this.#disconnectProbeDeviceLoss = null;
     this.#reflectionProbes?.dispose();
     this.#reflectionProbes = null;
     this.#lightProbes?.dispose();

@@ -290,11 +290,13 @@ scene (jittered) → taa-jitter → taa-resolve → resolved ─(copy)→ histor
 
 `rendering.quality` (GI plan step G15, 2026-11-03) is `"custom"` (default), `"low"`, `"medium"` or `"high"`, one per row of the GPU budget in coding standards §7. `registerRendering` applies the tier before the renderer is built (`applyRenderingQuality` in `src/render/rendering-settings.ts`), so `renderer.settings` is what runs and `app.settings.section("rendering")` stays what the project wrote. A named tier sets `hdr`, `taa.enabled`, `ambientOcclusion.enabled` and `ambientOcclusion.quality`; a field the project wrote itself is kept, which is why the store exposes the project's raw value (`SettingsStore.declared`): the resolved section cannot tell a written `false` from a default one. The tier also caps a `PostProcessStack`'s screen-space effects (`src/render/screen-space-effects.ts`): contact shadows from `"medium"`, SSGI at `"high"`. Bloom, tone mapping and auto exposure are left as authored; the budget allows bloom and AgX at every tier.
 
-| Tier     | `hdr` | TAA | GTAO | contact shadows | SSGI    |
-| -------- | ----- | --- | ---- | --------------- | ------- |
-| `low`    | off   | off | half | off             | off     |
-| `medium` | on    | on  | half | allowed         | off     |
-| `high`   | on    | on  | full | allowed         | allowed |
+| Tier     | `hdr` | TAA | GTAO | contact shadows | SSGI    | reflection probe size | `everyFrame` probes |
+| -------- | ----- | --- | ---- | --------------- | ------- | --------------------- | ------------------- |
+| `low`    | off   | off | half | off             | off     | ≤ 64                  | read as `once`      |
+| `medium` | on    | on  | half | allowed         | off     | ≤ 128                 | read as `once`      |
+| `high`   | on    | on  | full | allowed         | allowed | ≤ 256                 | allowed             |
+
+GI Phase 2 (step B5, 2026-11-09) adds the reflection-probe columns, read each frame by the probe runtime (`src/render/gpu/reflection-probes.ts`) from `renderer.qualityPreset`: a probe's `size` is clamped to the tier's maximum, and below `"high"` a probe asking for `refreshMode: "everyFrame"` captures as `"once"` (when first ready, and on `refresh()`), with one warning per app. Light probes and lightmaps are not tiered: baked lighting is the low-end path. `"custom"` caps nothing (sizes up to 1024, `everyFrame` allowed). A probe borrows the scene environment's BRDF table and harmonics, so until an environment map is loaded nothing of it runs: the renderer does not load the probe chunk, and if the environment goes the runtime frees every probe's face targets and cube and stops its per-frame mesh walk; a probe's targets are allocated on the first capture that can run (an `"onDemand"` probe's on its first `refresh()`). The 3D templates add one `ReflectionProbe` at `"high"` only (`templates/3d-*/src/quality.ts`); they load no environment map yet, so it costs nothing until a project adds an `.env`.
 
 ## 3. Picking
 
@@ -309,6 +311,7 @@ scene (jittered) → taa-jitter → taa-resolve → resolved ─(copy)→ histor
 ## 4. Device loss
 
 - `createApp` enables `enableDeviceLostSceneRecovery` when `rendering.features.deviceLostRecovery` is on (every feature is opt-in), and the 2D/UI extensions enable `enableDeviceLostSpriteRecovery` / `enableDeviceLostTextRecovery` **before** creating resources (Lite requirement).
+- Reflection probes (GI B1) own a cube texture Lite does not know about. On `app.events.onDeviceLost`, before Lite's recovery rebuilds the materials, the probe runtime points every material back at the scene environment (without a rebuild of its own), drops each probe's passes and cube, and remembers which probes had captured; after recovery they are created again and capture again, an `"onDemand"` probe included. Not covered by a test yet. Outside device loss, a removed probe's cube is destroyed once the rebuilds of the materials that reflected it settle and the queue is idle; its face targets go with their render tasks.
 - Callbacks fan out to `app.events.onDeviceLost`, `onDeviceRecovered`, `onDeviceRecoveryFailed`. Lite cannot recover PCF/CSM shadows or glTF `EXT_lights_image_based` environments today; when those are in use, recovery is expected to fail and templates offer a reload. This is tracked as an upstream item.
 
 ## 5. Diagnostics and tools

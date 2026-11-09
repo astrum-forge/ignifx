@@ -1,6 +1,7 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
 import { Color } from "../math/color.js";
+import { createPerformanceClock } from "../time/clock.js";
 import { readLightProbeGrid } from "./light-probe-asset.js";
 import { Light } from "./light.js";
 import { MeshRenderer } from "./mesh-renderer.js";
@@ -36,6 +37,9 @@ const GOLDEN_ANGLE = 2.399963229728653;
 
 /** The most rays one probe may trace. */
 const MAX_RAYS = 4096;
+
+/** How long the bake works before it yields to the host, in milliseconds (half a 60 Hz frame). */
+const YIELD_BUDGET_MS = 8;
 
 /** The checked options a bake runs with. */
 interface BakeSettings {
@@ -131,8 +135,8 @@ type BakeLight =
  * cast and bounce light (see {@link LightProbeBakeResult.skipped}). Cost grows with probes × rays ×
  * triangles; it is meant for small scenes and tools, not for every frame.
  *
- * The bake is asynchronous: it yields to the host after each probe, reports progress through
- * `onProgress`, and stops at the next probe once `signal` aborts.
+ * The bake is asynchronous: it yields to the host after every ~8 ms of work, reports progress
+ * through `onProgress` after each probe, and stops at the next probe once `signal` aborts.
  *
  * @param world - The world to bake. Its meshes and lights are read once, when the bake starts.
  * @param options - The grid, the quality, and the cancellation and progress hooks.
@@ -162,6 +166,8 @@ export async function bakeLightProbes(world: World, options: LightProbeBakeOptio
   const { origin, cellSize, counts } = settings.grid;
   const total = counts.x * counts.y * counts.z;
   const coefficients: number[] = [];
+  const clock = createPerformanceClock();
+  let sliceStart = clock.nowMs();
   for (let probe = 0; probe < total; probe += 1) {
     const i = probe % counts.x;
     const j = Math.floor(probe / counts.x) % counts.y;
@@ -177,10 +183,15 @@ export async function bakeLightProbes(world: World, options: LightProbeBakeOptio
       ),
     );
     options.onProgress?.(probe + 1, total);
-    // One probe at a time, so a caller's thread keeps drawing and an abort lands between probes.
-    // oxlint-disable-next-line eslint/no-await-in-loop -- see the comment above
-    await yieldToHost();
     options.signal?.throwIfAborted();
+    // Yield once a slice of work is spent, not after every probe: a `setTimeout(0)` per probe is
+    // clamped to ~4 ms by browsers, which idled a 2,000-probe bake for ~8 s.
+    if (clock.nowMs() - sliceStart >= YIELD_BUDGET_MS && probe + 1 < total) {
+      // oxlint-disable-next-line eslint/no-await-in-loop -- the caller's thread keeps drawing between slices
+      await yieldToHost();
+      options.signal?.throwIfAborted();
+      sliceStart = clock.nowMs();
+    }
   }
   return {
     data: {
@@ -230,7 +241,7 @@ function fail(problem: string): IgnifxError {
 }
 
 /**
- * Lets the host run before the next probe.
+ * Lets the host run before the next slice of probes.
  *
  * @returns A promise that settles on a later task.
  */

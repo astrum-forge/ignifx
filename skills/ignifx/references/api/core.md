@@ -11975,7 +11975,10 @@ Each lit PBR material reflects the nearest enabled probe that has captured: a pr
 probe, materials reflect the `Environment` again. A material shared by several meshes follows the
 first of them. Diffuse lighting still comes from the scene environment.
 
-The probe needs a loaded `Environment` (it reuses its lighting tables) and a canvas-backed app.
+The probe needs a loaded `Environment` (it reuses its lighting tables) and a canvas-backed app;
+until an environment map is loaded it waits, holding no GPU memory and costing no frame time. A
+`rendering.quality` tier caps `size` and allows `"everyFrame"` only at `high` (below, the probe
+captures as `"once"`); with the `custom` tier nothing is capped.
 Mip levels are box-filtered, so very rough materials look blurrier than with a prefiltered `.env`.
 
 #### Example
@@ -12080,7 +12083,8 @@ The serialized field declarations (ADR-0004).
 
 **`Beta`**
 
-Cube face size in pixels, rounded down to a power of two from 16 to 1024. Defaults to `128`.
+Cube face size in pixels, rounded down to a power of two from 16 to 1024. Defaults to `128`. A
+`rendering.quality` tier caps it: 64 at `low`, 128 at `medium`, 256 at `high`.
 
 ##### typeId
 
@@ -32851,8 +32855,8 @@ When a reflection probe renders its cube map again.
 
 - `"once"` (default): when the probe is first ready, and again on [ReflectionProbe.refresh](#refresh).
 - `"onDemand"`: only on [ReflectionProbe.refresh](#refresh); until then the probe reflects nothing.
-- `"everyFrame"`: every frame, six extra scene passes each frame. Use it for one probe at most, and
-  only on desktop at the `high` quality tier (nothing caps it yet).
+- `"everyFrame"`: every frame, six extra scene passes each frame. Use it for one probe at most, on
+  desktop. The `low` and `medium` quality tiers (`rendering.quality`) treat it as `"once"`.
 
 ***
 
@@ -35175,9 +35179,14 @@ The rendering quality tiers, in the order the inspector lists them
 #### Remarks
 
 - `"custom"` (default): every effect is exactly as the section and the `PostProcessStack`s say.
-- `"low"`: GTAO at half resolution; no HDR, TAA, contact shadows or SSGI.
-- `"medium"`: adds HDR and TAA, and lets a stack run contact shadows.
-- `"high"`: GTAO at full resolution, and lets a stack run SSGI.
+- `"low"`: GTAO at half resolution; no HDR, TAA, contact shadows or SSGI; reflection probes at
+  64 pixels a face at most.
+- `"medium"`: adds HDR and TAA, lets a stack run contact shadows, and reflection probes up to 128.
+- `"high"`: GTAO at full resolution, lets a stack run SSGI, reflection probes up to 256, and lets
+  a probe capture every frame.
+
+Below `"high"`, a `ReflectionProbe` with `refreshMode: "everyFrame"` captures as `"once"`.
+Light probes and lightmaps run at every tier.
 
 ***
 
@@ -36187,8 +36196,8 @@ One bounce, first-order harmonics, deterministic. Only meshes built with `MeshAs
 cast and bounce light (see [LightProbeBakeResult.skipped](#skipped)). Cost grows with probes × rays ×
 triangles; it is meant for small scenes and tools, not for every frame.
 
-The bake is asynchronous: it yields to the host after each probe, reports progress through
-`onProgress`, and stops at the next probe once `signal` aborts.
+The bake is asynchronous: it yields to the host after every ~8 ms of work, reports progress
+through `onProgress` after each probe, and stops at the next probe once `signal` aborts.
 
 #### Throws
 

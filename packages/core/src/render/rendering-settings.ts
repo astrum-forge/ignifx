@@ -68,9 +68,14 @@ export type AmbientOcclusionQuality = (typeof AMBIENT_OCCLUSION_QUALITIES)[numbe
  *
  * @remarks
  * - `"custom"` (default): every effect is exactly as the section and the `PostProcessStack`s say.
- * - `"low"`: GTAO at half resolution; no HDR, TAA, contact shadows or SSGI.
- * - `"medium"`: adds HDR and TAA, and lets a stack run contact shadows.
- * - `"high"`: GTAO at full resolution, and lets a stack run SSGI.
+ * - `"low"`: GTAO at half resolution; no HDR, TAA, contact shadows or SSGI; reflection probes at
+ *   64 pixels a face at most.
+ * - `"medium"`: adds HDR and TAA, lets a stack run contact shadows, and reflection probes up to 128.
+ * - `"high"`: GTAO at full resolution, lets a stack run SSGI, reflection probes up to 256, and lets
+ *   a probe capture every frame.
+ *
+ * Below `"high"`, a `ReflectionProbe` with `refreshMode: "everyFrame"` captures as `"once"`.
+ * Light probes and lightmaps run at every tier.
  *
  * @public
  */
@@ -101,9 +106,16 @@ export interface RenderingQualityPreset {
   readonly contactShadows: boolean;
   /** Whether a `PostProcessStack`'s `ssgi` record may run. */
   readonly ssgi: boolean;
+  /** The largest cube face a `ReflectionProbe` captures at, in pixels; a larger `size` is clamped. */
+  readonly reflectionProbeMaxSize: number;
+  /** Whether a `ReflectionProbe` may use `refreshMode: "everyFrame"`; below, it acts as `"once"`. */
+  readonly reflectionProbeEveryFrame: boolean;
 }
 
-/** The presets of the three named tiers; `"custom"` has none. Bloom and tone mapping stay as authored. */
+/**
+ * The presets of the three named tiers; `"custom"` has none. Bloom and tone mapping stay as authored.
+ * Light probes and lightmaps run at every tier: baked lighting is the low-end path.
+ */
 const QUALITY_PRESETS: Readonly<Record<Exclude<RenderingQuality, "custom">, RenderingQualityPreset>> = {
   low: {
     hdr: false,
@@ -112,6 +124,8 @@ const QUALITY_PRESETS: Readonly<Record<Exclude<RenderingQuality, "custom">, Rend
     ambientOcclusionQuality: "half",
     contactShadows: false,
     ssgi: false,
+    reflectionProbeMaxSize: 64,
+    reflectionProbeEveryFrame: false,
   },
   medium: {
     hdr: true,
@@ -120,6 +134,8 @@ const QUALITY_PRESETS: Readonly<Record<Exclude<RenderingQuality, "custom">, Rend
     ambientOcclusionQuality: "half",
     contactShadows: true,
     ssgi: false,
+    reflectionProbeMaxSize: 128,
+    reflectionProbeEveryFrame: false,
   },
   high: {
     hdr: true,
@@ -128,6 +144,8 @@ const QUALITY_PRESETS: Readonly<Record<Exclude<RenderingQuality, "custom">, Rend
     ambientOcclusionQuality: "full",
     contactShadows: true,
     ssgi: true,
+    reflectionProbeMaxSize: 256,
+    reflectionProbeEveryFrame: true,
   },
 };
 
@@ -517,7 +535,7 @@ export function renderingSettingsSchema(): Schema {
     ),
     quality: enumOf(RENDERING_QUALITIES, "custom", {
       tooltip:
-        "Quality tier. low: half-res GTAO. medium: adds HDR, TAA, contact shadows. high: full-res GTAO, SSGI. custom: as set. Fields you set win.",
+        "Quality tier. low: half-res GTAO, 64 px reflection probes. medium: adds HDR, TAA, contact shadows, 128 px probes. high: full-res GTAO, SSGI, 256 px probes, everyFrame probes. custom: as set. Fields you set win.",
     }),
   });
 }

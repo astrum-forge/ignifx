@@ -10,10 +10,10 @@ import {
   getPbrUnlit,
   isPbrMaterial,
   isPbrSkybox,
+  rebuildMaterial,
   setPbrEnvironment,
   setPbrLocalEnvironment,
 } from "@babylonjs/lite";
-import { rebuildMaterialPipelines } from "../material.js";
 import { readOwnerTag } from "../picking.js";
 import { readSceneEnvironment } from "./environment.js";
 import { colorTextureOf, deviceOf, removeTask } from "./render-texture.js";
@@ -117,8 +117,10 @@ export interface LiteReflectionProbe {
    * @param z - The world Z.
    * @param near - The near clip distance.
    * @param far - The far clip distance.
+   * @returns `false`, rendering nothing, while the scene has no environment to borrow the lighting
+   * tables from.
    */
-  capture(x: number, y: number, z: number, near: number, far: number): void;
+  capture(x: number, y: number, z: number, near: number, far: number): boolean;
   /**
    * Turns the faces the last frame rendered into the cube map, when a capture ran.
    *
@@ -126,8 +128,14 @@ export interface LiteReflectionProbe {
    * @returns `true` when {@link LiteReflectionProbe.environment} was created by this call.
    */
   resolve(decodeGamma: boolean): boolean;
-  /** Removes the passes and frees the textures. Idempotent. */
-  dispose(): void;
+  /**
+   * Removes the passes, frees the face targets, and destroys the cube map once `after` settled and
+   * the GPU finished the work submitted by then. Idempotent.
+   *
+   * @param after - What must finish before the cube may go, such as the rebuilds of the materials
+   * that reflected it; omitted (device lost, app closing) to wait for the queue only.
+   */
+  dispose(after?: PromiseLike<unknown>): void;
 }
 
 /**
@@ -219,9 +227,9 @@ export function createLiteReflectionProbe(
     get environment(): EnvironmentTextures | null {
       return environment;
     },
-    capture(x: number, y: number, z: number, near: number, far: number): void {
-      if (isDisposed) {
-        return;
+    capture(x: number, y: number, z: number, near: number, far: number): boolean {
+      if (isDisposed || readSceneEnvironment(scene) === null) {
+        return false;
       }
       for (let index = 0; index < FACES.length; index += 1) {
         const face = FACES[index];
@@ -237,6 +245,7 @@ export function createLiteReflectionProbe(
         task.executionEnabled = true;
       }
       isCapturing = true;
+      return true;
     },
     resolve(decodeGamma: boolean): boolean {
       if (isDisposed || !isCapturing) {
@@ -278,7 +287,7 @@ export function createLiteReflectionProbe(
       };
       return true;
     },
-    dispose(): void {
+    dispose(after?: PromiseLike<unknown>): void {
       if (isDisposed) {
         return;
       }
@@ -286,14 +295,36 @@ export function createLiteReflectionProbe(
       for (const task of tasks) {
         task.executionEnabled = false;
         removeTask(scene, task);
+        // Frees the face target too (`lib/frame-graph/render-task-base.js` 97–109).
         task.dispose();
       }
-      // Materials still bound to the cube are reassigned by the caller before the next frame; the
-      // cube itself is left for the garbage collector, since a bind group in flight may name it.
+      const retired = cube;
       cube = null;
       environment = null;
+      if (retired !== null) {
+        destroyWhenIdle(deviceOf(engine), retired, after);
+      }
     },
   };
+}
+
+/**
+ * Destroys a texture once nothing in flight can name it: a material rebuild finishes asynchronously
+ * (`rebuildMaterial`, `index.d.ts` 11136), and until then Lite may still draw with a bind group that
+ * holds the old cube, so destruction waits for `after`, then for the queue.
+ *
+ * @param device - The device, or `null` when it is gone (the texture is destroyed at once).
+ * @param texture - The texture.
+ * @param after - What must settle first, if anything.
+ */
+function destroyWhenIdle(device: GPUDevice | null, texture: GPUTexture, after: PromiseLike<unknown> | undefined): void {
+  const destroy = (): void => {
+    texture.destroy();
+  };
+  Promise.resolve(after)
+    .catch(() => undefined)
+    .then(async () => device?.queue.onSubmittedWorkDone())
+    .then(destroy, destroy);
 }
 
 /**
@@ -472,17 +503,19 @@ export function forEachReflectiveMesh(
 /**
  * Points a PBR material at a probe, or back at the scene environment, and rebuilds it.
  *
- * @param scene - The registered scene.
+ * @param scene - The registered scene, or `null` to leave the rebuild to Lite (its device-loss
+ * recovery rebuilds every material).
  * @param material - The material.
  * @param binding - The probe, or `null` for the scene environment.
+ * @returns The rebuild in flight, if Lite runs it asynchronously; Lite reports its failure itself.
  *
  * @internal
  */
 export function assignReflectionProbe(
-  scene: SceneContext,
+  scene: SceneContext | null,
   material: PbrMaterialProps,
   binding: LiteProbeBinding | null,
-): void {
+): Promise<void> | undefined {
   if (binding === null) {
     clearPbrLocalEnvironment(material);
   } else if (binding.box === null) {
@@ -495,5 +528,10 @@ export function assignReflectionProbe(
       projectionSize: binding.box,
     });
   }
-  rebuildMaterialPipelines(scene, material);
+  if (scene === null) {
+    return undefined;
+  }
+  // Since 1.34 a PBR rebuild in a built scene finishes asynchronously (`../material.ts`).
+  const pending = rebuildMaterial(scene, material);
+  return pending instanceof Promise ? pending : undefined;
 }
