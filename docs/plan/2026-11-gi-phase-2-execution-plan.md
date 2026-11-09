@@ -1,6 +1,6 @@
 # Plan · GI Phase 2 "Baked lighting run time": execution plan
 
-**Status:** Proposed (2026-11-04) · **Owner:** Astrum Forge Studios · **Precedence:** below constitution, standards, architecture docs, ADRs (`CONSTITUTION.md` §10.1) · **Parent:** [`2026-10-global-illumination-feasibility.md`](2026-10-global-illumination-feasibility.md) §3.6 (option E), §5 Phase 2, decisions in its §8
+**Status:** Done (2026-11-09): B1–B6 merged, follow-ups in §7 · Proposed 2026-11-04 · **Owner:** Astrum Forge Studios · **Precedence:** below constitution, standards, architecture docs, ADRs (`CONSTITUTION.md` §10.1) · **Parent:** [`2026-10-global-illumination-feasibility.md`](2026-10-global-illumination-feasibility.md) §3.6 (option E), §5 Phase 2, decisions in its §8
 
 Phase 2 is the engine half of option E: reflection probes, light probes and lightmaps at run time, plus the smallest bake the engine can do on its own. The editor's baker (UV2 unwrap, GPU path tracer, denoiser, bake panel) waits for editor 0.8 or later (feasibility §8.4), so every format here is plain JSON plus textures that a later baker writes and that a game can author by hand or with the B4 baker today. This document records what Lite 1.34 gives and lacks (§2), the rules (§3), the steps B1–B6 (§4), two spikes (§5) and what is still unverified (§6).
 
@@ -64,3 +64,26 @@ Order: B1 and B3 are independent; B2 starts with spike P1; B4 needs B2's asset; 
 - No Phase 2 cost has been measured; every budget above is an estimate, and `everyFrame` capture is 6 extra scene passes.
 - Whether `world.raycastRender` hits anything in a headless Node app (cloned meshes need a device); B4 is specified for an app with one.
 - Safari 26 and Firefox were not tried.
+
+## 7. Progress
+
+All six steps are done (2026-11-09). The user guide is `skills/ignifx/references/concepts/baked-lighting.md`; the design record is `docs/architecture/07-rendering.md` §2.15.
+
+| Step                             | State | PR                                            |
+| -------------------------------- | ----- | --------------------------------------------- |
+| **B1** Reflection probes         | Done  | #151                                          |
+| **B1b** Probe blending           | Open  | (see Remaining)                               |
+| **B2** Light probes              | Done  | #156                                          |
+| **B3** Lightmaps                 | Done  | #164 (identity placement only; spike P2 open) |
+| **B4** Headless bake             | Done  | #160 (yield every ~8 ms added in #163)        |
+| **B5** Tiers, goldens, templates | Done  | #163 (goldens not recorded, see Remaining)    |
+| **B6** Schemas and skill pages   | Done  | #PR_B6                                        |
+
+**Remaining**
+
+- **B1b, reflection-probe blending:** one `createPbrLocalEnvironmentProbeSet` for overlapping probes, a GGX prefilter instead of box mips, `ReflectionProbe.blendDistance` and `capture()` to a file.
+- **Spike P2, the lightmap atlas transform:** `.lightmap.json` `entries` other than the identity log `IGX-0735` and sample the whole texture until UV2 can be rewritten into atlas space.
+- **The lightmap baker:** UV2 unwrap (`xatlas` as WebAssembly, an ADR under §9.3) and a GPU path tracer, in the editor's baker (feasibility §8.4); the engine bakes light probes only.
+- **Goldens:** one visual golden per B1–B3 scene is not recorded yet (coordinator bulk run), and no Phase 2 cost has been measured with `pnpm test:gpu-budget` on a scene that captures.
+- **The template `.env` decision (owner):** the 3D templates add a `ReflectionProbe` at `high` (#163) but load no environment map, so it stays idle; making it visible means shipping `studio.env` (205 KB) and a BRDF table, which changes the `high` look and its goldens.
+- §6's unverified items stand: ±Y faces and a rotated environment, device loss of the probe path, Safari and Firefox.

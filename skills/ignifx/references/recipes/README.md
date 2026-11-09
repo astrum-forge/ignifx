@@ -38,5 +38,7 @@ new recipe is added to the table below and to the Recipes table in `../../SKILL.
 | [`load-a-heightmap-terrain`](load-a-heightmap-terrain.md) | Load a `.terrain.json` with a 16-bit heightmap and query the ground |
 | [`walk-on-terrain`](walk-on-terrain.md) | Give a terrain a `HeightfieldCollider` from `colliderInit()` and walk a character on it |
 | [`scatter-foliage`](scatter-foliage.md) | Place seeded grass with `TerrainScatter` and a wind foliage material |
+| [`bake-and-load-light-probes`](bake-and-load-light-probes.md) | Bake a light-probe grid on the CPU in a Node tool, save the `.probes.json`, and load it into a `LightProbeVolume` |
+| [`assign-a-lightmap`](assign-a-lightmap.md) | Give a static `MeshRenderer` a baked `.lightmap.json` through its `lightmap` record |
 | [`save-and-load-game-state`](save-and-load-game-state.md) | Write a versioned save slot to `app.storage` from an autosave coroutine |
 | [`show-diagnostics-in-devtools`](show-diagnostics-in-devtools.md) | Publish a gameplay counter into `app.diagnostics` and read it back |

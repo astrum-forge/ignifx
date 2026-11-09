@@ -15,6 +15,8 @@ pages beside them are maintained alongside `docs/architecture/06-serialization-a
 | [`ignifx.mesh.md`](ignifx.mesh.md)               | generated | `.mesh.json`: one primitive mesh and its options                    |
 | [`inputactions.md`](inputactions.md)             | prose     | `.input.json`: maps, actions, binding paths, composites, processors |
 | [`ignifx.inputactions.md`](ignifx.inputactions.md) | generated | The input actions file's top-level fields                         |
+| [`ignifx-probes.md`](ignifx-probes.md)           | generated | `.probes.json`: a baked light-probe grid (`LightProbeVolume`)       |
+| [`ignifx-lightmap.md`](ignifx-lightmap.md)       | generated | `.lightmap.json`: a lightmap texture and per-entity atlas entries   |
 | [`components.md`](components.md)                 | generated | Every built-in component's serialized fields and defaults           |
 | [`ignifx.schemas.json`](ignifx.schemas.json)     | generated | All of the above in one bundle, for tools and validators            |
 
