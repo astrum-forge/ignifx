@@ -37,8 +37,9 @@ export function chooseQuality(flag: string | null): RenderingQuality | null {
  *
  * @remarks
  * The probe borrows its lighting tables from a loaded environment map, and the template loads none
- * (`Environment.environment` stays `null`), so it captures nothing until a game assigns an `.env`
- * to the `Environment`; from then on shiny materials reflect the arena instead of the sky map.
+ * (`Environment.environment` stays `null`), so it costs nothing (no GPU memory, no frame time)
+ * until a game assigns an `.env` to the `Environment`; from then on shiny materials reflect the
+ * arena instead of the sky map.
  *
  * @param app - The app, before `app.start()`.
  * @param quality - The tier this run uses.

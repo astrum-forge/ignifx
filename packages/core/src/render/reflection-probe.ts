@@ -27,7 +27,7 @@ export const REFLECTION_PROBE_REFRESH_MODES = ["once", "onDemand", "everyFrame"]
  * - `"once"` (default): when the probe is first ready, and again on {@link ReflectionProbe.refresh}.
  * - `"onDemand"`: only on {@link ReflectionProbe.refresh}; until then the probe reflects nothing.
  * - `"everyFrame"`: every frame, six extra scene passes each frame. Use it for one probe at most, on
- *   desktop. The `low` and `medium` quality tiers (`rendering.quality`) treat it as `"onDemand"`.
+ *   desktop. The `low` and `medium` quality tiers (`rendering.quality`) treat it as `"once"`.
  *
  * @public
  */
@@ -48,8 +48,9 @@ const MAX_SIZE = 1024;
  * first of them. Diffuse lighting still comes from the scene environment.
  *
  * The probe needs a loaded `Environment` (it reuses its lighting tables) and a canvas-backed app;
- * until an environment map is loaded it waits and captures nothing. A `rendering.quality` tier caps
- * `size` and allows `"everyFrame"` only at `high`; with the `custom` tier nothing is capped.
+ * until an environment map is loaded it waits, holding no GPU memory and costing no frame time. A
+ * `rendering.quality` tier caps `size` and allows `"everyFrame"` only at `high` (below, the probe
+ * captures as `"once"`); with the `custom` tier nothing is capped.
  * Mip levels are box-filtered, so very rough materials look blurrier than with a prefiltered `.env`.
  *
  * @example
@@ -153,7 +154,7 @@ export function resolveReflectionProbeSize(size: number, maxSize: number = MAX_S
  * @param mode - The authored mode.
  * @param allowsEveryFrame - Whether the tier lets a probe capture every frame
  * (`RenderingQualityPreset.reflectionProbeEveryFrame`; `true` when no tier applies).
- * @returns `mode`, except `"everyFrame"` reads as `"onDemand"` when the tier forbids it.
+ * @returns `mode`, except `"everyFrame"` reads as `"once"` when the tier forbids it.
  *
  * @internal
  */
@@ -161,7 +162,7 @@ export function resolveReflectionProbeRefreshMode(
   mode: ReflectionProbeRefreshMode,
   allowsEveryFrame: boolean,
 ): ReflectionProbeRefreshMode {
-  return mode === "everyFrame" && !allowsEveryFrame ? "onDemand" : mode;
+  return mode === "everyFrame" && !allowsEveryFrame ? "once" : mode;
 }
 
 /**
@@ -244,7 +245,7 @@ function reflectionProbeSchema(): Schema {
     }),
     refreshMode: enumOf(REFLECTION_PROBE_REFRESH_MODES, "once", {
       tooltip:
-        "once: capture when ready and on refresh(); onDemand: only on refresh(); everyFrame: every frame (costly; one probe; the low and medium quality tiers treat it as onDemand).",
+        "once: capture when ready and on refresh(); onDemand: only on refresh(); everyFrame: every frame (costly; one probe; the low and medium quality tiers treat it as once).",
     }),
     boxProjection: optional(vec3({ x: 10, y: 10, z: 10 }), {
       tooltip:

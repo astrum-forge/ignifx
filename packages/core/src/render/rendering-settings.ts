@@ -74,7 +74,7 @@ export type AmbientOcclusionQuality = (typeof AMBIENT_OCCLUSION_QUALITIES)[numbe
  * - `"high"`: GTAO at full resolution, lets a stack run SSGI, reflection probes up to 256, and lets
  *   a probe capture every frame.
  *
- * Below `"high"`, a `ReflectionProbe` with `refreshMode: "everyFrame"` captures only on `refresh()`.
+ * Below `"high"`, a `ReflectionProbe` with `refreshMode: "everyFrame"` captures as `"once"`.
  * Light probes and lightmaps run at every tier.
  *
  * @public
@@ -108,7 +108,7 @@ export interface RenderingQualityPreset {
   readonly ssgi: boolean;
   /** The largest cube face a `ReflectionProbe` captures at, in pixels; a larger `size` is clamped. */
   readonly reflectionProbeMaxSize: number;
-  /** Whether a `ReflectionProbe` may use `refreshMode: "everyFrame"`; below, it acts as `"onDemand"`. */
+  /** Whether a `ReflectionProbe` may use `refreshMode: "everyFrame"`; below, it acts as `"once"`. */
   readonly reflectionProbeEveryFrame: boolean;
 }
 

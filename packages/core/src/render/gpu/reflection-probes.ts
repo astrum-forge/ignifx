@@ -66,8 +66,16 @@ export interface ReflectionProbeRuntime {
    * @param isHdr - Whether `rendering.hdr` is on.
    * @param tier - The `rendering.quality` preset, which caps the size and `everyFrame`; `null` for
    * `"custom"`.
+   * @param hasEnvironment - Whether the scene has an environment map. Without one every probe is
+   * freed and nothing else runs, not even the mesh walk.
    */
-  update(world: World, probes: readonly ReflectionProbe[], isHdr: boolean, tier: RenderingQualityPreset | null): void;
+  update(
+    world: World,
+    probes: readonly ReflectionProbe[],
+    isHdr: boolean,
+    tier: RenderingQualityPreset | null,
+    hasEnvironment: boolean,
+  ): void;
   /**
    * Drops every GPU probe after the device was lost, before Lite's recovery rebuilds the materials,
    * so no material still names a cube of the lost device. The probes capture again on the first
@@ -102,8 +110,11 @@ export async function createReflectionProbeRuntime(
   const retiring: { lite: LiteReflectionProbe; environment: LiteProbeBinding["environment"] | null }[] = [];
   /** Material rebuilds started this frame. */
   const rebuilds: Promise<void>[] = [];
-  /** Probes whose capture the device loss destroyed; they capture again whatever their mode. */
-  const lostCaptures = new WeakSet<ReflectionProbe>();
+  /**
+   * Probes whose capture was freed while they stayed (resized, environment gone, device lost); they
+   * capture again whatever their mode.
+   */
+  const recapture = new WeakSet<ReflectionProbe>();
   let hasWarnedEveryFrame = false;
 
   const assign = (material: ReflectiveMaterial, binding: LiteProbeBinding | null): void => {
@@ -114,6 +125,9 @@ export async function createReflectionProbeRuntime(
   };
 
   const release = (probe: ReflectionProbe, state: ProbeState): void => {
+    if (state.lite.environment !== null) {
+      recapture.add(probe);
+    }
     retiring.push({ lite: state.lite, environment: state.lite.environment });
     states.delete(probe);
   };
@@ -140,7 +154,21 @@ export async function createReflectionProbeRuntime(
     rebuilds.length = 0;
   };
 
+  /** Hands every material back to the scene environment, without walking the scene. */
+  const clearMaterials = (): void => {
+    for (const [material, binding] of assigned) {
+      if (binding !== null) {
+        assign(material, null);
+      }
+    }
+    assigned.clear();
+  };
+
   const assignMaterials = (): void => {
+    if (candidates.length === 0) {
+      clearMaterials();
+      return;
+    }
     seen.clear();
     forEachReflectiveMesh(scene, (material, x, y, z) => {
       if (seen.has(material)) {
@@ -164,7 +192,19 @@ export async function createReflectionProbeRuntime(
       probes: readonly ReflectionProbe[],
       isHdr: boolean,
       tier: RenderingQualityPreset | null,
+      hasEnvironment: boolean,
     ): void {
+      candidates.length = 0;
+      if (!hasEnvironment) {
+        // A probe borrows the environment's lighting tables, so without one it holds no GPU memory
+        // and costs no frame work; refresh requests stay on the component until it can capture.
+        for (const [probe, state] of states) {
+          release(probe, state);
+        }
+        clearMaterials();
+        retire();
+        return;
+      }
       const maxSize = tier?.reflectionProbeMaxSize;
       const allowsEveryFrame = tier?.reflectionProbeEveryFrame ?? true;
       for (const [probe, state] of states) {
@@ -172,7 +212,6 @@ export async function createReflectionProbeRuntime(
           release(probe, state);
         }
       }
-      candidates.length = 0;
       for (const probe of probes) {
         const wantsRefresh = probe.consumeRefreshRequest();
         if (!probe.isEnabledInHierarchy) {
@@ -183,14 +222,17 @@ export async function createReflectionProbeRuntime(
           hasWarnedEveryFrame = true;
           warn(
             '{entity} asks its ReflectionProbe for refreshMode "everyFrame", which only the "high" ' +
-              "rendering.quality tier allows, so it captures only on refresh().",
+              'rendering.quality tier allows, so it captures as "once" (when ready and on refresh()).',
             probe.entity.name,
           );
         }
         let state = states.get(probe);
         if (state === undefined) {
-          const wasLost = lostCaptures.has(probe);
-          lostCaptures.delete(probe);
+          // Nothing is allocated until a capture is due: an `onDemand` probe waits for refresh().
+          if (mode === "onDemand" && !wantsRefresh && !recapture.has(probe)) {
+            continue;
+          }
+          recapture.delete(probe);
           state = {
             lite: createLiteReflectionProbe(
               engine,
@@ -199,7 +241,7 @@ export async function createReflectionProbeRuntime(
               EDITOR_ONLY_METADATA_KEY,
               cullingFilter(world, probe),
             ),
-            framesToCapture: mode === "once" || wasLost ? CAPTURE_FRAMES : 0,
+            framesToCapture: CAPTURE_FRAMES,
             binding: null,
           };
           states.set(probe, state);
@@ -212,7 +254,6 @@ export async function createReflectionProbeRuntime(
         if (wantsRefresh) {
           state.framesToCapture = CAPTURE_FRAMES;
         }
-        // A capture waits, without counting down, until the scene has an environment.
         if (
           (state.framesToCapture > 0 || mode === "everyFrame") &&
           state.lite.capture(x, y, z, probe.near, probe.far)
@@ -242,7 +283,7 @@ export async function createReflectionProbeRuntime(
       assigned.clear();
       for (const [probe, state] of states) {
         if (state.lite.environment !== null) {
-          lostCaptures.add(probe);
+          recapture.add(probe);
         }
         state.lite.dispose();
       }
@@ -254,12 +295,7 @@ export async function createReflectionProbeRuntime(
       for (const [probe, state] of states) {
         release(probe, state);
       }
-      for (const [material, binding] of assigned) {
-        if (binding !== null) {
-          assign(material, null);
-        }
-      }
-      assigned.clear();
+      clearMaterials();
       const settled = Promise.allSettled(rebuilds);
       for (const entry of retiring) {
         entry.lite.dispose(settled);

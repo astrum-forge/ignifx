@@ -3,7 +3,7 @@ import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
 import { toComponentHandle, toEntityHandle } from "../handles/handle.js";
 import { forceDeviceLossForTesting } from "../lite/gpu/device-loss.js";
-import { readSceneImageProcessing, setSceneClearColor } from "../lite/gpu/environment.js";
+import { readSceneEnvironment, readSceneImageProcessing, setSceneClearColor } from "../lite/gpu/environment.js";
 import { disposeScenePicker } from "../lite/gpu/picker.js";
 import { setSurfaceSizePx } from "../lite/gpu/render-diagnostics-gpu.js";
 import { captureFrame } from "../lite/gpu/screenshot-capture.js";
@@ -1768,7 +1768,13 @@ export class RendererImpl implements Renderer {
       });
     }
     this.#lightProbes ??= new LightProbeHost(this.engine, this.scene, onError);
-    this.#reflectionProbes.update(world, probes, (this.#presenter?.hdr ?? null) !== null, this.qualityPreset);
+    this.#reflectionProbes.update(
+      world,
+      probes,
+      (this.#presenter?.hdr ?? null) !== null,
+      this.qualityPreset,
+      readSceneEnvironment(this.scene) !== null,
+    );
     this.#lightProbes.update(volumes);
   }
 

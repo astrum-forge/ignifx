@@ -11888,8 +11888,9 @@ probe, materials reflect the `Environment` again. A material shared by several m
 first of them. Diffuse lighting still comes from the scene environment.
 
 The probe needs a loaded `Environment` (it reuses its lighting tables) and a canvas-backed app;
-until an environment map is loaded it waits and captures nothing. A `rendering.quality` tier caps
-`size` and allows `"everyFrame"` only at `high`; with the `custom` tier nothing is capped.
+until an environment map is loaded it waits, holding no GPU memory and costing no frame time. A
+`rendering.quality` tier caps `size` and allows `"everyFrame"` only at `high` (below, the probe
+captures as `"once"`); with the `custom` tier nothing is capped.
 Mip levels are box-filtered, so very rough materials look blurrier than with a prefiltered `.env`.
 
 #### Example
@@ -32662,7 +32663,7 @@ When a reflection probe renders its cube map again.
 - `"once"` (default): when the probe is first ready, and again on [ReflectionProbe.refresh](#refresh).
 - `"onDemand"`: only on [ReflectionProbe.refresh](#refresh); until then the probe reflects nothing.
 - `"everyFrame"`: every frame, six extra scene passes each frame. Use it for one probe at most, on
-  desktop. The `low` and `medium` quality tiers (`rendering.quality`) treat it as `"onDemand"`.
+  desktop. The `low` and `medium` quality tiers (`rendering.quality`) treat it as `"once"`.
 
 ***
 
@@ -34934,7 +34935,7 @@ The rendering quality tiers, in the order the inspector lists them
 - `"high"`: GTAO at full resolution, lets a stack run SSGI, reflection probes up to 256, and lets
   a probe capture every frame.
 
-Below `"high"`, a `ReflectionProbe` with `refreshMode: "everyFrame"` captures only on `refresh()`.
+Below `"high"`, a `ReflectionProbe` with `refreshMode: "everyFrame"` captures as `"once"`.
 Light probes and lightmaps run at every tier.
 
 ***

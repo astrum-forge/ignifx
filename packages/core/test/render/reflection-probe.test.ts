@@ -99,8 +99,8 @@ describe("selectReflectionProbe", () => {
 });
 
 describe("resolveReflectionProbeRefreshMode", () => {
-  it("reads everyFrame as onDemand below the high tier and keeps the other modes", () => {
-    expect(resolveReflectionProbeRefreshMode("everyFrame", false)).toBe("onDemand");
+  it("reads everyFrame as once below the high tier and keeps the other modes", () => {
+    expect(resolveReflectionProbeRefreshMode("everyFrame", false)).toBe("once");
     expect(resolveReflectionProbeRefreshMode("everyFrame", true)).toBe("everyFrame");
     expect(resolveReflectionProbeRefreshMode("once", false)).toBe("once");
   });

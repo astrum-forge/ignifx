@@ -292,11 +292,11 @@ scene (jittered) → taa-jitter → taa-resolve → resolved ─(copy)→ histor
 
 | Tier     | `hdr` | TAA | GTAO | contact shadows | SSGI    | reflection probe size | `everyFrame` probes |
 | -------- | ----- | --- | ---- | --------------- | ------- | --------------------- | ------------------- |
-| `low`    | off   | off | half | off             | off     | ≤ 64                  | read as `onDemand`  |
-| `medium` | on    | on  | half | allowed         | off     | ≤ 128                 | read as `onDemand`  |
+| `low`    | off   | off | half | off             | off     | ≤ 64                  | read as `once`      |
+| `medium` | on    | on  | half | allowed         | off     | ≤ 128                 | read as `once`      |
 | `high`   | on    | on  | full | allowed         | allowed | ≤ 256                 | allowed             |
 
-GI Phase 2 (step B5, 2026-11-09) adds the reflection-probe columns, read each frame by the probe runtime (`src/render/gpu/reflection-probes.ts`) from `renderer.qualityPreset`: a probe's `size` is clamped to the tier's maximum, and below `"high"` a probe asking for `refreshMode: "everyFrame"` captures only on `refresh()`, with one warning per app. Light probes and lightmaps are not tiered: baked lighting is the low-end path. `"custom"` caps nothing (sizes up to 1024, `everyFrame` allowed). The 3D templates add one `ReflectionProbe` at `"high"` only (`templates/3d-*/src/quality.ts`); it waits for an environment map, which the templates do not load yet.
+GI Phase 2 (step B5, 2026-11-09) adds the reflection-probe columns, read each frame by the probe runtime (`src/render/gpu/reflection-probes.ts`) from `renderer.qualityPreset`: a probe's `size` is clamped to the tier's maximum, and below `"high"` a probe asking for `refreshMode: "everyFrame"` captures as `"once"` (when first ready, and on `refresh()`), with one warning per app. Light probes and lightmaps are not tiered: baked lighting is the low-end path. `"custom"` caps nothing (sizes up to 1024, `everyFrame` allowed). A probe borrows the scene environment's BRDF table and harmonics, so until an environment map is loaded nothing of it runs: the renderer does not load the probe chunk, and if the environment goes the runtime frees every probe's face targets and cube and stops its per-frame mesh walk; a probe's targets are allocated on the first capture that can run (an `"onDemand"` probe's on its first `refresh()`). The 3D templates add one `ReflectionProbe` at `"high"` only (`templates/3d-*/src/quality.ts`); they load no environment map yet, so it costs nothing until a project adds an `.env`.
 
 ## 3. Picking
 

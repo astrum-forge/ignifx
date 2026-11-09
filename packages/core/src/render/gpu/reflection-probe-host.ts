@@ -62,13 +62,21 @@ export class ReflectionProbeHost {
    * @param probes - Every `ReflectionProbe` in it.
    * @param isHdr - Whether `rendering.hdr` is on.
    * @param tier - The `rendering.quality` preset; `null` for `"custom"`.
+   * @param hasEnvironment - Whether the scene has an environment map; until it has, the chunk is
+   * not even loaded, since a probe needs the map's lighting tables.
    */
-  update(world: World, probes: readonly ReflectionProbe[], isHdr: boolean, tier: RenderingQualityPreset | null): void {
+  update(
+    world: World,
+    probes: readonly ReflectionProbe[],
+    isHdr: boolean,
+    tier: RenderingQualityPreset | null,
+    hasEnvironment: boolean,
+  ): void {
     if (this.#runtime !== null) {
-      this.#runtime.update(world, probes, isHdr, tier);
+      this.#runtime.update(world, probes, isHdr, tier, hasEnvironment);
       return;
     }
-    if (probes.length === 0 || this.#isLoading || this.#isDisposed) {
+    if (probes.length === 0 || !hasEnvironment || this.#isLoading || this.#isDisposed) {
       return;
     }
     this.#isLoading = true;
