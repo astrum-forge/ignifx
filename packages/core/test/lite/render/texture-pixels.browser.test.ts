@@ -5,7 +5,7 @@ import { createMaterialAsset, pbrMaterialDefinition } from "../../../src/render/
 import { MeshAsset } from "../../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../../src/render/mesh-renderer.js";
 import { TextureAsset } from "../../../src/render/texture-asset.js";
-import { createBrowserApp, SETTLE_FRAMES } from "../../render/support/browser-harness.js";
+import { createBrowserApp, settle, SETTLE_FRAMES } from "../../render/support/browser-harness.js";
 import type { PixelRgba } from "../../../src/lite/screenshot.js";
 import type { BrowserApp } from "../../render/support/browser-harness.js";
 
@@ -124,7 +124,7 @@ async function buildQuadScene(): Promise<{
   screen.addComponent(MeshRenderer, { mesh: quad, materials: [material], castShadows: false });
 
   await running.start();
-  await running.advance(SETTLE_FRAMES * 2);
+  await settle(running, SETTLE_FRAMES * 2);
   return { running, texture: handle.value };
 }
 
@@ -167,7 +167,7 @@ describe("update", () => {
 
     // Byte offset 0 is texel (0, 0): the red one. Black is the one class no texel has.
     texture.update(Uint8Array.from([0, 0, 0, 255]), 0, 0, 1, 1);
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
 
     const after = await quadrantClasses(running);
     expect(after).not.toContain("100");
@@ -187,7 +187,7 @@ describe("update", () => {
       cyan[index * 4 + 3] = 255;
     }
     texture.update(cyan);
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
     expect(await quadrantClasses(running)).toEqual(["011", "011", "011", "011"]);
   }, 120_000);
 });

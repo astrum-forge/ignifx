@@ -7,7 +7,7 @@ import { SHADER_ASSET_TYPE, ShaderAsset } from "../../src/render/shader-asset.js
 import { shaderMaterialDefinition } from "../../src/render/shader-material-definition.js";
 import { parseShaderDeclaration } from "../../src/render/shader-pragma.js";
 import { loadShaderSupport } from "../../src/render/shader-support.js";
-import { createBrowserApp, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { createBrowserApp, settle, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 
 /**
@@ -76,7 +76,7 @@ async function clockScene(): Promise<BrowserApp> {
   });
   quad.transform.lookAt({ x: 0, y: 0, z: -10 });
   await running.start();
-  await running.advance(SETTLE_FRAMES);
+  await settle(running);
   return running;
 }
 

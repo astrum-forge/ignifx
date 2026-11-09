@@ -6,7 +6,7 @@ import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/mat
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
 import { ReflectionProbe } from "../../src/render/reflection-probe.js";
-import { createBrowserApp, fixtureUrl, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { createBrowserApp, fixtureUrl, settle, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 import type { ColorLike } from "../../src/math/types.js";
 import type { EnvironmentAsset } from "../../src/render/environment-asset.js";
@@ -75,7 +75,7 @@ describe("ReflectionProbe", () => {
       });
       world.createEntity("Probe", { position: { x: 0, y: 0, z: -1.5 } }).addComponent(ReflectionProbe, { size: 64 });
       await running.start();
-      await running.advance(SETTLE_FRAMES * 3);
+      await settle(running, SETTLE_FRAMES * 3);
       expect(running.errors).toEqual([]);
       expect(running.renderer.reflectionProbeHost?.isActive).toBe(true);
       const left = await running.pixelAt(LEFT.x, LEFT.y);

@@ -3,7 +3,13 @@ import { KTX2_DECODER_FILE, KTX2_TRANSCODER_FILES, MESHOPT_DECODER_FILE } from "
 import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/material-asset.js";
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
-import { addCameraAndLight, createBrowserApp, fixtureUrl, SETTLE_FRAMES } from "../render/support/browser-harness.js";
+import {
+  addCameraAndLight,
+  createBrowserApp,
+  fixtureUrl,
+  settle,
+  SETTLE_FRAMES,
+} from "../render/support/browser-harness.js";
 import type { AssetHandle } from "../../src/assets/types.js";
 import type { PixelRgba } from "../../src/lite/screenshot.js";
 import type { TextureAsset } from "../../src/render/texture-asset.js";
@@ -163,7 +169,7 @@ async function drawQuadrants(
   );
   const mesh = MeshAsset.plane(running.app, { size: 4 });
   running.world.createEntity("Quad").addComponent(MeshRenderer, { mesh, materials: [material] });
-  await running.advance(SETTLE_FRAMES * 2);
+  await settle(running, SETTLE_FRAMES * 2);
 
   const near = SIZE * 0.3;
   const far = SIZE * 0.7;

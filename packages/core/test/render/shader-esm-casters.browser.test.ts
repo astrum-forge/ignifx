@@ -9,7 +9,7 @@ import { SHADER_ASSET_TYPE, ShaderAsset } from "../../src/render/shader-asset.js
 import { shaderMaterialDefinition } from "../../src/render/shader-material-definition.js";
 import { parseShaderDeclaration } from "../../src/render/shader-pragma.js";
 import { loadShaderSupport } from "../../src/render/shader-support.js";
-import { createBrowserApp, pixelLuminance, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { createBrowserApp, pixelLuminance, settle, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 import type { ShadowTechniqueName } from "../../src/render/light.js";
 
@@ -114,7 +114,7 @@ async function buildScene(
   });
 
   await running.start();
-  await running.advance(SETTLE_FRAMES * 4);
+  await settle(running, SETTLE_FRAMES * 4);
   return { running, caster: renderer };
 }
 
@@ -173,7 +173,7 @@ describe("shader-material shadow casters", () => {
     const { running, caster } = await buildScene(technique, shaderCaster);
     const casting = await groundLuminance(running);
     caster.castShadows = false;
-    await running.advance(SETTLE_FRAMES * 4);
+    await settle(running, SETTLE_FRAMES * 4);
     const notCasting = await groundLuminance(running);
     const warnings = running.log.toArray().filter((record) => record.message.includes("IGX-0724")).length;
     await teardown(running);

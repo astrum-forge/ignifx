@@ -8,7 +8,7 @@ import {
 } from "../../src/render/material-asset.js";
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
-import { createBrowserApp, gpuDeviceErrors, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { createBrowserApp, gpuDeviceErrors, settle, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 import type { ErrorReport } from "../../src/app/types.js";
 
@@ -287,7 +287,7 @@ async function buildScene(): Promise<{
     });
   };
   await running.start();
-  await running.advance(SETTLE_FRAMES);
+  await settle(running);
   // A shadow-casting light is a topology change. Its rebuild can outlast a fixed number of frames on
   // a slow runner, and a test that hooks the next rebuild must start after it.
   const before = running.renderer.renderableRebuilds;

@@ -12,7 +12,7 @@ import { SHADER_ASSET_TYPE, ShaderAsset } from "../../../src/render/shader-asset
 import { shaderMaterialDefinition } from "../../../src/render/shader-material-definition.js";
 import { parseShaderDeclaration } from "../../../src/render/shader-pragma.js";
 import { loadShaderSupport } from "../../../src/render/shader-support.js";
-import { createBrowserApp, fixtureUrl, SETTLE_FRAMES } from "../../render/support/browser-harness.js";
+import { createBrowserApp, fixtureUrl, settle, SETTLE_FRAMES } from "../../render/support/browser-harness.js";
 import type { AssetHandle } from "../../../src/assets/types.js";
 import type { CapturedFrame } from "../../../src/lite/screenshot.js";
 import type { ShadowTechniqueName } from "../../../src/render/light.js";
@@ -131,7 +131,7 @@ async function buildScene(light: CasterLight, addCaster: (running: BrowserApp) =
 
   await running.start();
   await addCaster(running);
-  await running.advance(SETTLE_FRAMES * 4);
+  await settle(running, SETTLE_FRAMES * 4);
   return running;
 }
 
@@ -221,10 +221,10 @@ async function measureArm(
   const { running, model } = await buildRigScene(light);
   const rest = await running.app.renderer.captureScreenshot();
   placeLeftArm(model, y);
-  await running.advance(SETTLE_FRAMES);
+  await settle(running);
   const posed = await running.app.renderer.captureScreenshot();
   placeLeftArm(model, ARM_REST.y);
-  await running.advance(SETTLE_FRAMES);
+  await settle(running);
   const back = await running.app.renderer.captureScreenshot();
   const errors = running.errors.length;
   await teardown(running);
@@ -306,10 +306,10 @@ describe("a shader-material caster's shadow", () => {
       // The engine writes `time` to Lite through the same call, so this stands in for a clock-driven
       // vertex stage without depending on how long a software frame takes.
       material.value.setUniform("size", 0.4);
-      await running.advance(SETTLE_FRAMES);
+      await settle(running);
       const small = await running.app.renderer.captureScreenshot();
       material.value.setUniform("size", 1);
-      await running.advance(SETTLE_FRAMES);
+      await settle(running);
       const back = await running.app.renderer.captureScreenshot();
       const shrunk = changedPixels(full, small);
       const grown = changedPixels(small, back);

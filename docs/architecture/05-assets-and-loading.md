@@ -134,6 +134,7 @@ One `texture` type covers six extensions, and the loader picks Lite's loader fro
 
 Rules for loaders:
 
+- **No code from a network host at run time.** A loader, a decoder or a transcoder never makes the engine load or run code (a script, WebAssembly, a worker) from a network host while a game or the editor runs: everything it needs is served from the game's or the editor's own origin, as the decoders above are. When a dependency cannot be served locally, the loader refuses the file with a clear error before anything is fetched rather than falling back to a CDN. `.basis` is the standing example: Lite 1.34 hard-codes the transcoder's CDN URL, so the texture loader fails it with `IGX-0509` and asks for `.ktx2` instead; the refusal comes before anything is fetched only in a project that serves its own decoders (every `@ignifx/vite-plugin` build), while without them Lite still tries the CDN first and the loader turns that failure into the same error. This rule is stricter than `CONSTITUTION.md` §9, which §10.1 allows; a §9 clause saying the same for the engine, its packages and the editor is proposed in engine #157 and needs the owner's approval through a `constitution:` pull request with an ADR (§10.2).
 - Loaders are pure with respect to the world: they produce values, never create entities.
 - GPU uploads happen inside `load` using the Lite engine; a loader must tolerate the null engine (return CPU-only data with `gpu: null`).
 - Dependencies are loaded through `loadDependency` so that refcounts and progress propagate.

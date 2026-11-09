@@ -8,6 +8,7 @@ import {
   createBrowserApp,
   gpuDeviceErrors,
   pixelLuminance,
+  settle,
   SETTLE_FRAMES,
 } from "../../render/support/browser-harness.js";
 import type { BrowserApp } from "../../render/support/browser-harness.js";
@@ -72,7 +73,7 @@ it("draws the first morph-target mesh a page adds after start", async () => {
     [1],
   );
   running.world.createEntity("Quad").addComponent(MeshRenderer, { mesh: quad });
-  await running.advance(SETTLE_FRAMES * 3);
+  await settle(running, SETTLE_FRAMES * 3);
   const settledErrors = device.errors.length;
   await running.advance(SETTLE_FRAMES * 2);
 

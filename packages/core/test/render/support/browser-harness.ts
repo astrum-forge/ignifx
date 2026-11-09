@@ -113,6 +113,55 @@ export async function settleRebuilds(harness: BrowserApp, before: number, left =
 }
 
 /**
+ * Reports whether the renderer still owes a renderable rebuild or a cache-reset confirmation.
+ *
+ * @param renderer - The app's renderer.
+ * @returns `true` while a rebuild is queued or running, or a material cache reset is unconfirmed.
+ */
+function owesRebuild(renderer: RendererImpl): boolean {
+  return renderer.needsRenderableRebuild || renderer.isRebuildInFlight || renderer.materialCacheResets.unconfirmed;
+}
+
+/**
+ * Waits until the renderer has gone `quietFrames` frames without owing or starting a renderable
+ * rebuild, so whatever the test changed has reached the screen.
+ *
+ * @remarks
+ * The form of {@link settleRebuilds} for a change that may or may not need a rebuild (a material,
+ * a setting, a post-process stack, an asset that loads after `start()`): it never insists on one.
+ * The render sync system queues a rebuild one frame after the change and runs it between frames
+ * for as long as the machine takes, so a fixed frame count reads the old scene on a loaded runner.
+ * A rebuild that starts while it waits restarts the count, so it never waits less than
+ * `advance(quietFrames)` would.
+ *
+ * @param harness - The running app.
+ * @param quietFrames - How many frames in a row must pass with no rebuild owed or started.
+ * @param left - How many more frames to wait.
+ * @returns A promise that settles once the scene has been quiet for `quietFrames` frames.
+ * @throws Error when the renderer is still rebuilding after {@link MAX_REBUILD_FRAMES} frames.
+ */
+export async function settle(
+  harness: BrowserApp,
+  quietFrames = SETTLE_FRAMES,
+  left = MAX_REBUILD_FRAMES,
+): Promise<void> {
+  if (left <= 0) {
+    throw new Error(`The renderer was still rebuilding after ${String(MAX_REBUILD_FRAMES)} frames.`);
+  }
+  const renderer = harness.renderer;
+  if (owesRebuild(renderer)) {
+    await harness.nextFrame();
+    return settle(harness, quietFrames, left - 1);
+  }
+  const rebuilds = renderer.renderableRebuilds;
+  await harness.advance(quietFrames);
+  if (!owesRebuild(renderer) && renderer.renderableRebuilds === rebuilds) {
+    return;
+  }
+  return settle(harness, quietFrames, left - quietFrames);
+}
+
+/**
  * Waits for one animation frame.
  *
  * @returns A promise that resolves inside the next frame callback.

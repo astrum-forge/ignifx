@@ -8,7 +8,7 @@ import {
   addCameraAndLight,
   createBrowserApp,
   pixelLuminance,
-  SETTLE_FRAMES,
+  settle,
   settleRebuilds,
 } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
@@ -102,7 +102,7 @@ describe("hiding a renderer", () => {
     expect(clone).not.toBeNull();
 
     scene.renderer.enabled = false;
-    await scene.harness.advance(SETTLE_FRAMES);
+    await settle(scene.harness);
     expect(pixelLuminance(await scene.harness.centrePixel())).toBeLessThan(lit / 2);
     // §2.3: never remove a mesh from the scene to hide it — Lite disposes a mesh leaving its last
     // scene. The clone is still the same object, still in the scene, and comes straight back.
@@ -110,7 +110,7 @@ describe("hiding a renderer", () => {
     expect(scene.renderer.isVisible).toBe(false);
 
     scene.renderer.enabled = true;
-    await scene.harness.advance(SETTLE_FRAMES);
+    await settle(scene.harness);
     expect(pixelLuminance(await scene.harness.centrePixel())).toBeGreaterThan(lit / 2);
     expect(scene.renderer.isVisible).toBe(true);
   });
@@ -122,14 +122,14 @@ describe("hiding a renderer", () => {
 
     // The display-only hide an edit-mode LodGroup uses: drawn nothing, saved nothing.
     scene.renderer.displayHidden = true;
-    await scene.harness.advance(SETTLE_FRAMES);
+    await settle(scene.harness);
     expect(pixelLuminance(await scene.harness.centrePixel())).toBeLessThan(lit / 2);
     expect(scene.renderer.enabled).toBe(true);
     expect(scene.renderer.isVisible).toBe(false);
     expect(scene.renderer.lite.mesh).toBe(clone);
 
     scene.renderer.displayHidden = false;
-    await scene.harness.advance(SETTLE_FRAMES);
+    await settle(scene.harness);
     expect(pixelLuminance(await scene.harness.centrePixel())).toBeGreaterThan(lit / 2);
     expect(scene.renderer.isVisible).toBe(true);
   });
@@ -138,7 +138,7 @@ describe("hiding a renderer", () => {
     const scene = await buildCubeScene();
     const lit = pixelLuminance(await scene.harness.centrePixel());
     scene.renderer.entity.active = false;
-    await scene.harness.advance(SETTLE_FRAMES);
+    await settle(scene.harness);
     expect(pixelLuminance(await scene.harness.centrePixel())).toBeLessThan(lit / 2);
   });
 });
@@ -154,7 +154,7 @@ describe("the orthographic toggle", () => {
     // camera left at the clear colour is now covered.
     scene.camera.projection = "orthographic";
     scene.camera.orthographicSize = 1;
-    await scene.harness.advance(SETTLE_FRAMES);
+    await settle(scene.harness);
     const orthographicEdge = await scene.harness.pixelAt(2, scene.harness.canvas.height >> 1);
     expect(pixelLuminance(orthographicEdge)).toBeGreaterThan(pixelLuminance(perspectiveEdge) + 10);
   });
@@ -176,12 +176,12 @@ describe("light colour", () => {
       [],
     );
     running.world.createEntity("Cube").addComponent(MeshRenderer, { mesh, materials: [material] });
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     const white = await running.centrePixel();
     expect(white.r).toBeGreaterThan(10);
 
     light.color = { r: 1, g: 0, b: 0, a: 1 };
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     const red = await running.centrePixel();
     expect(red.r).toBeGreaterThan(red.b + 10);
   });
@@ -199,7 +199,7 @@ describe("the rendering.clearColor setting", () => {
     });
     harness = running;
     const camera = addCameraAndLight(running, 4);
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     expect(camera.clearColor).toBeNull();
 
     const corner = await running.pixelAt(1, 1);

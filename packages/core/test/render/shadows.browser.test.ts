@@ -11,6 +11,7 @@ import {
   fixtureUrl,
   gpuDeviceErrors,
   pixelLuminance,
+  settle,
   SETTLE_FRAMES,
 } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
@@ -101,7 +102,7 @@ async function buildShadowScene(
   const caster = blocker.addComponent(MeshRenderer, { mesh: box, materials: [white], castShadows: blockerCasts });
 
   await running.start();
-  await running.advance(SETTLE_FRAMES * 4);
+  await settle(running, SETTLE_FRAMES * 4);
   return { running, light, caster };
 }
 
@@ -185,7 +186,7 @@ describe("caster lists", () => {
     device.stop();
     expect(scene.caster.castShadows).toBe(true);
     scene.caster.castShadows = false;
-    await scene.running.advance(SETTLE_FRAMES * 2);
+    await settle(scene.running, SETTLE_FRAMES * 2);
     expect(scene.running.errors).toEqual([]);
     // The last caster leaving empties the list, which used to make the pass draw every receiver.
     expect(device.errors).toEqual([]);
@@ -198,7 +199,7 @@ describe("caster lists", () => {
     const scene = await buildShadowScene(true);
     const before = await bandLuminance(scene.running, 29, 34, 35, 40);
     scene.caster.mesh = MeshAsset.box(scene.running.app, { size: 2 });
-    await scene.running.advance(SETTLE_FRAMES * 4);
+    await settle(scene.running, SETTLE_FRAMES * 4);
     const after = await bandLuminance(scene.running, 29, 34, 35, 40);
     expect(scene.running.errors).toEqual([]);
     expect(scene.light.isCastingShadows).toBe(true);
@@ -228,7 +229,7 @@ describe("caster lists", () => {
           material._csmGen = (material._csmGen ?? 0) + 1;
         }
       }
-      await scene.running.advance(SETTLE_FRAMES);
+      await settle(scene.running);
       globalThis.removeEventListener("error", onError);
       expect(frameErrors).toEqual([]);
       expect(scene.running.errors).toEqual([]);
@@ -262,18 +263,18 @@ describe("caster lists", () => {
       expect(before).not.toBeNull();
       edit(scene.light.shadows);
       // oxlint-disable-next-line no-await-in-loop -- each edit has to land before the next one
-      await scene.running.advance(SETTLE_FRAMES * 2);
+      await settle(scene.running, SETTLE_FRAMES * 2);
       expect(scene.light.isCastingShadows).toBe(true);
       expect(scene.light.lite.shadowGenerator).not.toBe(before);
     }
     // A frame with nothing changed keeps the generator.
     const settled = scene.light.lite.shadowGenerator;
-    await scene.running.advance(SETTLE_FRAMES);
+    await settle(scene.running);
     expect(scene.light.lite.shadowGenerator).toBe(settled);
     // Still casting the box's shadow onto the ground with the new generator.
     const shadowed = await meanLuminance(scene.running);
     scene.light.shadows.enabled = false;
-    await scene.running.advance(SETTLE_FRAMES * 2);
+    await settle(scene.running, SETTLE_FRAMES * 2);
     expect(shadowed).toBeLessThan(await meanLuminance(scene.running));
     device.stop();
     expect(device.errors).toEqual([]);
@@ -283,7 +284,7 @@ describe("caster lists", () => {
   it("releases the generator when the light stops casting", async () => {
     const scene = await buildShadowScene(true);
     scene.light.shadows.enabled = false;
-    await scene.running.advance(SETTLE_FRAMES * 2);
+    await settle(scene.running, SETTLE_FRAMES * 2);
     expect(scene.light.isCastingShadows).toBe(false);
     expect(scene.light.lite.shadowGenerator).toBeNull();
     expect(scene.running.errors).toEqual([]);
@@ -294,7 +295,7 @@ describe("caster lists", () => {
     const lit = await meanLuminance(scene.running);
 
     scene.light.enabled = false;
-    await scene.running.advance(SETTLE_FRAMES * 2);
+    await settle(scene.running, SETTLE_FRAMES * 2);
     expect(scene.light.isCastingShadows).toBe(false);
     expect(scene.light.lite.shadowGenerator).toBeNull();
     // The sun is the only light, so with it contributing nothing the frame is close to black.
@@ -302,7 +303,7 @@ describe("caster lists", () => {
     expect(dark).toBeLessThan(lit / 4);
 
     scene.light.enabled = true;
-    await scene.running.advance(SETTLE_FRAMES * 4);
+    await settle(scene.running, SETTLE_FRAMES * 4);
     expect(scene.light.isCastingShadows).toBe(true);
     expect(await meanLuminance(scene.running)).toBeGreaterThan(lit * 0.75);
     expect(scene.running.errors).toEqual([]);
@@ -383,7 +384,7 @@ async function buildSphereScene(type: "directional" | "point"): Promise<{
   lightEntity.addComponent(Light, { type, intensity: type === "point" ? 40 : 3, range: 40 });
 
   await running.start();
-  await running.advance(SETTLE_FRAMES * 4);
+  await settle(running, SETTLE_FRAMES * 4);
   return { running, lightEntity };
 }
 
@@ -398,7 +399,7 @@ describe("which direction a light shades from", () => {
     const scene = await buildSphereScene("directional");
     // Aim the light along +X: it can only light the hemisphere whose normals point along -X.
     scene.lightEntity.transform.lookAt({ x: 10, y: 0, z: 0 });
-    await scene.running.advance(SETTLE_FRAMES * 3);
+    await settle(scene.running, SETTLE_FRAMES * 3);
 
     const left = await bandLuminance(scene.running, ...LEFT_BAND);
     const right = await bandLuminance(scene.running, ...RIGHT_BAND);
@@ -409,12 +410,12 @@ describe("which direction a light shades from", () => {
   it("swaps the lit hemisphere when the light entity is turned 180 degrees", async () => {
     const scene = await buildSphereScene("directional");
     scene.lightEntity.transform.lookAt({ x: 10, y: 0, z: 0 });
-    await scene.running.advance(SETTLE_FRAMES * 3);
+    await settle(scene.running, SETTLE_FRAMES * 3);
     const firstLeft = await bandLuminance(scene.running, ...LEFT_BAND);
     const firstRight = await bandLuminance(scene.running, ...RIGHT_BAND);
 
     scene.lightEntity.transform.lookAt({ x: -10, y: 0, z: 0 });
-    await scene.running.advance(SETTLE_FRAMES * 3);
+    await settle(scene.running, SETTLE_FRAMES * 3);
     const secondLeft = await bandLuminance(scene.running, ...LEFT_BAND);
     const secondRight = await bandLuminance(scene.running, ...RIGHT_BAND);
 
@@ -428,12 +429,12 @@ describe("which direction a light shades from", () => {
   it("moves a point light's lit region with its entity", async () => {
     const scene = await buildSphereScene("point");
     scene.lightEntity.transform.localPosition.set(-4, 0, -2);
-    await scene.running.advance(SETTLE_FRAMES * 3);
+    await settle(scene.running, SETTLE_FRAMES * 3);
     const nearLeft = await bandLuminance(scene.running, ...LEFT_BAND);
     const nearRight = await bandLuminance(scene.running, ...RIGHT_BAND);
 
     scene.lightEntity.transform.localPosition.set(4, 0, -2);
-    await scene.running.advance(SETTLE_FRAMES * 3);
+    await settle(scene.running, SETTLE_FRAMES * 3);
     const farLeft = await bandLuminance(scene.running, ...LEFT_BAND);
     const farRight = await bandLuminance(scene.running, ...RIGHT_BAND);
 
@@ -526,7 +527,7 @@ async function buildModelShadowScene(castShadows: boolean): Promise<{
   blocker.transform.localPosition.set(0, 2, 0);
   blocker.transform.localScale.set(2, 2, 2);
   const model = blocker.addComponent(Model, { model: handle, castShadows, receiveShadows: false });
-  await running.advance(SETTLE_FRAMES * 4);
+  await settle(running, SETTLE_FRAMES * 4);
   return { running, model };
 }
 
@@ -545,7 +546,7 @@ describe("a Model as a shadow caster", () => {
     expect(scene.model.lite.root).not.toBeNull();
 
     scene.model.castShadows = false;
-    await scene.running.advance(SETTLE_FRAMES);
+    await settle(scene.running);
     const idle: LiteMesh[] = [];
     scene.model.collectCasters(idle);
     expect(idle).toEqual([]);

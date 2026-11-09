@@ -9,6 +9,7 @@ import {
   createBrowserApp,
   gpuDeviceErrors,
   pixelLuminance,
+  settle,
   SETTLE_FRAMES,
 } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
@@ -84,7 +85,7 @@ async function render(
     lightmap: { asset: createLightmapAsset(app, texture), mode: "shadowmap", level: 1, gamma: false, uv2: true },
   });
   await running.start();
-  await running.advance(SETTLE_FRAMES * 3);
+  await settle(running, SETTLE_FRAMES * 3);
   expect(running.errors).toEqual([]);
   const y = SIZE >> 1;
   const left = pixelLuminance(await running.pixelAt(Math.round(SIZE * 0.4), y));

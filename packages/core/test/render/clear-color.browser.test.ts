@@ -4,7 +4,7 @@ import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/mat
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
 import { PostProcessStack } from "../../src/render/post-process-stack.js";
-import { addCameraAndLight, createBrowserApp, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { addCameraAndLight, createBrowserApp, settle, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 import type { PixelRgba } from "../../src/lite/screenshot.js";
 import type { ColorLike } from "../../src/math/types.js";
@@ -87,7 +87,7 @@ async function presentedClear(writer: Writer, path: FramePath, srgb = false): Pr
     camera.entity.addComponent(PostProcessStack, { bloom: { enabled: true } });
   }
   await running.start();
-  await running.advance(SETTLE_FRAMES * 2);
+  await settle(running, SETTLE_FRAMES * 2);
   return running.pixelAt(1, 1);
 }
 
@@ -147,7 +147,7 @@ describe("a clear colour under tone mapping", () => {
       .createEntity("Fogged")
       .addComponent(MeshRenderer, { mesh: MeshAsset.box(running.app, { size: 2 }), materials: [white] });
     await running.start();
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
 
     const fogged = await running.pixelAt(16, 16);
     const background = await running.pixelAt(1, 1);

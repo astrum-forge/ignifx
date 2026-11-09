@@ -5,7 +5,7 @@ import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/mat
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
 import { PostProcessStack } from "../../src/render/post-process-stack.js";
-import { createBrowserApp, gpuDeviceErrors, pixelLuminance, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { createBrowserApp, gpuDeviceErrors, pixelLuminance, settle, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 
 /**
@@ -53,7 +53,7 @@ async function buildScene(bloom: boolean): Promise<{ running: BrowserApp; stack:
     .addComponent(MeshRenderer, { mesh: MeshAsset.sphere(running.app, { diameter: 0.8 }), materials: [material] });
   await running.start();
   // The bloom chunk loads on the first frame that asks for it; give it time to land and record.
-  await running.advance(SETTLE_FRAMES * 3);
+  await settle(running, SETTLE_FRAMES * 3);
   return { running, stack };
 }
 

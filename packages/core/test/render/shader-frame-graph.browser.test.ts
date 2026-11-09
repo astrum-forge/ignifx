@@ -12,7 +12,7 @@ import { parseShaderDeclaration } from "../../src/render/shader-pragma.js";
 import { loadShaderSupport } from "../../src/render/shader-support.js";
 import { createStorageBufferAsset } from "../../src/render/storage-buffer-asset.js";
 import { TextureAsset } from "../../src/render/texture-asset.js";
-import { createBrowserApp, pixelLuminance, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { createBrowserApp, pixelLuminance, settle, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 import type { AssetHandle } from "../../src/assets/types.js";
 import type { Entity } from "../../src/entity/entity.js";
@@ -205,7 +205,7 @@ async function soakScene(options: SoakOptions): Promise<BrowserApp> {
   });
 
   await running.start();
-  await running.advance(SETTLE_FRAMES);
+  await settle(running);
 
   const ring = new Float32Array(RING_FLOATS);
   for (let index = 0; index < RING_SLOTS; index += 1) {
@@ -358,7 +358,7 @@ describe("two thin-instanced clouds swapped between two programs under fog and s
     });
 
     await running.start();
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
 
     const ring = new Float32Array(RING_FLOATS);
     for (let index = 0; index < RING_SLOTS; index += 1) {
@@ -402,7 +402,7 @@ describe("two thin-instanced clouds swapped between two programs under fog and s
     stopCollecting();
     expect(frameErrors).toEqual([]);
 
-    await running.advance(SETTLE_FRAMES * 2);
+    await settle(running, SETTLE_FRAMES * 2);
     const centre = await running.centrePixel();
     expect(running.errors).toEqual([]);
     expect(pixelLuminance(centre)).toBeGreaterThan(40);
@@ -452,7 +452,7 @@ async function wallPixel(
   });
 
   await running.start();
-  await running.advance(SETTLE_FRAMES * 4);
+  await settle(running, SETTLE_FRAMES * 4);
   const centre = await running.centrePixel();
   expect(running.errors).toEqual([]);
   return { r: centre.r, g: centre.g, b: centre.b };

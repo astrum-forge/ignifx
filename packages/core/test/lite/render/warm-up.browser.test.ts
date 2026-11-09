@@ -34,6 +34,18 @@ const BOX_RED = 100;
 /** The frame budget every wait gets. Generous: the point is to measure, not to time out. */
 const FRAME_BUDGET = 240;
 
+/**
+ * The most extra frames a mesh whose material family was never built may take to appear.
+ *
+ * @remarks
+ * Lite compiles the family's pipelines asynchronously, alongside the frames, so the count depends
+ * on the machine: SwiftShader measured 3 locally (ADR-0002, S2.2), and a loaded GitHub runner measured
+ * 10 (2026-11-09). 20 still proves what S2.2 is about, that an unwarmed family appears on its own
+ * within a few frames rather than never or after a stall, while the warmed-up cases below keep
+ * the tight bound of 2 that shows what a warm-up buys.
+ */
+const UNBUILT_FAMILY_FRAMES = 20;
+
 let current: RenderHarness | null = null;
 
 afterEach(() => {
@@ -122,7 +134,7 @@ describe("S2.2 · a mesh added after registerScene", () => {
     const harness = await emptyScene();
     const measured = await measureFramesToVisible(harness, redPbr());
     expect(measured.total).toBeLessThan(FRAME_BUDGET);
-    expect(measured.extra).toBeLessThanOrEqual(6);
+    expect(measured.extra).toBeLessThanOrEqual(UNBUILT_FAMILY_FRAMES);
   });
 
   it("appears no slower once the PBR family has been warmed up", async () => {

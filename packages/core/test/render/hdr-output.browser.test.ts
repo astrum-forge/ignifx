@@ -5,7 +5,7 @@ import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/mat
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
 import { PostProcessStack } from "../../src/render/post-process-stack.js";
-import { createBrowserApp, gpuDeviceErrors, pixelLuminance, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { createBrowserApp, gpuDeviceErrors, pixelLuminance, settle, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 
 /**
@@ -68,7 +68,7 @@ async function buildScene(options: {
     running.world.createEntity("Post").addComponent(PostProcessStack).smaa.enabled = true;
   }
   await running.start();
-  await running.advance(SETTLE_FRAMES * 2);
+  await settle(running, SETTLE_FRAMES * 2);
   return running;
 }
 

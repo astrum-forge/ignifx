@@ -51,6 +51,11 @@ the config would reuse), copy each run's `median` and `worst`, and set the ceili
 times the median, inside the tier's §7 whole-frame budget. `benchmarks/template-frame-time.test.ts`
 checks every tier row against that budget.
 
+All three tiers' rows are Apple M1 numbers, `high` included. The M1 is the `medium` tier's
+reference device; `high`'s is an RTX 3060 / RX 6600 class desktop GPU, which has not been measured,
+so the `high` rows only catch a regression on the recorded machine and say nothing about the
+tier's budget on its own hardware. Re-record them there when one is available.
+
 `playwright.config.ts` builds and previews **six** things before the first test, so a golden is
 always taken of a production build:
 

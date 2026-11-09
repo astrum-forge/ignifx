@@ -9,7 +9,7 @@ import {
 } from "../../src/render/material-asset.js";
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
-import { createBrowserApp, gpuDeviceErrors, pixelLuminance, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { createBrowserApp, gpuDeviceErrors, pixelLuminance, settle, SETTLE_FRAMES } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 import type { CapturedFrame } from "../../src/lite/screenshot.js";
 
@@ -83,7 +83,7 @@ it("casts a second shadow switched on after the scene's first, late, PBR build",
     materials: [plain],
   });
   await running.start();
-  await running.advance(SETTLE_FRAMES);
+  await settle(running);
 
   const addLight = (name: string, x: number, casts: boolean): Light => {
     const entity = running.world.createEntity(name);
@@ -97,7 +97,7 @@ it("casts a second shadow switched on after the scene's first, late, PBR build",
   };
   addLight("Left", -6, true);
   const right = addLight("Right", 6, false);
-  await running.advance(SETTLE_FRAMES);
+  await settle(running);
 
   // A material swap is not a topology change, so nothing but Lite's own runtime build runs: the
   // first PBR build of this scene, and the first time Lite registers the PBR cache reset.
@@ -107,12 +107,12 @@ it("casts a second shadow switched on after the scene's first, late, PBR build",
     [],
   );
   ground.materials = [white];
-  await running.advance(SETTLE_FRAMES * 4);
+  await settle(running, SETTLE_FRAMES * 4);
   expect(device.errors).toEqual([]);
   const unshadowed = await running.app.renderer.captureScreenshot();
 
   right.shadows.enabled = true;
-  await running.advance(SETTLE_FRAMES * 4);
+  await settle(running, SETTLE_FRAMES * 4);
 
   expect(device.errors).toEqual([]);
   expect(running.errors).toEqual([]);

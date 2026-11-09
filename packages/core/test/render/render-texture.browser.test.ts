@@ -3,7 +3,7 @@ import { Camera } from "../../src/render/camera.js";
 import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/material-asset.js";
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
-import { addCameraAndLight, createBrowserApp, gpuDeviceErrors, SETTLE_FRAMES } from "./support/browser-harness.js";
+import { addCameraAndLight, createBrowserApp, gpuDeviceErrors, settle } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
 import type { RenderCapture } from "../../src/render/renderer.js";
 
@@ -55,7 +55,7 @@ async function startScene(msaa: 1 | 4): Promise<{ running: BrowserApp; side: Cam
   const eye = running.world.createEntity("Side camera", { position: { x: 10, y: 0, z: -4 } });
   const side = eye.addComponent(Camera, { near: 0.1, far: 100 });
   await running.start();
-  await running.advance(SETTLE_FRAMES);
+  await settle(running);
   return { running, side };
 }
 
@@ -94,7 +94,7 @@ describe.each([1, 4] as const)("render to texture at MSAA %i", (msaa) => {
     side.priority = 10;
     const texture = running.app.renderer.createRenderTexture(WIDTH, HEIGHT);
     side.renderTarget = texture;
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     const [r, g] = centreOf(await texture.readPixels());
     expect(g, `texture centre ${String([r, g])}`).toBeGreaterThan(150);
     expect(running.world.mainCamera).not.toBe(side);

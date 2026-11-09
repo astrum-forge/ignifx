@@ -11,6 +11,7 @@ import {
   fixtureUrl,
   gpuDeviceErrors,
   pixelLuminance,
+  settle,
   SETTLE_FRAMES,
 } from "./support/browser-harness.js";
 import type { BrowserApp } from "./support/browser-harness.js";
@@ -84,7 +85,7 @@ async function buildScene(
   box.addComponent(MeshRenderer, { mesh: MeshAsset.box(running.app, { size: 1.5 }), materials: [white] });
   const stack = eye.addComponent(PostProcessStack);
   await running.start();
-  await running.advance(SETTLE_FRAMES * 2);
+  await settle(running, SETTLE_FRAMES * 2);
   return { running, stack };
 }
 
@@ -118,12 +119,12 @@ describe("PostProcessStack scene-colour passes", () => {
       expect(running.renderer.sceneInputsUserCount).toBe(0);
       const before = await meanLuminance(running);
       Object.assign(stack.contactShadows, { enabled: true, intensity: 3, length: 2, samples: 16 });
-      await running.advance(SETTLE_FRAMES * 4);
+      await settle(running, SETTLE_FRAMES * 4);
       expect(running.renderer.sceneInputsUserCount).toBe(1);
       const after = await meanLuminance(running);
       expect(after).toBeLessThan(before - 0.5);
       stack.contactShadows.enabled = false;
-      await running.advance(SETTLE_FRAMES);
+      await settle(running);
       expect(running.renderer.sceneInputsUserCount).toBe(0);
       expect(Math.abs((await meanLuminance(running)) - before)).toBeLessThan(0.5);
       expect(device.errors).toEqual([]);
@@ -138,7 +139,7 @@ describe("PostProcessStack scene-colour passes", () => {
       const { running, stack } = await buildScene(true);
       const before = await meanLuminance(running);
       Object.assign(stack.ssgi, { enabled: true, intensity: 3, radius: 3, environmentDiffuse: 1 });
-      await running.advance(SETTLE_FRAMES * 6);
+      await settle(running, SETTLE_FRAMES * 6);
       expect(running.renderer.sceneInputsUserCount).toBe(1);
       expect(await meanLuminance(running)).toBeGreaterThan(before + 0.5);
       expect(device.errors).toEqual([]);
@@ -156,7 +157,7 @@ describe("PostProcessStack scene-colour passes", () => {
       const before = await meanLuminance(running);
       stack.contactShadows.enabled = true;
       Object.assign(stack.ssgi, { enabled: true, intensity: 3, radius: 3, environmentDiffuse: 1 });
-      await running.advance(SETTLE_FRAMES * 6);
+      await settle(running, SETTLE_FRAMES * 6);
       expect(running.renderer.sceneInputsUserCount).toBe(1);
       expect(await meanLuminance(running)).toBeGreaterThan(before * 0.5);
       expect(device.errors).toEqual([]);
@@ -172,7 +173,7 @@ describe("PostProcessStack scene-colour passes", () => {
       const before = await meanLuminance(running);
       // No bounce added, all environment diffuse removed: only the plugin changes the frame.
       Object.assign(stack.ssgi, { enabled: true, intensity: 0, environmentDiffuse: 0 });
-      await running.advance(SETTLE_FRAMES * 4);
+      await settle(running, SETTLE_FRAMES * 4);
       expect(await meanLuminance(running)).toBeLessThan(before - 0.5);
       expect(device.errors).toEqual([]);
     } finally {

@@ -18,7 +18,7 @@ import {
   createBrowserApp,
   gpuDeviceErrors,
   nextFrame,
-  SETTLE_FRAMES,
+  settle,
 } from "../../render/support/browser-harness.js";
 import type { PixelRgba } from "../../../src/lite/screenshot.js";
 import type { RenderOverlay } from "../../../src/render/renderer.js";
@@ -112,7 +112,7 @@ async function startScene(scenario: Case): Promise<BrowserApp> {
     .createEntity("Red box")
     .addComponent(MeshRenderer, { mesh: MeshAsset.box(running.app, { size: 2 }), materials: [red] });
   await running.start();
-  await running.advance(SETTLE_FRAMES);
+  await settle(running);
   return running;
 }
 
@@ -213,7 +213,7 @@ describe("a render overlay", () => {
       expectDominant(await running.centrePixel(), "r");
       const overlay = await running.app.renderer.openOverlay();
       addGreenBox(running, overlay);
-      await running.advance(SETTLE_FRAMES);
+      await settle(running);
 
       await expectOverlayOverScene(running);
       expect(running.errors).toEqual([]);
@@ -226,7 +226,7 @@ describe("a render overlay", () => {
       await running.advance(2);
       const overlay = await running.app.renderer.openOverlay();
       addGreenBox(running, overlay);
-      await running.advance(SETTLE_FRAMES);
+      await settle(running);
 
       await expectOverlayOverScene(running);
       expectNoDeviceErrors();
@@ -237,13 +237,13 @@ describe("a render overlay", () => {
     const running = await startScene({ msaa: 4, path: "postProcessing" });
     const overlay = await running.app.renderer.openOverlay();
     addGreenBox(running, overlay);
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     // A sprite renderer that clears, as `@ignifx/2d` registers in "sprite" mode when the first sprite appears.
     const blue = { r: 0, g: 0, b: 1, a: 1 };
     registerSpriteRenderer(
       createSpriteRenderer(running.renderer.engine, { layers: [], clear: true, clearValue: blue }),
     );
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
 
     const contexts = getRenderingContexts(running.renderer.engine);
     expect(contexts.at(-1)).toBe(overlay.lite.scene);
@@ -259,12 +259,12 @@ describe("a render overlay", () => {
     const second = await running.app.renderer.openOverlay();
     addGreenBox(running, second);
     registerSpriteRenderer(createSpriteRenderer(running.renderer.engine, { layers: [], clear: false }));
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
 
     const contexts = getRenderingContexts(running.renderer.engine);
     expect(contexts.slice(-2)).toEqual([first.lite.scene, second.lite.scene]);
     const settled = [...contexts];
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     expect([...getRenderingContexts(running.renderer.engine)]).toEqual(settled);
     expectDominant(await running.centrePixel(), "g");
     expectNoDeviceErrors();
@@ -274,11 +274,11 @@ describe("a render overlay", () => {
     const running = await startScene({ msaa: 4, path: "postProcessing" });
     const overlay = await running.app.renderer.openOverlay();
     addGreenBox(running, overlay);
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     const larger = SIZE + 32;
     running.canvas.style.width = `${String(larger)}px`;
     running.canvas.style.height = `${String(larger)}px`;
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
 
     const frame = await running.app.renderer.captureScreenshot();
     expect(frame.width).toBeGreaterThan(SIZE);
@@ -293,12 +293,12 @@ describe("a render overlay", () => {
     const running = await startScene({ msaa: 4, path: "plain" });
     const overlay = await running.app.renderer.openOverlay();
     addGreenBox(running, overlay);
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
     expectDominant(await running.centrePixel(), "g");
 
     overlay.dispose();
     overlay.dispose();
-    await running.advance(SETTLE_FRAMES);
+    await settle(running);
 
     expectDominant(await running.centrePixel(), "r");
     expectGrey(await running.pixelAt(CORNER.x, CORNER.y));
