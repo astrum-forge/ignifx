@@ -1,5 +1,34 @@
 # ignifx
 
+## 0.18.0
+
+### Minor Changes
+
+- c63bed8: Re-export what the umbrella was missing from `@ignifx/core`, `@ignifx/2d`, `@ignifx/physics` and `@ignifx/physics-2d`: `RENDERING_QUALITIES`, `AMBIENT_OCCLUSION_QUALITIES` and the rendering settings types, `ReflectionProbe`, `LightProbeVolume` and the light probe asset API, the prefab override and scene dependency functions, `spriteClipFrameAtTime` and the sprite batch types.
+
+### Patch Changes
+
+- 1fe8809: Re-export the light-probe bake API from `@ignifx/core`: `bakeLightProbes`, `LightProbeBakeOptions` and `LightProbeBakeResult`.
+- Updated dependencies [1d6ee43]
+- Updated dependencies [e6655e0]
+- Updated dependencies [89c2f6b]
+- Updated dependencies [5f2ae72]
+- Updated dependencies [d41217c]
+- Updated dependencies [02ab4a2]
+  - @ignifx/core@0.18.0
+  - @ignifx/2d@0.18.0
+  - @ignifx/3d@0.18.0
+  - @ignifx/audio@0.18.0
+  - @ignifx/devtools@0.18.0
+  - @ignifx/electron@0.18.0
+  - @ignifx/input@0.18.0
+  - @ignifx/particles@0.18.0
+  - @ignifx/particles-2d@0.18.0
+  - @ignifx/physics@0.18.0
+  - @ignifx/physics-2d@0.18.0
+  - @ignifx/terrain@0.18.0
+  - @ignifx/ui@0.18.0
+
 ## 0.17.0
 
 ### Patch Changes
