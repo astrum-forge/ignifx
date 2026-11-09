@@ -322,6 +322,8 @@ import { createStorageBufferAsset } from '@ignifx/core';
 import { createTerrainHit } from '@ignifx/terrain';
 import { createTerrainLoader } from '@ignifx/terrain';
 import { createTextureLoader } from '@ignifx/core';
+import { createTilemapAsset } from '@ignifx/2d';
+import { CreateTilemapAssetOptions } from '@ignifx/2d';
 import { createTilemapLoader } from '@ignifx/2d';
 import { createTouchDevice } from '@ignifx/input';
 import { createUlidFactory } from '@ignifx/core';
@@ -481,6 +483,7 @@ import { EntityOverrideField } from '@ignifx/core';
 import { EntityPrefabLink } from '@ignifx/core';
 import { entityRef } from '@ignifx/core';
 import { EntityRefFieldSpec } from '@ignifx/core';
+import { enumerateInstanceTargets } from '@ignifx/core';
 import { EnumFieldSpec } from '@ignifx/core';
 import { enumOf } from '@ignifx/core';
 import { Environment } from '@ignifx/core';
@@ -668,6 +671,7 @@ import { InstancedMeshRenderer } from '@ignifx/core';
 import { InstancedMeshRendererLiteHandles } from '@ignifx/core';
 import { instanceEntityAt } from '@ignifx/core';
 import { InstanceRange } from '@ignifx/core';
+import { InstanceTarget } from '@ignifx/core';
 import { InstantiateOptions } from '@ignifx/core';
 import { instantiateScene } from '@ignifx/core';
 import { InstantiateSceneOptions } from '@ignifx/core';
@@ -729,6 +733,7 @@ import { LightmapFileData } from '@ignifx/core';
 import { LightmapMode } from '@ignifx/core';
 import { LightmapPlacement } from '@ignifx/core';
 import { LightProbeAsset } from '@ignifx/core';
+import { LightProbeBakeDirectLight } from '@ignifx/core';
 import { LightProbeBakeOptions } from '@ignifx/core';
 import { LightProbeBakeResult } from '@ignifx/core';
 import { LightProbeData } from '@ignifx/core';
@@ -1097,6 +1102,7 @@ import { PrefabApplyResult } from '@ignifx/core';
 import { PrefabComponentSkip } from '@ignifx/core';
 import { PrefabOverrideSelection } from '@ignifx/core';
 import { PrefabOverrideSkip } from '@ignifx/core';
+import { PrefabReader } from '@ignifx/core';
 import { Processor } from '@ignifx/input';
 import { ProcessorKind } from '@ignifx/input';
 import { ProfileScope } from '@ignifx/core';
@@ -1171,6 +1177,7 @@ import { resolveClipFrames } from '@ignifx/2d';
 import { resolveColor } from '@ignifx/particles';
 import { resolveEase } from '@ignifx/core';
 import { resolveGamepadRemap } from '@ignifx/input';
+import { resolveInstancePath } from '@ignifx/core';
 import { resolveMenuChoices } from '@ignifx/ui';
 import { resolveMenuLabel } from '@ignifx/ui';
 import { resolveRelative } from '@ignifx/2d';
@@ -2250,6 +2257,10 @@ export { createTerrainLoader }
 
 export { createTextureLoader }
 
+export { createTilemapAsset }
+
+export { CreateTilemapAssetOptions }
+
 export { createTilemapLoader }
 
 export { createTouchDevice }
@@ -2567,6 +2578,8 @@ export { EntityPrefabLink }
 export { entityRef }
 
 export { EntityRefFieldSpec }
+
+export { enumerateInstanceTargets }
 
 export { EnumFieldSpec }
 
@@ -2942,6 +2955,8 @@ export { instanceEntityAt }
 
 export { InstanceRange }
 
+export { InstanceTarget }
+
 export { InstantiateOptions }
 
 export { instantiateScene }
@@ -3063,6 +3078,8 @@ export { LightmapMode }
 export { LightmapPlacement }
 
 export { LightProbeAsset }
+
+export { LightProbeBakeDirectLight }
 
 export { LightProbeBakeOptions }
 
@@ -3800,6 +3817,8 @@ export { PrefabOverrideSelection }
 
 export { PrefabOverrideSkip }
 
+export { PrefabReader }
+
 export { Processor }
 
 export { ProcessorKind }
@@ -3947,6 +3966,8 @@ export { resolveColor }
 export { resolveEase }
 
 export { resolveGamepadRemap }
+
+export { resolveInstancePath }
 
 export { resolveMenuChoices }
 

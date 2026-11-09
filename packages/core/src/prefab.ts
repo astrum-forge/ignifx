@@ -16,6 +16,12 @@ export {
   type PrefabOverrideSkip,
 } from "./serialization/prefab-overrides.js";
 export { canonicalizeNumber } from "./schema/encode.js";
+export {
+  enumerateInstanceTargets,
+  resolveInstancePath,
+  type InstanceTarget,
+  type PrefabReader,
+} from "./serialization/instance-targets.js";
 export { parseOverridePath, type EntityOverrideField, type OverridePath } from "./serialization/overrides.js";
 export { computeSceneHash } from "./serialization/scene-asset.js";
 export {

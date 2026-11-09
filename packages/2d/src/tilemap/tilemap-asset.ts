@@ -1,7 +1,7 @@
 import { resolveRelative } from "../assets/relative.js";
 import { defineTilemap, TILEMAP_ASSET_TYPE, TILEMAP_FILE_EXTENSIONS } from "./definition.js";
 import type { TilemapDefinition, TilemapInput } from "./definition.js";
-import type { AssetLoader, LoaderContext } from "@ignifx/core";
+import type { App, AssetHandle, AssetLoader, LoaderContext } from "@ignifx/core";
 
 /**
  * The `tilemap` asset type and its loader (`docs/architecture/05-assets-and-loading.md` §5,
@@ -29,7 +29,10 @@ export class TilemapAsset {
   /** The type name the asset service registers tilemaps under. */
   static assetType: string = TILEMAP_ASSET_TYPE;
 
-  /** The address the document was loaded from. */
+  /**
+   * The address the document was loaded from. For a map built with {@link createTilemapAsset}, the
+   * `address` option it was given, or `""`.
+   */
   readonly address: string;
 
   /** The parsed document, with every tile layer decoded to a dense array. */
@@ -39,7 +42,7 @@ export class TilemapAsset {
   readonly atlasAddresses: readonly string[];
 
   /**
-   * Wraps a parsed document. The `tilemap` loader constructs these.
+   * Wraps a parsed document. The `tilemap` loader and {@link createTilemapAsset} construct these.
    *
    * @param address - The address it was loaded from.
    * @param definition - The parsed document.
@@ -89,4 +92,57 @@ export function createTilemapLoader(): AssetLoader<TilemapAsset> {
       return new TilemapAsset(ctx.address, defineTilemap(raw, ctx.address));
     },
   };
+}
+
+/**
+ * Options for {@link createTilemapAsset}.
+ *
+ * @public
+ */
+export interface CreateTilemapAssetOptions {
+  /**
+   * Treat the map as if it had been loaded from this address: its tilesets' `atlas` references
+   * resolve against it, and an error names it. Default `""`, which reads every `atlas` reference
+   * as a project-root address and names the map `"\<inline\>"` in errors.
+   */
+  readonly address?: string;
+}
+
+/**
+ * Publishes a tilemap built in code as an asset, so a `Tilemap` component can hold it.
+ *
+ * @remarks
+ * The document goes through the same `defineTilemap` check the `.tilemap.json` loader runs, so a
+ * map built here and the same map written to a file are interchangeable, and a bad one fails with
+ * the loader's error. The handle is a `memory:` asset (`AssetService.register`): serializing a
+ * component that references it writes `null`.
+ *
+ * @param app - The app.
+ * @param input - The document, in the shape a `.tilemap.json` file holds.
+ * @param options - The address to resolve the tilesets' atlases against.
+ * @returns A handle with one holder, already loaded.
+ * @throws IgnifxError with code `IGX-1105` when the document is malformed (see `defineTilemap`).
+ *
+ * @example
+ * ```ts
+ * const map = createTilemapAsset(app, {
+ *   tileWidth: 16,
+ *   width: 2,
+ *   height: 1,
+ *   tilesets: [{ name: "terrain", atlas: "2d/terrain.atlas.json", firstId: 1, tiles: [] }],
+ *   layers: [{ name: "Ground", tiles: [1, 2] }],
+ * });
+ * world.createEntity("Level").addComponent(Tilemap, { map });
+ * ```
+ *
+ * @public
+ */
+export function createTilemapAsset(
+  app: App,
+  input: TilemapInput,
+  options: CreateTilemapAssetOptions = {},
+): AssetHandle<TilemapAsset> {
+  const address = options.address ?? "";
+  const definition = defineTilemap(input, address === "" ? undefined : address);
+  return app.assets.register(new TilemapAsset(address, definition), { type: TILEMAP_ASSET_TYPE });
 }

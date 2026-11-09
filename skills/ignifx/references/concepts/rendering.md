@@ -170,11 +170,15 @@ on [`baked-lighting.md`](baked-lighting.md); the bullets below are each componen
   }
   ```
 
-- `await bakeLightProbes(world, { origin, cellSize, counts, rays?, maxDistance?, sky?, signal?,
-onProgress? })` bakes a grid on the CPU, headless included, yielding to the host about every 8 ms: one bounce, from the world's lights and the triangles of every
+- `await bakeLightProbes(world, { origin, cellSize, counts, rays?, maxDistance?, sky?, directLight?,
+signal?, onProgress? })` bakes a grid on the CPU, headless included, yielding to the host about every 8 ms: one bounce, from the world's lights and the triangles of every
   enabled `MeshRenderer` whose mesh was built with `MeshAsset.fromData`. Primitives and glTF models
   keep their triangles on the GPU and are skipped (`result.skipped` counts them). `sky` is the
-  linear radiance of rays that hit nothing; hemispheric lights add to it. Save `result.data` with
+  linear radiance of rays that hit nothing; hemispheric lights add to it. `directLight` defaults to
+  `"exclude"`: directional, point and spot lights keep lighting the scene in real time, so the probes
+  hold only their bounce (the light they put on surfaces, shadowed, coming back) and the sky, not
+  their direct light, which would count it twice. Pass `"include"` when those lights will be
+  disabled at run time. Save `result.data` with
   `writeLightProbeFile` or use it at once with `createLightProbeAsset`. It costs probes × rays ×
   triangles, so bake small scenes, in a tool or at load, never per frame. A bad grid, `rays` outside
   1–4096 or a non-finite `maxDistance` is `IGX-0734` before any tracing; an aborted `signal` rejects

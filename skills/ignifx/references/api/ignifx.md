@@ -2169,7 +2169,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-52)
+[`Script`](#abstract-script).[`entity`](#entity-53)
 
 ##### handle
 
@@ -3390,7 +3390,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-52)
+[`Script`](#abstract-script).[`entity`](#entity-53)
 
 ##### handle
 
@@ -7270,7 +7270,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-52)
+[`Script`](#abstract-script).[`entity`](#entity-53)
 
 ##### handle
 
@@ -17372,7 +17372,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-52)
+[`Script`](#abstract-script).[`entity`](#entity-53)
 
 ##### handle
 
@@ -20849,7 +20849,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-61)
+[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-62)
 
 ##### handle
 
@@ -31389,7 +31389,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-52)
+[`Script`](#abstract-script).[`entity`](#entity-53)
 
 ##### handle
 
@@ -37956,7 +37956,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-52)
+[`Script`](#abstract-script).[`entity`](#entity-53)
 
 ##### handle
 
@@ -40210,7 +40210,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-52)
+[`Script`](#abstract-script).[`entity`](#entity-53)
 
 ##### handle
 
@@ -43884,7 +43884,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-52)
+[`Script`](#abstract-script).[`entity`](#entity-53)
 
 ##### handle
 
@@ -51934,7 +51934,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-52)
+[`Script`](#abstract-script).[`entity`](#entity-53)
 
 ##### handle
 
@@ -52609,7 +52609,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-52)
+[`Script`](#abstract-script).[`entity`](#entity-53)
 
 ##### handle
 
@@ -53979,7 +53979,8 @@ map.definition.layers.length; // 2
 
 > `readonly` **address**: `string`
 
-The address the document was loaded from.
+The address the document was loaded from. For a map built with [createTilemapAsset](#createtilemapasset), the
+`address` option it was given, or `""`.
 
 ##### assetType
 
@@ -63865,7 +63866,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-61)
+[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-62)
 
 ##### handle
 
@@ -64488,7 +64489,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-61)
+[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-62)
 
 ##### handle
 
@@ -65737,7 +65738,7 @@ Resolved project settings.
 
 The asynchronous key-value store settings, save games, and input rebindings live in
 (`docs/architecture/14-platform-electron.md` §2). The backend is chosen from
-[PlatformInfo.kind](#kind-34) — IndexedDB in a browser, memory under Node — unless `createApp` was
+[PlatformInfo.kind](#kind-35) — IndexedDB in a browser, memory under Node — unless `createApp` was
 given one.
 
 ##### time
@@ -70443,6 +70444,22 @@ Whether the instance survives a `"single"` scene load. Defaults to `false`.
 
 ***
 
+### CreateTilemapAssetOptions
+
+Options for [createTilemapAsset](#createtilemapasset).
+
+#### Properties
+
+##### address?
+
+> `readonly` `optional` **address?**: `string`
+
+Treat the map as if it had been loaded from this address: its tilesets' `atlas` references
+resolve against it, and an error names it. Default `""`, which reads every `atlas` reference
+as a project-root address and names the map `"\<inline\>"` in errors.
+
+***
+
 ### CurveFieldSpec
 
 Kind-specific data for `curve`.
@@ -74780,6 +74797,70 @@ The first instance index that moved.
 
 ***
 
+### InstanceTarget
+
+One entity or component inside a prefab instance of a scene file, named by its instance path
+(`docs/architecture/06-serialization-and-scene-format.md` §2).
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address of the prefab file that declares the target, as its `instance` entry names it.
+
+##### carrier
+
+> `readonly` **carrier**: `string`
+
+The uid of the scene entity carrying the `instance` entry: the path's first segment.
+
+##### component
+
+> `readonly` **component**: [`SceneFileComponent`](#scenefilecomponent) \| `null`
+
+The component's record, or `null` for an entity.
+
+##### entity
+
+> `readonly` **entity**: [`SceneFileEntity`](#scenefileentity)
+
+The target's record in that file, or for a component the record of the entity holding it.
+
+##### kind
+
+> `readonly` **kind**: `"entity"` \| `"component"`
+
+What the path names: an `$entity` or a `$component` reference target.
+
+##### labels
+
+> `readonly` **labels**: readonly `string`[]
+
+The display names from the carrier down to [InstanceTarget.entity](#entity-26): the carrier's name
+first, then each entity's. A prefab's single root merges into the entity instancing it, so it
+adds no name. A label reads `labels.join(" › ")`, plus the component type for a component.
+
+##### overridePath
+
+> `readonly` **overridePath**: `string` \| `null`
+
+The prefix of an override path on the carrier's `instance` entry that addresses the target:
+`"<entityUid>/components/<componentPath>"` for a component (append `/props/<field>` or
+`/enabled`), where the component path is an instance path when the component sits in a nested
+prefab, and `"<entityUid>"` for an entity of the instanced file itself. `null` for an entity
+inside a nested prefab, which overrides do not reach.
+
+##### path
+
+> `readonly` **path**: `string`
+
+The instance path, `"<carrierUid>/…/<uid>"`: what a `{ "$entity" | "$component": … }`
+reference in the scene writes to reach the target.
+
+***
+
 ### InstantiateOptions
 
 Options accepted by [World.instantiate](#instantiate-1) and [World.instantiateAsync](#instantiateasync)
@@ -75121,6 +75202,23 @@ How many probes along X, Y and Z.
 ###### z
 
 > `readonly` **z**: `number`
+
+##### directLight?
+
+> `readonly` `optional` **directLight?**: [`LightProbeBakeDirectLight`](#lightprobebakedirectlight)
+
+**`Beta`**
+
+Whether each probe also stores the light it receives straight from the directional, point and
+spot lights it sees. Defaults to `"exclude"`.
+
+###### Remarks
+
+Those lights keep lighting the scene in real time while a `LightProbeVolume` is on, so a probe
+that also holds their direct light counts it twice. `"exclude"` bakes only the bounce: the
+light that reached surfaces from those lights (shadowed) and came back, plus the sky and the
+hemispheric lights. Use `"include"` when the baked lights will be disabled at run time, or to
+read a probe's total light with `sampleLightProbes`.
 
 ##### maxDistance?
 
@@ -80031,12 +80129,23 @@ the instance root carries itself.
 Override paths to act on. A path selects every override at that path or below it, so
 `"<entityUid>"` selects everything on that entity and `"<entityUid>/components/<componentUid>"`
 selects a component's removal, its `enabled` flag, and its props. An `add` to
-`<entityUid>/components` sits at `<entityUid>/components/<addedUid>`. Omitted, every override
+`<entityUid>/components` sits at `<entityUid>/components/<addedUid>`. A component of a nested
+prefab is selected by its instance path the same way:
+`"<nestedInstanceUid>/components/<nestedInstanceUid>/<componentUid>"`. Omitted, every override
 is selected.
 
 ###### Inherited from
 
 [`PrefabOverrideSelection`](#prefaboverrideselection).[`paths`](#paths-6)
+
+##### readScene?
+
+> `readonly` `optional` **readScene?**: [`PrefabReader`](#prefabreader)
+
+Reads the prefabs the prefab file itself instances, by the address its `instance` entries name.
+An override of a nested prefab's component (an instance path in its component segment) is
+applied by moving it onto the nested `instance` entry of the prefab file, which needs the
+nested file to find the entity holding the component. Omitted, such overrides are skipped.
 
 ##### rootComponents?
 
@@ -80148,7 +80257,9 @@ Which overrides of an instance [applyOverridesToAsset](#applyoverridestoasset) a
 Override paths to act on. A path selects every override at that path or below it, so
 `"<entityUid>"` selects everything on that entity and `"<entityUid>/components/<componentUid>"`
 selects a component's removal, its `enabled` flag, and its props. An `add` to
-`<entityUid>/components` sits at `<entityUid>/components/<addedUid>`. Omitted, every override
+`<entityUid>/components` sits at `<entityUid>/components/<addedUid>`. A component of a nested
+prefab is selected by its instance path the same way:
+`"<nestedInstanceUid>/components/<nestedInstanceUid>/<componentUid>"`. Omitted, every override
 is selected.
 
 ***
@@ -90157,6 +90268,17 @@ One of [LIGHTMAP\_MODES](#lightmap_modes).
 
 ***
 
+### LightProbeBakeDirectLight
+
+> **LightProbeBakeDirectLight** = `"include"` \| `"exclude"`
+
+**`Beta`**
+
+Whether a light-probe bake adds the light a probe receives straight from directional, point and
+spot lights. See [LightProbeBakeOptions.directLight](#directlight).
+
+***
+
 ### LightType
 
 > **LightType** = *typeof* [`LIGHT_TYPES`](#light_types)\[`number`\]
@@ -90916,6 +91038,18 @@ The grammar, in the order the parser tries it:
 <uid>/components/<uid>/props/<field>[/<key>…]      → prop
 ```
 
+The component segment may also be an instance path, which reaches a component of a prefab the
+instanced file itself instances: `"<nestedInstanceUid>/<componentUid>"`, where the first segment
+is the uid of the entity carrying the nested `instance` entry in the instanced file and must
+equal the path's entity segment, and the last is the uid the nested prefab file gives the
+component. Deeper nesting adds one segment per nested instance, as in references
+(`"<nestedInstanceUid>/<deeperInstanceUid>/<componentUid>"`). The component segment then runs up to
+the first `props` or `enabled` segment, so a component uid cannot be either word.
+
+```text
+<uid>/components/<uid>/<uid>…/<uid>/props/<field>  → prop, component "<uid>/<uid>…/<uid>"
+```
+
 ***
 
 ### PartialFieldsOf
@@ -91095,6 +91229,35 @@ Chooses a plural category for a number, in one locale.
 #### Returns
 
 `string`
+
+***
+
+### PrefabReader
+
+> **PrefabReader** = (`address`) => [`SceneFile`](#scenefile) \| `null` \| `undefined`
+
+Reads a prefab (or any scene) file by the address an `instance` entry names, for
+[resolveInstancePath](#resolveinstancepath) and [enumerateInstanceTargets](#enumerateinstancetargets).
+
+#### Parameters
+
+##### address
+
+`string`
+
+The instanced scene's address.
+
+#### Returns
+
+[`SceneFile`](#scenefile) \| `null` \| `undefined`
+
+The parsed file, or `null`/`undefined` when it cannot be read.
+
+#### Remarks
+
+The address is passed exactly as the entry's `scene.$asset` holds it. Return `null` or
+`undefined` for a file that is not available; the walk then stops there, as the loader stops at
+a scene that is not loaded.
 
 ***
 
@@ -98148,9 +98311,12 @@ byte-identical output through [stringifySceneFile](#stringifyscenefile). The rul
 - On a prefab with exactly one root, the instance root's own `name`, `transform`, and other entity
   fields are its placement, not prefab content, so overrides of the root's entity fields and
   transform are skipped.
-- Overrides reach only the prefab's own entities. Content of a scene the prefab itself instances
-  is not addressable by an override path, so a nested prefab is never edited: an override that
-  names something the prefab file does not hold is skipped.
+- A nested prefab is never edited. An override of a nested prefab's component, whose component
+  segment is an instance path (`"<nestedInstanceUid>/<componentUid>"`), moves onto the prefab
+  file's nested `instance` entry instead, rewritten into that entry's own paths, replacing an
+  override there at the same path and op. It needs [PrefabApplyOptions.readScene](#readscene); without
+  it, or when the path names nothing, it is skipped. Any other override that names something the
+  prefab file does not hold is skipped.
 - An override is skipped when an earlier override that stays on the instance overlaps its path, so
   the instance keeps the value it had.
 - A skipped override stays on the returned instance.
@@ -98707,7 +98873,9 @@ The grid and what was traced.
 #### Remarks
 
 One bounce, first-order harmonics, deterministic. Only meshes built with `MeshAsset.fromData`
-cast and bounce light (see [LightProbeBakeResult.skipped](#skipped)). Cost grows with probes × rays ×
+cast and bounce light (see [LightProbeBakeResult.skipped](#skipped)). By default a probe holds the
+bounce but not the direct light of directional, point and spot lights, which keep lighting the
+scene in real time (see [LightProbeBakeOptions.directLight](#directlight)). Cost grows with probes × rays ×
 triangles; it is meant for small scenes and tools, not for every frame.
 
 The bake is asynchronous: it yields to the host after every ~8 ms of work, reports progress
@@ -98717,8 +98885,8 @@ through `onProgress` after each probe, and stops at the next probe once `signal`
 
 IgnifxError with code `IGX-0734`, before tracing anything, for a grid the `.probes.json`
 format cannot hold (whole counts, `counts.x` ≤ 1024, `counts.y × counts.z` ≤ 4096, finite
-`origin` and positive `cellSize`), `rays` outside 1–4096, or a `maxDistance` that is not finite
-and positive. The promise rejects with `signal.reason` when the bake is aborted.
+`origin` and positive `cellSize`), `rays` outside 1–4096, a `maxDistance` that is not finite
+and positive, or a `directLight` other than `"include"` or `"exclude"`. The promise rejects with `signal.reason` when the bake is aborted.
 
 #### Example
 
@@ -101102,6 +101270,64 @@ ctx.registerAssetLoader(createTextureLoader());
 
 ***
 
+### createTilemapAsset()
+
+> **createTilemapAsset**(`app`, `input`, `options?`): [`AssetHandle`](#assethandle)\<[`TilemapAsset`](#tilemapasset-1)\>
+
+Publishes a tilemap built in code as an asset, so a `Tilemap` component can hold it.
+
+#### Parameters
+
+##### app
+
+[`App`](#app-1)
+
+The app.
+
+##### input
+
+[`TilemapInput`](#tilemapinput)
+
+The document, in the shape a `.tilemap.json` file holds.
+
+##### options?
+
+[`CreateTilemapAssetOptions`](#createtilemapassetoptions)
+
+The address to resolve the tilesets' atlases against.
+
+#### Returns
+
+[`AssetHandle`](#assethandle)\<[`TilemapAsset`](#tilemapasset-1)\>
+
+A handle with one holder, already loaded.
+
+#### Remarks
+
+The document goes through the same `defineTilemap` check the `.tilemap.json` loader runs, so a
+map built here and the same map written to a file are interchangeable, and a bad one fails with
+the loader's error. The handle is a `memory:` asset (`AssetService.register`): serializing a
+component that references it writes `null`.
+
+#### Throws
+
+IgnifxError with code `IGX-1105` when the document is malformed (see `defineTilemap`).
+
+#### Example
+
+```ts
+const map = createTilemapAsset(app, {
+  tileWidth: 16,
+  width: 2,
+  height: 1,
+  tilesets: [{ name: "terrain", atlas: "2d/terrain.atlas.json", firstId: 1, tiles: [] }],
+  layers: [{ name: "Ground", tiles: [1, 2] }],
+});
+world.createEntity("Level").addComponent(Tilemap, { map });
+```
+
+***
+
 ### createTilemapLoader()
 
 > **createTilemapLoader**(): [`AssetLoader`](#assetloader)\<[`TilemapAsset`](#tilemapasset-1)\>
@@ -103048,6 +103274,52 @@ The field definition.
 
 ```ts
 target: entityRef<Entity>();
+```
+
+***
+
+### enumerateInstanceTargets()
+
+> **enumerateInstanceTargets**(`scene`, `readScene`): [`InstanceTarget`](#instancetarget)[]
+
+Lists every entity and component an instance path can reach inside a scene file's prefab
+instances, with the path, a label chain, and the override path that addresses it.
+
+#### Parameters
+
+##### scene
+
+[`SceneFile`](#scenefile)
+
+The scene file.
+
+##### readScene
+
+[`PrefabReader`](#prefabreader)
+
+Reads the prefab files.
+
+#### Returns
+
+[`InstanceTarget`](#instancetarget)[]
+
+The targets, in scene order of their carriers, then depth first in file order.
+
+#### Remarks
+
+A pure function over files, for tools such as an editor's reference picker. Each path is the
+shortest form [resolveInstancePath](#resolveinstancepath) resolves. A prefab's single root is not listed as an
+entity: it merges into the carrier, which the scene names by its plain uid; its components are
+listed. Components an override `add`s are not listed: they keep no uid from a prefab file. The
+walk stops at a file `readScene` cannot read, at a prefab that would instance itself, and 16
+files deep.
+
+#### Example
+
+```ts
+const components = enumerateInstanceTargets(sceneFile, (address) => files.get(address)).filter(
+  (target) => target.kind === "component",
+);
 ```
 
 ***
@@ -105911,7 +106183,7 @@ parseMessage("{count, plural, one {# life}}").error; // "plural count has no oth
 
 ### parseOverridePath()
 
-> **parseOverridePath**(`path`): [`OverridePath`](#overridepath-1)
+> **parseOverridePath**(`path`): [`OverridePath`](#overridepath-2)
 
 Parses an override path.
 
@@ -105925,7 +106197,7 @@ The `path` string from the file.
 
 #### Returns
 
-[`OverridePath`](#overridepath-1)
+[`OverridePath`](#overridepath-2)
 
 The parsed path.
 
@@ -107790,6 +108062,63 @@ The remap, or `null` for a standard pad.
 
 ```ts
 resolveGamepadRemap({ id: "Pro Controller (Nintendo)", mapping: "", buttons: [], axes: [] });
+```
+
+***
+
+### resolveInstancePath()
+
+> **resolveInstancePath**(`scene`, `path`, `readScene`, `kind?`): [`InstanceTarget`](#instancetarget) \| `null`
+
+Finds the entity or component an instance path names inside a scene file's prefab instances,
+without loading anything: the rules the loader resolves `$entity` and `$component` references
+by.
+
+#### Parameters
+
+##### scene
+
+[`SceneFile`](#scenefile)
+
+The scene file holding the path.
+
+##### path
+
+`string`
+
+The instance path, `"<carrierUid>/…/<uid>"`.
+
+##### readScene
+
+[`PrefabReader`](#prefabreader)
+
+Reads the prefab files the path walks through.
+
+##### kind?
+
+`"entity"` \| `"component"`
+
+What the reference expects: `"entity"` for `$entity`, `"component"` for
+`$component`. Omitted, an entity is looked for first, then a component.
+
+#### Returns
+
+[`InstanceTarget`](#instancetarget) \| `null`
+
+The target, or `null` when the path is a plain uid or names nothing.
+
+#### Remarks
+
+A pure function over files. The path's first segment is the uid of an entity of `scene` that
+carries an `instance` entry; each later segment but the last names an entity of the prefab
+reached so far that itself instances a prefab; the last names the target by the uid its own file
+gives it. A prefab's single root merges into the entity instancing it, so a prefab that root
+instances is searched at the same level, with no extra segment.
+
+#### Example
+
+```ts
+const target = resolveInstancePath(sceneFile, "01J…CRATE/01J…LID", (address) => files.get(address));
 ```
 
 ***

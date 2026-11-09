@@ -1,6 +1,7 @@
 import { Vec2 } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import { importTiledMap } from "../../src/tilemap/importers/tiled.js";
+import { createTilemapAsset } from "../../src/tilemap/tilemap-asset.js";
 import { Tilemap } from "../../src/tilemap/tilemap.js";
 import { createTwoDApp, readFixtureJson } from "../support/app.js";
 import type { TilemapAsset } from "../../src/tilemap/tilemap-asset.js";
@@ -321,5 +322,37 @@ describe("tile objects", () => {
       ["spawn", "player-start"],
     ]);
     expect(tilemap?.definition?.objects[0]?.x).toBeCloseTo(0.96, 6);
+  });
+});
+
+describe("createTilemapAsset", () => {
+  it("publishes a map built in code that a Tilemap can hold", async () => {
+    const created = await createTwoDApp();
+    harness = created;
+    const handle = createTilemapAsset(
+      created.app,
+      {
+        tileWidth: 16,
+        width: 2,
+        height: 1,
+        tilesets: [{ name: "terrain", atlas: "terrain.atlas.json", firstId: 1, tiles: [] }],
+        layers: [{ name: "Ground", tiles: [1, 2] }],
+      },
+      { address: "2d/level.tilemap.json" },
+    );
+    expect(handle.state).toBe("loaded");
+    expect(handle.value.atlasFor(0)).toBe("2d/terrain.atlas.json");
+    const tilemap = created.app.world.createEntity("level").addComponent(Tilemap);
+    tilemap.map = handle;
+    expect(tilemap.definition?.width).toBe(2);
+    expect(tilemap.layerSize(0)).toEqual({ x: 2, y: 1 });
+  });
+
+  it("fails a bad grid with the loader's error code", async () => {
+    const created = await createTwoDApp();
+    harness = created;
+    expect(() =>
+      createTilemapAsset(created.app, { tileWidth: 16, width: 2, height: 2, layers: [{ name: "Ground", tiles: [1] }] }),
+    ).toThrow(expect.objectContaining({ code: "IGX-1105" }));
   });
 });

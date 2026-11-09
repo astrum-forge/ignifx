@@ -19,11 +19,12 @@ import type { World } from "../world/world.js";
  * - **Per probe.** `rays` directions on a Fibonacci sphere. A hit returns the surface's albedo (the
  *   material's base or diffuse colour, decoded to linear) times the direct light there, with a
  *   shadow ray per directional, point or spot light and the hemispheric lights unshadowed. A miss
- *   returns `sky` plus the hemispheric lights. Directional, point and spot lights the probe sees are
- *   added exactly, as clamped-cosine lobes. Spot cones are ignored.
+ *   returns `sky` plus the hemispheric lights. With `directLight: "include"`, the directional, point
+ *   and spot lights the probe sees are added exactly, as clamped-cosine lobes; by default they are
+ *   left out, because those lights still light the scene in real time. Spot cones are ignored.
  * - **Units.** Lite's: a white surface lit by the result shows `c0 + c1·n.y + c2·n.z + c3·n.x`, so a
- *   uniform sky of radiance `L` bakes to `c0 = L`, and a directional light of intensity `I` to
- *   `c0 = I/4` and a first-order term of `I/2` along its direction.
+ *   uniform sky of radiance `L` bakes to `c0 = L`, and an included directional light of intensity
+ *   `I` to `c0 = I/4` and a first-order term of `I/2` along its direction.
  */
 
 /** The basis factors: `Y00² · 4π` is 1 and `(2/3) · Y1m² · 4π` is 2, per sample. */
@@ -47,7 +48,16 @@ interface BakeSettings {
   readonly rays: number;
   readonly maxDistance: number;
   readonly sky: readonly number[];
+  readonly includeDirect: boolean;
 }
+
+/**
+ * Whether a light-probe bake adds the light a probe receives straight from directional, point and
+ * spot lights. See {@link LightProbeBakeOptions.directLight}.
+ *
+ * @beta
+ */
+export type LightProbeBakeDirectLight = "include" | "exclude";
 
 /**
  * What {@link bakeLightProbes} bakes.
@@ -67,6 +77,18 @@ export interface LightProbeBakeOptions {
   readonly maxDistance?: number;
   /** The linear radiance of rays that hit nothing, before hemispheric lights. Defaults to black. */
   readonly sky?: ColorLike;
+  /**
+   * Whether each probe also stores the light it receives straight from the directional, point and
+   * spot lights it sees. Defaults to `"exclude"`.
+   *
+   * @remarks
+   * Those lights keep lighting the scene in real time while a `LightProbeVolume` is on, so a probe
+   * that also holds their direct light counts it twice. `"exclude"` bakes only the bounce: the
+   * light that reached surfaces from those lights (shadowed) and came back, plus the sky and the
+   * hemispheric lights. Use `"include"` when the baked lights will be disabled at run time, or to
+   * read a probe's total light with `sampleLightProbes`.
+   */
+  readonly directLight?: LightProbeBakeDirectLight;
   /** Stops the bake between probes; the promise then rejects with the signal's reason. */
   readonly signal?: AbortSignal;
   /**
@@ -132,7 +154,9 @@ type BakeLight =
  *
  * @remarks
  * One bounce, first-order harmonics, deterministic. Only meshes built with `MeshAsset.fromData`
- * cast and bounce light (see {@link LightProbeBakeResult.skipped}). Cost grows with probes × rays ×
+ * cast and bounce light (see {@link LightProbeBakeResult.skipped}). By default a probe holds the
+ * bounce but not the direct light of directional, point and spot lights, which keep lighting the
+ * scene in real time (see {@link LightProbeBakeOptions.directLight}). Cost grows with probes × rays ×
  * triangles; it is meant for small scenes and tools, not for every frame.
  *
  * The bake is asynchronous: it yields to the host after every ~8 ms of work, reports progress
@@ -143,8 +167,8 @@ type BakeLight =
  * @returns The grid and what was traced.
  * @throws IgnifxError with code `IGX-0734`, before tracing anything, for a grid the `.probes.json`
  * format cannot hold (whole counts, `counts.x` ≤ 1024, `counts.y × counts.z` ≤ 4096, finite
- * `origin` and positive `cellSize`), `rays` outside 1–4096, or a `maxDistance` that is not finite
- * and positive. The promise rejects with `signal.reason` when the bake is aborted.
+ * `origin` and positive `cellSize`), `rays` outside 1–4096, a `maxDistance` that is not finite
+ * and positive, or a `directLight` other than `"include"` or `"exclude"`. The promise rejects with `signal.reason` when the bake is aborted.
  *
  * @example
  * ```ts
@@ -225,7 +249,18 @@ function readBakeOptions(options: LightProbeBakeOptions): BakeSettings {
   if (!Number.isFinite(maxDistance) || maxDistance <= 0) {
     throw fail("maxDistance must be a finite number above 0");
   }
-  return { grid, rays, maxDistance, sky: linearRgb(options.sky ?? { r: 0, g: 0, b: 0, a: 1 }, false) };
+  // Widened: a JavaScript caller or a parsed file can pass anything.
+  const directLight: string = options.directLight ?? "exclude";
+  if (directLight !== "include" && directLight !== "exclude") {
+    throw fail('directLight must be "include" or "exclude"');
+  }
+  return {
+    grid,
+    rays,
+    maxDistance,
+    sky: linearRgb(options.sky ?? { r: 0, g: 0, b: 0, a: 1 }, false),
+    includeDirect: directLight === "include",
+  };
 }
 
 /**
@@ -289,7 +324,9 @@ function bakeProbe(
       sh[9 + channel] = read(sh, 9 + channel) + (BAND1_PER_SAMPLE * value * dx) / rays;
     }
   }
-  addDirectLobes(scene, lights, px, py, pz, sh);
+  if (settings.includeDirect) {
+    addDirectLobes(scene, lights, px, py, pz, sh);
+  }
   return sh;
 }
 

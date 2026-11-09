@@ -421,7 +421,12 @@ export {
   writeLightProbeFile,
   type LightProbeData,
 } from "./render/light-probe-asset.js";
-export { bakeLightProbes, type LightProbeBakeOptions, type LightProbeBakeResult } from "./render/light-probe-bake.js";
+export {
+  bakeLightProbes,
+  type LightProbeBakeDirectLight,
+  type LightProbeBakeOptions,
+  type LightProbeBakeResult,
+} from "./render/light-probe-bake.js";
 export { LightProbeVolume } from "./render/light-probe-volume.js";
 export { createLightProbeLoader } from "./render/loaders/light-probe-loader.js";
 export {
@@ -502,6 +507,12 @@ export {
   type SceneLoadIssue,
 } from "./serialization/load.js";
 export { instanceComponentAt, instanceEntityAt } from "./serialization/instance-lookup.js";
+export {
+  enumerateInstanceTargets,
+  resolveInstancePath,
+  type InstanceTarget,
+  type PrefabReader,
+} from "./serialization/instance-targets.js";
 export { parseOverridePath, type EntityOverrideField, type OverridePath } from "./serialization/overrides.js";
 export {
   applyOverridesToAsset,

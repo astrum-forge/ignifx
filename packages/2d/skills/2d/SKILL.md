@@ -243,6 +243,36 @@ ignifx import tilemap assets/maps/cave.tmj --pixels-per-unit 16
 ignifx import tilemap assets/maps/world.ldtk assets/levels --pixels-per-unit 16
 ```
 
+### A map built in code
+
+`createTilemapAsset(app, input, { address })` publishes a map generated at run time, in the same
+shape a `.tilemap.json` holds, and checks it the way the loader does (a bad grid throws `IGX-1105`).
+`address` is what the tilesets' `atlas` references resolve against; without it they are read as
+project-root addresses. The handle is a `memory:` asset, so a scene saved with it writes `null`.
+
+```ts
+import { createTilemapAsset, Tilemap, TilemapRenderer } from "ignifx";
+import type { App, AssetHandle, SpriteAtlasAsset } from "ignifx";
+
+/** A one-row strip of alternating tiles, for a generated level. */
+export function buildStrip(app: App, atlas: AssetHandle<SpriteAtlasAsset>, width: number): void {
+  const tiles: number[] = [];
+  for (let x = 0; x < width; x += 1) {
+    tiles.push(1 + (x % 2));
+  }
+  const map = createTilemapAsset(app, {
+    tileWidth: 16,
+    width,
+    height: 1,
+    tilesets: [{ name: "terrain", atlas: "2d/terrain.atlas.json", firstId: 1, tiles: [] }],
+    layers: [{ name: "Ground", tiles, collision: true }],
+  });
+  const level = app.world.createEntity("Level");
+  level.addComponent(Tilemap).map = map;
+  level.addComponent(TilemapRenderer).atlas = atlas;
+}
+```
+
 ### Picking a sprite under the pointer
 
 ```ts run
