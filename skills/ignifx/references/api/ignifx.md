@@ -24878,7 +24878,9 @@ light (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B2).
 
 Every lit PBR material samples the grid per pixel, blending the eight probes around it, so moving
 objects and shared materials need nothing extra. Outside the grid the nearest edge probes apply.
-Reflections still come from the `Environment` or a `ReflectionProbe`. The volume needs a loaded
+Reflections still come from the `Environment` or a `ReflectionProbe`. With a `PostProcessStack`'s
+`ssgi` on, the diffuse term is `P − (1 − environmentDiffuse)·E` (probes `P`, environment `E`),
+because SSGI's discount applies to the environment and the probes replace it after. The volume needs a loaded
 `Environment` and a canvas; its GPU code loads only once a world has one, and headless it does
 nothing. When several volumes are enabled, the most recently created one wins.
 
@@ -41693,7 +41695,9 @@ Each lit PBR material reflects the nearest enabled probe that has captured: a pr
 probe, materials reflect the `Environment` again. A material shared by several meshes follows the
 first of them. Diffuse lighting still comes from the scene environment.
 
-The probe needs a loaded `Environment` (it reuses its lighting tables) and a canvas-backed app.
+The probe needs a loaded `Environment` (it reuses its lighting tables) and a canvas-backed app;
+until an environment map is loaded it waits and captures nothing. A `rendering.quality` tier caps
+`size` and allows `"everyFrame"` only at `high`; with the `custom` tier nothing is capped.
 Mip levels are box-filtered, so very rough materials look blurrier than with a prefiltered `.env`.
 
 #### Example
@@ -41798,7 +41802,8 @@ The serialized field declarations (ADR-0004).
 
 **`Beta`**
 
-Cube face size in pixels, rounded down to a power of two from 16 to 1024. Defaults to `128`.
+Cube face size in pixels, rounded down to a power of two from 16 to 1024. Defaults to `128`. A
+`rendering.quality` tier caps it: 64 at `low`, 128 at `medium`, 256 at `high`.
 
 ##### typeId
 
@@ -90788,8 +90793,8 @@ When a reflection probe renders its cube map again.
 
 - `"once"` (default): when the probe is first ready, and again on [ReflectionProbe.refresh](#refresh-2).
 - `"onDemand"`: only on [ReflectionProbe.refresh](#refresh-2); until then the probe reflects nothing.
-- `"everyFrame"`: every frame, six extra scene passes each frame. Use it for one probe at most, and
-  only on desktop at the `high` quality tier (nothing caps it yet).
+- `"everyFrame"`: every frame, six extra scene passes each frame. Use it for one probe at most, on
+  desktop. The `low` and `medium` quality tiers (`rendering.quality`) treat it as `"onDemand"`.
 
 ***
 
@@ -95806,9 +95811,14 @@ The rendering quality tiers, in the order the inspector lists them
 #### Remarks
 
 - `"custom"` (default): every effect is exactly as the section and the `PostProcessStack`s say.
-- `"low"`: GTAO at half resolution; no HDR, TAA, contact shadows or SSGI.
-- `"medium"`: adds HDR and TAA, and lets a stack run contact shadows.
-- `"high"`: GTAO at full resolution, and lets a stack run SSGI.
+- `"low"`: GTAO at half resolution; no HDR, TAA, contact shadows or SSGI; reflection probes at
+  64 pixels a face at most.
+- `"medium"`: adds HDR and TAA, lets a stack run contact shadows, and reflection probes up to 128.
+- `"high"`: GTAO at full resolution, lets a stack run SSGI, reflection probes up to 256, and lets
+  a probe capture every frame.
+
+Below `"high"`, a `ReflectionProbe` with `refreshMode: "everyFrame"` captures only on `refresh()`.
+Light probes and lightmaps run at every tier.
 
 ***
 
