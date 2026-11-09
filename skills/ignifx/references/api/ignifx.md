@@ -98459,8 +98459,8 @@ One bounce, first-order harmonics, deterministic. Only meshes built with `MeshAs
 cast and bounce light (see [LightProbeBakeResult.skipped](#skipped)). Cost grows with probes × rays ×
 triangles; it is meant for small scenes and tools, not for every frame.
 
-The bake is asynchronous: it yields to the host after each probe, reports progress through
-`onProgress`, and stops at the next probe once `signal` aborts.
+The bake is asynchronous: it yields to the host after every ~8 ms of work, reports progress
+through `onProgress` after each probe, and stops at the next probe once `signal` aborts.
 
 #### Throws
 
