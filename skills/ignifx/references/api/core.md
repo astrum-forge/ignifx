@@ -19616,7 +19616,7 @@ Resolved project settings.
 
 The asynchronous key-value store settings, save games, and input rebindings live in
 (`docs/architecture/14-platform-electron.md` §2). The backend is chosen from
-[PlatformInfo.kind](#kind-17) — IndexedDB in a browser, memory under Node — unless `createApp` was
+[PlatformInfo.kind](#kind-18) — IndexedDB in a browser, memory under Node — unless `createApp` was
 given one.
 
 ##### time
@@ -24549,6 +24549,70 @@ The first instance index that moved.
 
 ***
 
+### InstanceTarget
+
+One entity or component inside a prefab instance of a scene file, named by its instance path
+(`docs/architecture/06-serialization-and-scene-format.md` §2).
+
+#### Properties
+
+##### address
+
+> `readonly` **address**: `string`
+
+The address of the prefab file that declares the target, as its `instance` entry names it.
+
+##### carrier
+
+> `readonly` **carrier**: `string`
+
+The uid of the scene entity carrying the `instance` entry: the path's first segment.
+
+##### component
+
+> `readonly` **component**: [`SceneFileComponent`](#scenefilecomponent) \| `null`
+
+The component's record, or `null` for an entity.
+
+##### entity
+
+> `readonly` **entity**: [`SceneFileEntity`](#scenefileentity)
+
+The target's record in that file, or for a component the record of the entity holding it.
+
+##### kind
+
+> `readonly` **kind**: `"entity"` \| `"component"`
+
+What the path names: an `$entity` or a `$component` reference target.
+
+##### labels
+
+> `readonly` **labels**: readonly `string`[]
+
+The display names from the carrier down to [InstanceTarget.entity](#entity-6): the carrier's name
+first, then each entity's. A prefab's single root merges into the entity instancing it, so it
+adds no name. A label reads `labels.join(" › ")`, plus the component type for a component.
+
+##### overridePath
+
+> `readonly` **overridePath**: `string` \| `null`
+
+The prefix of an override path on the carrier's `instance` entry that addresses the target:
+`"<entityUid>/components/<componentPath>"` for a component (append `/props/<field>` or
+`/enabled`), where the component path is an instance path when the component sits in a nested
+prefab, and `"<entityUid>"` for an entity of the instanced file itself. `null` for an entity
+inside a nested prefab, which overrides do not reach.
+
+##### path
+
+> `readonly` **path**: `string`
+
+The instance path, `"<carrierUid>/…/<uid>"`: what a `{ "$entity" | "$component": … }`
+reference in the scene writes to reach the target.
+
+***
+
 ### InstantiateOptions
 
 Options accepted by [World.instantiate](#instantiate-1) and [World.instantiateAsync](#instantiateasync)
@@ -26755,12 +26819,23 @@ the instance root carries itself.
 Override paths to act on. A path selects every override at that path or below it, so
 `"<entityUid>"` selects everything on that entity and `"<entityUid>/components/<componentUid>"`
 selects a component's removal, its `enabled` flag, and its props. An `add` to
-`<entityUid>/components` sits at `<entityUid>/components/<addedUid>`. Omitted, every override
+`<entityUid>/components` sits at `<entityUid>/components/<addedUid>`. A component of a nested
+prefab is selected by its instance path the same way:
+`"<nestedInstanceUid>/components/<nestedInstanceUid>/<componentUid>"`. Omitted, every override
 is selected.
 
 ###### Inherited from
 
 [`PrefabOverrideSelection`](#prefaboverrideselection).[`paths`](#paths-1)
+
+##### readScene?
+
+> `readonly` `optional` **readScene?**: [`PrefabReader`](#prefabreader)
+
+Reads the prefabs the prefab file itself instances, by the address its `instance` entries name.
+An override of a nested prefab's component (an instance path in its component segment) is
+applied by moving it onto the nested `instance` entry of the prefab file, which needs the
+nested file to find the entity holding the component. Omitted, such overrides are skipped.
 
 ##### rootComponents?
 
@@ -26872,7 +26947,9 @@ Which overrides of an instance [applyOverridesToAsset](#applyoverridestoasset) a
 Override paths to act on. A path selects every override at that path or below it, so
 `"<entityUid>"` selects everything on that entity and `"<entityUid>/components/<componentUid>"`
 selects a component's removal, its `enabled` flag, and its props. An `add` to
-`<entityUid>/components` sits at `<entityUid>/components/<addedUid>`. Omitted, every override
+`<entityUid>/components` sits at `<entityUid>/components/<addedUid>`. A component of a nested
+prefab is selected by its instance path the same way:
+`"<nestedInstanceUid>/components/<nestedInstanceUid>/<componentUid>"`. Omitted, every override
 is selected.
 
 ***
@@ -32580,6 +32657,18 @@ The grammar, in the order the parser tries it:
 <uid>/components/<uid>/props/<field>[/<key>…]      → prop
 ```
 
+The component segment may also be an instance path, which reaches a component of a prefab the
+instanced file itself instances: `"<nestedInstanceUid>/<componentUid>"`, where the first segment
+is the uid of the entity carrying the nested `instance` entry in the instanced file and must
+equal the path's entity segment, and the last is the uid the nested prefab file gives the
+component. Deeper nesting adds one segment per nested instance, as in references
+(`"<nestedInstanceUid>/<deeperInstanceUid>/<componentUid>"`). The component segment then runs up to
+the first `props` or `enabled` segment, so a component uid cannot be either word.
+
+```text
+<uid>/components/<uid>/<uid>…/<uid>/props/<field>  → prop, component "<uid>/<uid>…/<uid>"
+```
+
 ***
 
 ### PartialFieldsOf
@@ -32645,6 +32734,35 @@ Which operating system the host runs, as far as it will admit.
 `"unknown"` is a real answer, not a failure: a locked-down browser that freezes its user agent
 and exposes no `navigator.userAgentData` genuinely does not say, and code that branches on the
 operating system has to have a default anyway.
+
+***
+
+### PrefabReader
+
+> **PrefabReader** = (`address`) => [`SceneFile`](#scenefile) \| `null` \| `undefined`
+
+Reads a prefab (or any scene) file by the address an `instance` entry names, for
+[resolveInstancePath](#resolveinstancepath) and [enumerateInstanceTargets](#enumerateinstancetargets).
+
+#### Parameters
+
+##### address
+
+`string`
+
+The instanced scene's address.
+
+#### Returns
+
+[`SceneFile`](#scenefile) \| `null` \| `undefined`
+
+The parsed file, or `null`/`undefined` when it cannot be read.
+
+#### Remarks
+
+The address is passed exactly as the entry's `scene.$asset` holds it. Return `null` or
+`undefined` for a file that is not available; the walk then stops there, as the loader stops at
+a scene that is not loaded.
 
 ***
 
@@ -35606,9 +35724,12 @@ byte-identical output through [stringifySceneFile](#stringifyscenefile). The rul
 - On a prefab with exactly one root, the instance root's own `name`, `transform`, and other entity
   fields are its placement, not prefab content, so overrides of the root's entity fields and
   transform are skipped.
-- Overrides reach only the prefab's own entities. Content of a scene the prefab itself instances
-  is not addressable by an override path, so a nested prefab is never edited: an override that
-  names something the prefab file does not hold is skipped.
+- A nested prefab is never edited. An override of a nested prefab's component, whose component
+  segment is an instance path (`"<nestedInstanceUid>/<componentUid>"`), moves onto the prefab
+  file's nested `instance` entry instead, rewritten into that entry's own paths, replacing an
+  override there at the same path and op. It needs [PrefabApplyOptions.readScene](#readscene); without
+  it, or when the path names nothing, it is skipped. Any other override that names something the
+  prefab file does not hold is skipped.
 - An override is skipped when an earlier override that stays on the instance overlaps its path, so
   the instance keeps the value it had.
 - A skipped override stays on the returned instance.
@@ -38003,6 +38124,52 @@ target: entityRef<Entity>();
 
 ***
 
+### enumerateInstanceTargets()
+
+> **enumerateInstanceTargets**(`scene`, `readScene`): [`InstanceTarget`](#instancetarget)[]
+
+Lists every entity and component an instance path can reach inside a scene file's prefab
+instances, with the path, a label chain, and the override path that addresses it.
+
+#### Parameters
+
+##### scene
+
+[`SceneFile`](#scenefile)
+
+The scene file.
+
+##### readScene
+
+[`PrefabReader`](#prefabreader)
+
+Reads the prefab files.
+
+#### Returns
+
+[`InstanceTarget`](#instancetarget)[]
+
+The targets, in scene order of their carriers, then depth first in file order.
+
+#### Remarks
+
+A pure function over files, for tools such as an editor's reference picker. Each path is the
+shortest form [resolveInstancePath](#resolveinstancepath) resolves. A prefab's single root is not listed as an
+entity: it merges into the carrier, which the scene names by its plain uid; its components are
+listed. Components an override `add`s are not listed: they keep no uid from a prefab file. The
+walk stops at a file `readScene` cannot read, at a prefab that would instance itself, and 16
+files deep.
+
+#### Example
+
+```ts
+const components = enumerateInstanceTargets(sceneFile, (address) => files.get(address)).filter(
+  (target) => target.kind === "component",
+);
+```
+
+***
+
 ### enumOf()
 
 > **enumOf**\<`T`\>(`values`, `defaultValue`, `options?`): [`FieldDefinition`](#fielddefinition)\<`T`\>
@@ -38977,7 +39144,7 @@ nickname: optional(str()); // string | null
 
 ### parseOverridePath()
 
-> **parseOverridePath**(`path`): [`OverridePath`](#overridepath)
+> **parseOverridePath**(`path`): [`OverridePath`](#overridepath-1)
 
 Parses an override path.
 
@@ -38991,7 +39158,7 @@ The `path` string from the file.
 
 #### Returns
 
-[`OverridePath`](#overridepath)
+[`OverridePath`](#overridepath-1)
 
 The parsed path.
 
@@ -39250,6 +39417,63 @@ The curve, or `null` when the name is not one the table declares.
 
 ```ts
 const curve = resolveEase("cubicOut");
+```
+
+***
+
+### resolveInstancePath()
+
+> **resolveInstancePath**(`scene`, `path`, `readScene`, `kind?`): [`InstanceTarget`](#instancetarget) \| `null`
+
+Finds the entity or component an instance path names inside a scene file's prefab instances,
+without loading anything: the rules the loader resolves `$entity` and `$component` references
+by.
+
+#### Parameters
+
+##### scene
+
+[`SceneFile`](#scenefile)
+
+The scene file holding the path.
+
+##### path
+
+`string`
+
+The instance path, `"<carrierUid>/…/<uid>"`.
+
+##### readScene
+
+[`PrefabReader`](#prefabreader)
+
+Reads the prefab files the path walks through.
+
+##### kind?
+
+`"entity"` \| `"component"`
+
+What the reference expects: `"entity"` for `$entity`, `"component"` for
+`$component`. Omitted, an entity is looked for first, then a component.
+
+#### Returns
+
+[`InstanceTarget`](#instancetarget) \| `null`
+
+The target, or `null` when the path is a plain uid or names nothing.
+
+#### Remarks
+
+A pure function over files. The path's first segment is the uid of an entity of `scene` that
+carries an `instance` entry; each later segment but the last names an entity of the prefab
+reached so far that itself instances a prefab; the last names the target by the uid its own file
+gives it. A prefab's single root merges into the entity instancing it, so a prefab that root
+instances is searched at the same level, with no extra segment.
+
+#### Example
+
+```ts
+const target = resolveInstancePath(sceneFile, "01J…CRATE/01J…LID", (address) => files.get(address));
 ```
 
 ***

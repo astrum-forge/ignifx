@@ -488,6 +488,12 @@ export {
   type SceneLoadIssue,
 } from "./serialization/load.js";
 export { instanceComponentAt, instanceEntityAt } from "./serialization/instance-lookup.js";
+export {
+  enumerateInstanceTargets,
+  resolveInstancePath,
+  type InstanceTarget,
+  type PrefabReader,
+} from "./serialization/instance-targets.js";
 export { parseOverridePath, type EntityOverrideField, type OverridePath } from "./serialization/overrides.js";
 export {
   applyOverridesToAsset,

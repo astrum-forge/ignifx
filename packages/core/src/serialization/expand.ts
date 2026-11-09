@@ -1,11 +1,12 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
 import { setOwnJsonProperty } from "../schema/json.js";
-import { remapInstancePath } from "./instance-paths.js";
+import { instancePathResolver, remapInstancePath } from "./instance-paths.js";
 import { asJsonArray, asJsonObject } from "./json-view.js";
 import { applyOverrides } from "./overrides.js";
 import { findSceneDependency } from "./scene-asset.js";
-import type { MutableSceneEntity, OverrideTarget } from "./overrides.js";
+import type { InstancePathResolver } from "./instance-paths.js";
+import type { MutableSceneEntity, NestedComponentResolver, OverrideTarget } from "./overrides.js";
 import type { SceneAsset } from "./scene-asset.js";
 import type { SceneFileComponent, SceneFileEntity } from "./scene-file.js";
 import type { AssetHandle } from "../assets/types.js";
@@ -316,10 +317,48 @@ function expandInstance(
   const produced = expandFile(resolved.value, rootUid, key, true, [...chain, address], state, merge);
   const overrides = instance.overrides;
   if (overrides !== undefined && overrides.length > 0) {
-    applyOverrides(overrides, produced, (message) => {
-      state.options.report(CoreErrorCode.instanceHashMismatch, `${asset.address}: ${message}`);
-    });
+    applyOverrides(
+      overrides,
+      produced,
+      (message) => {
+        state.options.report(CoreErrorCode.instanceHashMismatch, `${asset.address}: ${message}`);
+      },
+      nestedResolver(produced, state),
+    );
   }
+}
+
+/**
+ * Resolves the override component segments that are instance paths into the prefabs an instanced
+ * file itself instances. Their copies are already expanded, with fresh uids, when the outer
+ * overrides run, so the path is read through the expansion's instance path tables: the first
+ * segment is a uid of the instanced file, which `produced` maps to its copy.
+ *
+ * @param produced - The instanced file's override targets, by the uid the file gives each entity.
+ * @param state - The expansion so far.
+ * @returns The resolver; it builds its tables on first use, so overrides without such a path cost
+ * nothing.
+ */
+function nestedResolver(produced: ReadonlyMap<string, OverrideTarget>, state: ExpandState): NestedComponentResolver {
+  let paths: InstancePathResolver | null = null;
+  return (path) => {
+    const at = path.indexOf("/");
+    const head = produced.get(path.slice(0, at));
+    if (head === undefined) {
+      return null;
+    }
+    paths ??= instancePathResolver(state);
+    const uid = paths.component(`${head.data.uid}${path.slice(at)}`);
+    if (uid === null) {
+      return null;
+    }
+    for (const entity of state.entities) {
+      if (entity.data.components.some((component) => component.uid === uid)) {
+        return { data: entity.data, uid };
+      }
+    }
+    return null;
+  };
 }
 
 /**

@@ -1199,6 +1199,9 @@ export interface EntityRefFieldSpec {
 }
 
 // @public
+export function enumerateInstanceTargets(scene: SceneFile, readScene: PrefabReader): InstanceTarget[];
+
+// @public
 export interface EnumFieldSpec {
     readonly kind: "enum";
     readonly values: readonly string[];
@@ -1697,6 +1700,18 @@ export function instanceEntityAt(root: Entity, path: string): Entity | null;
 export interface InstanceRange {
     readonly count: number;
     readonly start: number;
+}
+
+// @public
+export interface InstanceTarget {
+    readonly address: string;
+    readonly carrier: string;
+    readonly component: SceneFileComponent | null;
+    readonly entity: SceneFileEntity;
+    readonly kind: "entity" | "component";
+    readonly labels: readonly string[];
+    readonly overridePath: string | null;
+    readonly path: string;
 }
 
 // @public
@@ -2764,6 +2779,7 @@ export class PostProcessStack extends Component implements ComponentHooks {
 
 // @public
 export interface PrefabApplyOptions extends PrefabOverrideSelection {
+    readonly readScene?: PrefabReader;
     readonly rootComponents?: readonly SceneFileComponent[];
 }
 
@@ -2795,6 +2811,9 @@ export interface PrefabOverrideSkip {
     readonly override: SceneFileOverride;
     readonly reason: string;
 }
+
+// @public
+export type PrefabReader = (address: string) => SceneFile | null | undefined;
 
 // @public
 export interface ProfileScope {
@@ -3112,6 +3131,9 @@ export function resetFrameSample(sample: FrameSample): FrameSample;
 
 // @public
 export function resolveEase(ease: EasingName | EasingFunction | undefined): EasingFunction | null;
+
+// @public
+export function resolveInstancePath(scene: SceneFile, path: string, readScene: PrefabReader, kind?: "entity" | "component"): InstanceTarget | null;
 
 // @public
 export function revertOverrides(instance: SceneFileInstance, selection?: PrefabOverrideSelection): SceneFileInstance;

@@ -66,8 +66,9 @@ describe("parseOverridePath", () => {
       "R/transform/x/y",
       "R/other/C",
       "R/components/",
-      "R/components/C/x",
       "R/components/C/props",
+      "R/components/C/enabled/x",
+      "R/components/C//props/x",
     ]) {
       try {
         parseOverridePath(path);

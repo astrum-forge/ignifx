@@ -528,10 +528,11 @@ function writeInstance(
  * Diffs every direct member of an instance against the record the instanced file holds for it.
  *
  * @remarks
- * Only entities the instanced file itself declares are diffed. An entity that came from a scene
- * the instanced scene itself instanced is not addressable by the §2 path grammar — its uid lives in
- * a third file — so deep edits inside a nested prefab are not written back; `flatten: true` is the
- * escape hatch.
+ * Only entities the instanced file itself declares are diffed. Content that came from a scene the
+ * instanced scene itself instanced is not diffed: an override can address a nested prefab's
+ * component by instance path, but the diff would need the nested file with the outer prefab's own
+ * overrides applied, so deep edits inside a nested prefab are not written back; `flatten: true` is
+ * the escape hatch.
  *
  * An instance root that stands for its scene's single root is diffed against that root's record
  * too, but only for the components the scene put on it: its name, transform, and other entity

@@ -126,8 +126,9 @@ expanded under the instance root instead.
   instance, applied, skipped }`: the new prefab, its hash, and the entry without the applied
   overrides. Other instances pick the change up, and their own override at the same path still wins;
   record the new `hash` on them. On a single-root prefab the root's entity fields and transform are
-  the instance's placement and stay on the entry, and content of a nested prefab is never edited
-  (both land in `skipped`). `revertOverrides(instance, { paths? })` drops overrides so the instance
+  the instance's placement and stay on the entry (they land in `skipped`). A nested prefab is never
+  edited: an override of one of its components moves onto the prefab's nested `instance` entry,
+  rewritten into that entry's paths, which needs `readScene` (below). `revertOverrides(instance, { paths? })` drops overrides so the instance
   follows the prefab again. A path selects everything at or below it; an `add` sits at
   `<uid>/components/<addedUid>`.
 - Components added on a single-root instance's root are written in the entity's own `components`,
@@ -135,9 +136,26 @@ expanded under the instance root instead.
   prefabFile, { rootComponents: entity.components })` appends the selected ones to the prefab's root
   (selected at `<rootUid>/components/<uid>`) and returns `appliedComponents` (remove them from the
   entity), `rootComponents` (the ones it keeps) and `skippedComponents`.
+- **Overrides of a nested prefab's components.** The component segment of an override path may be
+  an instance path: `"<nestedInstanceUid>/components/<nestedInstanceUid>/<uidInTheNestedPrefab>/props/<field>"`.
+  Both `<nestedInstanceUid>`s are the entity of the instanced file that carries the nested
+  `instance` entry (the path's entity segment must equal the component path's first segment), and
+  deeper nesting adds a segment per nested instance, as references do. The outer override runs
+  after the nested prefab's own overrides, so it wins. One that names nothing is skipped with a
+  diagnostic, like any other. `applyOverridesToAsset(instance, prefabFile, { readScene })` moves such
+  an override onto the prefab's nested entry; without `readScene` it is skipped.
 - Tools that only edit files import these from `@ignifx/core/prefab`, which loads no renderer and no
   Babylon Lite: `applyOverridesToAsset`, `revertOverrides`, `parseOverridePath`,
-  `computeSceneHash`, `stringifySceneFile` and the scene-file types.
+  `resolveInstancePath`, `enumerateInstanceTargets`, `computeSceneHash`, `stringifySceneFile` and
+  the scene-file types.
+- **Instance paths over files.** `resolveInstancePath(sceneFile, path, readScene, kind?)` finds what
+  a reference's instance path names by the loader's rules, and
+  `enumerateInstanceTargets(sceneFile, readScene)` lists every entity and component inside each
+  instance. Each `InstanceTarget` has its `path`, the file `address`, the `entity` and `component`
+  records, the display `labels` (carrier name, then each entity's), and `overridePath`, the
+  override path prefix on the carrier's entry that addresses it (append `/props/<field>` or
+  `/enabled`; `null` for an entity inside a nested prefab). `readScene(address)` returns a parsed
+  file or `null`; both functions are pure.
 - **References into an instance.** Every copy of a prefab gets fresh uids, so a plain
   `{ "$entity": "<uid>" }` cannot point inside one. Use an instance path instead:
   `{ "$entity": "<instanceRootUid>/<uidInThePrefab>" }`, or `{ "$component": "…" }` the same way.
@@ -160,7 +178,10 @@ expanded under the instance root instead.
 <uid>/components/<uid>                        one component           ("remove" only)
 <uid>/components/<uid>/enabled                a component's enabled flag
 <uid>/components/<uid>/props/<field>[/<key>…] one prop, or a step into a record/map/array
+<uid>/components/<uid>/<uid>…/props/<field>     a nested prefab's component, by instance path
 ```
+
+The component segment runs up to the first `props` or `enabled` segment.
 
 ## Loading order
 
