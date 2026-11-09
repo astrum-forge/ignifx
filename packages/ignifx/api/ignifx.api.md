@@ -322,6 +322,8 @@ import { createStorageBufferAsset } from '@ignifx/core';
 import { createTerrainHit } from '@ignifx/terrain';
 import { createTerrainLoader } from '@ignifx/terrain';
 import { createTextureLoader } from '@ignifx/core';
+import { createTilemapAsset } from '@ignifx/2d';
+import { CreateTilemapAssetOptions } from '@ignifx/2d';
 import { createTilemapLoader } from '@ignifx/2d';
 import { createTouchDevice } from '@ignifx/input';
 import { createUlidFactory } from '@ignifx/core';
@@ -2249,6 +2251,10 @@ export { createTerrainHit }
 export { createTerrainLoader }
 
 export { createTextureLoader }
+
+export { createTilemapAsset }
+
+export { CreateTilemapAssetOptions }
 
 export { createTilemapLoader }
 

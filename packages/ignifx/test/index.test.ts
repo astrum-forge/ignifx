@@ -569,6 +569,7 @@ const expectedTwoDExports = [
   "asepriteFrameName",
   "createSpriteAnimationLoader",
   "createSpriteAtlasLoader",
+  "createTilemapAsset",
   "createTilemapLoader",
   "decodeTileRle",
   "defaultTwoDSettings",
