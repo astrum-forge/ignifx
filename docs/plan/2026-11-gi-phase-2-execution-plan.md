@@ -77,7 +77,7 @@ All six steps are done (2026-11-09). The user guide is `skills/ignifx/references
 | **B3** Lightmaps                 | Done  | #164 (identity placement only; spike P2 open) |
 | **B4** Headless bake             | Done  | #160 (yield every ~8 ms added in #163)        |
 | **B5** Tiers, goldens, templates | Done  | #163 (goldens not recorded, see Remaining)    |
-| **B6** Schemas and skill pages   | Done  | #PR_B6                                        |
+| **B6** Schemas and skill pages   | Done  | #169                                          |
 
 **Remaining**
 
