@@ -322,6 +322,8 @@ import { createStorageBufferAsset } from '@ignifx/core';
 import { createTerrainHit } from '@ignifx/terrain';
 import { createTerrainLoader } from '@ignifx/terrain';
 import { createTextureLoader } from '@ignifx/core';
+import { createTilemapAsset } from '@ignifx/2d';
+import { CreateTilemapAssetOptions } from '@ignifx/2d';
 import { createTilemapLoader } from '@ignifx/2d';
 import { createTouchDevice } from '@ignifx/input';
 import { createUlidFactory } from '@ignifx/core';
@@ -731,6 +733,7 @@ import { LightmapFileData } from '@ignifx/core';
 import { LightmapMode } from '@ignifx/core';
 import { LightmapPlacement } from '@ignifx/core';
 import { LightProbeAsset } from '@ignifx/core';
+import { LightProbeBakeDirectLight } from '@ignifx/core';
 import { LightProbeBakeOptions } from '@ignifx/core';
 import { LightProbeBakeResult } from '@ignifx/core';
 import { LightProbeData } from '@ignifx/core';
@@ -2254,6 +2257,10 @@ export { createTerrainLoader }
 
 export { createTextureLoader }
 
+export { createTilemapAsset }
+
+export { CreateTilemapAssetOptions }
+
 export { createTilemapLoader }
 
 export { createTouchDevice }
@@ -3071,6 +3078,8 @@ export { LightmapMode }
 export { LightmapPlacement }
 
 export { LightProbeAsset }
+
+export { LightProbeBakeDirectLight }
 
 export { LightProbeBakeOptions }
 

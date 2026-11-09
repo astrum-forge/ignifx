@@ -1948,6 +1948,9 @@ export class LightProbeAsset {
 }
 
 // @beta
+export type LightProbeBakeDirectLight = "include" | "exclude";
+
+// @beta
 export interface LightProbeBakeOptions {
     readonly cellSize: Vec3Like;
     readonly counts: {
@@ -1955,6 +1958,7 @@ export interface LightProbeBakeOptions {
         readonly y: number;
         readonly z: number;
     };
+    readonly directLight?: LightProbeBakeDirectLight;
     readonly maxDistance?: number;
     readonly onProgress?: (done: number, total: number) => void;
     readonly origin: Vec3Like;
