@@ -24834,6 +24834,79 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 
 ***
 
+### LightmapAsset
+
+**`Beta`**
+
+A loaded lightmap: a texture and where each entity's UV2 square sits in it.
+
+#### Remarks
+
+A `MeshRenderer` names it in its `lightmap` record. Only placements equal to
+[IDENTITY\_LIGHTMAP\_PLACEMENT](#identity_lightmap_placement) are honoured for now: Babylon Lite 1.34's lightmap fragment
+samples `uv2` without a transform, so a renderer with another placement logs `IGX-0735` once and
+samples the whole texture until the atlas transform lands (GI plan §5, spike P2).
+
+#### Example
+
+```ts
+const lightmap = await app.assets.loadAsync<LightmapAsset>("lighting/hall.lightmap.json");
+entity.isStatic = true;
+entity.addComponent(MeshRenderer, { mesh, lightmap: { asset: lightmap, mode: "add", level: 1, gamma: false, uv2: true } });
+```
+
+#### Properties
+
+##### assetType
+
+> `static` **assetType**: `string`
+
+**`Beta`**
+
+The type name the asset service registers lightmaps under.
+
+##### entries
+
+> `readonly` **entries**: `Readonly`\<`Record`\<`string`, [`LightmapPlacement`](#lightmapplacement)\>\>
+
+**`Beta`**
+
+Per-entity placements, keyed by entity uid.
+
+##### texture
+
+> `readonly` **texture**: [`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\>
+
+**`Beta`**
+
+The baked texture. The asset does not own the handle: its loader or creator does.
+
+#### Methods
+
+##### placementOf()
+
+> **placementOf**(`entityId`): [`LightmapPlacement`](#lightmapplacement)
+
+**`Beta`**
+
+The placement of one entity's UV2 square.
+
+###### Parameters
+
+###### entityId
+
+`string`
+
+The entity's uid.
+
+###### Returns
+
+[`LightmapPlacement`](#lightmapplacement)
+
+Its entry, or [IDENTITY\_LIGHTMAP\_PLACEMENT](#identity_lightmap_placement) when it has none.
+
+***
+
 ### LightProbeAsset
 
 **`Beta`**
@@ -29806,6 +29879,21 @@ Several renderers on one entity draw several meshes from one transform, which is
 > `static` **description**: `string`
 
 What the component does, in one line, for an inspector.
+
+##### lightmap
+
+> **lightmap**: [`MeshRendererLightmap`](#meshrendererlightmap-1) \| `null`
+
+**`Beta`**
+
+A baked lightmap, or `null` (default) for none (GI Phase 2, step B3).
+
+###### Remarks
+
+Only a renderer on a static entity (`entity.isStatic`) with a PBR material samples it; it then
+draws with its own copy of the material (`MaterialAsset.clone`), so later edits of the shared
+material do not reach it. Anything else draws without the lightmap and logs `IGX-0735` once.
+The GPU code loads only once a renderer samples one, and headless nothing happens.
 
 ##### materials
 
@@ -74953,6 +75041,47 @@ The sorting layer every layer lands in. Defaults to `"Default"`.
 
 ***
 
+### LightmapFileData
+
+A lightmap as a `.lightmap.json` stores it.
+
+#### Properties
+
+##### entries
+
+> `readonly` **entries**: `Readonly`\<`Record`\<`string`, [`LightmapPlacement`](#lightmapplacement)\>\>
+
+Per-entity placements, keyed by entity uid; an entity without one samples the whole texture.
+
+##### texture
+
+> `readonly` **texture**: `string`
+
+The texture's asset address, resolved like any other address against the asset root.
+
+***
+
+### LightmapPlacement
+
+Where one renderer's UV2 square sits in a lightmap atlas: the lightmap is sampled at
+`uv2 · scale + offset`.
+
+#### Properties
+
+##### offset
+
+> `readonly` **offset**: [`Vec2Like`](#vec2like)
+
+The atlas-space position of the square's `(0, 0)` corner.
+
+##### scale
+
+> `readonly` **scale**: [`Vec2Like`](#vec2like)
+
+The atlas-space size of the renderer's UV2 square; each component above 0.
+
+***
+
 ### LightProbeBakeOptions
 
 **`Beta`**
@@ -77188,6 +77317,60 @@ Two floats per vertex, or omitted for a mesh with no texture coordinates.
 
 Two floats per vertex for the second UV set (`uv2` in a shader), or omitted. Lightmaps, baked
 ambient occlusion, and the parent-LOD height a terrain morph reads all ride here.
+
+***
+
+### MeshRendererLightmap
+
+**`Beta`**
+
+The `lightmap` record of a [MeshRenderer](#meshrenderer) (GI Phase 2, step B3).
+
+#### Remarks
+
+Mutable, because a schema `record()` field is a plain object a script edits in place.
+
+#### Properties
+
+##### asset
+
+> **asset**: [`AssetHandle`](#assethandle)\<[`LightmapAsset`](#lightmapasset)\> \| `null`
+
+**`Beta`**
+
+The `.lightmap.json` to sample, or `null` for none.
+
+##### gamma
+
+> **gamma**: `boolean`
+
+**`Beta`**
+
+Decode the sample from sRGB to linear; leave it off for a texture already decoded on load.
+
+##### level
+
+> **level**: `number`
+
+**`Beta`**
+
+A multiplier on the sample.
+
+##### mode
+
+> **mode**: `"add"` \| `"shadowmap"`
+
+**`Beta`**
+
+Add the baked light, or multiply the shading by it.
+
+##### uv2
+
+> **uv2**: `boolean`
+
+**`Beta`**
+
+Sample with the mesh's second UV set (`uvs2`); `false` uses the first.
 
 ***
 
@@ -79893,7 +80076,7 @@ The new prefab file, with the applied overrides written into it.
 
 > `readonly` **hash**: `string`
 
-The content hash of [PrefabApplyResult.asset](#asset-7), as [computeSceneHash](#computescenehash) writes it.
+The content hash of [PrefabApplyResult.asset](#asset-8), as [computeSceneHash](#computescenehash) writes it.
 
 ##### instance
 
@@ -89960,6 +90143,16 @@ The union of [KINEMATIC\_SYNC\_MODES](#kinematic_sync_modes).
 
 ***
 
+### LightmapMode
+
+> **LightmapMode** = *typeof* [`LIGHTMAP_MODES`](#lightmap_modes)\[`number`\]
+
+**`Beta`**
+
+One of [LIGHTMAP\_MODES](#lightmap_modes).
+
+***
+
 ### LightType
 
 > **LightType** = *typeof* [`LIGHT_TYPES`](#light_types)\[`number`\]
@@ -92480,6 +92673,12 @@ A `Time` property was set to a value outside its documented domain.
 
 A `app.tweens.to(...)` option was outside its documented domain.
 
+##### lightmapNotApplied
+
+> `readonly` **lightmapNotApplied**: `"IGX-0735"`
+
+A `MeshRenderer`'s lightmap is not drawn as declared: the entity is not static, the material is not PBR, or the placement is not the identity.
+
 ##### malformedErrorCode
 
 > `readonly` **malformedErrorCode**: `"IGX-1502"`
@@ -94163,6 +94362,14 @@ stays `1` and an incompatible change invalidates files rather than migrating the
 
 ***
 
+### IDENTITY\_LIGHTMAP\_PLACEMENT
+
+> `const` **IDENTITY\_LIGHTMAP\_PLACEMENT**: [`LightmapPlacement`](#lightmapplacement)
+
+The placement every entity without an entry gets: the whole texture.
+
+***
+
 ### IGNIFX\_HOST\_AUTHORITY
 
 > `const` **IGNIFX\_HOST\_AUTHORITY**: `"app"` = `"app"`
@@ -94526,6 +94733,49 @@ The `formatVersion` this engine reads and writes.
 > `const` **LIGHT\_TYPES**: readonly \[`"directional"`, `"point"`, `"spot"`, `"hemispheric"`\]
 
 Supported light kinds.
+
+***
+
+### LIGHTMAP\_ASSET\_TYPE
+
+> `const` **LIGHTMAP\_ASSET\_TYPE**: `"lightmap"` = `"lightmap"`
+
+The asset type lightmaps are registered under.
+
+***
+
+### LIGHTMAP\_FILE\_EXTENSIONS
+
+> `const` **LIGHTMAP\_FILE\_EXTENSIONS**: readonly `string`[]
+
+The address extensions that select the lightmap loader.
+
+***
+
+### LIGHTMAP\_FILE\_FORMAT
+
+> `const` **LIGHTMAP\_FILE\_FORMAT**: `"ignifx-lightmap"` = `"ignifx-lightmap"`
+
+The `format` header every `.lightmap.json` carries.
+
+***
+
+### LIGHTMAP\_FORMAT\_VERSION
+
+> `const` **LIGHTMAP\_FORMAT\_VERSION**: `1` = `1`
+
+The `formatVersion` this engine reads and writes.
+
+***
+
+### LIGHTMAP\_MODES
+
+> `const` **LIGHTMAP\_MODES**: readonly \[`"add"`, `"shadowmap"`\]
+
+**`Beta`**
+
+How a lightmap combines with a material's shading: `"add"` adds the baked light to it,
+`"shadowmap"` multiplies it (Babylon Lite's `useAsShadowmap`).
 
 ***
 
@@ -99988,6 +100238,64 @@ their size. Each handle has one holder — the `TerrainAsset`, which releases it
 
 ***
 
+### createLightmapAsset()
+
+> **createLightmapAsset**(`app`, `texture`, `entries?`): [`AssetHandle`](#assethandle)\<[`LightmapAsset`](#lightmapasset)\>
+
+**`Beta`**
+
+Publishes a lightmap built in code, such as a texture from `TextureAsset.fromPixels`.
+
+#### Parameters
+
+##### app
+
+[`App`](#app-1)
+
+The app.
+
+##### texture
+
+[`AssetHandle`](#assethandle)\<[`TextureAsset`](#textureasset)\>
+
+The baked texture; the caller keeps owning the handle.
+
+##### entries?
+
+`Readonly`\<`Record`\<`string`, [`LightmapPlacement`](#lightmapplacement)\>\>
+
+Per-entity placements, keyed by entity uid. Defaults to none.
+
+#### Returns
+
+[`AssetHandle`](#assethandle)\<[`LightmapAsset`](#lightmapasset)\>
+
+A handle a `MeshRenderer`'s `lightmap.asset` can take.
+
+#### Throws
+
+IgnifxError with code `IGX-0709` when a placement is malformed.
+
+***
+
+### createLightmapLoader()
+
+> **createLightmapLoader**(): [`AssetLoader`](#assetloader)\<[`LightmapAsset`](#lightmapasset)\>
+
+**`Beta`**
+
+Builds the loader for `.lightmap.json` lightmaps (GI Phase 2, step B3). The texture the file names
+loads as a dependency, so it is released with the lightmap; a texture that fails to load fails
+the lightmap.
+
+#### Returns
+
+[`AssetLoader`](#assetloader)\<[`LightmapAsset`](#lightmapasset)\>
+
+The loader to register with `ctx.registerAssetLoader`.
+
+***
+
 ### createLightProbeAsset()
 
 > **createLightProbeAsset**(`app`, `data`): [`AssetHandle`](#assethandle)\<[`LightProbeAsset`](#lightprobeasset)\>
@@ -102000,6 +102308,22 @@ The records, keyed by namespaced type id.
 ```ts
 describeInputSchemas()["ignifx/PlayerInput"].fields["deviceSlot"].default; // 0
 ```
+
+***
+
+### describeLightmapFileFormat()
+
+> **describeLightmapFileFormat**(): [`SchemaDescription`](#schemadescription)
+
+**`Beta`**
+
+Describes the `.lightmap.json` lightmap format (GI Phase 2, step B3).
+
+#### Returns
+
+[`SchemaDescription`](#schemadescription)
+
+The description of the top-level file fields.
 
 ***
 
@@ -110069,6 +110393,30 @@ Receives two floats per vertex, or omitted to leave UVs alone.
 #### Returns
 
 `void`
+
+***
+
+### writeLightmapFile()
+
+> **writeLightmapFile**(`data`): `Record`\<`string`, `unknown`\>
+
+**`Beta`**
+
+Turns a lightmap description into the JSON a `.lightmap.json` file holds.
+
+#### Parameters
+
+##### data
+
+[`LightmapFileData`](#lightmapfiledata)
+
+The texture address and placements.
+
+#### Returns
+
+`Record`\<`string`, `unknown`\>
+
+The file contents, with the format header.
 
 ***
 

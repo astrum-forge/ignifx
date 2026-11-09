@@ -372,6 +372,7 @@ Draws one clone of a mesh asset with a material.
 | `receiveShadows` | `bool` | `true` | Whether shadow maps darken this mesh. |
 | `renderOrder` | `i32` | `0` | Sort key within the opaque or transparent phase; lower draws first. |
 | `pickable` | `bool` | `true` | Whether picking considers this mesh at all. |
+| `lightmap` | `optional` | `null` | A baked lightmap; drawn only on a static entity with a PBR material. |
 
 ## Model (`ignifx/Model`)
 

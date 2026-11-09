@@ -1517,6 +1517,34 @@
         }
       }
     },
+    "ignifx/lightmap-file": {
+      "title": "Lightmap file",
+      "format": "ignifx-lightmap",
+      "description": "A baked lightmap texture that static MeshRenderers sample through their second UV set, and where each entity's UV2 square sits in it.",
+      "package": "packages/core",
+      "fields": {
+        "format": {
+          "kind": "str",
+          "default": "\"ignifx-lightmap\"",
+          "description": "Always \"ignifx-lightmap\"."
+        },
+        "formatVersion": {
+          "kind": "u32",
+          "default": "1",
+          "description": "The file format version; 1 before ignifx 1.0."
+        },
+        "texture": {
+          "kind": "str",
+          "default": "\"\"",
+          "description": "The lightmap texture's asset address (a .png, .ktx2 or other texture); required."
+        },
+        "entries": {
+          "kind": "map",
+          "default": "{}",
+          "description": "Per entity uid, { scale: { x, y }, offset: { x, y } }: the entity's UV2 square in the texture (sampled at uv2 · scale + offset; scale above 0). Missing halves and missing entities take scale 1, offset 0. Only the identity is drawn until the atlas transform lands."
+        }
+      }
+    },
     "ignifx/LightProbeVolume": {
       "title": "LightProbeVolume",
       "format": "components",
@@ -1844,6 +1872,11 @@
           "kind": "bool",
           "default": "true",
           "description": "Whether picking considers this mesh at all."
+        },
+        "lightmap": {
+          "kind": "optional",
+          "default": "null",
+          "description": "A baked lightmap; drawn only on a static entity with a PBR material."
         }
       }
     },

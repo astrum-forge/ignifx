@@ -10,6 +10,7 @@ import { InstancedMeshRenderer } from "./instanced-mesh-renderer.js";
 import { LIGHT_PROBE_FILE_FORMAT, LIGHT_PROBE_FORMAT_VERSION } from "./light-probe-asset.js";
 import { LightProbeVolume } from "./light-probe-volume.js";
 import { Light } from "./light.js";
+import { LIGHTMAP_FILE_FORMAT, LIGHTMAP_FORMAT_VERSION } from "./lightmap-asset.js";
 import { MATERIAL_FILE_FORMAT, MATERIAL_FORMAT_VERSION, MATERIAL_KINDS } from "./material-asset.js";
 import { MESH_PRIMITIVES } from "./mesh-asset.js";
 import { MESH_FILE_FORMAT, MESH_FORMAT_VERSION, MESH_PRIMITIVE_OPTIONS } from "./mesh-file.js";
@@ -101,6 +102,7 @@ export function describeSchemas(): Readonly<Record<string, SchemaDescription>> {
     "ignifx/material-file": describeMaterialFileFormat(),
     "ignifx/environment-file": describeEnvironmentFileFormat(),
     "ignifx/light-probe-file": describeLightProbeFileFormat(),
+    "ignifx/lightmap-file": describeLightmapFileFormat(),
     "ignifx/mesh-file": describeMeshFileFormat(),
   };
 }
@@ -309,6 +311,41 @@ export function describeLightProbeFileFormat(): SchemaDescription {
         default: [],
         description:
           "12 linear-RGB floats per probe (c0, c1, c2, c3; diffuse light for normal n is c0 + c1·n.y + c2·n.z + c3·n.x), X fastest, then Y, then Z.",
+      },
+    },
+  };
+}
+
+/**
+ * Describes the `.lightmap.json` lightmap format (GI Phase 2, step B3).
+ *
+ * @returns The description of the top-level file fields.
+ *
+ * @beta
+ */
+export function describeLightmapFileFormat(): SchemaDescription {
+  return {
+    title: "Lightmap file",
+    format: LIGHTMAP_FILE_FORMAT,
+    description:
+      "A baked lightmap texture that static MeshRenderers sample through their second UV set, and where each entity's UV2 square sits in it.",
+    fields: {
+      format: { kind: "str", default: LIGHTMAP_FILE_FORMAT, description: `Always "${LIGHTMAP_FILE_FORMAT}".` },
+      formatVersion: {
+        kind: "u32",
+        default: LIGHTMAP_FORMAT_VERSION,
+        description: "The file format version; 1 before ignifx 1.0.",
+      },
+      texture: {
+        kind: "str",
+        default: "",
+        description: "The lightmap texture's asset address (a .png, .ktx2 or other texture); required.",
+      },
+      entries: {
+        kind: "map",
+        default: {},
+        description:
+          "Per entity uid, { scale: { x, y }, offset: { x, y } }: the entity's UV2 square in the texture (sampled at uv2 · scale + offset; scale above 0). Missing halves and missing entities take scale 1, offset 0. Only the identity is drawn until the atlas transform lands.",
       },
     },
   };

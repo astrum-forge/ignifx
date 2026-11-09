@@ -313,7 +313,7 @@ export {
   type MeshOptionKind,
   type MeshPrimitiveOptionKinds,
 } from "./render/mesh-file.js";
-export { MeshRenderer } from "./render/mesh-renderer.js";
+export { LIGHTMAP_MODES, MeshRenderer, type LightmapMode, type MeshRendererLightmap } from "./render/mesh-renderer.js";
 // Custom shaders (docs/plan/2026-09-terrain-particles-shaders.md §3). The pragma parser, the live
 // material state, the surface-shader layer and the post-effect compiler are reached through dynamic
 // `import()` and must not be re-exported here: a value re-export puts them in every entry chunk
@@ -425,6 +425,19 @@ export { bakeLightProbes, type LightProbeBakeOptions, type LightProbeBakeResult 
 export { LightProbeVolume } from "./render/light-probe-volume.js";
 export { createLightProbeLoader } from "./render/loaders/light-probe-loader.js";
 export {
+  createLightmapAsset,
+  IDENTITY_LIGHTMAP_PLACEMENT,
+  LIGHTMAP_ASSET_TYPE,
+  LIGHTMAP_FILE_EXTENSIONS,
+  LIGHTMAP_FILE_FORMAT,
+  LIGHTMAP_FORMAT_VERSION,
+  LightmapAsset,
+  writeLightmapFile,
+  type LightmapFileData,
+  type LightmapPlacement,
+} from "./render/lightmap-asset.js";
+export { createLightmapLoader } from "./render/loaders/lightmap-loader.js";
+export {
   forceRendererDeviceLossForTesting,
   RENDER_DIAGNOSTICS_COUNTERS,
   type FrameWaitOptions,
@@ -461,6 +474,7 @@ export {
 export {
   describeEnvironmentFileFormat,
   describeLightProbeFileFormat,
+  describeLightmapFileFormat,
   describeMaterialFileFormat,
   describeMeshFileFormat,
   describeSchemas,
