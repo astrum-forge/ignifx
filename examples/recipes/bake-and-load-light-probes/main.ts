@@ -1,0 +1,84 @@
+/**
+ * Bake and load light probes
+ *
+ * `bakeLightProbes(world, options)` traces one bounce of diffuse light on the CPU, so it needs no
+ * GPU: run it in a Node tool (as here), in an editor, or in the game while it loads. It reads the
+ * world once — every enabled `Light`, and the triangles of every enabled `MeshRenderer` whose mesh
+ * was built with `MeshAsset.fromData` — and returns `LightProbeData`. Primitives (`MeshAsset.box`,
+ * `ground`) and glTF models keep their triangles on the GPU only, so they neither block nor bounce
+ * light; `result.skipped` counts them. Give the bake stand-in `fromData` copies of such meshes.
+ *
+ * `writeLightProbeFile` adds the `ignifx-probes` header; save the JSON under the asset root as a
+ * `.probes.json` and the game loads it like any other asset. A `LightProbeVolume` then replaces the
+ * environment's diffuse light on every lit PBR material, moving objects included. The volume draws
+ * only in a canvas-backed app with a loaded `Environment`; here the second app is headless and
+ * reads the grid back with `sampleLightProbes`, the CPU twin of the shader.
+ *
+ * The bake costs probes × `rays` × triangles and yields to the host as it goes: pass `onProgress`
+ * for a progress bar and an `AbortSignal` to cancel it (the promise rejects with the signal's reason).
+ */
+// docs:run
+import {
+  Light,
+  LightProbeVolume,
+  MeshAsset,
+  MeshRenderer,
+  bakeLightProbes,
+  createApp,
+  createMaterialAsset,
+  pbrMaterialDefinition,
+  sampleLightProbes,
+  writeLightProbeFile,
+} from "@ignifx/core";
+import type { App, ColorLike, LightProbeAsset } from "@ignifx/core";
+
+// Adds a 6 m square quad, facing `normal`, with a CPU-side mesh the bake can trace.
+function addWall(app: App, name: string, corners: number[], normal: number[], baseColor: ColorLike): void {
+  const mesh = MeshAsset.fromData(app, name, {
+    positions: Float32Array.from(corners),
+    normals: Float32Array.from([...normal, ...normal, ...normal, ...normal]),
+    indices: Uint32Array.from([0, 1, 2, 0, 2, 3]),
+  });
+  const material = createMaterialAsset(app, pbrMaterialDefinition({ baseColor, metallic: 0, roughness: 1 }), []);
+  app.world.createEntity(name).addComponent(MeshRenderer, { mesh, materials: [material] });
+}
+
+// 1. The tool: build the static scene, bake, and save the file into the game's assets.
+const tool = await createApp();
+addWall(tool, "Floor", [-3, 0, -3, 3, 0, -3, 3, 0, 3, -3, 0, 3], [0, 1, 0], { r: 0.7, g: 0.7, b: 0.7, a: 1 });
+addWall(tool, "Red wall", [3, 0, -3, 3, 3, -3, 3, 3, 3, 3, 0, 3], [-1, 0, 0], { r: 0.9, g: 0.1, b: 0.1, a: 1 });
+const sun = tool.world.createEntity("Sun", { position: { x: -6, y: 6, z: 0 } });
+sun.transform.lookAt({ x: 3, y: 1, z: 0 }); // low, so it lights the red wall
+sun.addComponent(Light, { type: "directional", intensity: 3 });
+
+const baked = await bakeLightProbes(tool.world, {
+  origin: { x: -2, y: 0.5, z: -2 },
+  cellSize: { x: 2, y: 1, z: 2 },
+  counts: { x: 3, y: 2, z: 3 },
+  rays: 256,
+  sky: { r: 0.2, g: 0.25, b: 0.35, a: 1 },
+  onProgress: (done, total) => {
+    if (done === total) tool.log.info(`baked ${String(total)} probes`);
+  },
+});
+tool.log.info("traced triangles:", baked.triangles, "skipped renderers:", baked.skipped);
+
+// A real tool writes this text to `assets/lighting/room.probes.json` (`node:fs`, or an editor's save).
+const saved = JSON.stringify(writeLightProbeFile(baked.data));
+tool.dispose();
+
+// 2. The game: load the grid like any other asset and light the world with it. A browser fetches
+// the file from the server; this headless app gets a stand-in `fetch` that serves the saved text.
+const serve: typeof fetch = (input) => {
+  const url = input instanceof Request ? input.url : input.toString();
+  return Promise.resolve(new Response(url.endsWith("lighting/room.probes.json") ? saved : null));
+};
+const game = await createApp({ fetch: serve });
+const probes = await game.assets.loadAsync<LightProbeAsset>("lighting/room.probes.json");
+game.world.createEntity("Room probes").addComponent(LightProbeVolume, { probes, intensity: 1 });
+
+// The floor by the red wall picks up its bounce; the far side of the room does not.
+const up = { x: 0, y: 1, z: 0 };
+game.log.info("by the red wall:", sampleLightProbes(probes.value.data, 2, 0.5, 0, up));
+game.log.info("across the room:", sampleLightProbes(probes.value.data, -2, 0.5, 0, up));
+game.dispose();

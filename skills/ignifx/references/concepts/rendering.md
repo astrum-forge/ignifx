@@ -115,6 +115,9 @@ what they mean.
   no shadow until it is enabled again. It stays in the scene at intensity `0`, so toggling it costs
   no material rebuild (dropping its shadow generator still does, as `shadows.enabled = false` does).
 
+Which of the three to use, their file formats, the bake, the quality tiers and the known gaps are
+on [`baked-lighting.md`](baked-lighting.md); the bullets below are each component's contract.
+
 - A `ReflectionProbe` captures six views from its entity's position into a cube map, then every
   lit PBR material reflects the nearest probe instead of the `Environment`: a probe whose
   `boxProjection` box (full size in metres, centred on the probe) holds the mesh wins, then the
@@ -168,7 +171,7 @@ what they mean.
   ```
 
 - `await bakeLightProbes(world, { origin, cellSize, counts, rays?, maxDistance?, sky?, directLight?,
-signal?, onProgress? })` bakes a grid on the CPU, headless included, yielding after each probe: one bounce, from the world's lights and the triangles of every
+signal?, onProgress? })` bakes a grid on the CPU, headless included, yielding to the host about every 8 ms: one bounce, from the world's lights and the triangles of every
   enabled `MeshRenderer` whose mesh was built with `MeshAsset.fromData`. Primitives and glTF models
   keep their triangles on the GPU and are skipped (`result.skipped` counts them). `sky` is the
   linear radiance of rays that hit nothing; hemispheric lights add to it. `directLight` defaults to
