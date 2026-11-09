@@ -287,6 +287,8 @@ import { createInputActionsLoader } from '@ignifx/input';
 import { createKeyboardDevice } from '@ignifx/input';
 import { createLayerTable } from '@ignifx/core';
 import { createLayerTextures } from '@ignifx/terrain';
+import { createLightmapAsset } from '@ignifx/core';
+import { createLightmapLoader } from '@ignifx/core';
 import { createLightProbeAsset } from '@ignifx/core';
 import { createLightProbeLoader } from '@ignifx/core';
 import { createLocaleLoader } from '@ignifx/ui';
@@ -395,6 +397,7 @@ import { describeAudioBusesFormat } from '@ignifx/audio';
 import { describeEnvironmentFileFormat } from '@ignifx/core';
 import { describeInputActionsFormat } from '@ignifx/input';
 import { describeInputSchemas } from '@ignifx/input';
+import { describeLightmapFileFormat } from '@ignifx/core';
 import { describeLightProbeFileFormat } from '@ignifx/core';
 import { describeLocaleFileFormat } from '@ignifx/ui';
 import { describeMaterialFileFormat } from '@ignifx/core';
@@ -606,6 +609,7 @@ import { I18N_FORMAT } from '@ignifx/ui';
 import { I18N_FORMAT_VERSION } from '@ignifx/ui';
 import { I18nService } from '@ignifx/ui';
 import { i32 } from '@ignifx/core';
+import { IDENTITY_LIGHTMAP_PLACEMENT } from '@ignifx/core';
 import { IGNIFX_HOST_AUTHORITY } from '@ignifx/electron';
 import { IGNIFX_ORIGIN } from '@ignifx/electron';
 import { IGNIFX_SCHEME } from '@ignifx/electron';
@@ -715,6 +719,15 @@ import { LIGHT_PROBE_FILE_EXTENSIONS } from '@ignifx/core';
 import { LIGHT_PROBE_FILE_FORMAT } from '@ignifx/core';
 import { LIGHT_PROBE_FORMAT_VERSION } from '@ignifx/core';
 import { LIGHT_TYPES } from '@ignifx/core';
+import { LIGHTMAP_ASSET_TYPE } from '@ignifx/core';
+import { LIGHTMAP_FILE_EXTENSIONS } from '@ignifx/core';
+import { LIGHTMAP_FILE_FORMAT } from '@ignifx/core';
+import { LIGHTMAP_FORMAT_VERSION } from '@ignifx/core';
+import { LIGHTMAP_MODES } from '@ignifx/core';
+import { LightmapAsset } from '@ignifx/core';
+import { LightmapFileData } from '@ignifx/core';
+import { LightmapMode } from '@ignifx/core';
+import { LightmapPlacement } from '@ignifx/core';
 import { LightProbeAsset } from '@ignifx/core';
 import { LightProbeBakeOptions } from '@ignifx/core';
 import { LightProbeBakeResult } from '@ignifx/core';
@@ -867,6 +880,7 @@ import { MeshPrimitive } from '@ignifx/core';
 import { MeshPrimitiveDefinition } from '@ignifx/core';
 import { MeshPrimitiveOptionKinds } from '@ignifx/core';
 import { MeshRenderer } from '@ignifx/core';
+import { MeshRendererLightmap } from '@ignifx/core';
 import { MeshShapeTable } from '@ignifx/particles';
 import { MessageNode } from '@ignifx/ui';
 import { MessageParams } from '@ignifx/ui';
@@ -1595,6 +1609,7 @@ import { worldToPixelsToRef } from '@ignifx/2d';
 import { wrapAngleDegrees } from '@ignifx/core';
 import { writeChunkIndices } from '@ignifx/terrain';
 import { writeChunkVertices } from '@ignifx/terrain';
+import { writeLightmapFile } from '@ignifx/core';
 import { writeLightProbeFile } from '@ignifx/core';
 import { yawFromDirection } from '@ignifx/3d';
 import { zoomForSize } from '@ignifx/2d';
@@ -2165,6 +2180,10 @@ export { createLayerTable }
 
 export { createLayerTextures }
 
+export { createLightmapAsset }
+
+export { createLightmapLoader }
+
 export { createLightProbeAsset }
 
 export { createLightProbeLoader }
@@ -2380,6 +2399,8 @@ export { describeEnvironmentFileFormat }
 export { describeInputActionsFormat }
 
 export { describeInputSchemas }
+
+export { describeLightmapFileFormat }
 
 export { describeLightProbeFileFormat }
 
@@ -2803,6 +2824,8 @@ export { I18nService }
 
 export { i32 }
 
+export { IDENTITY_LIGHTMAP_PLACEMENT }
+
 export { IGNIFX_HOST_AUTHORITY }
 
 export { IGNIFX_ORIGIN }
@@ -3020,6 +3043,24 @@ export { LIGHT_PROBE_FILE_FORMAT }
 export { LIGHT_PROBE_FORMAT_VERSION }
 
 export { LIGHT_TYPES }
+
+export { LIGHTMAP_ASSET_TYPE }
+
+export { LIGHTMAP_FILE_EXTENSIONS }
+
+export { LIGHTMAP_FILE_FORMAT }
+
+export { LIGHTMAP_FORMAT_VERSION }
+
+export { LIGHTMAP_MODES }
+
+export { LightmapAsset }
+
+export { LightmapFileData }
+
+export { LightmapMode }
+
+export { LightmapPlacement }
 
 export { LightProbeAsset }
 
@@ -3324,6 +3365,8 @@ export { MeshPrimitiveDefinition }
 export { MeshPrimitiveOptionKinds }
 
 export { MeshRenderer }
+
+export { MeshRendererLightmap }
 
 export { MeshShapeTable }
 
@@ -4780,6 +4823,8 @@ export { wrapAngleDegrees }
 export { writeChunkIndices }
 
 export { writeChunkVertices }
+
+export { writeLightmapFile }
 
 export { writeLightProbeFile }
 

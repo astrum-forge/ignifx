@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
   ReflectionProbe,
+  resolveReflectionProbeRefreshMode,
   resolveReflectionProbeSize,
   selectReflectionProbe,
 } from "../../src/render/reflection-probe.js";
@@ -67,6 +68,12 @@ describe("resolveReflectionProbeSize", () => {
   ])("reads %s as %s", (size, expected) => {
     expect(resolveReflectionProbeSize(size)).toBe(expected);
   });
+
+  it("clamps to a quality tier's cap", () => {
+    expect(resolveReflectionProbeSize(1024, 64)).toBe(64);
+    expect(resolveReflectionProbeSize(32, 256)).toBe(32);
+    expect(resolveReflectionProbeSize(Number.NaN, 64)).toBe(64);
+  });
 });
 
 describe("selectReflectionProbe", () => {
@@ -88,5 +95,13 @@ describe("selectReflectionProbe", () => {
     const sparse: ReflectionProbeCandidate[] = [];
     sparse[1] = probeAt(1);
     expect(selectReflectionProbe(0, 0, 0, sparse)).toBe(1);
+  });
+});
+
+describe("resolveReflectionProbeRefreshMode", () => {
+  it("reads everyFrame as once below the high tier and keeps the other modes", () => {
+    expect(resolveReflectionProbeRefreshMode("everyFrame", false)).toBe("once");
+    expect(resolveReflectionProbeRefreshMode("everyFrame", true)).toBe("everyFrame");
+    expect(resolveReflectionProbeRefreshMode("once", false)).toBe("once");
   });
 });

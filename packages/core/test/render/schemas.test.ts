@@ -39,6 +39,7 @@ describe("describeSchemas", () => {
       "ignifx/Transform",
       "ignifx/environment-file",
       "ignifx/light-probe-file",
+      "ignifx/lightmap-file",
       "ignifx/material-file",
       "ignifx/mesh-file",
       "ignifx/scene-file",

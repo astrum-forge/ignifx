@@ -3,7 +3,7 @@ import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
 import { toComponentHandle, toEntityHandle } from "../handles/handle.js";
 import { forceDeviceLossForTesting } from "../lite/gpu/device-loss.js";
-import { readSceneImageProcessing, setSceneClearColor } from "../lite/gpu/environment.js";
+import { readSceneEnvironment, readSceneImageProcessing, setSceneClearColor } from "../lite/gpu/environment.js";
 import { disposeScenePicker } from "../lite/gpu/picker.js";
 import { setSurfaceSizePx } from "../lite/gpu/render-diagnostics-gpu.js";
 import { captureFrame } from "../lite/gpu/screenshot-capture.js";
@@ -17,6 +17,7 @@ import { sceneLightCount } from "../lite/scene.js";
 import { createMaterialCacheResets } from "../lite/shadow.js";
 import { clamp } from "../math/math-utils.js";
 import { LightProbeHost } from "./gpu/light-probe-host.js";
+import { LightmapHost } from "./gpu/lightmap-host.js";
 import { ReflectionProbeHost } from "./gpu/reflection-probe-host.js";
 import {
   applySurfaceScale,
@@ -53,6 +54,7 @@ import {
 import type { Camera } from "./camera.js";
 import type { LightProbeVolume } from "./light-probe-volume.js";
 import type { MaterialAsset } from "./material-asset.js";
+import type { MeshRenderer } from "./mesh-renderer.js";
 import type { ReflectionProbe } from "./reflection-probe.js";
 import type { RenderTexture, RenderTextureOwner } from "./render-texture.js";
 import type { RenderingFeatureSettings, RenderingQualityPreset, RenderingSettings } from "./rendering-settings.js";
@@ -68,6 +70,7 @@ import type { ScenePresenter } from "../lite/gpu/render-path.js";
 import type { SceneInputs, SceneInputsHost } from "../lite/gpu/scene-inputs.js";
 import type { TaaHandle } from "../lite/gpu/taa.js";
 import type { MaterialWarmUp } from "../lite/gpu/warm-up.js";
+import type { LiteMaterial } from "../lite/material.js";
 import type { NodeTag } from "../lite/node.js";
 import type { LitePickInfo, PickAccept, PickedIdentity } from "../lite/picking.js";
 import type { RenderingFeatureName, RenderingFeatures } from "../lite/render-features.js";
@@ -736,8 +739,14 @@ export class RendererImpl implements Renderer {
   /** The reflection probes' host, created on the first frame of a canvas-backed app (GI B1). */
   #reflectionProbes: ReflectionProbeHost | null = null;
 
+  /** Detaches the reflection probes' `app.events.onDeviceLost` handler. */
+  #disconnectProbeDeviceLoss: Disconnect | null = null;
+
   /** The light probes' host, created with the reflection probes' one (GI B2). */
   #lightProbes: LightProbeHost | null = null;
+
+  /** The lightmaps' host, created when the first renderer with a clone asks for its material (GI B3). */
+  #lightmaps: LightmapHost | null = null;
 
   /** The TAA passes (`../lite/gpu/taa.ts`), when `rendering.taa` installed them. */
   #taa: TaaHandle | null = null;
@@ -1725,7 +1734,8 @@ export class RendererImpl implements Renderer {
   /**
    * The baked-lighting components' per-frame work (GI Phase 2): `ReflectionProbe` (B1) captures
    * what is due and points each lit PBR material at its probe; `LightProbeVolume` (B2) keeps the
-   * winning grid on every lit PBR material. Each loads its own chunk the first time a world has one
+   * winning grid on every lit PBR material; lightmaps (B3) rebuild the material copies the
+   * `MeshRenderer`s took this frame. Each loads its own chunk the first time a world has one
    * of its components. The `PreRender` system calls it every frame; it does nothing on a headless
    * app.
    *
@@ -1755,10 +1765,65 @@ export class RendererImpl implements Renderer {
     const onError = (error: unknown): void => {
       this.#app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });
     };
-    this.#reflectionProbes ??= new ReflectionProbeHost(this.engine, this.scene, onError);
+    if (this.#reflectionProbes === null) {
+      const host = new ReflectionProbeHost(this.engine, this.scene, onError, (message, entityName) => {
+        this.#app.log.warn(message, entityName);
+      });
+      this.#reflectionProbes = host;
+      this.#disconnectProbeDeviceLoss = this.#app.events.onDeviceLost.connect(() => {
+        host.handleDeviceLost();
+      });
+    }
     this.#lightProbes ??= new LightProbeHost(this.engine, this.scene, onError);
-    this.#reflectionProbes.update(world, probes, (this.#presenter?.hdr ?? null) !== null);
+    this.#reflectionProbes.update(
+      world,
+      probes,
+      (this.#presenter?.hdr ?? null) !== null,
+      this.qualityPreset,
+      readSceneEnvironment(this.scene) !== null,
+    );
     this.#lightProbes.update(volumes);
+    this.#lightmaps?.flush();
+  }
+
+  /**
+   * The material a `MeshRenderer` draws with this frame: its own lightmapped copy of `base` when it
+   * samples a lightmap (GI B3), else `base`'s. Only a renderer with a clone in the scene asks, so
+   * never a headless one.
+   *
+   * @param owner - The renderer.
+   * @param base - The material asset it declares, or the default material.
+   * @returns The Lite material.
+   *
+   * @internal
+   */
+  lightmapMaterial(owner: MeshRenderer, base: MaterialAsset): LiteMaterial {
+    this.#lightmaps ??= new LightmapHost(this.#app, this.scene, (error: unknown): void => {
+      this.#app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });
+    });
+    return this.#lightmaps.materialFor(owner, base);
+  }
+
+  /**
+   * Drops a `MeshRenderer`'s lightmapped material copy, if it has one.
+   *
+   * @param owner - The renderer.
+   *
+   * @internal
+   */
+  releaseLightmap(owner: MeshRenderer): void {
+    this.#lightmaps?.release(owner);
+  }
+
+  /**
+   * The lightmaps' host, for tests and diagnostics.
+   *
+   * @returns The host, or `null` before a renderer asked for a material.
+   *
+   * @internal
+   */
+  get lightmapHost(): LightmapHost | null {
+    return this.#lightmaps;
   }
 
   /**
@@ -2041,10 +2106,14 @@ export class RendererImpl implements Renderer {
     this.#afterRebuild.length = 0;
     this.#ambientOcclusion?.dispose();
     this.#ambientOcclusion = null;
+    this.#disconnectProbeDeviceLoss?.();
+    this.#disconnectProbeDeviceLoss = null;
     this.#reflectionProbes?.dispose();
     this.#reflectionProbes = null;
     this.#lightProbes?.dispose();
     this.#lightProbes = null;
+    this.#lightmaps?.dispose();
+    this.#lightmaps = null;
     this.#sceneInputsHost?.dispose();
     this.#sceneInputsHost = null;
     this.#taa = null;

@@ -44,7 +44,8 @@
             "castShadows": false,
             "receiveShadows": false,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         }
       ]
@@ -216,7 +217,8 @@
             "castShadows": false,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -282,7 +284,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -348,7 +351,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -414,7 +418,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -480,7 +485,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -546,7 +552,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -612,7 +619,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -678,7 +686,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -744,7 +753,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -810,7 +820,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -876,7 +887,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -942,7 +954,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -1008,7 +1021,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -1074,7 +1088,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -1140,7 +1155,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -1206,7 +1222,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -1272,7 +1289,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -1338,7 +1356,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -1404,7 +1423,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -1470,7 +1490,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -1536,7 +1557,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -1602,7 +1624,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -1668,7 +1691,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -1734,7 +1758,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -1800,7 +1825,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -1866,7 +1892,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -1932,7 +1959,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -1998,7 +2026,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -2081,7 +2110,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -2164,7 +2194,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -2247,7 +2278,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -2330,7 +2362,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -2413,7 +2446,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -2496,7 +2530,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -2557,7 +2592,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         }
       ]
@@ -2603,7 +2639,8 @@
             "castShadows": false,
             "receiveShadows": false,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         }
       ]
@@ -2649,7 +2686,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -2710,7 +2748,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         }
       ]
@@ -2756,7 +2795,8 @@
             "castShadows": false,
             "receiveShadows": false,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         }
       ]
@@ -2802,7 +2842,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         },
         {
@@ -2863,7 +2904,8 @@
             "castShadows": true,
             "receiveShadows": true,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         }
       ]
@@ -2909,7 +2951,8 @@
             "castShadows": false,
             "receiveShadows": false,
             "renderOrder": 0,
-            "pickable": true
+            "pickable": true,
+            "lightmap": null
           }
         }
       ]
