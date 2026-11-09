@@ -70,6 +70,18 @@ describe("rendering.quality", () => {
     expect(renderingQualityPreset("high")).toMatchObject({ contactShadows: true, ssgi: true });
   });
 
+  it("caps reflection probes per tier", () => {
+    const caps = (["low", "medium", "high"] as const).map((tier) => {
+      const preset = renderingQualityPreset(tier);
+      return [preset?.reflectionProbeMaxSize, preset?.reflectionProbeEveryFrame];
+    });
+    expect(caps).toEqual([
+      [64, false],
+      [128, false],
+      [256, true],
+    ]);
+  });
+
   it("lets a field the project wrote win over its tier", () => {
     const high = effective({
       quality: "high",

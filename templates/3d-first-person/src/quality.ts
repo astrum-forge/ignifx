@@ -1,4 +1,4 @@
-import { Environment, RENDERING_QUALITIES } from "@ignifx/core";
+import { Environment, ReflectionProbe, RENDERING_QUALITIES } from "@ignifx/core";
 import type { App, RenderingQuality } from "@ignifx/core";
 
 /**
@@ -32,7 +32,13 @@ export function chooseQuality(flag: string | null): RenderingQuality | null {
 
 /**
  * Adds the look that goes with a named tier: an `Environment` that tone maps with AgX, which keeps
- * bright HDR colour from clipping to flat white. Nothing for `null` or `"custom"`.
+ * bright HDR colour from clipping to flat white, and at `"high"` one `ReflectionProbe` over the
+ * arena. Nothing for `null` or `"custom"`.
+ *
+ * @remarks
+ * The probe borrows its lighting tables from a loaded environment map, and the template loads none
+ * (`Environment.environment` stays `null`), so it captures nothing until a game assigns an `.env`
+ * to the `Environment`; from then on shiny materials reflect the arena instead of the sky map.
  *
  * @param app - The app, before `app.start()`.
  * @param quality - The tier this run uses.
@@ -44,6 +50,12 @@ export function addTierLook(app: App, quality: RenderingQuality | null): void {
   app.world.createEntity("Environment").addComponent(Environment, {
     imageProcessing: { exposure: 1, contrast: 1, toneMapping: "agx" },
   });
+  if (quality === "high") {
+    // The arena's walls stand at ±12 m; the box is as tall so the sky reads as far away.
+    app.world
+      .createEntity("Reflection probe", { position: { x: 0, y: 1.5, z: 0 } })
+      .addComponent(ReflectionProbe, { size: 256, boxProjection: { x: 24, y: 24, z: 24 } });
+  }
 }
 
 /**

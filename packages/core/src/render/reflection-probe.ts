@@ -26,8 +26,8 @@ export const REFLECTION_PROBE_REFRESH_MODES = ["once", "onDemand", "everyFrame"]
  * @remarks
  * - `"once"` (default): when the probe is first ready, and again on {@link ReflectionProbe.refresh}.
  * - `"onDemand"`: only on {@link ReflectionProbe.refresh}; until then the probe reflects nothing.
- * - `"everyFrame"`: every frame, six extra scene passes each frame. Use it for one probe at most, and
- *   only on desktop at the `high` quality tier (nothing caps it yet).
+ * - `"everyFrame"`: every frame, six extra scene passes each frame. Use it for one probe at most, on
+ *   desktop. The `low` and `medium` quality tiers (`rendering.quality`) treat it as `"onDemand"`.
  *
  * @public
  */
@@ -47,7 +47,9 @@ const MAX_SIZE = 1024;
  * probe, materials reflect the `Environment` again. A material shared by several meshes follows the
  * first of them. Diffuse lighting still comes from the scene environment.
  *
- * The probe needs a loaded `Environment` (it reuses its lighting tables) and a canvas-backed app.
+ * The probe needs a loaded `Environment` (it reuses its lighting tables) and a canvas-backed app;
+ * until an environment map is loaded it waits and captures nothing. A `rendering.quality` tier caps
+ * `size` and allows `"everyFrame"` only at `high`; with the `custom` tier nothing is capped.
  * Mip levels are box-filtered, so very rough materials look blurrier than with a prefiltered `.env`.
  *
  * @example
@@ -71,7 +73,10 @@ export class ReflectionProbe extends Component {
   /** The serialized field declarations (ADR-0004). */
   static schema: Schema = reflectionProbeSchema();
 
-  /** Cube face size in pixels, rounded down to a power of two from 16 to 1024. Defaults to `128`. */
+  /**
+   * Cube face size in pixels, rounded down to a power of two from 16 to 1024. Defaults to `128`. A
+   * `rendering.quality` tier caps it: 64 at `low`, 128 at `medium`, 256 at `high`.
+   */
   declare size: number;
 
   /** When the probe captures again. Defaults to `"once"`. */
@@ -129,17 +134,34 @@ export class ReflectionProbe extends Component {
  * The cube face size a probe captures at.
  *
  * @param size - The authored size.
- * @returns `size` rounded down to a power of two and clamped to 16..1024; 128 for a value that is not
- * a finite number.
+ * @param maxSize - The quality tier's cap (`RenderingQualityPreset.reflectionProbeMaxSize`); 1024
+ * when no tier applies.
+ * @returns `size` rounded down to a power of two and clamped to 16..`maxSize`; 128 (or `maxSize` if
+ * smaller) for a value that is not a finite number.
  *
  * @internal
  */
-export function resolveReflectionProbeSize(size: number): number {
-  if (!Number.isFinite(size)) {
-    return 128;
-  }
-  const clamped = Math.min(MAX_SIZE, Math.max(MIN_SIZE, Math.floor(size)));
+export function resolveReflectionProbeSize(size: number, maxSize: number = MAX_SIZE): number {
+  const upper = Math.min(MAX_SIZE, Math.max(MIN_SIZE, Math.floor(maxSize)));
+  const clamped = Number.isFinite(size) ? Math.min(upper, Math.max(MIN_SIZE, Math.floor(size))) : Math.min(upper, 128);
   return 2 ** Math.floor(Math.log2(clamped));
+}
+
+/**
+ * The refresh mode a probe runs with under a quality tier.
+ *
+ * @param mode - The authored mode.
+ * @param allowsEveryFrame - Whether the tier lets a probe capture every frame
+ * (`RenderingQualityPreset.reflectionProbeEveryFrame`; `true` when no tier applies).
+ * @returns `mode`, except `"everyFrame"` reads as `"onDemand"` when the tier forbids it.
+ *
+ * @internal
+ */
+export function resolveReflectionProbeRefreshMode(
+  mode: ReflectionProbeRefreshMode,
+  allowsEveryFrame: boolean,
+): ReflectionProbeRefreshMode {
+  return mode === "everyFrame" && !allowsEveryFrame ? "onDemand" : mode;
 }
 
 /**
@@ -217,11 +239,12 @@ function reflectionProbeSchema(): Schema {
     size: u32(128, {
       min: MIN_SIZE,
       max: MAX_SIZE,
-      tooltip: "Cube face size in pixels, rounded down to a power of two. Larger is sharper and slower to capture.",
+      tooltip:
+        "Cube face size in pixels, rounded down to a power of two. Larger is sharper and slower to capture. Quality tiers cap it (low 64, medium 128, high 256).",
     }),
     refreshMode: enumOf(REFLECTION_PROBE_REFRESH_MODES, "once", {
       tooltip:
-        "once: capture when ready and on refresh(); onDemand: only on refresh(); everyFrame: every frame (costly; one probe, desktop high tier only).",
+        "once: capture when ready and on refresh(); onDemand: only on refresh(); everyFrame: every frame (costly; one probe; the low and medium quality tiers treat it as onDemand).",
     }),
     boxProjection: optional(vec3({ x: 10, y: 10, z: 10 }), {
       tooltip:
