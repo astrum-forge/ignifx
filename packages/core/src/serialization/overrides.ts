@@ -23,6 +23,18 @@ import type { JsonObject, JsonValue } from "../schema/json.js";
  * <uid>/components/<uid>/props/<field>[/<key>…]      → prop
  * ```
  *
+ * The component segment may also be an instance path, which reaches a component of a prefab the
+ * instanced file itself instances: `"<nestedInstanceUid>/<componentUid>"`, where the first segment
+ * is the uid of the entity carrying the nested `instance` entry in the instanced file and must
+ * equal the path's entity segment, and the last is the uid the nested prefab file gives the
+ * component. Deeper nesting adds one segment per nested instance, as in references
+ * (`"<nestedInstanceUid>/<deeperInstanceUid>/<componentUid>"`). The component segment then runs up to
+ * the first `props` or `enabled` segment, so a component uid cannot be either word.
+ *
+ * ```text
+ * <uid>/components/<uid>/<uid>…/<uid>/props/<field>  → prop, component "<uid>/<uid>…/<uid>"
+ * ```
+ *
  * @public
  */
 export type OverridePath =
@@ -98,21 +110,24 @@ export function parseOverridePath(path: string): OverridePath {
   if (second !== "components") {
     throw invalidPath(path, `"${second}" is not "components", "transform", or an entity property.`);
   }
-  const component = segments[2] ?? "";
-  if (component === "") {
+  const rest = segments.slice(2);
+  const at = rest.findIndex((segment, index) => index > 0 && (segment === "props" || segment === "enabled"));
+  const componentSegments = at < 0 ? rest : rest.slice(0, at);
+  if (componentSegments.includes("")) {
     throw invalidPath(path, "a component override names the component's uid after /components/.");
   }
-  if (segments.length === 3) {
+  const component = componentSegments.join("/");
+  if (at < 0) {
     return { kind: "component", entity, component };
   }
-  const fourth = segments[3] ?? "";
-  if (fourth === "enabled" && segments.length === 4) {
+  const keyword = rest[at];
+  const steps = rest.slice(at + 1);
+  if (keyword === "enabled" && steps.length === 0) {
     return { kind: "componentField", entity, component };
   }
-  if (fourth !== "props" || segments.length < 5) {
+  if (keyword !== "props" || steps.length === 0) {
     throw invalidPath(path, "a property override is <uid>/components/<uid>/props/<field>.");
   }
-  const steps = segments.slice(4);
   if (steps.includes("__proto__")) {
     throw invalidPath(path, '"__proto__" is not a property name an override may address.');
   }
@@ -144,6 +159,8 @@ export function overrideOp(override: SceneFileOverride): "replace" | "remove" | 
  * @param overrides - The patches, in file order.
  * @param lookup - Source uid to the mutable entity record it expanded into.
  * @param report - Called for a patch that names something the instanced file does not contain.
+ * @param nested - Resolves a component segment that is an instance path (a component of a prefab
+ * the instanced file instances); without it such a patch is reported as naming no component.
  *
  * @internal
  */
@@ -151,6 +168,7 @@ export function applyOverrides(
   overrides: readonly SceneFileOverride[],
   lookup: ReadonlyMap<string, OverrideTarget>,
   report: (message: string) => void,
+  nested?: NestedComponentResolver,
 ): void {
   for (let index = 0; index < overrides.length; index += 1) {
     const override = overrides[index];
@@ -163,8 +181,44 @@ export function applyOverrides(
       report(`the override path "${override.path}" names no entity of the instanced scene.`);
       continue;
     }
-    applyOne(overrideOp(override), parsed, override, target, report);
+    applyOne(overrideOp(override), parsed, override, target, report, nested ?? null);
   }
+}
+
+/**
+ * Resolves the component segment of an override path that is an instance path,
+ * `"<nestedInstanceUid>/…/<componentUid>"`, after the nested copies got their fresh uids.
+ *
+ * @param path - The component segment; its first segment is a uid of the instanced file.
+ * @returns The record holding the component and the component's uid in it, or `null` when the path
+ * names nothing.
+ *
+ * @internal
+ */
+export type NestedComponentResolver = (path: string) => NestedComponentTarget | null;
+
+/**
+ * What a {@link NestedComponentResolver} found.
+ *
+ * @internal
+ */
+export interface NestedComponentTarget {
+  /** The record holding the component. */
+  readonly data: MutableSceneEntity;
+  /** The component's uid in {@link NestedComponentTarget.data}. */
+  readonly uid: string;
+}
+
+/**
+ * Whether an override path's component segment is an instance path into a nested prefab.
+ *
+ * @param component - The component segment.
+ * @returns `true` when it holds more than one uid.
+ *
+ * @internal
+ */
+export function isNestedComponentPath(component: string): boolean {
+  return component.includes("/");
 }
 
 /**
@@ -208,6 +262,7 @@ export interface MutableSceneEntity {
  * @param override - The raw entry, for its `value`.
  * @param target - The entity the path resolved to, with its component uid mapping.
  * @param report - Called when the patch cannot be applied.
+ * @param nested - Resolves a component segment that is an instance path, or `null`.
  */
 function applyOne(
   op: "replace" | "remove" | "add",
@@ -215,8 +270,19 @@ function applyOne(
   override: SceneFileOverride,
   target: OverrideTarget,
   report: (message: string) => void,
+  nested: NestedComponentResolver | null,
 ): void {
-  const entity = target.data;
+  let entity = target.data;
+  let uid = "";
+  if (parsed.kind === "component" || parsed.kind === "componentField" || parsed.kind === "prop") {
+    const found = componentTarget(target, parsed.entity, parsed.component, nested);
+    if (found === null) {
+      report(`"${override.path}" names no component of that entity.`);
+      return;
+    }
+    entity = found.data;
+    uid = found.uid;
+  }
   switch (parsed.kind) {
     case "entity": {
       report(`"${override.path}" addresses a whole entity; overrides patch properties and components.`);
@@ -253,7 +319,7 @@ function applyOne(
         report(`"${override.path}" addresses a whole component; only { "op": "remove" } may patch it.`);
         return;
       }
-      const at = indexOfComponent(entity, resolve(target, parsed.component));
+      const at = indexOfComponent(entity, uid);
       if (at < 0) {
         report(`"${override.path}" names no component of that entity.`);
         return;
@@ -262,7 +328,6 @@ function applyOne(
       return;
     }
     case "componentField": {
-      const uid = resolve(target, parsed.component);
       const component = componentOf(entity, uid);
       if (component === null) {
         report(`"${override.path}" names no component of that entity.`);
@@ -272,7 +337,6 @@ function applyOne(
       return;
     }
     case "prop": {
-      const uid = resolve(target, parsed.component);
       const component = componentOf(entity, uid);
       if (component === null) {
         report(`"${override.path}" names no component of that entity.`);
@@ -449,15 +513,30 @@ function writeArrayStep(
 }
 
 /**
- * Resolves the uid an override path names — a uid of the instanced file — to the uid this copy of
- * the prefab gave the same component.
+ * Resolves the component an override path names — a uid of the instanced file, or an instance path
+ * into a prefab it instances — to the record holding this copy of it and the uid it got.
  *
  * @param target - The entity the path resolved to.
- * @param sourceUid - The uid the path names.
- * @returns This copy's uid, or the name itself when the mapping does not know it.
+ * @param entityUid - The path's entity segment.
+ * @param component - The path's component segment.
+ * @param nested - Resolves an instance path, or `null`.
+ * @returns The record and uid; for a plain uid the mapping's uid, or the name itself when the
+ * mapping does not know it. `null` when an instance path names nothing or does not start at the
+ * path's entity.
  */
-function resolve(target: OverrideTarget, sourceUid: string): string {
-  return target.components.get(sourceUid) ?? sourceUid;
+function componentTarget(
+  target: OverrideTarget,
+  entityUid: string,
+  component: string,
+  nested: NestedComponentResolver | null,
+): NestedComponentTarget | null {
+  if (!isNestedComponentPath(component)) {
+    return { data: target.data, uid: target.components.get(component) ?? component };
+  }
+  if (nested === null || component.slice(0, component.indexOf("/")) !== entityUid) {
+    return null;
+  }
+  return nested(component);
 }
 
 /**

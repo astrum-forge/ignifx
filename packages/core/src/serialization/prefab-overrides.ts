@@ -1,7 +1,9 @@
 import { canonicalizeNumber } from "../schema/encode.js";
+import { resolveInstancePath } from "./instance-targets.js";
 import { asJsonArray, asJsonObject } from "./json-view.js";
-import { applyOverrides, overrideOp, parseOverridePath } from "./overrides.js";
+import { applyOverrides, isNestedComponentPath, overrideOp, parseOverridePath } from "./overrides.js";
 import { computeSceneHash } from "./scene-asset.js";
+import type { PrefabReader } from "./instance-targets.js";
 import type { MutableSceneEntity, OverridePath, OverrideTarget } from "./overrides.js";
 import type {
   SceneFile,
@@ -21,7 +23,9 @@ export interface PrefabOverrideSelection {
    * Override paths to act on. A path selects every override at that path or below it, so
    * `"<entityUid>"` selects everything on that entity and `"<entityUid>/components/<componentUid>"`
    * selects a component's removal, its `enabled` flag, and its props. An `add` to
-   * `<entityUid>/components` sits at `<entityUid>/components/<addedUid>`. Omitted, every override
+   * `<entityUid>/components` sits at `<entityUid>/components/<addedUid>`. A component of a nested
+   * prefab is selected by its instance path the same way:
+   * `"<nestedInstanceUid>/components/<nestedInstanceUid>/<componentUid>"`. Omitted, every override
    * is selected.
    */
   readonly paths?: readonly string[];
@@ -43,6 +47,13 @@ export interface PrefabApplyOptions extends PrefabOverrideSelection {
    * Omitted, none is applied.
    */
   readonly rootComponents?: readonly SceneFileComponent[];
+  /**
+   * Reads the prefabs the prefab file itself instances, by the address its `instance` entries name.
+   * An override of a nested prefab's component (an instance path in its component segment) is
+   * applied by moving it onto the nested `instance` entry of the prefab file, which needs the
+   * nested file to find the entity holding the component. Omitted, such overrides are skipped.
+   */
+  readonly readScene?: PrefabReader;
 }
 
 /**
@@ -116,9 +127,12 @@ export interface PrefabApplyResult {
  * - On a prefab with exactly one root, the instance root's own `name`, `transform`, and other entity
  *   fields are its placement, not prefab content, so overrides of the root's entity fields and
  *   transform are skipped.
- * - Overrides reach only the prefab's own entities. Content of a scene the prefab itself instances
- *   is not addressable by an override path, so a nested prefab is never edited: an override that
- *   names something the prefab file does not hold is skipped.
+ * - A nested prefab is never edited. An override of a nested prefab's component, whose component
+ *   segment is an instance path (`"<nestedInstanceUid>/<componentUid>"`), moves onto the prefab
+ *   file's nested `instance` entry instead, rewritten into that entry's own paths, replacing an
+ *   override there at the same path and op. It needs {@link PrefabApplyOptions.readScene}; without
+ *   it, or when the path names nothing, it is skipped. Any other override that names something the
+ *   prefab file does not hold is skipped.
  * - An override is skipped when an earlier override that stays on the instance overlaps its path, so
  *   the instance keeps the value it had.
  * - A skipped override stays on the returned instance.
@@ -181,7 +195,9 @@ export async function applyOverridesToAsset(
     }
     const parsed = parseOverridePath(override.path);
     let reason = precheck(override, parsed, singleRootUid, uids) ?? shadowedBy(override, remaining);
-    if (reason === null) {
+    if (reason === null && isNestedPath(parsed)) {
+      reason = moveIntoNestedInstance(override, parsed, asset, records, selection?.readScene);
+    } else if (reason === null) {
       applyOverrides([override], lookup, (message) => {
         reason ??= message;
       });
@@ -219,6 +235,61 @@ export async function applyOverridesToAsset(
     rootComponents: own.kept,
     skippedComponents: own.skipped,
   };
+}
+
+/**
+ * Whether a parsed override path addresses a component of a nested prefab.
+ *
+ * @param parsed - The parsed path.
+ * @returns `true` when its component segment is an instance path.
+ */
+function isNestedPath(parsed: OverridePath): boolean {
+  return (
+    (parsed.kind === "component" || parsed.kind === "componentField" || parsed.kind === "prop") &&
+    isNestedComponentPath(parsed.component)
+  );
+}
+
+/**
+ * Moves an override of a nested prefab's component onto the prefab file's nested `instance` entry,
+ * rewritten into the paths of the file that entry instances.
+ *
+ * @param override - The override.
+ * @param parsed - Its parsed path, whose component segment is an instance path.
+ * @param asset - The prefab file.
+ * @param records - The prefab's mutable records, by uid; the carrier's `instance` is replaced.
+ * @param readScene - Reads nested prefab files, if given.
+ * @returns Why the override cannot be moved, or `null` once it is.
+ */
+function moveIntoNestedInstance(
+  override: SceneFileOverride,
+  parsed: OverridePath,
+  asset: SceneFile,
+  records: ReadonlyMap<string, MutableSceneEntity>,
+  readScene: PrefabReader | undefined,
+): string | null {
+  if (parsed.kind !== "component" && parsed.kind !== "componentField" && parsed.kind !== "prop") {
+    return null;
+  }
+  if (readScene === undefined) {
+    return `"${override.path}" reaches into a nested prefab; pass readScene to apply it.`;
+  }
+  const head = parsed.component.slice(0, parsed.component.indexOf("/"));
+  const carrier = records.get(head);
+  const instance = carrier?.instance;
+  const target = head === parsed.entity ? resolveInstancePath(asset, parsed.component, readScene, "component") : null;
+  const prefix = target?.overridePath ?? null;
+  if (carrier === undefined || instance === undefined || prefix === null) {
+    return `"${override.path}" names no component of a nested prefab.`;
+  }
+  const suffix =
+    parsed.kind === "prop" ? `/props/${parsed.steps.join("/")}` : parsed.kind === "componentField" ? "/enabled" : "";
+  const path = `${prefix}${suffix}`;
+  const moved: SceneFileOverride = { ...override, path };
+  const op = overrideOp(moved);
+  const kept = (instance.overrides ?? []).filter((existing) => existing.path !== path || overrideOp(existing) !== op);
+  carrier.instance = withOverrides(instance, [...kept, moved], instance.hash);
+  return null;
 }
 
 /** What {@link applyRootComponents} did with the instance root's own components. */
@@ -430,7 +501,15 @@ function shadowedBy(override: SceneFileOverride, remaining: readonly SceneFileOv
  * @returns The key.
  */
 function overlapKey(override: SceneFileOverride): string {
-  return override.path.split("/").slice(0, 5).join("/");
+  let parsed: OverridePath;
+  try {
+    parsed = parseOverridePath(override.path);
+  } catch {
+    return override.path;
+  }
+  return parsed.kind === "prop"
+    ? `${parsed.entity}/components/${parsed.component}/props/${parsed.steps[0] ?? ""}`
+    : override.path;
 }
 
 /**

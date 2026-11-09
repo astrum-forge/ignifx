@@ -17,6 +17,21 @@ export function computeSceneHash(file: SceneFile): Promise<string>;
 export type EntityOverrideField = "name" | "active" | "static" | "layer" | "tags";
 
 // @public
+export function enumerateInstanceTargets(scene: SceneFile, readScene: PrefabReader): InstanceTarget[];
+
+// @public
+export interface InstanceTarget {
+    readonly address: string;
+    readonly carrier: string;
+    readonly component: SceneFileComponent | null;
+    readonly entity: SceneFileEntity;
+    readonly kind: "entity" | "component";
+    readonly labels: readonly string[];
+    readonly overridePath: string | null;
+    readonly path: string;
+}
+
+// @public
 export function isSceneFileHeader(value: unknown): boolean;
 
 // @public
@@ -65,6 +80,7 @@ export function parseOverridePath(path: string): OverridePath;
 
 // @public
 export interface PrefabApplyOptions extends PrefabOverrideSelection {
+    readonly readScene?: PrefabReader;
     readonly rootComponents?: readonly SceneFileComponent[];
 }
 
@@ -96,6 +112,12 @@ export interface PrefabOverrideSkip {
     readonly override: SceneFileOverride;
     readonly reason: string;
 }
+
+// @public
+export type PrefabReader = (address: string) => SceneFile | null | undefined;
+
+// @public
+export function resolveInstancePath(scene: SceneFile, path: string, readScene: PrefabReader, kind?: "entity" | "component"): InstanceTarget | null;
 
 // @public
 export function revertOverrides(instance: SceneFileInstance, selection?: PrefabOverrideSelection): SceneFileInstance;
