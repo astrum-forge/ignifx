@@ -444,7 +444,7 @@ The animation manager, or `null` under a headless app or before the model loaded
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -452,7 +452,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -461,7 +461,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -474,13 +474,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **onEvent**(): [`Signal`](#signal-5)\<`string`\>
+> **get** **onEvent**(): [`Signal`](#signal-6)\<`string`\>
 
 Fires with the name of every animation event the playing states cross.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<`string`\>
+[`Signal`](#signal-6)\<`string`\>
 
 Fires with the name of every animation event the playing states cross.
 
@@ -488,13 +488,13 @@ Fires with the name of every animation event the playing states cross.
 
 ###### Get Signature
 
-> **get** **onStateEntered**(): [`Signal`](#signal-5)\<`string`\>
+> **get** **onStateEntered**(): [`Signal`](#signal-6)\<`string`\>
 
 Fires with a state's name each time a layer enters it.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<`string`\>
+[`Signal`](#signal-6)\<`string`\>
 
 Fires with a state's name each time a layer enters it.
 
@@ -502,13 +502,13 @@ Fires with a state's name each time a layer enters it.
 
 ###### Get Signature
 
-> **get** **onStateExited**(): [`Signal`](#signal-5)\<`string`\>
+> **get** **onStateExited**(): [`Signal`](#signal-6)\<`string`\>
 
 Fires with a state's name each time a layer leaves it, after any crossfade has finished.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<`string`\>
+[`Signal`](#signal-6)\<`string`\>
 
 Fires with a state's name each time a layer leaves it, after any crossfade has finished.
 
@@ -2231,7 +2231,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -2239,7 +2239,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -2248,7 +2248,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -3494,7 +3494,7 @@ Whether the source is making a sound.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -3502,7 +3502,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -3511,7 +3511,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -4175,7 +4175,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -4183,7 +4183,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -4192,7 +4192,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -4848,7 +4848,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -4856,7 +4856,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -4865,7 +4865,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -5503,7 +5503,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -5511,7 +5511,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -5520,7 +5520,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -6110,7 +6110,7 @@ The camera, or `null` before the component is attached.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -6118,7 +6118,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -6127,7 +6127,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -6832,7 +6832,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -6840,7 +6840,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -6849,7 +6849,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -7332,7 +7332,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -7340,7 +7340,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -7349,7 +7349,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -7916,7 +7916,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -7924,7 +7924,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -7933,7 +7933,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -8579,7 +8579,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -8587,7 +8587,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -8596,7 +8596,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -9151,13 +9151,13 @@ Whether the character is standing on a walkable surface.
 
 ###### Get Signature
 
-> **get** **onCollided**(): [`Signal`](#signal-5)\<[`CharacterCollision`](#charactercollision)\>
+> **get** **onCollided**(): [`Signal`](#signal-6)\<[`CharacterCollision`](#charactercollision)\>
 
 Emitted once per dynamic body the character pushed during a step.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`CharacterCollision`](#charactercollision)\>
+[`Signal`](#signal-6)\<[`CharacterCollision`](#charactercollision)\>
 
 The signal, created on first access.
 
@@ -9165,7 +9165,7 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -9173,7 +9173,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -9182,7 +9182,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -9823,7 +9823,7 @@ Rapier's `computedGrounded` from the last move.
 
 ###### Get Signature
 
-> **get** **onCollided**(): [`Signal`](#signal-5)\<[`CharacterCollision2D`](#charactercollision2d)\>
+> **get** **onCollided**(): [`Signal`](#signal-6)\<[`CharacterCollision2D`](#charactercollision2d)\>
 
 Emitted once per obstacle the character hit during a step.
 
@@ -9834,7 +9834,7 @@ never appears here. Listen for `onTriggerEnter`/`onTriggerExit` on the entity's 
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`CharacterCollision2D`](#charactercollision2d)\>
+[`Signal`](#signal-6)\<[`CharacterCollision2D`](#charactercollision2d)\>
 
 The signal, created on first access.
 
@@ -9842,7 +9842,7 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -9850,7 +9850,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -9859,7 +9859,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -10447,7 +10447,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -10455,7 +10455,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -10464,7 +10464,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -10973,7 +10973,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -10981,7 +10981,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -10990,7 +10990,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -11510,7 +11510,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -11518,7 +11518,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -11527,7 +11527,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -12739,7 +12739,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -12747,7 +12747,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -12756,7 +12756,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -13625,7 +13625,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -13633,7 +13633,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -13642,7 +13642,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -15002,7 +15002,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -15010,7 +15010,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -15019,7 +15019,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -15831,14 +15831,14 @@ The name.
 
 ###### Get Signature
 
-> **get** **onActiveChanged**(): [`Signal`](#signal-5)\<`boolean`\>
+> **get** **onActiveChanged**(): [`Signal`](#signal-6)\<`boolean`\>
 
 Emitted with the new value when the entity's **own** active flag changes. An ancestor's change
 does not emit it; read `activeInHierarchy` for the effective state.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<`boolean`\>
+[`Signal`](#signal-6)\<`boolean`\>
 
 The signal, created on first access.
 
@@ -15846,13 +15846,13 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onChildAdded**(): [`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
+> **get** **onChildAdded**(): [`Signal`](#signal-6)\<[`Entity`](#entity-19)\>
 
 Emitted after a child is added, whether by creation or by reparenting.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
+[`Signal`](#signal-6)\<[`Entity`](#entity-19)\>
 
 The signal, created on first access.
 
@@ -15860,13 +15860,13 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onChildRemoved**(): [`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
+> **get** **onChildRemoved**(): [`Signal`](#signal-6)\<[`Entity`](#entity-19)\>
 
 Emitted after a child is removed.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
+[`Signal`](#signal-6)\<[`Entity`](#entity-19)\>
 
 The signal, created on first access.
 
@@ -15874,7 +15874,7 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onComponentAdded**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onComponentAdded**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted with each component attached to this entity, synchronously at the end of
 `addComponent`, after the component's `onAttach` has run
@@ -15884,7 +15884,7 @@ than polling `entity.components`. Costs nothing until something connects.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal, created on first access.
 
@@ -15892,7 +15892,7 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onComponentRemoved**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onComponentRemoved**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted with each component the destroy flush removes from this entity, after it has left
 `entity.components` and before its `onDetach` runs. Removal is deferred, so this fires in the
@@ -15900,7 +15900,7 @@ destroy flush rather than inside `removeComponent`.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal, created on first access.
 
@@ -15908,14 +15908,14 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Entity`](#entity-19)\>
 
 Emitted in the destroy flush, after the entity's components have run `onDestroy`. `Signal`'s
 `{ owner }` option uses it to detach handlers automatically.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
+[`Signal`](#signal-6)\<[`Entity`](#entity-19)\>
 
 The signal, created on first access.
 
@@ -15923,13 +15923,13 @@ The signal, created on first access.
 
 ###### Get Signature
 
-> **get** **onParentChanged**(): [`Signal`](#signal-5)\<[`Entity`](#entity-19) \| `null`\>
+> **get** **onParentChanged**(): [`Signal`](#signal-6)\<[`Entity`](#entity-19) \| `null`\>
 
 Emitted with the new parent after this entity is reparented.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Entity`](#entity-19) \| `null`\>
+[`Signal`](#signal-6)\<[`Entity`](#entity-19) \| `null`\>
 
 The signal, created on first access.
 
@@ -16778,7 +16778,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -16786,7 +16786,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -16795,7 +16795,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -17476,7 +17476,7 @@ Whether the sprint action is held and the character is moving.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -17484,7 +17484,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -17493,7 +17493,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -19993,7 +19993,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -20001,7 +20001,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -20010,7 +20010,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -20961,7 +20961,7 @@ The size.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -20969,7 +20969,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -20978,7 +20978,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -21818,19 +21818,19 @@ The action name game code asks for.
 
 ##### onCanceled
 
-> `readonly` **onCanceled**: [`Signal`](#signal-5)\<[`InputActionEvent`](#inputactionevent)\>
+> `readonly` **onCanceled**: [`Signal`](#signal-6)\<[`InputActionEvent`](#inputactionevent)\>
 
 Emitted the frame the action returns to rest.
 
 ##### onPerformed
 
-> `readonly` **onPerformed**: [`Signal`](#signal-5)\<[`InputActionEvent`](#inputactionevent)\>
+> `readonly` **onPerformed**: [`Signal`](#signal-6)\<[`InputActionEvent`](#inputactionevent)\>
 
 Emitted when the action is pressed and whenever its value changes while actuated.
 
 ##### onStarted
 
-> `readonly` **onStarted**: [`Signal`](#signal-5)\<[`InputActionEvent`](#inputactionevent)\>
+> `readonly` **onStarted**: [`Signal`](#signal-6)\<[`InputActionEvent`](#inputactionevent)\>
 
 Emitted the frame the action is first actuated.
 
@@ -23369,7 +23369,7 @@ The instanced mesh and its LOD partner, either of which may be `null`.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -23377,7 +23377,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -23386,7 +23386,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -24586,7 +24586,7 @@ The light and its shadow generator, either of which may be `null`.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -24594,7 +24594,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -24603,7 +24603,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -25108,7 +25108,7 @@ The handle.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 **`Beta`**
 
@@ -25118,7 +25118,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -25798,7 +25798,7 @@ Which level is showing, or `-1` when the group is past its last threshold.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -25806,7 +25806,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -25815,7 +25815,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -25828,13 +25828,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **onLevelChanged**(): [`Signal`](#signal-5)\<`number`\>
+> **get** **onLevelChanged**(): [`Signal`](#signal-6)\<`number`\>
 
 Fires with the new level index each time the group switches; `-1` means culled.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<`number`\>
+[`Signal`](#signal-6)\<`number`\>
 
 Fires with the new level index each time the group switches; `-1` means culled.
 
@@ -29371,7 +29371,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -29379,7 +29379,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -29388,7 +29388,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -30061,7 +30061,7 @@ The clone, or `null` when there is nothing to draw.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -30069,7 +30069,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -30078,7 +30078,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -30650,7 +30650,7 @@ The nodes, keyed by glTF node name.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -30658,7 +30658,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -30667,7 +30667,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -31391,7 +31391,7 @@ Whether music is sounding.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -31399,7 +31399,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -31408,7 +31408,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -31856,13 +31856,13 @@ Whether Recast has finished loading.
 
 ###### Get Signature
 
-> **get** **onReady**(): [`Signal`](#signal-5)\<[`NavigationService`](#navigationservice)\>
+> **get** **onReady**(): [`Signal`](#signal-6)\<[`NavigationService`](#navigationservice)\>
 
 Fires the first time Recast has finished loading.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`NavigationService`](#navigationservice)\>
+[`Signal`](#signal-6)\<[`NavigationService`](#navigationservice)\>
 
 Fires the first time Recast has finished loading.
 
@@ -32363,13 +32363,13 @@ Whether the agent is holding still rather than heading somewhere.
 
 ###### Get Signature
 
-> **get** **onArrived**(): [`Signal`](#signal-5)\<[`NavMeshAgent`](#navmeshagent)\>
+> **get** **onArrived**(): [`Signal`](#signal-6)\<[`NavMeshAgent`](#navmeshagent)\>
 
 Fires once each time the agent reaches its destination.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`NavMeshAgent`](#navmeshagent)\>
+[`Signal`](#signal-6)\<[`NavMeshAgent`](#navmeshagent)\>
 
 Fires once each time the agent reaches its destination.
 
@@ -32377,7 +32377,7 @@ Fires once each time the agent reaches its destination.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -32385,7 +32385,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -32394,7 +32394,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -32918,7 +32918,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -32926,7 +32926,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -32935,7 +32935,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -33548,13 +33548,13 @@ The Recast plugin and the crowd, or `null` before the bake.
 
 ###### Get Signature
 
-> **get** **onBaked**(): [`Signal`](#signal-5)\<[`NavMeshSurface`](#navmeshsurface)\>
+> **get** **onBaked**(): [`Signal`](#signal-6)\<[`NavMeshSurface`](#navmeshsurface)\>
 
 Fires once each time the surface finishes baking.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`NavMeshSurface`](#navmeshsurface)\>
+[`Signal`](#signal-6)\<[`NavMeshSurface`](#navmeshsurface)\>
 
 Fires once each time the surface finishes baking.
 
@@ -33562,7 +33562,7 @@ Fires once each time the surface finishes baking.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -33570,7 +33570,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -33579,7 +33579,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -34228,7 +34228,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -34236,7 +34236,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -34245,7 +34245,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -35301,7 +35301,7 @@ The `.particles.json`, as a loaded handle.
 
 ##### onStopped
 
-> `readonly` **onStopped**: [`Signal`](#signal-5)\<[`ParticleSystem`](#particlesystem)\>
+> `readonly` **onStopped**: [`Signal`](#signal-6)\<[`ParticleSystem`](#particlesystem)\>
 
 Emitted once when a non-looping system runs out of cycle and particles.
 
@@ -35567,7 +35567,7 @@ Whether the system is playing, paused or not.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -35575,7 +35575,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -35584,7 +35584,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -36049,7 +36049,7 @@ What the component does, in one line, for an inspector.
 
 ##### onStopped
 
-> `readonly` **onStopped**: [`Signal`](#signal-5)\<[`ParticleSystem2D`](#particlesystem2d)\>
+> `readonly` **onStopped**: [`Signal`](#signal-6)\<[`ParticleSystem2D`](#particlesystem2d)\>
 
 Emitted once when a non-looping system runs out of cycle and particles.
 
@@ -36286,7 +36286,7 @@ Whether the system is playing, paused or not.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -36294,7 +36294,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -36303,7 +36303,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -37930,7 +37930,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -37938,7 +37938,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -37947,7 +37947,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -38501,7 +38501,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -38509,7 +38509,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -38518,7 +38518,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -39130,7 +39130,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -39138,7 +39138,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -39147,7 +39147,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -39679,7 +39679,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -39687,7 +39687,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -39696,7 +39696,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -40184,7 +40184,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -40192,7 +40192,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -40201,7 +40201,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -41958,7 +41958,7 @@ The handle.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 **`Beta`**
 
@@ -41968,7 +41968,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -42504,7 +42504,7 @@ The Havok body, or `null` before the first fixed step built it.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -42512,7 +42512,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -42521,7 +42521,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -43213,7 +43213,7 @@ Metres per second, world space.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -43221,7 +43221,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -43230,7 +43230,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -43857,7 +43857,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -43865,7 +43865,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -43874,7 +43874,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -44256,13 +44256,13 @@ Whether every entity of the instance has been constructed and its references res
 
 ###### Get Signature
 
-> **get** **onUnloading**(): [`Signal`](#signal-5)
+> **get** **onUnloading**(): [`Signal`](#signal-6)
 
 Emitted just before the instance is unloaded, while its entities are still valid.
 
 ###### Returns
 
-[`Signal`](#signal-5)
+[`Signal`](#signal-6)
 
 The signal.
 
@@ -44518,7 +44518,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -44526,7 +44526,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -44535,7 +44535,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -44912,7 +44912,7 @@ health.onDied.connect((entity) => this.spawnLoot(entity), { owner: this, once: t
 
 ##### Constructor
 
-> **new Signal**\<`T`\>(`options?`): [`Signal`](#signal-5)\<`T`\>
+> **new Signal**\<`T`\>(`options?`): [`Signal`](#signal-6)\<`T`\>
 
 Creates a signal.
 
@@ -44927,7 +44927,7 @@ supplied by the app for engine signals; a signal a script owns usually needs nei
 
 ###### Returns
 
-[`Signal`](#signal-5)\<`T`\>
+[`Signal`](#signal-6)\<`T`\>
 
 #### Accessors
 
@@ -46140,7 +46140,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -46148,7 +46148,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -46157,7 +46157,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -46922,13 +46922,13 @@ Whether a clip is currently advancing.
 
 ###### Get Signature
 
-> **get** **onClipEnded**(): [`Signal`](#signal-5)\<`string`\>
+> **get** **onClipEnded**(): [`Signal`](#signal-6)\<`string`\>
 
 Emitted with a clip's name when a non-looping clip reaches its last frame.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<`string`\>
+[`Signal`](#signal-6)\<`string`\>
 
 The signal.
 
@@ -46936,7 +46936,7 @@ The signal.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -46944,7 +46944,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -46953,7 +46953,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -46966,7 +46966,7 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **onEvent**(): [`Signal`](#signal-5)\<`string`\>
+> **get** **onEvent**(): [`Signal`](#signal-6)\<`string`\>
 
 Emitted with an event's name when playback passes the frame that declares it.
 
@@ -46978,7 +46978,7 @@ so a footstep is never silently dropped.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<`string`\>
+[`Signal`](#signal-6)\<`string`\>
 
 The signal.
 
@@ -47760,7 +47760,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -47768,7 +47768,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -47777,7 +47777,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -48491,7 +48491,7 @@ The sprite handle, or `null` when the sprite is not in a layer.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -48499,7 +48499,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -48508,7 +48508,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -49331,7 +49331,7 @@ The material, or `null` headless and before the asset loads.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -49339,7 +49339,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -49348,7 +49348,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -49361,14 +49361,14 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **onHeightsChanged**(): [`Signal`](#signal-5)\<[`TerrainRegion`](#terrainregion)\>
+> **get** **onHeightsChanged**(): [`Signal`](#signal-6)\<[`TerrainRegion`](#terrainregion)\>
 
 Fires after [Terrain.setHeights](#setheights-1) with the sample rectangle that changed, so a collider
 and a scatter can follow.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`TerrainRegion`](#terrainregion)\>
+[`Signal`](#signal-6)\<[`TerrainRegion`](#terrainregion)\>
 
 The signal.
 
@@ -50562,7 +50562,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -50570,7 +50570,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -50579,7 +50579,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -51075,7 +51075,7 @@ The size.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -51083,7 +51083,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -51092,7 +51092,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -51907,7 +51907,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -51915,7 +51915,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -51924,7 +51924,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -52624,7 +52624,7 @@ The direction the character is being pushed this step, normalized. Reused each s
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -52632,7 +52632,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -52641,7 +52641,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -53351,7 +53351,7 @@ The layer count.
 
 ###### Get Signature
 
-> **get** **onCollisionChanged**(): [`Signal`](#signal-5)
+> **get** **onCollisionChanged**(): [`Signal`](#signal-6)
 
 Emitted after the merged collision surface has been rebuilt.
 
@@ -53364,7 +53364,7 @@ frame pays for one merge.
 
 ###### Returns
 
-[`Signal`](#signal-5)
+[`Signal`](#signal-6)
 
 The signal.
 
@@ -53372,7 +53372,7 @@ The signal.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -53380,7 +53380,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -53389,7 +53389,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -53402,13 +53402,13 @@ invariant in `T`; the read-only interface is not, and `connect` is all this cont
 
 ###### Get Signature
 
-> **get** **onTileChanged**(): [`Signal`](#signal-5)\<[`TileChange`](#tilechange)\>
+> **get** **onTileChanged**(): [`Signal`](#signal-6)\<[`TileChange`](#tilechange)\>
 
 Emitted whenever `setTile` or `setCells` changes a cell.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`TileChange`](#tilechange)\>
+[`Signal`](#signal-6)\<[`TileChange`](#tilechange)\>
 
 The signal.
 
@@ -54259,7 +54259,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -54267,7 +54267,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -54276,7 +54276,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -54825,7 +54825,7 @@ The atlas.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -54833,7 +54833,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -54842,7 +54842,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -55675,7 +55675,7 @@ A freshly allocated vector. Use `Transform.lossyScaleToRef` in hot code.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -55683,7 +55683,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -55692,7 +55692,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -56545,7 +56545,7 @@ tween.onComplete.connect(() => app.log.info("arrived"));
 
 ##### onComplete
 
-> `readonly` **onComplete**: [`Signal`](#signal-5)\<[`Tween`](#tween)\>
+> `readonly` **onComplete**: [`Signal`](#signal-6)\<[`Tween`](#tween)\>
 
 Fires once when the tween finishes, with the tween itself. Never fires after `stop`.
 
@@ -62382,13 +62382,13 @@ The main camera, or `null` when the world has none.
 
 ###### Get Signature
 
-> **get** **onEntityCreated**(): [`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
+> **get** **onEntityCreated**(): [`Signal`](#signal-6)\<[`Entity`](#entity-19)\>
 
 Emitted for every entity the world creates.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
+[`Signal`](#signal-6)\<[`Entity`](#entity-19)\>
 
 The signal.
 
@@ -62396,13 +62396,13 @@ The signal.
 
 ###### Get Signature
 
-> **get** **onEntityDestroyed**(): [`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
+> **get** **onEntityDestroyed**(): [`Signal`](#signal-6)\<[`Entity`](#entity-19)\>
 
 Emitted for every entity the destroy flush releases.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Entity`](#entity-19)\>
+[`Signal`](#signal-6)\<[`Entity`](#entity-19)\>
 
 The signal.
 
@@ -62410,13 +62410,13 @@ The signal.
 
 ###### Get Signature
 
-> **get** **onSceneLoaded**(): [`Signal`](#signal-5)\<[`SceneInstance`](#sceneinstance)\>
+> **get** **onSceneLoaded**(): [`Signal`](#signal-6)\<[`SceneInstance`](#sceneinstance)\>
 
 Emitted when a scene instance finishes loading.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`SceneInstance`](#sceneinstance)\>
+[`Signal`](#signal-6)\<[`SceneInstance`](#sceneinstance)\>
 
 The signal.
 
@@ -62424,13 +62424,13 @@ The signal.
 
 ###### Get Signature
 
-> **get** **onSceneUnloaded**(): [`Signal`](#signal-5)\<[`SceneInstance`](#sceneinstance)\>
+> **get** **onSceneUnloaded**(): [`Signal`](#signal-6)\<[`SceneInstance`](#sceneinstance)\>
 
 Emitted when a scene instance is unloaded.
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`SceneInstance`](#sceneinstance)\>
+[`Signal`](#signal-6)\<[`SceneInstance`](#sceneinstance)\>
 
 The signal.
 
@@ -63280,7 +63280,7 @@ Whether the owner has already been destroyed.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -63288,7 +63288,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -63297,7 +63297,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -63887,7 +63887,7 @@ The size.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -63895,7 +63895,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -63904,7 +63904,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -64510,7 +64510,7 @@ The size.
 
 ###### Get Signature
 
-> **get** **onDestroyed**(): [`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+> **get** **onDestroyed**(): [`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 Emitted once when the component is destroyed, in the destroy flush. Connecting with
 `{ owner: this }` elsewhere uses it to detach handlers automatically
@@ -64518,7 +64518,7 @@ Emitted once when the component is destroyed, in the destroy flush. Connecting w
 
 ###### Returns
 
-[`Signal`](#signal-5)\<[`Component`](#abstract-component)\>
+[`Signal`](#signal-6)\<[`Component`](#abstract-component)\>
 
 The signal. It is created on first access, so a component nobody listens to allocates
 nothing.
@@ -64527,7 +64527,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -65593,7 +65593,7 @@ the world, and the lazily loaded Recast module behind both.
 
 ##### onError
 
-> `readonly` **onError**: [`Signal`](#signal-5)\<[`ErrorReport`](#errorreport)\>
+> `readonly` **onError**: [`Signal`](#signal-6)\<[`ErrorReport`](#errorreport)\>
 
 Every failure the engine caught at a boundary rather than rethrowing.
 
@@ -74956,6 +74956,144 @@ The sorting layer every layer lands in. Defaults to `"Default"`.
 
 ***
 
+### LightProbeBakeOptions
+
+**`Beta`**
+
+What [bakeLightProbes](#bakelightprobes) bakes.
+
+#### Properties
+
+##### cellSize
+
+> `readonly` **cellSize**: [`Vec3Like`](#vec3like)
+
+**`Beta`**
+
+The distance between neighbouring probes along each axis, in metres.
+
+##### counts
+
+> `readonly` **counts**: `object`
+
+**`Beta`**
+
+How many probes along X, Y and Z.
+
+###### x
+
+> `readonly` **x**: `number`
+
+###### y
+
+> `readonly` **y**: `number`
+
+###### z
+
+> `readonly` **z**: `number`
+
+##### maxDistance?
+
+> `readonly` `optional` **maxDistance?**: `number`
+
+**`Beta`**
+
+How far a ray looks for a surface, in metres; finite and positive. Defaults to `100`.
+
+##### onProgress?
+
+> `readonly` `optional` **onProgress?**: (`done`, `total`) => `void`
+
+**`Beta`**
+
+Called after each probe.
+
+###### Parameters
+
+###### done
+
+`number`
+
+Probes baked so far.
+
+###### total
+
+`number`
+
+Probes in the grid.
+
+###### Returns
+
+`void`
+
+##### origin
+
+> `readonly` **origin**: [`Vec3Like`](#vec3like)
+
+**`Beta`**
+
+The world position of probe `(0, 0, 0)`.
+
+##### rays?
+
+> `readonly` `optional` **rays?**: `number`
+
+**`Beta`**
+
+Rays per probe, a whole number from 1 to 4096. Defaults to `128`; more is smoother and slower.
+
+##### signal?
+
+> `readonly` `optional` **signal?**: `AbortSignal`
+
+**`Beta`**
+
+Stops the bake between probes; the promise then rejects with the signal's reason.
+
+##### sky?
+
+> `readonly` `optional` **sky?**: [`ColorLike`](#colorlike)
+
+**`Beta`**
+
+The linear radiance of rays that hit nothing, before hemispheric lights. Defaults to black.
+
+***
+
+### LightProbeBakeResult
+
+**`Beta`**
+
+The result of a bake.
+
+#### Properties
+
+##### data
+
+> `readonly` **data**: [`LightProbeData`](#lightprobedata)
+
+**`Beta`**
+
+The grid, ready for `createLightProbeAsset` or `writeLightProbeFile`.
+
+##### skipped
+
+> `readonly` **skipped**: `number`
+
+**`Beta`**
+
+How many enabled mesh renderers were skipped because their triangles are not on the CPU.
+
+##### triangles
+
+> `readonly` **triangles**: `number`
+
+**`Beta`**
+
+How many triangles the rays were traced against.
+
+***
+
 ### LightProbeData
 
 A grid of light probes, as a `.probes.json` stores it.
@@ -75091,7 +75229,7 @@ What a loader is handed for one load
 #### Remarks
 
 The three `fetch*` methods share one code path: the bytes are streamed through the service's
-priority queue, counted into the handle's progress, and aborted with [LoaderContext.signal](#signal).
+priority queue, counted into the handle's progress, and aborted with [LoaderContext.signal](#signal-1).
 A loader that reaches the network any other way loses progress, cancellation, and retries.
 
 #### Properties
@@ -83329,7 +83467,7 @@ Which layers the query may hit. Defaults to everything.
 
 ### SignalLike
 
-The read-only half of a [Signal](#signal-5): what a public API exposes when callers may subscribe but
+The read-only half of a [Signal](#signal-6): what a public API exposes when callers may subscribe but
 must not emit, where `T` is the payload the signal emits.
 
 #### Example
@@ -83386,7 +83524,7 @@ A function that detaches the handler.
 
 ### SignalOptions
 
-Options for the [Signal](#signal-5) constructor, where `T` is the payload the signal emits.
+Options for the [Signal](#signal-6) constructor, where `T` is the payload the signal emits.
 
 #### Type Parameters
 
@@ -83418,7 +83556,7 @@ passes a reporter that routes to `app.onError`. It must not throw.
 
 ###### signal
 
-[`Signal`](#signal-5)\<`T`\>
+[`Signal`](#signal-6)\<`T`\>
 
 ###### Returns
 
@@ -83449,7 +83587,7 @@ Emitted once when the owner is destroyed; the signal uses it to detach the handl
 
 ###### Remarks
 
-Typed as [SignalLike](#signallike) rather than [Signal](#signal-5) so that an owner may expose a precisely
+Typed as [SignalLike](#signallike) rather than [Signal](#signal-6) so that an owner may expose a precisely
 typed signal — `Entity.onDestroyed` is a `Signal<Entity>` per
 `docs/architecture/02-scene-graph.md` §4. `Signal` carries private state, which makes it
 invariant in `T`; the read-only interface is not, and `connect` is all this contract needs.
@@ -89403,7 +89541,7 @@ The edge of the canvas the overlay is docked to.
 
 > **Disconnect** = () => `void`
 
-Detaches a handler from a [Signal](#signal-5). Calling it more than once is a no-op.
+Detaches a handler from a [Signal](#signal-6). Calling it more than once is a no-op.
 
 #### Returns
 
@@ -91052,7 +91190,7 @@ The union of the shadow techniques a directional light can use.
 
 > **SignalHandler**\<`T`\> = (`value`) => `void`
 
-A listener attached to a [Signal](#signal-5).
+A listener attached to a [Signal](#signal-6).
 
 #### Type Parameters
 
@@ -98284,6 +98422,63 @@ The stops.
 `Float32Array`
 
 `LOOKUP_SAMPLES * 4` floats, sRGB.
+
+***
+
+### bakeLightProbes()
+
+> **bakeLightProbes**(`world`, `options`): `Promise`\<[`LightProbeBakeResult`](#lightprobebakeresult)\>
+
+**`Beta`**
+
+Bakes a light-probe grid from a world's mesh renderers and lights, on the CPU.
+
+#### Parameters
+
+##### world
+
+[`World`](#world-65)
+
+The world to bake. Its meshes and lights are read once, when the bake starts.
+
+##### options
+
+[`LightProbeBakeOptions`](#lightprobebakeoptions)
+
+The grid, the quality, and the cancellation and progress hooks.
+
+#### Returns
+
+`Promise`\<[`LightProbeBakeResult`](#lightprobebakeresult)\>
+
+The grid and what was traced.
+
+#### Remarks
+
+One bounce, first-order harmonics, deterministic. Only meshes built with `MeshAsset.fromData`
+cast and bounce light (see [LightProbeBakeResult.skipped](#skipped)). Cost grows with probes × rays ×
+triangles; it is meant for small scenes and tools, not for every frame.
+
+The bake is asynchronous: it yields to the host after each probe, reports progress through
+`onProgress`, and stops at the next probe once `signal` aborts.
+
+#### Throws
+
+IgnifxError with code `IGX-0734`, before tracing anything, for a grid the `.probes.json`
+format cannot hold (whole counts, `counts.x` ≤ 1024, `counts.y × counts.z` ≤ 4096, finite
+`origin` and positive `cellSize`), `rays` outside 1–4096, or a `maxDistance` that is not finite
+and positive. The promise rejects with `signal.reason` when the bake is aborted.
+
+#### Example
+
+```ts
+const baked = await bakeLightProbes(world, {
+  origin: { x: -4, y: 0.5, z: -4 },
+  cellSize: { x: 2, y: 2, z: 2 },
+  counts: { x: 5, y: 2, z: 5 },
+});
+world.createEntity("Probes").addComponent(LightProbeVolume, { probes: createLightProbeAsset(app, baked.data) });
+```
 
 ***
 

@@ -7,6 +7,7 @@ const expectedExports = [
   "addComponentFromRecord",
   "AMBIENT_OCCLUSION_QUALITIES",
   "applyOverridesToAsset",
+  "bakeLightProbes",
   "createLightProbeAsset",
   "createLightProbeLoader",
   "defaultAutoExposureSettings",
