@@ -1,5 +1,19 @@
 # @ignifx/2d
 
+## 0.19.0
+
+### Minor Changes
+
+- 0cf1e24: Add `createTilemapAsset(app, input, { address })`, which publishes a tilemap built in code at run time as an asset a `Tilemap` can hold. It takes the `.tilemap.json` shape and checks it the way the loader does, so a malformed map throws `IGX-1105`.
+
+### Patch Changes
+
+- Updated dependencies [b59a7c1]
+- Updated dependencies [60531bb]
+- Updated dependencies [8f134b2]
+- Updated dependencies [cd8f666]
+  - @ignifx/core@0.19.0
+
 ## 0.18.0
 
 ### Patch Changes
