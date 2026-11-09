@@ -1,8 +1,9 @@
 import { Component } from "../component/component.js";
 import { entityInternals } from "../entity/internals.js";
-import { array, asset, bool, i32 } from "../schema/field-kinds.js";
+import { array, asset, bool, enumOf, f32, i32, optional, record } from "../schema/field-kinds.js";
 import { createDefaults, defineSchema } from "../schema/schema.js";
 import { MeshInstance } from "./gpu/mesh-instance.js";
+import { LightmapAsset } from "./lightmap-asset.js";
 import { MaterialAsset } from "./material-asset.js";
 import { MeshAsset } from "./mesh-asset.js";
 import { rendererInternals } from "./renderer.js";
@@ -57,6 +58,42 @@ import type { Schema } from "../schema/types.js";
  */
 
 /**
+ * How a lightmap combines with a material's shading: `"add"` adds the baked light to it,
+ * `"shadowmap"` multiplies it (Babylon Lite's `useAsShadowmap`).
+ *
+ * @beta
+ */
+export const LIGHTMAP_MODES = ["add", "shadowmap"] as const;
+
+/**
+ * One of {@link LIGHTMAP_MODES}.
+ *
+ * @beta
+ */
+export type LightmapMode = (typeof LIGHTMAP_MODES)[number];
+
+/**
+ * The `lightmap` record of a {@link MeshRenderer} (GI Phase 2, step B3).
+ *
+ * @remarks
+ * Mutable, because a schema `record()` field is a plain object a script edits in place.
+ *
+ * @beta
+ */
+export interface MeshRendererLightmap {
+  /** The `.lightmap.json` to sample, or `null` for none. */
+  asset: AssetHandle<LightmapAsset> | null;
+  /** Add the baked light, or multiply the shading by it. */
+  mode: LightmapMode;
+  /** A multiplier on the sample. */
+  level: number;
+  /** Decode the sample from sRGB to linear; leave it off for a texture already decoded on load. */
+  gamma: boolean;
+  /** Sample with the mesh's second UV set (`uvs2`); `false` uses the first. */
+  uv2: boolean;
+}
+
+/**
  * Draws a mesh asset with a material (`docs/architecture/07-rendering.md` §2.3).
  *
  * @example
@@ -92,6 +129,19 @@ export class MeshRenderer extends Component implements ComponentHooks {
   declare renderOrder: number;
 
   declare pickable: boolean;
+
+  /**
+   * A baked lightmap, or `null` (default) for none (GI Phase 2, step B3).
+   *
+   * @remarks
+   * Only a renderer on a static entity (`entity.isStatic`) with a PBR material samples it; it then
+   * draws with its own copy of the material (`MaterialAsset.clone`), so later edits of the shared
+   * material do not reach it. Anything else draws without the lightmap and logs `IGX-0735` once.
+   * The GPU code loads only once a renderer samples one, and headless nothing happens.
+   *
+   * @beta
+   */
+  declare lightmap: MeshRendererLightmap | null;
 
   /** Applies the schema defaults, exactly as `Component.define` would. */
   constructor() {
@@ -173,7 +223,9 @@ export class MeshRenderer extends Component implements ComponentHooks {
 
   /** Removes the clone from the scene, releasing its share of the template's buffers. */
   onDetach(): void {
-    this.#releaseClone(rendererInternals(this.app.renderer));
+    const renderer = rendererInternals(this.app.renderer);
+    renderer.releaseLightmap(this);
+    this.#releaseClone(renderer);
   }
 
   /**
@@ -192,7 +244,7 @@ export class MeshRenderer extends Component implements ComponentHooks {
     if (instance === null) {
       return changed;
     }
-    instance.applyMaterial(this.#material(renderer));
+    instance.applyMaterial(renderer.lightmapMaterial(this, this.#materialAsset(renderer)));
     instance.applyDisplacement(this.#displacement(), this.entity.transform);
     instance.applyFlags(this.receiveShadows, this.renderOrder, this.pickable && !this.#displayHidden);
     instance.applyVisible(this.isEnabledInHierarchy && !this.#displayHidden);
@@ -282,8 +334,18 @@ export class MeshRenderer extends Component implements ComponentHooks {
    * @returns The Lite material.
    */
   #material(renderer: RendererImpl): LiteMaterial {
+    return this.#materialAsset(renderer).lite.material;
+  }
+
+  /**
+   * The material asset this renderer draws with: the first it declares, or the app's default.
+   *
+   * @param renderer - The rendering service, for the default material.
+   * @returns The material asset.
+   */
+  #materialAsset(renderer: RendererImpl): MaterialAsset {
     const declared = this.materials[0];
-    return declared?.state === "loaded" ? declared.value.lite.material : renderer.defaultMaterial().lite.material;
+    return declared?.state === "loaded" ? declared.value : renderer.defaultMaterial();
   }
 
   /**
@@ -324,5 +386,17 @@ function meshRendererSchema(): Schema {
     receiveShadows: bool(true, { tooltip: "Whether shadow maps darken this mesh." }),
     renderOrder: i32(0, { tooltip: "Sort key within the opaque or transparent phase; lower draws first." }),
     pickable: bool(true, { tooltip: "Whether picking considers this mesh at all." }),
+    lightmap: optional(
+      record({
+        asset: asset(LightmapAsset, { tooltip: "The baked .lightmap.json to sample." }),
+        mode: enumOf(LIGHTMAP_MODES, "add", {
+          tooltip: "add adds the baked light to the shading; shadowmap multiplies the shading by it.",
+        }),
+        level: f32(1, { min: 0, tooltip: "A multiplier on the lightmap sample." }),
+        gamma: bool(false, { tooltip: "Decode the sample from sRGB to linear; off for a texture already decoded." }),
+        uv2: bool(true, { tooltip: "Sample with the mesh's second UV set; off uses the first." }),
+      }),
+      { tooltip: "A baked lightmap; drawn only on a static entity with a PBR material." },
+    ),
   });
 }

@@ -574,6 +574,25 @@ export {
   writeLightProbeFile,
 } from "@ignifx/core";
 
+// Lightmaps (GI Phase 2, step B3).
+export {
+  createLightmapAsset,
+  createLightmapLoader,
+  describeLightmapFileFormat,
+  IDENTITY_LIGHTMAP_PLACEMENT,
+  LIGHTMAP_ASSET_TYPE,
+  LIGHTMAP_FILE_EXTENSIONS,
+  LIGHTMAP_FILE_FORMAT,
+  LIGHTMAP_FORMAT_VERSION,
+  LIGHTMAP_MODES,
+  LightmapAsset,
+  type LightmapFileData,
+  type LightmapMode,
+  type LightmapPlacement,
+  type MeshRendererLightmap,
+  writeLightmapFile,
+} from "@ignifx/core";
+
 // Custom shaders, surface shaders, custom post effects and instancing
 // (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1-§3.5).
 export {

@@ -19,7 +19,7 @@ what they mean.
 | ----------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Camera`                | A view. The **entity's transform is the view**; no follow logic                                            | `projection`, `fov` (degrees), `orthographicSize`, `near`/`far`, `viewport`, `clearColor`, `priority`                                                                 |
 | `Light`                 | `"directional" \| "point" \| "spot" \| "hemispheric"`                                                      | `shadows` is a sub-record; only directional and spot lights can cast (`IGX-0703`)                                                                                     |
-| `MeshRenderer`          | One clone of a `MeshAsset`, drawn with a `MaterialAsset`                                                   | `allowMultiple`; several renderers per entity are fine                                                                                                                |
+| `MeshRenderer`          | One clone of a `MeshAsset`, drawn with a `MaterialAsset`                                                   | `allowMultiple`; several renderers per entity are fine; `lightmap` samples a baked `.lightmap.json` on a static entity (`@beta`)                                      |
 | `InstancedMeshRenderer` | One mesh drawn many times from a caller-owned matrix slab                                                  | `setMatrices(slab, count)`, `setColors`, `setCount`, `markDirty(range)`; `capacity`, `gpuCulling` and `lod` are fixed before `app.start()` (`IGX-0717`)               |
 | `Model`                 | One instance of a loaded glTF, cloned under the entity's node                                              | `nodes`, `attachToNode(name, entity)`, `materialOverrides`; `animations`/`skeletons` are `@beta`                                                                      |
 | `Environment`           | Image-based lighting, skybox, fog, image processing, clear colour                                          | **One per world**; a second enabled one logs `IGX-0705` and the most recent wins. Assign a different **loaded** handle to `environment` to switch lighting at runtime |
@@ -190,6 +190,38 @@ onProgress? })` bakes a grid on the CPU, headless included, yielding after each 
     });
     const probes = createLightProbeAsset(app, baked.data);
     return world.createEntity("Baked probes").addComponent(LightProbeVolume, { probes });
+  }
+  ```
+
+- A `MeshRenderer`'s `lightmap` record (`@beta`) samples a baked lightmap through the mesh's
+  second UV set (`uvs2`; `uv2: false` uses the first): `asset` (a `LightmapAsset`), `mode`
+  (`"add"` adds the baked light to the shading, `"shadowmap"` multiplies the shading by it),
+  `level`, and `gamma` (decode an sRGB texture that was not decoded on load). Only a renderer on a
+  static entity (`entity.isStatic`, set before `awake` or in the file) with a PBR material samples
+  it; anything else draws without it and logs `IGX-0735` once. Such a renderer draws with its own
+  copy of its material, so later edits of the shared `MaterialAsset` do not reach it, and it shows
+  the lightmap one frame after the copy is made. A `.lightmap.json` (`format: "ignifx-lightmap"`)
+  names the `texture` by asset address and may give per-entity-uid `entries` of
+  `{ scale: { x, y }, offset: { x, y } }` for an atlas; they are validated, but only the identity is
+  drawn until the atlas transform lands (anything else logs `IGX-0735` and samples the whole
+  texture). `createLightmapAsset(app, texture)` publishes one built in code. The GPU code loads only
+  once a renderer samples a lightmap; `rendering.features.lightmaps` is not needed. ignifx bakes no
+  lightmaps yet: the editor's baker will write them.
+
+  ```ts
+  import type { App, AssetHandle, MeshAsset, World } from "@ignifx/core";
+  import { createLightmapAsset, MeshRenderer, TextureAsset } from "@ignifx/core";
+
+  export function addShadowedFloor(app: App, world: World, mesh: AssetHandle<MeshAsset>): MeshRenderer {
+    // 2×1 texels: the left half of the floor's UV2 square in shadow, the right half lit.
+    const pixels = Uint8Array.of(40, 40, 40, 255, 255, 255, 255, 255);
+    const lightmap = createLightmapAsset(app, TextureAsset.fromPixels(app, "floor-lightmap", pixels, 2, 1));
+    const floor = world.createEntity("Floor");
+    floor.isStatic = true;
+    return floor.addComponent(MeshRenderer, {
+      mesh,
+      lightmap: { asset: lightmap, mode: "shadowmap", level: 1, gamma: false, uv2: true },
+    });
   }
   ```
 

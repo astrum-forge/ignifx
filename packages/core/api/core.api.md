@@ -730,6 +730,7 @@ export const CoreErrorCode: {
     readonly renderTextureCameraDetached: "IGX-0732";
     readonly invalidFrameWait: "IGX-0733";
     readonly invalidLightProbeBake: "IGX-0734";
+    readonly lightmapNotApplied: "IGX-0735";
     readonly cryptoUnavailable: "IGX-1420";
     readonly storageInvalidNamespace: "IGX-1421";
     readonly storageInvalidKey: "IGX-1422";
@@ -834,6 +835,12 @@ export function createFrameSample(): FrameSample;
 
 // @public
 export function createLayerTable(names?: readonly string[]): LayerTable;
+
+// @beta
+export function createLightmapAsset(app: App, texture: AssetHandle<TextureAsset>, entries?: Readonly<Record<string, LightmapPlacement>>): AssetHandle<LightmapAsset>;
+
+// @beta
+export function createLightmapLoader(): AssetLoader<LightmapAsset>;
 
 // @beta
 export function createLightProbeAsset(app: App, data: LightProbeData): AssetHandle<LightProbeAsset>;
@@ -1021,6 +1028,9 @@ export function deltaAngleDegrees(fromDegrees: number, toDegrees: number): numbe
 
 // @public
 export function describeEnvironmentFileFormat(): SchemaDescription;
+
+// @beta
+export function describeLightmapFileFormat(): SchemaDescription;
 
 // @beta
 export function describeLightProbeFileFormat(): SchemaDescription;
@@ -1587,6 +1597,9 @@ export interface HotReloadStatics {
 export function i32(defaultValue?: number, options?: FieldOptions): FieldDefinition<number>;
 
 // @public
+export const IDENTITY_LIGHTMAP_PLACEMENT: LightmapPlacement;
+
+// @public
 export const IGNIFX_UNIFORM_NAMES: readonly ["time", "unscaledTime", "deltaTime", "mainLightDirection", "mainLightColor", "ambientColor"];
 
 // @public
@@ -1870,6 +1883,46 @@ export const LIGHT_PROBE_FORMAT_VERSION = 1;
 
 // @public
 export const LIGHT_TYPES: readonly ["directional", "point", "spot", "hemispheric"];
+
+// @public
+export const LIGHTMAP_ASSET_TYPE = "lightmap";
+
+// @public
+export const LIGHTMAP_FILE_EXTENSIONS: readonly string[];
+
+// @public
+export const LIGHTMAP_FILE_FORMAT = "ignifx-lightmap";
+
+// @public
+export const LIGHTMAP_FORMAT_VERSION = 1;
+
+// @beta
+export const LIGHTMAP_MODES: readonly ["add", "shadowmap"];
+
+// @beta
+export class LightmapAsset {
+    // @internal
+    constructor(texture: AssetHandle<TextureAsset>, entries: Readonly<Record<string, LightmapPlacement>>);
+    static assetType: string;
+    readonly entries: Readonly<Record<string, LightmapPlacement>>;
+    placementOf(entityId: string): LightmapPlacement;
+    readonly texture: AssetHandle<TextureAsset>;
+}
+
+// @public
+export interface LightmapFileData {
+    readonly entries: Readonly<Record<string, LightmapPlacement>>;
+    readonly texture: string;
+}
+
+// @beta
+export type LightmapMode = (typeof LIGHTMAP_MODES)[number];
+
+// @public
+export interface LightmapPlacement {
+    readonly offset: Vec2Like;
+    readonly scale: Vec2Like;
+}
 
 // @beta
 export class LightProbeAsset {
@@ -2427,6 +2480,8 @@ export class MeshRenderer extends Component implements ComponentHooks {
     get displayHidden(): boolean;
     set displayHidden(value: boolean);
     get isVisible(): boolean;
+    // @beta
+    lightmap: MeshRendererLightmap | null;
     get lite(): {
         readonly mesh: LiteSceneNode | null;
     };
@@ -2448,6 +2503,15 @@ export class MeshRenderer extends Component implements ComponentHooks {
     static typeId: string;
     // @internal
     get usesShaderMaterial(): boolean;
+}
+
+// @beta
+export interface MeshRendererLightmap {
+    asset: AssetHandle<LightmapAsset> | null;
+    gamma: boolean;
+    level: number;
+    mode: LightmapMode;
+    uv2: boolean;
 }
 
 // @public
@@ -4444,6 +4508,9 @@ export interface WorldLiteHandles {
 
 // @public
 export function wrapAngleDegrees(degrees: number): number;
+
+// @beta
+export function writeLightmapFile(data: LightmapFileData): Record<string, unknown>;
 
 // @beta
 export function writeLightProbeFile(data: LightProbeData): Record<string, unknown>;
