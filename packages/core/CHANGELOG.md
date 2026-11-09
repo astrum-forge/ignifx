@@ -1,5 +1,18 @@
 # @ignifx/core
 
+## 0.18.0
+
+### Minor Changes
+
+- 1d6ee43: A `.basis` texture in a project that serves its own decoders (one built with `@ignifx/vite-plugin`) now fails with `IGX-0509` before anything is fetched, instead of loading Babylon Lite's transcoder from `cdn.babylonjs.com`, which Lite gives no way to move. Elsewhere a `.basis` load that the page's Content Security Policy refuses fails with the same code. Convert `.basis` textures to `.ktx2`, which carry the same data and whose decoder ships with `@ignifx/core`.
+- e6655e0: Add `bakeLightProbes` (beta), an asynchronous CPU light-probe bake that also runs headless. It bakes a `.probes.json` grid from a world's lights and the triangles of meshes built with `MeshAsset.fromData`, and accepts `signal` and `onProgress`. It checks the grid, `rays` and `maxDistance` before tracing, and throws `IGX-0734` for values it cannot bake.
+- 5f2ae72: Add light probes (beta): a `LightProbeVolume` component lights PBR materials from a baked `.probes.json` grid (`LightProbeAsset`) instead of the environment's diffuse light, and `createLightProbeAsset` publishes a grid built in code. It needs a loaded `Environment`.
+
+### Patch Changes
+
+- 89c2f6b: Changing `LightProbeVolume.intensity` no longer recompiles every lit material. Light probes never add negative light. A `.probes.json` whose `origin` or `cellSize` is too large or too small to use is now rejected with `IGX-0709`.
+- d41217c: Fix a black frame when a `PostProcessStack` runs contact shadows and SSGI together without `rendering.hdr` (also reached by `rendering.quality: "high"` with `hdr: false` written). The second pass wrote the scene colour target, which Lite reallocated under the scene pass ("Destroyed texture" in WebGPU); on the plain path the passes now ping-pong between two scratch targets and copy back.
+
 ## 0.17.0
 
 ### Minor Changes

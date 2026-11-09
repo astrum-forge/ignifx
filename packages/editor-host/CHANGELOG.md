@@ -1,5 +1,21 @@
 # @ignifx/editor-host
 
+## 0.18.0
+
+### Minor Changes
+
+- 0480f08: `setGrid` takes two new optional fields, announced by the `gridOverlay` capability: `overlay: true` draws the 3D grid over the scene, so a floor mesh no longer hides it, and `height` moves the grid's plane to that world y (from -100 000 to 100 000 metres, `GRID_MAX_HEIGHT`). Both default to the old behaviour. `renderThumbnail` no longer holds up other requests while its model settles: it runs beside the request queue, and it stops waiting after a few frames when nothing draws. Its images are unchanged.
+
+### Patch Changes
+
+- Updated dependencies [1d6ee43]
+- Updated dependencies [e6655e0]
+- Updated dependencies [89c2f6b]
+- Updated dependencies [5f2ae72]
+- Updated dependencies [d41217c]
+  - @ignifx/core@0.18.0
+  - @ignifx/vite-plugin@0.18.0
+
 ## 0.17.0
 
 ### Minor Changes
