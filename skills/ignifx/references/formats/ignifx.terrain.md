@@ -12,11 +12,37 @@ A terrain: size, resolution, a heightmap or seeded noise, chunking, layers, and 
 | `formatVersion` | `u32` | `1` | The document version this build reads. |
 | `name` | `str` | `""` | A human-readable name; the file's basename when empty. |
 | `size` | `record` | `{"width":512,"depth":512,"height":80}` | The terrain's extent, in metres. |
+| `size.width` | `f32` | `512` | Extent along X, in metres. |
+| `size.depth` | `f32` | `512` | Extent along Z, in metres. |
+| `size.height` | `f32` | `80` | The height a full-scale sample reaches, in metres. |
 | `resolution` | `u32` | `513` | Samples per side; 2^n + 1. |
 | `heightmap` | `record` | `{"source":""}` | Where the heights come from; omit it for noise. |
+| `heightmap.source` | `str` | `""` | A .r16 or PNG address, relative to this document. |
 | `noise` | `record` | `{"seed":1,"octaves":6,"frequency":0.004,"lacunarity":2,"persistence":0.5,"ridged":false,"terraces":0}` | The seeded fractal noise used when there is no heightmap. |
+| `noise.seed` | `u32` | `1` | The seed; the same seed always produces the same field. |
+| `noise.octaves` | `u32` | `6` | How many octaves are summed. |
+| `noise.frequency` | `f32` | `0.004` | The first octave's frequency, in cycles per metre. |
+| `noise.lacunarity` | `f32` | `2` | How much the frequency grows per octave. |
+| `noise.persistence` | `f32` | `0.5` | How much the amplitude shrinks per octave. |
+| `noise.ridged` | `bool` | `false` | Sharp crests rather than rolling hills. |
+| `noise.terraces` | `u32` | `0` | How many flat steps the height is quantised into; 0 leaves it smooth. |
 | `chunks` | `record` | `{"size":64,"lodLevels":4,"lodDistance":96,"skirtDepth":2}` | How the field is cut into chunks. |
+| `chunks.size` | `u32` | `64` | Quads per chunk side. |
+| `chunks.lodLevels` | `u32` | `4` | How many LOD meshes each chunk carries. |
+| `chunks.lodDistance` | `f32` | `96` | Metres at which level 1 takes over; each level doubles it. |
+| `chunks.skirtDepth` | `f32` | `2` | How far every LOD mesh's edges hang down, in metres. |
 | `layers` | `array` | `[]` | The layers, 1 to 8, in control-channel order. |
+| `layers[].name` | `str` | `""` | The layer's name; what a splat rule and a TerrainScatter refer to. |
+| `layers[].albedo` | `str` | `""` | The albedo texture's address; empty for a flat colour. |
+| `layers[].normal` | `str` | `""` | The tangent-space normal map's address; empty for none. |
+| `layers[].tiling` | `f32` | `8` | How many metres one repeat of the textures spans. |
+| `layers[].triplanar` | `bool` | `false` | Whether the layer projects along all three axes. |
 | `splat` | `record` | `{"control":[]}` | Painted splat weights; omit it to generate them from rules. |
+| `splat.control` | `array` | `[]` | RGBA control map addresses; the second covers layers 5-8. |
 | `splatRules` | `array` | `[]` | Rules that generate the splat weights. |
+| `splatRules[].layer` | `str` | `""` | The layer the rule paints. |
+| `splatRules[].height` | `array` | `[]` | The [min, max] height band, in metres. |
+| `splatRules[].slope` | `array` | `[]` | The [min, max] slope band, in degrees. |
 | `material` | `record` | `{"roughness":0.9,"metallic":0}` | The PBR factors every layer shares; per-layer roughness is not available. |
+| `material.roughness` | `f32` | `0.9` | Roughness factor for the whole surface. |
+| `material.metallic` | `f32` | `0` | Metallic factor for the whole surface. |

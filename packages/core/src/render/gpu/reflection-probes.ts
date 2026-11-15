@@ -78,10 +78,12 @@ export interface ReflectionProbeRuntime {
   ): void;
   /**
    * Drops every GPU probe after the device was lost, before Lite's recovery rebuilds the materials,
-   * so no material still names a cube of the lost device. The probes capture again on the first
-   * frame after recovery.
+   * so no material still names a cube of the lost device. Until {@link handleDeviceRecovered},
+   * `update` does nothing; the probes capture again on the first frame after it.
    */
   handleDeviceLost(): void;
+  /** Lets `update` run again once Lite rebuilt the scene on the new device. */
+  handleDeviceRecovered(): void;
   /** Frees every probe and hands every material back to the scene environment. */
   dispose(): void;
 }
@@ -91,7 +93,7 @@ export interface ReflectionProbeRuntime {
  *
  * @param engine - The engine.
  * @param scene - The registered render scene.
- * @param warn - Where a probe's warning goes: a message with an `{entity}` slot, and the name.
+ * @param warn - Where a probe's warning goes, with the entity's name already in the message.
  * @returns The runtime.
  *
  * @internal
@@ -99,7 +101,7 @@ export interface ReflectionProbeRuntime {
 export async function createReflectionProbeRuntime(
   engine: LiteEngine,
   scene: LiteScene,
-  warn: (message: string, entityName: string) => void,
+  warn: (message: string) => void,
 ): Promise<ReflectionProbeRuntime> {
   await enableReflectionProbes();
   const states = new Map<ReflectionProbe, ProbeState>();
@@ -108,24 +110,34 @@ export async function createReflectionProbeRuntime(
   const candidates: BoundCandidate[] = [];
   /** The cubes released this frame, freed once the materials that reflected them are rebuilt. */
   const retiring: { lite: LiteReflectionProbe; environment: LiteProbeBinding["environment"] | null }[] = [];
-  /** Material rebuilds started this frame. */
-  const rebuilds: Promise<void>[] = [];
+  /**
+   * Material rebuilds still in flight, whichever frame started them: a rebuild started a frame ago
+   * may still draw with a cube retired now, so a retired cube waits for all of them.
+   */
+  const rebuilds = new Set<Promise<void>>();
   /**
    * Probes whose capture was freed while they stayed (resized, environment gone, device lost); they
    * capture again whatever their mode.
    */
   const recapture = new WeakSet<ReflectionProbe>();
   let hasWarnedEveryFrame = false;
+  /** Between a device loss and Lite's recovery, nothing on the GPU may be touched. */
+  let isDeviceLost = false;
 
   const assign = (material: ReflectiveMaterial, binding: LiteProbeBinding | null): void => {
     const pending = assignReflectionProbe(scene, material, binding);
     if (pending !== undefined) {
-      rebuilds.push(pending);
+      rebuilds.add(pending);
+      const forget = (): void => {
+        rebuilds.delete(pending);
+      };
+      pending.then(forget, forget);
     }
   };
 
   const release = (probe: ReflectionProbe, state: ProbeState): void => {
-    if (state.lite.environment !== null) {
+    // A capture still under way (an `onDemand` refresh whose frames are not done) counts as wanted.
+    if (state.lite.environment !== null || state.framesToCapture > 0) {
       recapture.add(probe);
     }
     retiring.push({ lite: state.lite, environment: state.lite.environment });
@@ -135,7 +147,7 @@ export async function createReflectionProbeRuntime(
   /**
    * Frees the cubes released this frame. A material that reflected one and was not reassigned this
    * frame (its mesh left the scene) goes back to the scene environment first, so it never names a
-   * destroyed cube; the cubes then wait for every rebuild started this frame.
+   * destroyed cube; the cubes then wait for every rebuild still in flight, from any frame.
    */
   const retire = (): void => {
     if (retiring.length > 0) {
@@ -151,7 +163,6 @@ export async function createReflectionProbeRuntime(
       }
       retiring.length = 0;
     }
-    rebuilds.length = 0;
   };
 
   /** Hands every material back to the scene environment, without walking the scene. */
@@ -194,6 +205,9 @@ export async function createReflectionProbeRuntime(
       tier: RenderingQualityPreset | null,
       hasEnvironment: boolean,
     ): void {
+      if (isDeviceLost) {
+        return;
+      }
       candidates.length = 0;
       if (!hasEnvironment) {
         // A probe borrows the environment's lighting tables, so without one it holds no GPU memory
@@ -221,9 +235,9 @@ export async function createReflectionProbeRuntime(
         if (mode !== probe.refreshMode && !hasWarnedEveryFrame) {
           hasWarnedEveryFrame = true;
           warn(
-            '{entity} asks its ReflectionProbe for refreshMode "everyFrame", which only the "high" ' +
-              'rendering.quality tier allows, so it captures as "once" (when ready and on refresh()).',
-            probe.entity.name,
+            `${JSON.stringify(probe.entity.name)} asks its ReflectionProbe for refreshMode "everyFrame", ` +
+              'which only the "high" rendering.quality tier allows, so it captures as "once" (when ready ' +
+              "and on refresh()).",
           );
         }
         let state = states.get(probe);
@@ -273,6 +287,7 @@ export async function createReflectionProbeRuntime(
       retire();
     },
     handleDeviceLost(): void {
+      isDeviceLost = true;
       // Lite's recovery rebuilds every material against the new device, so only the bindings are
       // cleared here; the cubes belong to the lost device and go at once.
       for (const [material, binding] of assigned) {
@@ -282,14 +297,21 @@ export async function createReflectionProbeRuntime(
       }
       assigned.clear();
       for (const [probe, state] of states) {
-        if (state.lite.environment !== null) {
+        if (state.lite.environment !== null || state.framesToCapture > 0) {
           recapture.add(probe);
         }
         state.lite.dispose();
       }
       states.clear();
+      // The retired cubes belonged to the lost device too.
+      for (const entry of retiring) {
+        entry.lite.dispose();
+      }
       retiring.length = 0;
-      rebuilds.length = 0;
+      rebuilds.clear();
+    },
+    handleDeviceRecovered(): void {
+      isDeviceLost = false;
     },
     dispose(): void {
       for (const [probe, state] of states) {
@@ -301,7 +323,7 @@ export async function createReflectionProbeRuntime(
         entry.lite.dispose(settled);
       }
       retiring.length = 0;
-      rebuilds.length = 0;
+      rebuilds.clear();
     },
   };
 }

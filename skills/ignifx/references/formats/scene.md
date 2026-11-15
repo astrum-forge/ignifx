@@ -144,6 +144,10 @@ expanded under the instance root instead.
   after the nested prefab's own overrides, so it wins. One that names nothing is skipped with a
   diagnostic, like any other. `applyOverridesToAsset(instance, prefabFile, { readScene })` moves such
   an override onto the prefab's nested entry; without `readScene` it is skipped.
+  Only component props, `enabled` and `remove` reach a nested prefab: a nested entity's name,
+  `active`, transform and other fields, and an `add` to its component list, cannot be overridden
+  from the outer instance (edit the nested prefab, or flatten). A prefab that instances one nested
+  prefab twice gives each copy its own entity segment, so each is overridden on its own.
 - Tools that only edit files import these from `@ignifx/core/prefab`, which loads no renderer and no
   Babylon Lite: `applyOverridesToAsset`, `revertOverrides`, `parseOverridePath`,
   `resolveInstancePath`, `enumerateInstanceTargets`, `computeSceneHash`, `stringifySceneFile` and
@@ -203,7 +207,10 @@ use it; a game adds components with `addComponent`.
 
 `serializeScene(source, options?)` takes a `SceneInstance` or a list of root entities and answers
 with a `SceneFile`. Entities that came from an instance are re-emitted as `instance` entries with
-overrides recomputed by diffing against the asset, unless `options.flatten` is `true`. Fields marked
+overrides recomputed by diffing against the asset, unless `options.flatten` is `true`. A changed
+prop or `enabled` flag of a component that came from a nested prefab, or such a component removed,
+is written as a nested override (diffed against the nested prefab as the outer prefab configures
+it); a nested entity's own fields and components added to it are not. Fields marked
 `transient: true` in their schema are never written. `serializeEntity` and `serializeComponent` do
 the same for one object, for tooling and tests.
 

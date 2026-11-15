@@ -11,7 +11,39 @@ An animation state machine: parameters, layers, states, transitions, and 1D blen
 | `format` | `str` | `"ignifx.animator"` | Always ignifx.animator. |
 | `formatVersion` | `u32` | `1` | The document version this build reads. |
 | `parameters` | `array` | `[]` | The parameters the state machine reads. |
+| `parameters[].name` | `str` | `""` | The parameter's name; what setFloat and a condition's param use. |
+| `parameters[].kind` | `enum` | `"float"` | float, int, bool, or trigger. |
+| `parameters[].value` | `f32` | `0` | The value it starts at; ignored for a trigger. |
 | `layers` | `array` | `[]` | The layers, base first. |
+| `layers[].name` | `str` | `"Base"` | The layer's name. |
+| `layers[].weight` | `f32` | `1` | How much of this layer's pose reaches the result. |
+| `layers[].mask` | `array` | `[]` | The bone names the mask lists. |
+| `layers[].maskMode` | `enum` | `"include"` | Whether mask lists what animates. |
+| `layers[].additive` | `bool` | `false` | Whether the layer adds to the pose beneath it. |
+| `layers[].defaultState` | `str` | `""` | The state the layer starts in; its first state when empty. |
 | `states` | `array` | `[]` | The states. |
+| `states[].name` | `str` | `""` | The state's name; what play() and a transition's to take. |
+| `states[].layer` | `str` | `""` | The layer the state belongs to; the base layer when empty. |
+| `states[].clip` | `str` | `""` | The animation-group name this state plays. |
+| `states[].blendTree` | `str` | `""` | The 1D blend tree this state plays, instead of a clip. |
+| `states[].speed` | `f32` | `1` | A multiplier on the clip's own rate. |
+| `states[].loop` | `bool` | `true` | Whether the state restarts at its end. |
+| `states[].events` | `array` | `[]` | Events fired as the state plays. |
+| `states[].events[].time` | `f32` | `0` | Where in the clip the event sits, as a fraction. |
+| `states[].events[].name` | `str` | `""` | The name emitted on Animator.onEvent. |
 | `transitions` | `array` | `[]` | The transitions, in priority order. |
+| `transitions[].from` | `str` | `""` | The state this leaves, or any. |
+| `transitions[].to` | `str` | `""` | The state this enters. |
+| `transitions[].conditions` | `array` | `[]` | Every condition, all of which must pass. |
+| `transitions[].conditions[].param` | `str` | `""` | The parameter to test. |
+| `transitions[].conditions[].op` | `enum` | `"eq"` | The comparison. |
+| `transitions[].conditions[].value` | `f32` | `0` | What to compare against; ignored by trigger. |
+| `transitions[].duration` | `f32` | `0.2` | How long the crossfade takes, in seconds. |
+| `transitions[].exitTime` | `f32` | `0` | The earliest normalized time the source may be left at. |
+| `transitions[].interruptible` | `bool` | `false` | Whether this may start while another transition runs. |
 | `blendTrees1D` | `array` | `[]` | The 1D blend trees. |
+| `blendTrees1D[].name` | `str` | `""` | The tree's name; what a state's blendTree takes. |
+| `blendTrees1D[].param` | `str` | `""` | The parameter the tree reads. |
+| `blendTrees1D[].children` | `array` | `[]` | The children, sorted ascending by threshold. |
+| `blendTrees1D[].children[].clip` | `str` | `""` | The animation-group name this child plays. |
+| `blendTrees1D[].children[].threshold` | `f32` | `0` | The parameter value at which this child reaches full weight. |

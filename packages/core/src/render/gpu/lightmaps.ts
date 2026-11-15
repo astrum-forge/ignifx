@@ -1,5 +1,5 @@
 import { applyLightmap, enableLightmaps, setLightmapLevel } from "../../lite/gpu/lightmap.js";
-import { rebuildMaterialPipelines } from "../../lite/material.js";
+import { rebuildMaterialPipelines, syncPbrFactors } from "../../lite/material.js";
 import type { App } from "../../app/types.js";
 import type { AssetHandle } from "../../assets/types.js";
 import type { LiteLightmapOptions } from "../../lite/gpu/lightmap.js";
@@ -18,8 +18,10 @@ import type { MeshRendererLightmap } from "../mesh-renderer.js";
  * `MaterialAsset`s are shared, and a lightmap is per renderer, so each renderer draws with
  * `MaterialAsset.clone` of its material carrying the lightmap. The clone is rebuilt when the
  * material, the lightmap, its texture or a compiled option (`mode`, `gamma`, `uv2`) changes; a
- * `level` change only rewrites the clone's uniform block. Edits made to the shared material after
- * the clone was built do not reach it.
+ * `level` change only rewrites the clone's uniform block. Edits made to the shared material through
+ * its factor setters (`setBaseColor`, `setMetallicRoughness`, `setAlpha`) are copied onto the clone
+ * the next frame it is asked for (a comparison of seven numbers per frame); a reloaded material is a
+ * new asset, so it gets a new clone.
  *
  * ## Two frames, because of how Lite plumbs `uv2`
  *
@@ -138,6 +140,7 @@ export async function createLightmapRuntime(app: App, scene: LiteScene): Promise
         current.key === key
       ) {
         const material = current.clone.value.lite.material;
+        syncPbrFactors(base.lite.material, material);
         current.options = options;
         if (current.isApplied) {
           setLightmapLevel(material, settings.level);
@@ -146,6 +149,8 @@ export async function createLightmapRuntime(app: App, scene: LiteScene): Promise
       }
       release(owner);
       const clone = base.clone(app);
+      // The clone replays the declaration, so it takes the edits made to the base since it loaded.
+      syncPbrFactors(base.lite.material, clone.value.lite.material);
       const entry: Entry = { base, lightmap, texture, key, clone, options, isApplied: false, isReleased: false };
       entries.set(owner, entry);
       fresh.push(entry);

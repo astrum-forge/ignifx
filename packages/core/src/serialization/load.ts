@@ -494,6 +494,7 @@ function ownedInstance(
       asset: instance.rootUid === null ? handle : instance.asset,
       scene: instance.scene,
       root: instancedRoot(context, instance, source),
+      nestedBaseline: instance.nestedBaseline,
     };
   }
   return null;

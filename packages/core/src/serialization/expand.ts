@@ -53,6 +53,13 @@ export interface ExpandedInstance {
    * (`docs/architecture/06-serialization-and-scene-format.md` §2).
    */
   readonly root: ExpandedRoot | null;
+  /**
+   * The component records of the prefabs this instance itself instances, by expanded uid, as they
+   * stood before this entry's own overrides ran: the baseline the serializer diffs nested
+   * components against. `null` when the instanced scene instances nothing. Set once the instanced
+   * file is expanded; the records are never mutated afterwards (overrides replace them).
+   */
+  nestedBaseline: ReadonlyMap<string, SceneFileComponent> | null;
 }
 
 /**
@@ -122,8 +129,19 @@ export function expandScene(asset: SceneAsset, options: ExpandOptions): Expanded
   const state: ExpandState = { entities, instances, merged, options, counter: 0 };
   if (options.asInstance === true) {
     const key = nextInstanceKey(state);
-    instances.push({ key, address: asset.address, asset: null, scene: asset, rootUid: null, root: null });
+    const entry: ExpandedInstance = {
+      key,
+      address: asset.address,
+      asset: null,
+      scene: asset,
+      rootUid: null,
+      root: null,
+      nestedBaseline: null,
+    };
+    instances.push(entry);
+    const start = entities.length;
     expandFile(asset, null, key, true, [asset.address], state, null);
+    entry.nestedBaseline = nestedBaseline(state, start, key);
     return { entities, instances, merged };
   }
   expandFile(asset, null, null, false, [asset.address], state, null);
@@ -313,8 +331,19 @@ function expandInstance(
     merge = { into: carrier, componentSourceUids: new Map<string, string>() };
     root = { sourceUid: single.uid, componentSourceUids: merge.componentSourceUids };
   }
-  state.instances.push({ key, address, asset: resolved.handle, scene: resolved.value, rootUid, root });
+  const entry: ExpandedInstance = {
+    key,
+    address,
+    asset: resolved.handle,
+    scene: resolved.value,
+    rootUid,
+    root,
+    nestedBaseline: null,
+  };
+  state.instances.push(entry);
+  const start = state.entities.length;
   const produced = expandFile(resolved.value, rootUid, key, true, [...chain, address], state, merge);
+  entry.nestedBaseline = nestedBaseline(state, start, key);
   const overrides = instance.overrides;
   if (overrides !== undefined && overrides.length > 0) {
     applyOverrides(
@@ -359,6 +388,43 @@ function nestedResolver(produced: ReadonlyMap<string, OverrideTarget>, state: Ex
     }
     return null;
   };
+}
+
+/**
+ * Collects the component records an instance's nested prefabs produced, before the instance's own
+ * overrides run: every component of an entity a deeper instance produced, and every component a
+ * nested single root merged into an entity of the instanced file.
+ *
+ * @param state - The expansion so far.
+ * @param start - The index of the instance's first entity in `state.entities`.
+ * @param key - The instance's key.
+ * @returns Expanded component uid to its record, or `null` when there is none.
+ */
+function nestedBaseline(
+  state: ExpandState,
+  start: number,
+  key: string,
+): ReadonlyMap<string, SceneFileComponent> | null {
+  let baseline: Map<string, SceneFileComponent> | null = null;
+  for (let index = start; index < state.entities.length; index += 1) {
+    const entity = state.entities[index];
+    if (entity === undefined) {
+      continue;
+    }
+    const merged = entity.instanceKey === key ? state.merged.get(entity.data.uid) : undefined;
+    if (entity.instanceKey === key && merged === undefined) {
+      continue;
+    }
+    const components = entity.data.components;
+    for (let inner = 0; inner < components.length; inner += 1) {
+      const component = components[inner];
+      if (component !== undefined && (merged === undefined || merged.has(component.uid))) {
+        baseline ??= new Map<string, SceneFileComponent>();
+        baseline.set(component.uid, component);
+      }
+    }
+  }
+  return baseline;
 }
 
 /**
