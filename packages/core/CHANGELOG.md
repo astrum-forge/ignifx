@@ -1,5 +1,34 @@
 # @ignifx/core
 
+## 0.20.0
+
+### Minor Changes
+
+- 104cac3: `bakeLightProbes` now traces primitive meshes and, under a headless app, glTF `Model`s, and lists everything it leaves out with the reason in `result.skips`.
+  
+  `Light.bakeMode` (`"realtime"`, `"mixed"`, `"baked"`) decides whether the probes also store a light's direct light; a `"baked"` light no longer draws at run time.
+  
+  A hemispheric light that still draws is no longer stored in the probes as well, so it no longer lights a volume about twice; probes baked before come out darker for it unless the light is set to `"baked"`.
+  
+  `bakeLightProbes({ sky })` also takes a sky/horizon/ground gradient or nine spherical-harmonic coefficients.
+  
+  The Vite plugin types `.probes.json` assets as `lightprobes` and `.lightmap.json` as `lightmap` in the manifest.
+- 8bfc859: `bakeLightProbes` traces `Model`s in an app with a device too, reading the triangles of their drawn meshes instead of skipping them.
+  The scene host answers `bakeLightProbes` (capability `bakeLightProbes`): it bakes a `LightProbeVolume` over its live edit-mode world, with the environment's harmonics as the default sky, reports `bakeProgress`, stops on `cancelBake` or a document change, and answers the `.probes.json` document for the editor to write.
+- 158069d: Lightmap atlas placement: a `.lightmap.json` entry's `scale` and `offset` now move that renderer's UV2 into its square of a shared lightmap texture, so many static renderers can use one atlas. It needs `lightmap.uv2: true` and a mesh with `uvs2`; otherwise the renderer still logs `IGX-0735` and samples the whole texture.
+- a6b8e03: Reflection probes can blend: give overlapping box probes a `ReflectionProbe.blendDistance`, and lit PBR materials blend up to four of them per pixel instead of reflecting the nearest one. A probe that captures every frame turns blending off.
+
+### Patch Changes
+
+- 22f43ba: Reflection probes no longer free a cube a material rebuild from an earlier frame may still draw with, pause between a device loss and its recovery, keep an `onDemand` refresh that a missing environment interrupted, and name the entity in the `everyFrame` downgrade warning.
+  A lightmapped `MeshRenderer` now follows `setBaseColor`, `setMetallicRoughness` and `setAlpha` edits of its shared material, and frees its material copy when its mesh goes away.
+  `serializeScene` now writes overrides of nested prefab components (props, `enabled`, removal) from live state, so a scene holding them survives a load and save. A nested entity's own fields still cannot be overridden from an outer instance.
+  `ignifx.schemas.json` and the format pages now describe the sub-fields of nested records, arrays, maps and optionals, such as `MeshRenderer.lightmap.asset` (an asset reference of type `lightmap`).
+- f780bba: `enumerateInstanceTargets` and `resolveInstancePath` now reach the targets of a child that instances the same prefab as its file's root, as the loader does.
+  `describeRegisteredSchemas` writes `null` in `requires` for a required class that declares no `typeId` of its own, instead of its parent's type id.
+  `serializeScene` writes overrides for the components a variant prefab's nested root merged into the instance root, and reports (`IGX-0609`) a component added to a nested entity or a nested entity destroyed at run time instead of dropping it silently.
+- f780bba: Warnings and errors from lights, post-processing, instancing, environments, shadows, surface shaders, settings, particles, physics, terrain and navmesh surfaces now name the entity or asset instead of printing `{entity}` and similar placeholders.
+
 ## 0.19.0
 
 ### Minor Changes

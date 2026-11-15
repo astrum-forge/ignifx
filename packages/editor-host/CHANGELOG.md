@@ -1,5 +1,28 @@
 # @ignifx/editor-host
 
+## 0.20.0
+
+### Minor Changes
+
+- d75325f: The scene view answers `pickRect` for box selection (capability `pickRect`): the document entities whose drawn bounds a view rectangle overlaps or contains.
+  `renderThumbnail` also renders materials on a sphere, sprite atlases and PNG, JPEG or WebP images (capabilities `thumbnailMaterials`, `thumbnailAtlases`, `thumbnailTextures`).
+- 8bfc859: `bakeLightProbes` traces `Model`s in an app with a device too, reading the triangles of their drawn meshes instead of skipping them.
+  The scene host answers `bakeLightProbes` (capability `bakeLightProbes`): it bakes a `LightProbeVolume` over its live edit-mode world, with the environment's harmonics as the default sky, reports `bakeProgress`, stops on `cancelBake` or a document change, and answers the `.probes.json` document for the editor to write.
+
+### Patch Changes
+
+- f780bba: `pickRect` no longer box-selects disabled sprites and tilemaps, those on inactive entities, or `pickable: false` meshes, matching `pick`.
+  The schema set no longer lists a hidden host class in a component's `extends`.
+- Updated dependencies [104cac3]
+- Updated dependencies [22f43ba]
+- Updated dependencies [8bfc859]
+- Updated dependencies [158069d]
+- Updated dependencies [a6b8e03]
+- Updated dependencies [f780bba]
+- Updated dependencies [f780bba]
+  - @ignifx/core@0.20.0
+  - @ignifx/vite-plugin@0.20.0
+
 ## 0.19.0
 
 ### Patch Changes
