@@ -24,7 +24,7 @@ what they mean.
 | `Model`                 | One instance of a loaded glTF, cloned under the entity's node                                              | `nodes`, `attachToNode(name, entity)`, `materialOverrides`; `animations`/`skeletons` are `@beta`                                                                      |
 | `Environment`           | Image-based lighting, skybox, fog, image processing, clear colour                                          | **One per world**; a second enabled one logs `IGX-0705` and the most recent wins. Assign a different **loaded** handle to `environment` to switch lighting at runtime |
 | `PostProcessStack`      | `bloom`, `smaa`, `imageProcessing`, as one frame-graph chain; `contactShadows`, `ssgi` before it           | Needs `features.postProcessing`, or it logs `IGX-0710` and does nothing (§3)                                                                                          |
-| `ReflectionProbe`       | A cube map of the scene around the entity that nearby shiny PBR materials reflect (`@beta`)                | `size`, `refreshMode` (`once`/`onDemand`/`everyFrame`), `boxProjection`, `cullingMask`, `refresh()`; needs a loaded `Environment` and a canvas                        |
+| `ReflectionProbe`       | A cube map of the scene around the entity that nearby shiny PBR materials reflect (`@beta`)                | `size`, `refreshMode` (`once`/`onDemand`/`everyFrame`), `boxProjection`, `blendDistance`, `cullingMask`, `refresh()`; needs a loaded `Environment` and a canvas       |
 | `LightProbeVolume`      | Lights PBR materials with a baked `.probes.json` grid instead of the environment's diffuse light (`@beta`) | `probes` (a `LightProbeAsset`), `intensity`; needs a loaded `Environment` and a canvas; the most recent enabled volume wins                                           |
 
 - `Camera` also answers geometry questions: `screenToRay(x, y)`, `worldToScreen(point, out)`,
@@ -122,7 +122,9 @@ on [`baked-lighting.md`](baked-lighting.md); the bullets below are each componen
   lit PBR material reflects the nearest probe instead of the `Environment`: a probe whose
   `boxProjection` box (full size in metres, centred on the probe) holds the mesh wins, then the
   closest. `boxProjection` also makes reflections line up with the room's walls (parallax); `null`
-  makes them look infinitely far away. A material shared by several meshes follows the first. Use
+  makes them look infinitely far away. A material shared by several meshes follows the first. With
+  two or more box probes and a `blendDistance` above 0 on one, every lit PBR material blends them per
+  pixel instead (at most four overlapping at a point). Use
   `refreshMode: "once"` (default) and call `probe.refresh()` after the static scene changes;
   `"everyFrame"` costs six extra scene passes a frame: use it for one probe, on desktop at the
   `high` quality tier only. Diffuse light still comes from the

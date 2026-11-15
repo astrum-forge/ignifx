@@ -3,6 +3,7 @@ import {
   buildFrameGraphTask,
   clearPbrLocalEnvironment,
   createBankedFreeCamera,
+  createPbrLocalEnvironmentProbeSet,
   createRenderTarget,
   createRenderTask,
   enablePbrLocalCubemap,
@@ -13,6 +14,7 @@ import {
   rebuildMaterial,
   setPbrEnvironment,
   setPbrLocalEnvironment,
+  setPbrLocalEnvironmentProbeSet,
 } from "@babylonjs/lite";
 import { readOwnerTag } from "../picking.js";
 import { readSceneEnvironment } from "./environment.js";
@@ -23,6 +25,8 @@ import type {
   EngineContext,
   EnvironmentTextures,
   Mesh,
+  PbrLocalEnvironmentProbe,
+  PbrLocalEnvironmentProbeSet,
   PbrMaterialProps,
   RenderTarget,
   RenderTask,
@@ -50,6 +54,15 @@ import type {
  *   resolved first; it is called when the chunk loads.
  * - **Culling mask.** Render tasks have no mesh filter, so each face task's `execute` hides the meshes
  *   the caller rejects and shows them again, as `./render-texture.ts` does for editor-only meshes.
+ * - **Blending (B1b).** `createPbrLocalEnvironmentProbeSet` (`index.d.ts` 3411) **copies** every
+ *   probe's cube into one cube array when it is created (`lib/material/pbr/enable-pbr-local-cubemap.js`,
+ *   `createProbeTexture`) and blends up to four candidates per voxel per fragment. It has no dispose:
+ *   its buffers and texture are destroyed only when the scene is (`scene._disposables`), so a set
+ *   replaced earlier is freed through its `_texture`, `_uniformBuffer` and `_gridBuffer` fields and
+ *   its closure is taken off `scene._disposables`, all read from the pinned source
+ *   ({@link releaseLiteProbeSet}). A fragment inside a probe's inner box takes
+ *   that probe alone; between inner and outer boxes the candidates are weighted; outside every outer
+ *   box the nearest probe by its normalised distance wins (`local-cubemap-fragment.js`).
  */
 
 /** The colour format of the faces and the cube. */
@@ -472,6 +485,161 @@ export interface LiteProbeBinding {
 }
 
 /**
+ * One probe of a blended set, as {@link createLiteProbeSet} takes it.
+ *
+ * @internal
+ */
+export interface LiteProbeSetVolume {
+  /** The probe's environment, copied into the set. */
+  readonly environment: EnvironmentTextures;
+  /** The capture position, also the centre of both boxes. */
+  readonly position: readonly [number, number, number];
+  /** The full size of the projection and outer influence box. */
+  readonly outer: readonly [number, number, number];
+  /** The full size of the inner influence box. */
+  readonly inner: readonly [number, number, number];
+}
+
+/**
+ * A blended probe set and its release.
+ *
+ * @internal
+ */
+export interface LiteProbeSet {
+  /** Lite's set. */
+  readonly set: PbrLocalEnvironmentProbeSet;
+  /**
+   * Destroys the set's GPU resources once `after` settled and the queue drained. Idempotent.
+   *
+   * @param after - What must finish first, such as the rebuilds of the materials that used it;
+   * omitted to wait for the queue only.
+   */
+  dispose(after?: PromiseLike<unknown>): void;
+}
+
+/** The three GPU resources of a Lite probe set, by the field names `enable-pbr-local-cubemap.js` uses. */
+const PROBE_SET_RESOURCE_FIELDS = ["_texture", "_uniformBuffer", "_gridBuffer"] as const;
+
+/**
+ * Frees what a Lite probe set holds: its three GPU resources, and the cleanup closure Lite pushed
+ * onto `scene._disposables`, which would otherwise keep the whole set (its 64 KiB uniform data and
+ * its grid) alive until the scene is disposed.
+ *
+ * @remarks
+ * Every field is checked before use: a Lite upgrade that renames one degrades to `warn` (a leak
+ * that is logged) and never throws. Destroying twice is harmless.
+ *
+ * @param set - The set, as Lite returned it.
+ * @param disposables - The scene's `_disposables` list, or anything else when it is not one.
+ * @param cleanup - The closure Lite pushed for this set, or `undefined` when it was not found.
+ * @param warn - Receives one message per missing field or list.
+ *
+ * @internal
+ */
+export function releaseLiteProbeSet(
+  set: unknown,
+  disposables: unknown,
+  cleanup: unknown,
+  warn: (message: string) => void,
+): void {
+  // Boundary narrowing of Lite's undeclared fields (coding standards §5.2).
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  const record = typeof set === "object" && set !== null ? (set as Record<string, unknown>) : {};
+  for (const field of PROBE_SET_RESOURCE_FIELDS) {
+    const resource = record[field];
+    const destroy =
+      typeof resource === "object" && resource !== null ? (resource as { destroy?: unknown }).destroy : undefined;
+    if (typeof destroy === "function") {
+      Reflect.apply(destroy, resource, []);
+    } else {
+      warn(`a Babylon Lite probe set has no ${field} to destroy, so its GPU memory stays until the scene goes`);
+    }
+  }
+  if (!Array.isArray(disposables) || cleanup === undefined) {
+    warn("the Babylon Lite probe set's scene cleanup could not be found, so its CPU data stays until the scene goes");
+    return;
+  }
+  const index = disposables.indexOf(cleanup);
+  if (index >= 0) {
+    disposables.splice(index, 1);
+  }
+}
+
+/**
+ * The scene's `_disposables` list, which Lite's set pushes its cleanup onto.
+ *
+ * @param scene - The scene.
+ * @returns The list, or `undefined` when the scene has none (a Lite change).
+ */
+function disposablesOf(scene: SceneContext): unknown[] | undefined {
+  // Lite's scene type does not declare it; read from `lib/scene/scene-core.js` and
+  // `enable-pbr-local-cubemap.js` (`scene._disposables.push`).
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion, no-underscore-dangle
+  const list = (scene as unknown as { _disposables?: unknown })._disposables;
+  return Array.isArray(list) ? list : undefined;
+}
+
+/**
+ * Builds a blended set from captured probes.
+ *
+ * @param engine - The engine, for the queue a disposal waits on.
+ * @param scene - The registered scene.
+ * @param volumes - The probes, at least two.
+ * @param minimum - The voxel grid's minimum corner.
+ * @param maximum - The voxel grid's maximum corner.
+ * @param cellSize - The voxel edge.
+ * @param warn - Where a disposal that cannot free everything reports it.
+ * @returns The set.
+ * @throws When Lite refuses it: more than four probes in a voxel, more probes than the uniform block
+ * holds, or cubes of different formats.
+ *
+ * @internal
+ */
+export function createLiteProbeSet(
+  engine: EngineContext,
+  scene: SceneContext,
+  volumes: readonly LiteProbeSetVolume[],
+  minimum: readonly [number, number, number],
+  maximum: readonly [number, number, number],
+  cellSize: number,
+  warn: (message: string) => void,
+): LiteProbeSet {
+  const probes: PbrLocalEnvironmentProbe[] = volumes.map((volume) => ({
+    shape: "box",
+    environment: volume.environment,
+    capturePosition: volume.position,
+    projectionPosition: volume.position,
+    influencePosition: volume.position,
+    projectionSize: volume.outer,
+    influenceInnerSize: volume.inner,
+    influenceOuterSize: volume.outer,
+  }));
+  const disposables = disposablesOf(scene);
+  const before = disposables?.length ?? 0;
+  const set = createPbrLocalEnvironmentProbeSet(scene, { probes, voxelGrid: { minimum, maximum, cellSize } });
+  // Lite pushes exactly one cleanup closure as the set's last step.
+  const cleanup = disposables !== undefined && disposables.length === before + 1 ? disposables[before] : undefined;
+  let isDisposed = false;
+  return {
+    set,
+    dispose(after?: PromiseLike<unknown>): void {
+      if (isDisposed) {
+        return;
+      }
+      isDisposed = true;
+      const release = (): void => {
+        releaseLiteProbeSet(set, disposables, cleanup, warn);
+      };
+      const device = deviceOf(engine);
+      Promise.resolve(after)
+        .catch(() => undefined)
+        .then(async () => device?.queue.onSubmittedWorkDone())
+        .then(release, release);
+    },
+  };
+}
+
+/**
  * Calls `visit` for every mesh whose material is a lit, non-skybox PBR material.
  *
  * @param scene - The scene.
@@ -506,7 +674,7 @@ export function forEachReflectiveMesh(
  * @param scene - The registered scene, or `null` to leave the rebuild to Lite (its device-loss
  * recovery rebuilds every material).
  * @param material - The material.
- * @param binding - The probe, or `null` for the scene environment.
+ * @param binding - The probe, a blended set, or `null` for the scene environment.
  * @returns The rebuild in flight, if Lite runs it asynchronously; Lite reports its failure itself.
  *
  * @internal
@@ -514,10 +682,12 @@ export function forEachReflectiveMesh(
 export function assignReflectionProbe(
   scene: SceneContext | null,
   material: PbrMaterialProps,
-  binding: LiteProbeBinding | null,
+  binding: LiteProbeBinding | LiteProbeSet | null,
 ): Promise<void> | undefined {
   if (binding === null) {
     clearPbrLocalEnvironment(material);
+  } else if ("set" in binding) {
+    setPbrLocalEnvironmentProbeSet(material, binding.set);
   } else if (binding.box === null) {
     setPbrEnvironment(material, binding.environment);
   } else {

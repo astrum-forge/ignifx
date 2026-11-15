@@ -11988,6 +11988,11 @@ Each lit PBR material reflects the nearest enabled probe that has captured: a pr
 probe, materials reflect the `Environment` again. A material shared by several meshes follows the
 first of them. Diffuse lighting still comes from the scene environment.
 
+Blending: once two or more box probes have captured and one of them has a `blendDistance` above
+0, every lit PBR material blends them per fragment instead, fading each probe out over the last
+`blendDistance` metres inside its box. Probes without a box take no part then, and a probe that
+captures `"everyFrame"` (or is still capturing) keeps the nearest-probe choice for that frame.
+
 The probe needs a loaded `Environment` (it reuses its lighting tables) and a canvas-backed app;
 until an environment map is loaded it waits, holding no GPU memory and costing no frame time. A
 `rendering.quality` tier caps `size` and allows `"everyFrame"` only at `high` (below, the probe
@@ -12032,6 +12037,15 @@ Applies the schema defaults, exactly as `Component.define` would.
 **`Beta`**
 
 One probe per entity.
+
+##### blendDistance
+
+> **blendDistance**: `number`
+
+**`Beta`**
+
+How far inside its box, in metres, the probe fades out where it overlaps another box probe.
+Defaults to `0`, no blending; see the class remarks. Needs `boxProjection`.
 
 ##### boxProjection
 

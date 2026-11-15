@@ -3051,6 +3051,7 @@ export const REFLECTION_PROBE_REFRESH_MODES: readonly ["once", "onDemand", "ever
 export class ReflectionProbe extends Component {
     constructor();
     static allowMultiple: boolean;
+    blendDistance: number;
     boxProjection: Vec3Like | null;
     // @internal
     consumeRefreshRequest(): boolean;

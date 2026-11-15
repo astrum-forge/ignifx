@@ -1,4 +1,4 @@
-import { applyLightmap, enableLightmaps, setLightmapLevel } from "../../lite/gpu/lightmap.js";
+import { applyLightmap, enableLightmaps, lightmapAtlasWgsl, setLightmapLevel } from "../../lite/gpu/lightmap.js";
 import { rebuildMaterialPipelines, syncPbrFactors } from "../../lite/material.js";
 import type { App } from "../../app/types.js";
 import type { AssetHandle } from "../../assets/types.js";
@@ -40,6 +40,14 @@ import type { LightmapMode, MeshRendererLightmap } from "../mesh-renderer.js";
  * renderers arrive in, and one frame without the lightmap.
  */
 
+/**
+ * How many distinct atlas placements may be alive before the runtime warns once: each compiles its
+ * own pipeline variant per pass.
+ *
+ * @internal
+ */
+export const LIGHTMAP_PLACEMENT_WARNING_THRESHOLD = 64;
+
 /** One renderer's clone and what it was built from. */
 interface Entry {
   readonly base: MaterialAsset;
@@ -51,6 +59,8 @@ interface Entry {
   readonly uv2: boolean;
   /** The atlas placement applied, or `null` for the whole texture; compared by reference. */
   readonly atlas: LightmapPlacement | null;
+  /** The placement's WGSL, which tells distinct placements apart, or `null` without one. */
+  readonly atlasKey: string | null;
   readonly clone: AssetHandle<MaterialAsset>;
   /** The intensity the next flush applies; it follows the record every frame. */
   level: number;
@@ -114,12 +124,23 @@ export async function createLightmapRuntime(app: App, scene: LiteScene): Promise
   /** Clones handed out this frame, and those whose meshes have drawn them plain for a frame. */
   let fresh: Entry[] = [];
   let due: Entry[] = [];
+  /** Live renderers per distinct placement, for the pipeline-count warning. */
+  const placements = new Map<string, number>();
+  let hasWarnedPlacements = false;
 
   const release = (owner: object): void => {
     const entry = entries.get(owner);
     if (entry !== undefined) {
       entries.delete(owner);
       entry.isReleased = true;
+      if (entry.atlasKey !== null) {
+        const left = (placements.get(entry.atlasKey) ?? 1) - 1;
+        if (left > 0) {
+          placements.set(entry.atlasKey, left);
+        } else {
+          placements.delete(entry.atlasKey);
+        }
+      }
       entry.clone.release();
     }
   };
@@ -166,12 +187,24 @@ export async function createLightmapRuntime(app: App, scene: LiteScene): Promise
         gamma: settings.gamma,
         uv2: settings.uv2,
         atlas,
+        atlasKey: atlas === null ? null : lightmapAtlasWgsl(atlas),
         clone,
         level: settings.level,
         isApplied: false,
         isReleased: false,
       };
       entries.set(owner, entry);
+      if (entry.atlasKey !== null) {
+        placements.set(entry.atlasKey, (placements.get(entry.atlasKey) ?? 0) + 1);
+        if (!hasWarnedPlacements && placements.size > LIGHTMAP_PLACEMENT_WARNING_THRESHOLD) {
+          hasWarnedPlacements = true;
+          app.log.warn(
+            `${String(placements.size)} distinct lightmap atlas placements are in use; each compiles its own ` +
+              "shader pipeline per pass, which costs load time and memory. A shared-UV approach is planned; " +
+              "until then, bake UV2 that already points into the atlas and leave the entries empty.",
+          );
+        }
+      }
       fresh.push(entry);
       return clone.value.lite.material;
     },

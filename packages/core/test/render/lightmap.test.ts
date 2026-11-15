@@ -77,6 +77,8 @@ describe(".lightmap.json", () => {
     ["a zero scale", { ...valid, entries: { e: { scale: { x: 0, y: 1 } } } }],
     ["a non-finite offset", { ...valid, entries: { e: { offset: { x: Number.NaN, y: 0 } } } }],
     ["a malformed offset", { ...valid, entries: { e: { offset: [0, 0] } } }],
+    ["a scale beyond f32", { ...valid, entries: { e: { scale: { x: 1e39, y: 1 } } } }],
+    ["an offset beyond the placement range", { ...valid, entries: { e: { offset: { x: 0, y: -2e6 } } } }],
     ["an empty entity id", { ...valid, entries: { "": {} } }],
     ["a non-object file", null],
   ])("rejects %s with IGX-0709", (_name, file) => {
