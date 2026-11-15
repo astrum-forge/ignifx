@@ -348,6 +348,36 @@ describe("resolveInstancePath and enumerateInstanceTargets", () => {
     const scene = buildFile({ entities: [entityRecord({ uid: "L", instance: { scene: { $asset: "loop" } } })] });
     expect(enumerateInstanceTargets(scene, () => loop).map((target) => target.path)).toEqual(["L/K"]);
   });
+
+  it("follows a child that instances the same prefab as its file's merged root", () => {
+    // Guard: root G merges the enemy into the carrier; child H instances the enemy again. The
+    // enemy does not enclose H, so H's copy is not a cycle.
+    const guard = buildFile({
+      entities: [
+        entityRecord({ uid: "G", name: "Guard", instance: { scene: { $asset: ENEMY } } }),
+        entityRecord({ uid: "H", name: "Twin", parent: "G", instance: { scene: { $asset: ENEMY } } }),
+      ],
+    });
+    const withGuard = new Map([...files, ["guard", guard]]);
+    const readGuard = (address: string): SceneFile | undefined => withGuard.get(address);
+    const scene = buildFile({ entities: [entityRecord({ uid: "L", instance: { scene: { $asset: "guard" } } })] });
+    const paths = enumerateInstanceTargets(scene, readGuard).map((target) => target.path);
+    expect(paths).toEqual(["L/AI", "L/C", "L/T", "L/H", "L/H/AI", "L/H/C", "L/H/T"]);
+    expect(resolveInstancePath(scene, "L/H/T", readGuard)?.address).toBe(ENEMY);
+
+    // A true cycle (a child instancing the file that declares it) is still refused.
+    const cyclic = buildFile({
+      entities: [
+        entityRecord({ uid: "G", name: "Guard" }),
+        entityRecord({ uid: "H", parent: "G", instance: { scene: { $asset: "cyclic" } } }),
+      ],
+    });
+    const cyclicScene = buildFile({
+      entities: [entityRecord({ uid: "L", instance: { scene: { $asset: "cyclic" } } })],
+    });
+    expect(enumerateInstanceTargets(cyclicScene, () => cyclic).map((target) => target.path)).toEqual(["L/H"]);
+    expect(resolveInstancePath(cyclicScene, "L/H/H", () => cyclic)).toBeNull();
+  });
 });
 
 /** Pair: single root Q, children N1 and N2, each instancing the enemy. */
