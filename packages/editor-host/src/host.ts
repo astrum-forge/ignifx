@@ -197,12 +197,14 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
         HostCapability.tilemapCells,
         HostCapability.editorLines,
         HostCapability.spriteAnimation,
+        HostCapability.bakeLightProbes,
       ]
     : [
         HostCapability.heartbeat,
         HostCapability.logRelay,
         HostCapability.hotReloadDefaults,
         HostCapability.spriteAnimation,
+        HostCapability.bakeLightProbes,
       ];
   let channel: Channel | null = null;
   const scene = new SceneHost({

@@ -2,6 +2,7 @@ import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
 import { Color } from "../math/color.js";
 import { createPerformanceClock } from "../time/clock.js";
+import { traceLiveModel } from "./gpu/light-probe-bake-model.js";
 import { readLightProbeGrid } from "./light-probe-asset.js";
 import { readGltfTriangles } from "./light-probe-bake-gltf.js";
 import { primitiveTriangles } from "./light-probe-bake-primitives.js";
@@ -25,7 +26,9 @@ import type { World } from "../world/world.js";
  *
  * - **Geometry.** Triangles of every enabled `MeshRenderer` (a `MeshAsset.fromData` mesh's own
  *   arrays, or a primitive rebuilt on the CPU by `light-probe-bake-primitives.ts`) and every enabled
- *   `Model` whose glTF a headless app loaded (`light-probe-bake-gltf.ts`), moved to world space. What
+ *   `Model` — read from the glTF file a headless app loaded (`light-probe-bake-gltf.ts`), or, under
+ *   an app with a device, from its instance's meshes (Lite's `getMeshTriangles`) — moved to world
+ *   space. What
  *   cannot be read is listed in {@link LightProbeBakeResult.skips}. Each mesh keeps a world bounding
  *   box, so a ray tests the triangles of the meshes it passes through only.
  * - **Per probe.** `rays` directions on a Fibonacci sphere. A hit returns the surface's albedo (the
@@ -287,8 +290,10 @@ export function lightBakeTerms(
  * @remarks
  * One bounce, first-order harmonics, deterministic. `MeshRenderer` meshes (built from data, or
  * primitives) and `Model` glTF files cast and bounce light; a model is read from the file a
- * headless app loaded, so under an app with a device models are skipped (see
- * {@link LightProbeBakeResult.skips}), as are Draco- and meshopt-compressed glTF primitives. By
+ * headless app loaded, or, under an app with a device, from the CPU triangles Lite keeps on its
+ * instance's meshes once the model has been drawn (a model not instantiated yet is listed in
+ * {@link LightProbeBakeResult.skips}). Draco- and meshopt-compressed glTF primitives are skipped
+ * headless. By
  * default a probe holds every light's bounce but the direct light of `"baked"` lights only, since
  * the others keep lighting the scene in real time (see {@link LightProbeBakeOptions.directLight} and
  * `Light.bakeMode`). Cost grows with probes × rays × triangles (each mesh's bounding box culls its
@@ -693,6 +698,12 @@ function collectTriangles(
     if (!model.isEnabledInHierarchy) {
       continue;
     }
+    // Under an app with a device the file's bytes are not kept: read the instance's own meshes.
+    const live = traceLiveModel(model, builder, materialAlbedo, skip, signal);
+    if (live !== null) {
+      skipped += live;
+      continue;
+    }
     const gltf = readModel(model.model, gltfCache);
     if (typeof gltf === "string") {
       skipped += 1;
@@ -753,7 +764,7 @@ function readModel(
   const bytes = asset.sourceBytes;
   let result: GltfBakeGeometry | string;
   if (bytes === null) {
-    result = "its glTF is read only when a headless app loaded it (createApp({ headless: true }))";
+    result = "its model has no instance to read yet (it is read once a frame has drawn it)";
   } else {
     try {
       result = readGltfTriangles(bytes);

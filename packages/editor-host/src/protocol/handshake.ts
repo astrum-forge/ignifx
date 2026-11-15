@@ -209,6 +209,14 @@ export const HostCapability = {
    * `RpcErrorCode.methodNotFound`.
    */
   spriteAnimation: "spriteAnimation",
+  /**
+   * The scene host answers `bakeLightProbes` and `cancelBake` and sends `bakeProgress`
+   * (`LightProbeBakeMethod`): it bakes a `LightProbeVolume` from its live edit-mode world (prefab
+   * instances, models, lights, the environment's sky) and answers the `.probes.json` document for
+   * the editor to write. Additive in 0.3; without it, the host answers both with
+   * `RpcErrorCode.methodNotFound`.
+   */
+  bakeLightProbes: "bakeLightProbes",
 } as const;
 
 /**

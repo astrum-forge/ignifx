@@ -99071,8 +99071,10 @@ The grid and what was traced.
 
 One bounce, first-order harmonics, deterministic. `MeshRenderer` meshes (built from data, or
 primitives) and `Model` glTF files cast and bounce light; a model is read from the file a
-headless app loaded, so under an app with a device models are skipped (see
-[LightProbeBakeResult.skips](#skips)), as are Draco- and meshopt-compressed glTF primitives. By
+headless app loaded, or, under an app with a device, from the CPU triangles Lite keeps on its
+instance's meshes once the model has been drawn (a model not instantiated yet is listed in
+[LightProbeBakeResult.skips](#skips)). Draco- and meshopt-compressed glTF primitives are skipped
+headless. By
 default a probe holds every light's bounce but the direct light of `"baked"` lights only, since
 the others keep lighting the scene in real time (see [LightProbeBakeOptions.directLight](#directlight) and
 `Light.bakeMode`). Cost grows with probes × rays × triangles (each mesh's bounding box culls its

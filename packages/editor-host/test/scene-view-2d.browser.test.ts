@@ -187,6 +187,7 @@ async function sceneView(): Promise<{ readonly view: EditorHost; readonly opened
     HostCapability.tilemapCells,
     HostCapability.editorLines,
     HostCapability.spriteAnimation,
+    HostCapability.bakeLightProbes,
   ]);
   host = await starting;
   await peer.nextNotification(SceneNotification.schemasChanged);

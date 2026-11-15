@@ -505,6 +505,7 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
       HostCapability.logRelay,
       HostCapability.hotReloadDefaults,
       HostCapability.spriteAnimation,
+      HostCapability.bakeLightProbes,
     ];
     const engineVersion = resolveEngineVersion(ENGINE_VERSION);
     expectWire(await peer.request(wire("hello")), {

@@ -4,9 +4,9 @@
  * `bakeLightProbes(world, options)` traces one bounce of diffuse light on the CPU, so it needs no
  * GPU: run it in a Node tool (as here), in an editor, or in the game while it loads. It reads the
  * world once — every enabled `Light`, and the triangles of every enabled `MeshRenderer` (data or a
- * primitive such as `MeshAsset.box`) and of every `Model` a headless app loaded — and returns
- * `LightProbeData`. Whatever it cannot read (a model under an app with a device, a Draco-compressed
- * glTF primitive) is listed in `result.skips`. A light's `bakeMode` decides whether the probes also
+ * primitive such as `MeshAsset.box`) and of every `Model` (from its file in a headless app, from its
+ * drawn meshes in an app with a device) — and returns `LightProbeData`. Whatever it cannot read (a
+ * model not drawn yet, a Draco-compressed glTF primitive) is listed in `result.skips`. A light's `bakeMode` decides whether the probes also
  * hold its direct light: `"baked"` lights only, by default, since the others draw at run time.
  *
  * `writeLightProbeFile` adds the `ignifx-probes` header; save the JSON under the asset root as a

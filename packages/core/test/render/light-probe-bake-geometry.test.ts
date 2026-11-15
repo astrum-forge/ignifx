@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readGltfTriangles } from "../../src/render/light-probe-bake-gltf.js";
+import { readGltfMaterialAlbedos, readGltfTriangles } from "../../src/render/light-probe-bake-gltf.js";
 import { MAX_BAKE_SEGMENTS, primitiveTriangles } from "../../src/render/light-probe-bake-primitives.js";
 import { glbOf, gltfOf } from "./support/gltf-bytes.js";
 import type { MeshPrimitiveDefinition } from "../../src/render/mesh-asset.js";
@@ -373,5 +373,22 @@ describe("readGltfTriangles, hostile documents", () => {
     );
     expect(cycle.primitives).toHaveLength(1);
     expect(cycle.skipped.at(-1)).toContain("node 0 is reached twice");
+  });
+});
+
+describe("readGltfMaterialAlbedos", () => {
+  it("reads each named material's flat albedo from the JSON", () => {
+    const bytes = glbOf([
+      { positions: [0, 0, 0, 1, 0, 0, 0, 1, 0], baseColor: [0.8, 0, 0, 1], metallic: 0, name: "Red" },
+      { positions: [0, 0, 0, 1, 0, 0, 0, 1, 0], baseColor: [1, 1, 1, 1], metallic: 0.5, name: "Grey" },
+    ]);
+    const albedos = readGltfMaterialAlbedos(bytes);
+    expect(albedos.get("Red")?.[0]).toBeCloseTo(0.8, 6);
+    expect(albedos.get("Red")?.[1]).toBe(0);
+    expect(albedos.get("Grey")?.[0]).toBeCloseTo(0.5, 6);
+  });
+
+  it("answers no albedos for a file it cannot read", () => {
+    expect(readGltfMaterialAlbedos(new TextEncoder().encode("not json").buffer).size).toBe(0);
   });
 });

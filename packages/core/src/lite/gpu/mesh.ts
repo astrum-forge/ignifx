@@ -9,6 +9,8 @@ import {
   createPlane,
   createSphere,
   createTorus,
+  getMaterialFamily,
+  getMeshTriangles,
   removeFromScene,
   setSubtreeVisible,
   updateMeshColors as liteUpdateMeshColors,
@@ -24,10 +26,12 @@ import type {
   GroundOptions,
   Material,
   Mesh,
+  PbrMaterialProps,
   PlaneOptions,
   SceneContext,
   SceneNode,
   SphereOptions,
+  StandardMaterialProps,
   TorusOptions,
 } from "@babylonjs/lite";
 
@@ -673,4 +677,78 @@ export function collectSubtreeMeshes(node: SceneNode, out: Mesh[]): void {
       collectSubtreeMeshes(child, out);
     }
   }
+}
+
+/**
+ * What the light-probe bake reads of one drawn mesh: its CPU triangles, in the mesh's own space, its
+ * material's name, and its flat diffuse colour.
+ *
+ * @internal
+ */
+export interface MeshBakeSurface {
+  /** Three floats per vertex. */
+  readonly positions: Float32Array;
+  /** Three indices per triangle. */
+  readonly indices: Uint32Array;
+  /** The material's name (a glTF material's name in the file), or `null`. */
+  readonly materialName: string | null;
+  /**
+   * The material's linear diffuse colour: a PBR material's `baseColorFactor` times
+   * `1 − metallicFactor` (no metallic when an ORM texture drives it), a Standard material's
+   * `diffuseColor`; `null` for any other family, and for a PBR material without a factor (Lite
+   * bakes an untextured glTF material's colour into a texture).
+   */
+  readonly albedo: readonly [number, number, number] | null;
+}
+
+/**
+ * Reads a drawn mesh for the light-probe bake, through Lite's `getMeshTriangles` (`index.d.ts`
+ * 6798), which copies the positions and indices a mesh retains on the CPU. A glTF load retains them
+ * on every mesh (`lib/loader-gltf/load-gltf.js`, `gltf-interleave.js`), and a clone spreads the
+ * template's fields, so a `Model` instance's meshes answer too.
+ *
+ * @param mesh - The mesh.
+ * @returns Its surface, or `null` when Lite kept no CPU triangles for it.
+ *
+ * @internal
+ */
+export function readMeshBakeSurface(mesh: Mesh): MeshBakeSurface | null {
+  const triangles = getMeshTriangles(mesh);
+  if (triangles === null) {
+    return null;
+  }
+  const material: Material = mesh.material;
+  const family = getMaterialFamily(material);
+  let albedo: readonly [number, number, number] | null = null;
+  if (family === "pbr") {
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the family says it is a PBR material.
+    const pbr = material as PbrMaterialProps;
+    // An untextured glTF material's factor lives in a 1×1 texture, not here
+    // (`lib/loader-gltf/gltf-pbr-builder.js`): without a factor the colour is unknown.
+    const base = pbr.baseColorFactor;
+    if (base !== undefined) {
+      const keep = 1 - (pbr.ormTexture === undefined ? clamp01(pbr.metallicFactor ?? 1) : 0);
+      albedo = [clamp01(base[0]) * keep, clamp01(base[1]) * keep, clamp01(base[2]) * keep];
+    }
+  } else if (family === "standard") {
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the family says it is a Standard material.
+    const standard = material as StandardMaterialProps;
+    albedo = [clamp01(standard.diffuseColor[0]), clamp01(standard.diffuseColor[1]), clamp01(standard.diffuseColor[2])];
+  }
+  return {
+    positions: triangles.positions,
+    indices: triangles.indices,
+    materialName: material.name ?? null,
+    albedo,
+  };
+}
+
+/**
+ * Clamps a colour channel to `[0, 1]`, `NaN` to 0.
+ *
+ * @param value - The channel.
+ * @returns It, clamped.
+ */
+function clamp01(value: number): number {
+  return Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0;
 }

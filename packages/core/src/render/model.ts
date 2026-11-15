@@ -189,6 +189,17 @@ export class Model extends Component implements ComponentHooks {
   }
 
   /**
+   * The meshes of the instantiated subtree, for the light-probe bake under an app with a device.
+   *
+   * @returns The meshes, or `null` while nothing is instantiated (headless, or not synced yet).
+   *
+   * @internal
+   */
+  get instanceMeshes(): readonly LiteMesh[] | null {
+    return this.#instance?.meshes ?? null;
+  }
+
+  /**
    * Parents an entity under one of the model's glTF nodes — the "weapon in hand" case
    * (`docs/architecture/07-rendering.md` §2.4).
    *
