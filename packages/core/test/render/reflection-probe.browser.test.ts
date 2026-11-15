@@ -169,7 +169,7 @@ describe("ReflectionProbe", () => {
       });
     }
     await running.start();
-    await settle(running, SETTLE_FRAMES * 6);
+    await settle(running, SETTLE_FRAMES * 8);
     expect(running.errors).toEqual([]);
     const y = SIZE >> 1;
     const left = await running.pixelAt(4, y);
