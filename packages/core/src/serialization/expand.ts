@@ -60,6 +60,13 @@ export interface ExpandedInstance {
    * file is expanded; the records are never mutated afterwards (overrides replace them).
    */
   nestedBaseline: ReadonlyMap<string, SceneFileComponent> | null;
+  /**
+   * When the instanced scene's single root itself instances a scene (a variant), the components
+   * those scenes' roots merged into the same entity, by expanded uid, to the uid the file that
+   * declared each gives it: what the serializer diffs as nested on the instance root. `null` when
+   * the root instances nothing.
+   */
+  nestedRootSourceUids: ReadonlyMap<string, string> | null;
 }
 
 /**
@@ -137,11 +144,17 @@ export function expandScene(asset: SceneAsset, options: ExpandOptions): Expanded
       rootUid: null,
       root: null,
       nestedBaseline: null,
+      nestedRootSourceUids: null,
     };
     instances.push(entry);
     const start = entities.length;
     expandFile(asset, null, key, true, [asset.address], state, null);
-    entry.nestedBaseline = nestedBaseline(state, start, key);
+    entry.nestedBaseline = nestedBaseline(state, start, key, null);
+    const rootUid = singleRoot(asset)?.uid;
+    const rootEntity = entities.find(
+      (entity, index) => index >= start && entity.instanceKey === key && entity.sourceUid === rootUid,
+    );
+    entry.nestedRootSourceUids = rootEntity === undefined ? null : nestedRootSources(state, 1, rootEntity.data.uid);
     return { entities, instances, merged };
   }
   expandFile(asset, null, null, false, [asset.address], state, null);
@@ -339,11 +352,19 @@ function expandInstance(
     rootUid,
     root,
     nestedBaseline: null,
+    nestedRootSourceUids: null,
   };
+  const at = state.instances.length;
   state.instances.push(entry);
   const start = state.entities.length;
   const produced = expandFile(resolved.value, rootUid, key, true, [...chain, address], state, merge);
-  entry.nestedBaseline = nestedBaseline(state, start, key);
+  entry.nestedRootSourceUids = single === null ? null : nestedRootSources(state, at + 1, rootUid);
+  entry.nestedBaseline = nestedBaseline(
+    state,
+    start,
+    key,
+    entry.nestedRootSourceUids === null ? null : { carrier, uids: entry.nestedRootSourceUids },
+  );
   const overrides = instance.overrides;
   if (overrides !== undefined && overrides.length > 0) {
     applyOverrides(
@@ -398,14 +419,25 @@ function nestedResolver(produced: ReadonlyMap<string, OverrideTarget>, state: Ex
  * @param state - The expansion so far.
  * @param start - The index of the instance's first entity in `state.entities`.
  * @param key - The instance's key.
+ * @param root - The carrier and the components the instanced root's own nested instances merged
+ * into it, or `null` when there are none.
  * @returns Expanded component uid to its record, or `null` when there is none.
  */
 function nestedBaseline(
   state: ExpandState,
   start: number,
   key: string,
+  root: { readonly carrier: MutableSceneEntity; readonly uids: ReadonlyMap<string, string> } | null,
 ): ReadonlyMap<string, SceneFileComponent> | null {
   let baseline: Map<string, SceneFileComponent> | null = null;
+  if (root !== null) {
+    for (const component of root.carrier.components) {
+      if (root.uids.has(component.uid)) {
+        baseline ??= new Map<string, SceneFileComponent>();
+        baseline.set(component.uid, component);
+      }
+    }
+  }
   for (let index = start; index < state.entities.length; index += 1) {
     const entity = state.entities[index];
     if (entity === undefined) {
@@ -425,6 +457,30 @@ function nestedBaseline(
     }
   }
   return baseline;
+}
+
+/**
+ * The components the scenes a single root instances merged into the same carrier: every instance
+ * expanded after `from` whose root is the carrier and merged a single root into it.
+ *
+ * @param state - The expansion so far.
+ * @param from - The index in `state.instances` of the first instance the root's file produced.
+ * @param carrierUid - The carrier's expanded uid.
+ * @returns Expanded component uid to the uid its own file gives it, or `null` when there is none.
+ */
+function nestedRootSources(state: ExpandState, from: number, carrierUid: string): ReadonlyMap<string, string> | null {
+  let found: Map<string, string> | null = null;
+  for (let index = from; index < state.instances.length; index += 1) {
+    const instance = state.instances[index];
+    if (instance?.rootUid !== carrierUid || instance.root === null) {
+      continue;
+    }
+    for (const [uid, sourceUid] of instance.root.componentSourceUids) {
+      found ??= new Map<string, string>();
+      found.set(uid, sourceUid);
+    }
+  }
+  return found;
 }
 
 /**

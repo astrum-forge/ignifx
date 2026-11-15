@@ -386,8 +386,7 @@ export class ParticleSystem extends Component implements ComponentHooks {
       if (!this.#hasWarnedNoService) {
         this.#hasWarnedNoService = true;
         this.app.log.warn(
-          "{entity} has a ParticleSystem, but the particles() extension is not registered; it stays inert.",
-          this.entity.name,
+          `${JSON.stringify(this.entity.name)} has a ParticleSystem, but the particles() extension is not registered; it stays inert.`,
         );
       }
       return;

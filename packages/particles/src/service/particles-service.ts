@@ -226,11 +226,7 @@ export class ParticlesService {
     if (requested > available) {
       granted = Math.max(1, available);
       this.#app.log.warn(
-        `${ParticlesErrorCode.budgetExceeded}: {entity} asked for {capacity} particles, but only {available} of the {budget} particle budget remain; the system was clamped.`,
-        entity,
-        requested,
-        available,
-        this.maxParticles,
+        `${ParticlesErrorCode.budgetExceeded}: ${JSON.stringify(entity)} asked for ${String(requested)} particles, but only ${String(available)} of the ${String(this.maxParticles)} particle budget remain; the system was clamped.`,
       );
     }
     this.#capacityInUse += granted;
@@ -301,9 +297,7 @@ export class ParticlesService {
     }
     entry.hasReportedFailure = true;
     this.#app.log.error(
-      `${ParticlesErrorCode.shaderFailed}: The particle shader for {definition} could not be built: {message}.`,
-      asset.address,
-      message,
+      `${ParticlesErrorCode.shaderFailed}: The particle shader for ${asset.address} could not be built: ${message}.`,
     );
   }
 

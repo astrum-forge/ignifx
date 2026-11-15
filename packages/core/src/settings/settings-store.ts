@@ -271,11 +271,7 @@ export class SettingsStore implements AppSettings {
         hint: "Check the section against the schema the owning extension registered.",
       });
     }
-    this.#log.warn(
-      "The {section} settings section is invalid and was replaced by its defaults: {issues}",
-      name,
-      detail,
-    );
+    this.#log.warn(`The ${name} settings section is invalid and was replaced by its defaults: ${detail}`);
     return defaults;
   }
 }

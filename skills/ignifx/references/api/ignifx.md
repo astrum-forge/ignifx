@@ -82610,8 +82610,9 @@ Set by [describeRegisteredSchemas](#describeregisteredschemas), or by the caller
 
 > `readonly` `optional` **requires?**: readonly (`string` \| `null`)[]
 
-The components the class lists in `static requires`, as type ids (`null` for a class without a
-`typeId`), in declaration order. `addComponent` adds each one that is missing, so an editor adds
+The components the class lists in `static requires`, as type ids (`null` for a class that
+declares no `typeId` of its own, such as an unregistered subclass that only inherits its
+parent's), in declaration order. `addComponent` adds each one that is missing, so an editor adds
 them itself, and a scene file may list them in any order. A component on the entity whose class
 extends a required class counts as present. Set by [describeRegisteredSchemas](#describeregisteredschemas), or by the
 caller through [SchemaDescriptionMeta](#schemadescriptionmeta); absent when the class requires nothing.
@@ -102844,7 +102845,9 @@ The description of the top-level file fields.
 Describes every component an app has registered, the engine's, its extensions' and the game's,
 the way [describeSchema](#describeschema) describes one, plus what only the registry knows: whether an
 entity may hold more than one (`allowMultiple`), which package registered it (`package`), and
-which components it adds when they are missing (`requires`, its classes' type ids).
+which components it adds when they are missing (`requires`, its classes' type ids; `null` for a
+class that declares no `typeId` of its own, such as an unregistered subclass that only inherits
+its parent's, because naming the parent would describe a different component).
 This is what an external inspector, such as the ignifx editor, is generated from.
 
 #### Parameters

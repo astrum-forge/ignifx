@@ -348,6 +348,36 @@ describe("resolveInstancePath and enumerateInstanceTargets", () => {
     const scene = buildFile({ entities: [entityRecord({ uid: "L", instance: { scene: { $asset: "loop" } } })] });
     expect(enumerateInstanceTargets(scene, () => loop).map((target) => target.path)).toEqual(["L/K"]);
   });
+
+  it("follows a child that instances the same prefab as its file's merged root", () => {
+    // Guard: root G merges the enemy into the carrier; child H instances the enemy again. The
+    // enemy does not enclose H, so H's copy is not a cycle.
+    const guard = buildFile({
+      entities: [
+        entityRecord({ uid: "G", name: "Guard", instance: { scene: { $asset: ENEMY } } }),
+        entityRecord({ uid: "H", name: "Twin", parent: "G", instance: { scene: { $asset: ENEMY } } }),
+      ],
+    });
+    const withGuard = new Map([...files, ["guard", guard]]);
+    const readGuard = (address: string): SceneFile | undefined => withGuard.get(address);
+    const scene = buildFile({ entities: [entityRecord({ uid: "L", instance: { scene: { $asset: "guard" } } })] });
+    const paths = enumerateInstanceTargets(scene, readGuard).map((target) => target.path);
+    expect(paths).toEqual(["L/AI", "L/C", "L/T", "L/H", "L/H/AI", "L/H/C", "L/H/T"]);
+    expect(resolveInstancePath(scene, "L/H/T", readGuard)?.address).toBe(ENEMY);
+
+    // A true cycle (a child instancing the file that declares it) is still refused.
+    const cyclic = buildFile({
+      entities: [
+        entityRecord({ uid: "G", name: "Guard" }),
+        entityRecord({ uid: "H", parent: "G", instance: { scene: { $asset: "cyclic" } } }),
+      ],
+    });
+    const cyclicScene = buildFile({
+      entities: [entityRecord({ uid: "L", instance: { scene: { $asset: "cyclic" } } })],
+    });
+    expect(enumerateInstanceTargets(cyclicScene, () => cyclic).map((target) => target.path)).toEqual(["L/H"]);
+    expect(resolveInstancePath(cyclicScene, "L/H/H", () => cyclic)).toBeNull();
+  });
 });
 
 /** Pair: single root Q, children N1 and N2, each instancing the enemy. */
@@ -498,5 +528,105 @@ describe("serializeScene with nested prefab overrides", () => {
     const { harness } = await loadLevel(platoon, overrides);
     const written = serializeScene(harness.world.activeScene, { engineVersion: null });
     expect(written.entities[0]?.instance?.overrides).toEqual(overrides);
+  });
+
+  it("writes each copy of a nested prefab placed twice on its own", async () => {
+    const enemy = await createSceneAsset(ENEMY, enemyFile());
+    const pair = await createSceneAsset("prefabs/pair.prefab.json", pairFile(enemy.hash), [fakeHandle(ENEMY, enemy)]);
+    const overrides: SceneFileOverride[] = [
+      { path: "N1/components/N1/AI/props/speed", value: 5 },
+      { path: "N2/components/N2/T/props/note", value: "right" },
+    ];
+    const { harness, level } = await loadLevel(pair, overrides);
+    const written = serializeScene(harness.world.activeScene, { engineVersion: null, name: "Level" });
+    expect(written.entities[0]?.instance?.overrides).toEqual(overrides);
+
+    const right = harness.world.activeScene.roots[0]?.children.find((child) => child.name === "Right");
+    const ai = right?.getComponent(Everything);
+    if (ai !== undefined && ai !== null) {
+      ai.speed = 3;
+    }
+    const edited = serializeScene(harness.world.activeScene, { engineVersion: null, name: "Level" });
+    expect(edited.entities[0]?.instance?.overrides).toEqual([
+      { path: "N1/components/N1/AI/props/speed", value: 5 },
+      { path: "N2/components/N2/AI/props/speed", value: 3 },
+      { path: "N2/components/N2/T/props/note", value: "right" },
+    ]);
+    const reloaded = await createSceneAsset(level.address, edited, level.dependencies);
+    const again = createSerializationWorld();
+    worlds.push(again);
+    expect(instantiateScene(again.world, reloaded).issues).toEqual([]);
+    expect(JSON.stringify(serializeScene(again.world.activeScene, { engineVersion: null, name: "Level" }))).toBe(
+      JSON.stringify(edited),
+    );
+  });
+
+  it("diffs a single root that is itself a nested instance as nested", async () => {
+    const { variant } = await assets();
+    const overrides: SceneFileOverride[] = [{ path: "V/components/V/AI/props/speed", value: 6 }];
+    const { harness, level } = await loadLevel(variant, overrides);
+    const placed = harness.world.activeScene.roots[0];
+    expect(placed?.getComponent(Everything)?.speed).toBe(6);
+    const written = serializeScene(harness.world.activeScene, { engineVersion: null, name: "Level" });
+    expect(written.entities[0]?.instance?.overrides).toEqual(overrides);
+    expect(written.entities[0]?.components).toBeUndefined();
+
+    const ai = placed?.getComponent(Everything);
+    if (ai !== undefined && ai !== null) {
+      ai.speed = 9;
+    }
+    const edited = serializeScene(harness.world.activeScene, { engineVersion: null, name: "Level" });
+    expect(edited.entities[0]?.instance?.overrides).toEqual([{ path: "V/components/V/AI/props/speed", value: 9 }]);
+    const reloaded = await createSceneAsset(level.address, edited, level.dependencies);
+    const again = createSerializationWorld();
+    worlds.push(again);
+    expect(instantiateScene(again.world, reloaded).issues).toEqual([]);
+    expect(again.world.activeScene.roots[0]?.getComponent(Everything)?.speed).toBe(9);
+  });
+
+  it("reports nothing for an unedited level whose middle prefab adds a component to a nested entity", async () => {
+    const enemy = await createSceneAsset(ENEMY, enemyFile());
+    const squad = await createSceneAsset(
+      SQUAD,
+      squadFile(enemy.hash, [{ op: "add", path: "C/components", value: { uid: "X", type: "test/Everything" } }]),
+      [fakeHandle(ENEMY, enemy)],
+    );
+    const { harness } = await loadLevel(squad, []);
+    const weapon = harness.world.activeScene.roots[0]?.children.find((child) => child.name === "Grunt")?.children[0];
+    expect(weapon?.getComponent(Everything)).not.toBeNull();
+    const issues: string[] = [];
+    const written = serializeScene(harness.world.activeScene, {
+      engineVersion: null,
+      onIssue: (issue) => issues.push(issue.message),
+    });
+    expect(issues).toEqual([]);
+    expect(written.entities[0]?.instance?.overrides).toBeUndefined();
+  });
+
+  it("reports a component added to a nested entity and a nested entity destroyed at run time", async () => {
+    const { squad } = await assets();
+    const { harness } = await loadLevel(squad, []);
+    const grunt = harness.world.activeScene.roots[0]?.children.find((child) => child.name === "Grunt");
+    const weapon = grunt?.children[0];
+    expect(weapon?.name).toBe("Weapon");
+    weapon?.addComponent(Everything);
+    const write = (): { readonly overrides: unknown; readonly issues: string[] } => {
+      const issues: string[] = [];
+      const written = serializeScene(harness.world.activeScene, {
+        engineVersion: null,
+        onIssue: (issue) => issues.push(`${issue.code} ${issue.message}`),
+      });
+      return { overrides: written.entities[0]?.instance?.overrides, issues };
+    };
+    const added = write();
+    expect(added.overrides).toBeUndefined();
+    expect(added.issues).toHaveLength(1);
+    expect(added.issues[0]).toMatch(/^IGX-0609 test\/Everything was added at run time to "Weapon"/u);
+
+    weapon?.destroy();
+    const destroyed = write();
+    expect(destroyed.overrides).toBeUndefined();
+    expect(destroyed.issues).toHaveLength(1);
+    expect(destroyed.issues[0]).toMatch(/^IGX-0609 1 component\(s\) of a prefab nested in the instance "Placed"/u);
   });
 });

@@ -490,14 +490,11 @@ export class Environment extends Component implements ComponentHooks {
     }
     this.#hasWarnedAboutSkybox = true;
     renderer.app.log.warn(
-      `${CoreErrorCode.skyboxFixedAtLoad}: {entity} asks for skybox ` +
-        "{requested}, but {asset} was loaded with {loaded} and Babylon Lite builds the background " +
-        "when the environment loads, with no handle to change it afterwards. Declare skyboxEnabled " +
-        "and skyboxSize in the .environment.json instead.",
-      this.entity.name,
-      `{ enabled: ${String(skybox.enabled)}, size: ${String(skybox.size)} }`,
-      installed.address,
-      `{ enabled: ${String(definition.skyboxEnabled)}, size: ${String(definition.skyboxSize)} }`,
+      `${CoreErrorCode.skyboxFixedAtLoad}: ${JSON.stringify(this.entity.name)} asks for skybox ` +
+        `{ enabled: ${String(skybox.enabled)}, size: ${String(skybox.size)} }, but ${installed.address} was ` +
+        `loaded with { enabled: ${String(definition.skyboxEnabled)}, size: ${String(definition.skyboxSize)} } ` +
+        "and Babylon Lite builds the background when the environment loads, with no handle to change it " +
+        "afterwards. Declare skyboxEnabled and skyboxSize in the .environment.json instead.",
     );
   }
 

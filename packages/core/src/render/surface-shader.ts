@@ -749,9 +749,8 @@ function assertFeature(material: MaterialAsset, app: App | null, isHeadless: boo
     );
   }
   app.log.warn(
-    `${CoreErrorCode.surfaceShaderFeatureOff}: {material} carries a surface shader, but ` +
+    `${CoreErrorCode.surfaceShaderFeatureOff}: ${JSON.stringify(material.name)} carries a surface shader, but ` +
       "rendering.features.materialPlugins is off, so it would be inert on a device.",
-    material.name,
   );
 }
 

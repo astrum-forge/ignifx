@@ -48,7 +48,7 @@ export function schemaSet(app: App, hidden: ReadonlySet<string>): SchemaSet {
     const schema = type === Transform ? transformSchema() : (registry.describe(type).schema ?? {});
     schemas[typeId] = {
       ...description,
-      extends: registeredAncestors(registry, type),
+      extends: registeredAncestors(registry, type, hidden),
       propsSchema: toJsonSchema(schema),
     };
   }
@@ -71,15 +71,23 @@ export function schemaSet(app: App, hidden: ReadonlySet<string>): SchemaSet {
  *
  * @param registry - The app's component registry.
  * @param type - The described class.
+ * @param hidden - The host's own type ids, which the set leaves out and so never lists here.
  * @returns The ancestors' type ids, the class itself excluded; empty when none is registered.
  */
-function registeredAncestors(registry: ComponentRegistry, type: ComponentType): readonly string[] {
+function registeredAncestors(
+  registry: ComponentRegistry,
+  type: ComponentType,
+  hidden: ReadonlySet<string>,
+): readonly string[] {
   const ids: string[] = [];
   const ancestors = registry.describe(type).ancestors;
   for (let index = 1; index < ancestors.length; index += 1) {
     const ancestor = ancestors[index];
     if (ancestor !== undefined && registry.isRegistered(ancestor)) {
-      ids.push(registry.requireTypeId(ancestor));
+      const id = registry.requireTypeId(ancestor);
+      if (!hidden.has(id)) {
+        ids.push(id);
+      }
     }
   }
   return ids;

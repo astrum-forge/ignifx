@@ -83,8 +83,11 @@ interface Frame {
   readonly files: readonly FrameFile[];
   /** The names from the scene's carrier down to this frame's carrier. */
   readonly labels: readonly string[];
-  /** Every address read on the way here, for the cycle guard. */
-  readonly seen: readonly string[];
+  /**
+   * The addresses of the files enclosing this frame's carrier, outermost first: the cycle guard's
+   * ancestor chain. Files read for a sibling branch are not in it.
+   */
+  readonly ancestors: readonly string[];
 }
 
 /**
@@ -136,7 +139,7 @@ export function resolveInstancePath(
         labelsOf(frame, found.file, found.entity),
         nextSegments(found.file, found.entity.uid),
         readScene,
-        frame.seen,
+        ancestorsOf(frame, found.file),
       );
     }
   }
@@ -238,7 +241,7 @@ function walkFrame(
       labelsOf(frame, file, entity),
       nextSegments(file, entity.uid),
       readScene,
-      frame.seen,
+      ancestorsOf(frame, file),
     );
     walkFrame(nested, 0, `${prefix}/${entity.uid}`, carrier, readScene, into);
   }
@@ -251,7 +254,7 @@ function walkFrame(
  * @param labels - The names down to and including the carrier.
  * @param overrideSegments - The override component path prefix for the first file.
  * @param readScene - Reads the files.
- * @param seen - The addresses read on the way here.
+ * @param ancestors - The addresses of the files enclosing the carrier, outermost first.
  * @returns The frame; empty when the first file cannot be read or would nest itself.
  */
 function frameOf(
@@ -259,10 +262,10 @@ function frameOf(
   labels: readonly string[],
   overrideSegments: readonly string[] | null,
   readScene: PrefabReader,
-  seen: readonly string[],
+  ancestors: readonly string[],
 ): Frame {
   const files: FrameFile[] = [];
-  const addresses = [...seen];
+  const addresses = [...ancestors];
   let current: SceneFileEntity | null = carrier;
   let segments = overrideSegments;
   while (current?.instance !== undefined && addresses.length < DEPTH_LIMIT) {
@@ -278,7 +281,27 @@ function frameOf(
     segments ??= root === null ? null : [root.uid];
     current = root;
   }
-  return { files, labels, seen: addresses };
+  return { files, labels, ancestors };
+}
+
+/**
+ * The ancestor chain of an entity a frame file declares: the frame's own ancestors, then the frame
+ * files from the outermost down to and including the declaring one. A file later in the frame
+ * merges into the same carrier but does not enclose the entity, so it is not an ancestor.
+ *
+ * @param frame - The frame.
+ * @param file - The frame file declaring the entity.
+ * @returns The addresses, outermost first.
+ */
+function ancestorsOf(frame: Frame, file: FrameFile): string[] {
+  const chain = [...frame.ancestors];
+  for (const candidate of frame.files) {
+    chain.push(candidate.address);
+    if (candidate === file) {
+      break;
+    }
+  }
+  return chain;
 }
 
 /**

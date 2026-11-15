@@ -2,7 +2,8 @@ import { defineConfig } from "tsdown";
 import manifest from "./package.json" with { type: "json" };
 
 /**
- * ESM-only Node build with two entries: the library barrel and the `create-ignifx` executable.
+ * ESM-only Node build: the library barrel, the pure tilemap converter (`@ignifx/cli/tilemap`), and
+ * the `create-ignifx` and `ignifx` executables.
  * Declarations are emitted from `isolatedDeclarations`, so this build needs neither the TypeScript
  * programmatic API nor the TS 6 shim (ADR-0007). tsdown's shebang handling keeps the `#!` line of
  * `src/bin.ts` and marks `dist/bin.js` executable.
@@ -13,7 +14,7 @@ import manifest from "./package.json" with { type: "json" };
  * list on every build.
  */
 export default defineConfig({
-  entry: ["src/index.ts", "src/bin.ts", "src/ignifx/bin.ts"],
+  entry: ["src/index.ts", "src/tilemap.ts", "src/bin.ts", "src/ignifx/bin.ts"],
   format: ["esm"],
   platform: "node",
   fixedExtension: false,

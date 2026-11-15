@@ -315,8 +315,7 @@ export class RenderSyncSystem implements System {
     if (enabledCount > 1 && !this.#hasLoggedMultipleEnvironments) {
       this.#hasLoggedMultipleEnvironments = true;
       world.app.log.warn(
-        "IGX-0705: {count} Environment components are enabled in this world; the most recent one wins.",
-        enabledCount,
+        `IGX-0705: ${String(enabledCount)} Environment components are enabled in this world; the most recent one wins.`,
       );
     }
     if (enabledCount <= 1) {
@@ -467,10 +466,9 @@ export class RenderSyncSystem implements System {
     if (hasEsmLight && !this.#esmSkipReported.has(renderer)) {
       this.#esmSkipReported.add(renderer);
       renderer.entity.world.app.log.warn(
-        `${CoreErrorCode.shaderMaterialEsmCasterSkipped}: {entity} uses a shader material under ESM shadows; ` +
-          "Babylon Lite 1.27.0 cannot render it into an ESM map, so it casts no shadow there. " +
-          "Use pcf shadows or castShadows: false.",
-        renderer.entity.name,
+        `${CoreErrorCode.shaderMaterialEsmCasterSkipped}: ${JSON.stringify(renderer.entity.name)} uses a shader ` +
+          "material under ESM shadows; Babylon Lite 1.27.0 cannot render it into an ESM map, so it casts no " +
+          "shadow there. Use pcf shadows or castShadows: false.",
       );
     }
   }
