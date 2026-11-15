@@ -357,6 +357,24 @@ describe("describeRegisteredSchemas", () => {
     expect(describeRegisteredSchemas(registry)["mygame/Watcher"]?.requires).toEqual([null, "acme/Beacon"]);
   });
 
+  it("keeps the type id of a required class a hot reload replaced", () => {
+    class Fuel extends Component {
+      static typeId = "mygame/Fuel";
+    }
+    class Engine extends Component {
+      static typeId = "mygame/Engine";
+      static requires = [Fuel];
+    }
+    class FuelReloaded extends Component {
+      static typeId = "mygame/Fuel";
+    }
+    const registry = new ComponentRegistry();
+    registry.registerAll([Fuel, Engine]);
+    registry.replace(FuelReloaded);
+    expect(registry.isRegistered(Fuel)).toBe(false);
+    expect(describeRegisteredSchemas(registry)["mygame/Engine"]?.requires).toEqual(["mygame/Fuel"]);
+  });
+
   it("titles and summarises a component from its class's own statics, under the curated record", () => {
     class Lamp extends Component.define({ lit: bool(true) }) {
       static typeId = "acme/Lamp";
