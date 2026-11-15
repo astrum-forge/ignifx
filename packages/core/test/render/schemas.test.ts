@@ -83,6 +83,15 @@ describe("describeSchemas", () => {
     expect(camera?.fields["fov"]?.description).toContain("field of view");
   });
 
+  it("describes a nested record's sub-fields, so an inspector can draw MeshRenderer.lightmap typed", () => {
+    const lightmap = describeSchemas()["ignifx/MeshRenderer"]?.fields["lightmap"];
+    expect(lightmap?.kind).toBe("optional");
+    const fields = lightmap?.inner?.fields;
+    expect(Object.keys(fields ?? {})).toEqual(["asset", "mode", "level", "gamma", "uv2"]);
+    expect(fields?.["asset"]).toMatchObject({ kind: "asset", assetType: "lightmap" });
+    expect(fields?.["level"]).toMatchObject({ kind: "f32", default: 1, min: 0 });
+  });
+
   it("describes the two file formats this package owns", () => {
     const material = describeMaterialFileFormat();
     expect(material.fields["format"]?.default).toBe(MATERIAL_FILE_FORMAT);
