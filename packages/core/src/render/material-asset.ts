@@ -4,6 +4,7 @@ import {
   createDefaultMaterial,
   createPbrMaterialFromProps,
   createStandardMaterialFromProps,
+  copyPbrFactors,
   markMaterialDirty,
   setMaterialAlpha,
   setPbrBaseColor,
@@ -275,6 +276,9 @@ export class MaterialAsset {
 
   readonly #shader: ShaderMaterialState | null;
 
+  /** Bumped by every factor setter, so a copy made from this material can follow its edits. */
+  #revision = 0;
+
   /**
    * Wraps a built Lite material. Use {@link createMaterialAsset}; the loader constructs these.
    *
@@ -446,6 +450,7 @@ export class MaterialAsset {
    */
   setBaseColor(color: ColorLike): void {
     this.#assertNotShader("setBaseColor");
+    this.#revision += 1;
     const linear = toLinear(color);
     const pbr = this.#pbr;
     if (pbr !== null) {
@@ -469,6 +474,7 @@ export class MaterialAsset {
    */
   setMetallicRoughness(metallic: number, roughness: number): void {
     this.#assertNotShader("setMetallicRoughness");
+    this.#revision += 1;
     const pbr = this.#pbr;
     if (pbr !== null) {
       setPbrMetallicRoughness(pbr, metallic, roughness);
@@ -482,6 +488,7 @@ export class MaterialAsset {
    */
   setAlpha(alpha: number): void {
     this.#assertNotShader("setAlpha");
+    this.#revision += 1;
     setMaterialAlpha(this.#material, alpha);
   }
 
@@ -598,6 +605,35 @@ export class MaterialAsset {
    */
   clone(app: App): AssetHandle<MaterialAsset> {
     return createMaterialAsset(app, this.definition, this.textures);
+  }
+
+  /**
+   * How many times {@link MaterialAsset.setBaseColor}, {@link MaterialAsset.setMetallicRoughness}
+   * or {@link MaterialAsset.setAlpha} ran, so an engine-made copy (a lightmapped renderer's) knows
+   * when to take the edits.
+   *
+   * @returns The count.
+   *
+   * @internal
+   */
+  get revision(): number {
+    return this.#revision;
+  }
+
+  /**
+   * Writes this PBR material's current factors (base colour, metallic, roughness, alpha) onto
+   * another PBR material, such as an engine-made copy. A no-op unless both are `"pbr"`.
+   *
+   * @param target - The material to change.
+   *
+   * @internal
+   */
+  copyFactorsTo(target: MaterialAsset): void {
+    const from = this.#pbr;
+    const to = target.#pbr;
+    if (from !== null && to !== null) {
+      copyPbrFactors(from, to);
+    }
   }
 
   /**

@@ -18,8 +18,10 @@ import type { MeshRendererLightmap } from "../mesh-renderer.js";
  * `MaterialAsset`s are shared, and a lightmap is per renderer, so each renderer draws with
  * `MaterialAsset.clone` of its material carrying the lightmap. The clone is rebuilt when the
  * material, the lightmap, its texture or a compiled option (`mode`, `gamma`, `uv2`) changes; a
- * `level` change only rewrites the clone's uniform block. Edits made to the shared material after
- * the clone was built do not reach it.
+ * `level` change only rewrites the clone's uniform block. Edits made to the shared material through
+ * its factor setters (`setBaseColor`, `setMetallicRoughness`, `setAlpha`) are copied onto the clone
+ * the next frame it is asked for (`MaterialAsset.revision`); a reloaded material is a new asset, so
+ * it gets a new clone.
  *
  * ## Two frames, because of how Lite plumbs `uv2`
  *
@@ -43,6 +45,8 @@ interface Entry {
   readonly texture: LiteTexture2D;
   readonly key: string;
   readonly clone: AssetHandle<MaterialAsset>;
+  /** The base's `revision` whose factors the clone carries. */
+  revision: number;
   /** The options the next flush applies; `level` follows the record every frame. */
   options: LiteLightmapOptions;
   /** Whether the lightmap is set on the clone yet. */
@@ -137,6 +141,10 @@ export async function createLightmapRuntime(app: App, scene: LiteScene): Promise
         current.texture === texture &&
         current.key === key
       ) {
+        if (current.revision !== base.revision) {
+          current.revision = base.revision;
+          base.copyFactorsTo(current.clone.value);
+        }
         const material = current.clone.value.lite.material;
         current.options = options;
         if (current.isApplied) {
@@ -146,7 +154,19 @@ export async function createLightmapRuntime(app: App, scene: LiteScene): Promise
       }
       release(owner);
       const clone = base.clone(app);
-      const entry: Entry = { base, lightmap, texture, key, clone, options, isApplied: false, isReleased: false };
+      // The clone replays the declaration, so it takes the edits made to the base since it loaded.
+      base.copyFactorsTo(clone.value);
+      const entry: Entry = {
+        base,
+        lightmap,
+        texture,
+        key,
+        clone,
+        revision: base.revision,
+        options,
+        isApplied: false,
+        isReleased: false,
+      };
       entries.set(owner, entry);
       fresh.push(entry);
       return clone.value.lite.material;

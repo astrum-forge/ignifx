@@ -150,8 +150,7 @@ export class LightmapHost {
     }
     this.#reported.set(owner, problem);
     this.#app.log.warn(
-      `${CoreErrorCode.lightmapNotApplied}: {entity}'s MeshRenderer lightmap: ${problem}.`,
-      owner.entity.name,
+      `${CoreErrorCode.lightmapNotApplied}: the MeshRenderer lightmap of ${JSON.stringify(owner.entity.name)}: ${problem}.`,
     );
   }
 }

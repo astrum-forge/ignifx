@@ -365,6 +365,26 @@ export function setPbrMetallicRoughness(material: PbrMaterialProps, metallic: nu
 }
 
 /**
+ * Copies the factors `MaterialAsset`'s setters write (base colour, metallic, roughness, alpha) from
+ * one PBR material to another, such as a renderer's lightmapped copy of a shared material.
+ *
+ * @param from - The material to read.
+ * @param to - The material to change.
+ *
+ * @internal
+ */
+export function copyPbrFactors(from: PbrMaterialProps, to: PbrMaterialProps): void {
+  const color = from.baseColorFactor;
+  if (color !== undefined) {
+    setPbrBaseColor(to, color[0], color[1], color[2], color[3]);
+  }
+  to.metallicFactor = from.metallicFactor ?? 1;
+  to.roughnessFactor = from.roughnessFactor ?? 1;
+  to.alpha = from.alpha ?? 1;
+  markMaterialDirty(to);
+}
+
+/**
  * Replaces a material's overall alpha.
  *
  * @param material - The PBR or Standard material to change.
