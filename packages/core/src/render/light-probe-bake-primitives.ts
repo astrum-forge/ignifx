@@ -78,8 +78,8 @@ export function primitiveTriangles(definition: MeshPrimitiveDefinition): BakeTri
     case "capsule": {
       const options = definition.options;
       // Lite reads these with `||`, so a 0 takes the default as well.
-      const height = Math.max(options.height || 1, 0);
-      const radius = Math.max(options.radius || 0.25, 0);
+      const height = Math.max(orDefault(options.height, 1), 0);
+      const radius = Math.max(orDefault(options.radius, 0.25), 0);
       const half = Math.max(height / 2 - radius, 0);
       const arc = MAX_BAKE_SEGMENTS / 2;
       const profile: [number, number][] = [];
@@ -91,7 +91,7 @@ export function primitiveTriangles(definition: MeshPrimitiveDefinition): BakeTri
         const angle = (Math.PI / 2) * (step / arc);
         profile.push([Math.cos(angle) * radius, half + Math.sin(angle) * radius]);
       }
-      return revolve(profile, clampSegments(Math.max(3, options.tessellation || 16)));
+      return revolve(profile, clampSegments(Math.max(3, orDefault(options.tessellation, 16))));
     }
     case "torus": {
       const options = definition.options;
@@ -104,6 +104,17 @@ export function primitiveTriangles(definition: MeshPrimitiveDefinition): BakeTri
     default:
       return assertNever(definition, "mesh primitive");
   }
+}
+
+/**
+ * An option Lite reads with `||`: missing or `0` takes the default.
+ *
+ * @param value - The option.
+ * @param fallback - Lite's default.
+ * @returns The value to use.
+ */
+function orDefault(value: number | undefined, fallback: number): number {
+  return value === undefined || value === 0 || Number.isNaN(value) ? fallback : value;
 }
 
 /**

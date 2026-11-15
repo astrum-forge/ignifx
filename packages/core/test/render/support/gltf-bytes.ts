@@ -45,14 +45,14 @@ function documentFor(
     accessors.push({ bufferView: index, componentType: 5126, count: 3, type: "VEC3" });
     const primitive: Record<string, unknown> = { attributes: { POSITION: index } };
     if (mesh.baseColor !== undefined) {
-      primitive.material = materials.length;
+      primitive["material"] = materials.length;
       materials.push({
         ...(mesh.name === undefined ? {} : { name: mesh.name }),
         pbrMetallicRoughness: { baseColorFactor: [...mesh.baseColor], metallicFactor: mesh.metallic ?? 0 },
       });
     }
     if (mesh.draco === true) {
-      primitive.extensions = { KHR_draco_mesh_compression: { bufferView: 0, attributes: { POSITION: 0 } } };
+      primitive["extensions"] = { KHR_draco_mesh_compression: { bufferView: 0, attributes: { POSITION: 0 } } };
     }
     gltfMeshes.push({ primitives: [primitive] });
     nodes.push({
@@ -121,8 +121,10 @@ export function gltfOf(meshes: readonly TestGltfMesh[], uri?: string): ArrayBuff
   const { json, bin } = documentFor(meshes, [0, 0, 0]);
   let binary = "";
   for (const byte of bin) {
-    binary += String.fromCharCode(byte);
+    binary += String.fromCodePoint(byte);
   }
-  json.buffers = [{ byteLength: bin.byteLength, uri: uri ?? `data:application/octet-stream;base64,${btoa(binary)}` }];
+  json["buffers"] = [
+    { byteLength: bin.byteLength, uri: uri ?? `data:application/octet-stream;base64,${btoa(binary)}` },
+  ];
   return new TextEncoder().encode(JSON.stringify(json)).buffer;
 }

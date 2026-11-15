@@ -266,13 +266,10 @@ describe("bakeLightProbes", () => {
     const gltf = await bakeLightProbes(h.world, both);
     expect(gltf.triangles).toBe(2);
     expect(gltf.skipped).toBe(1);
-    expect(gltf.skips).toEqual([
-      expect.objectContaining({
-        entity: "No bytes",
-        component: "ignifx/Model",
-        reason: expect.stringContaining("headless"),
-      }),
-    ]);
+    expect(gltf.skips).toHaveLength(1);
+    expect(gltf.skips[0]?.entity).toBe("No bytes");
+    expect(gltf.skips[0]?.component).toBe("ignifx/Model");
+    expect(gltf.skips[0]?.reason).toContain("headless");
     expect(gltf.data.coefficients[0]).toBeCloseTo(0.5, 1);
     expect(gltf.data.coefficients[1]).toBeCloseTo(0, 6);
   });

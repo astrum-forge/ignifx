@@ -200,8 +200,8 @@ function parseJson(text: Uint8Array): GltfJson {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new Error("the glTF document is not a JSON object");
   }
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- every field is optional and checked where it is read.
-  return value as GltfJson;
+  // Every field of `GltfJson` is optional and checked where it is read.
+  return value;
 }
 
 /**

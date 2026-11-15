@@ -421,7 +421,17 @@ function readSky(sky: LightProbeBakeSky | undefined): SkyRadiance {
       out.fill(0);
     };
   }
-  if ("kind" in sky && sky.kind === "gradient") {
+  if (!("kind" in sky)) {
+    const flat = checkedColor(sky, "sky");
+    return (_dx, _dy, _dz, out) => {
+      for (let channel = 0; channel < 3; channel += 1) {
+        out[channel] = read(flat, channel);
+      }
+    };
+  }
+  // Widened: a JavaScript caller or a parsed file can pass any kind.
+  const kind: string = sky.kind;
+  if (kind === "gradient" && sky.kind === "gradient") {
     const up = checkedColor(sky.sky, "sky.sky");
     const horizon = checkedColor(sky.horizon, "sky.horizon");
     const down = checkedColor(sky.ground, "sky.ground");
@@ -433,7 +443,7 @@ function readSky(sky: LightProbeBakeSky | undefined): SkyRadiance {
       }
     };
   }
-  if ("kind" in sky && sky.kind === "sh9") {
+  if (kind === "sh9" && sky.kind === "sh9") {
     const c = sky.coefficients;
     if (!Array.isArray(c) || c.length !== 27 || !c.every((value) => Number.isFinite(value))) {
       throw fail("sky.coefficients must be 27 finite numbers (nine RGB triples)");
@@ -459,15 +469,7 @@ function readSky(sky: LightProbeBakeSky | undefined): SkyRadiance {
       }
     };
   }
-  if ("kind" in sky) {
-    throw fail('sky.kind must be "gradient" or "sh9"');
-  }
-  const flat = checkedColor(sky, "sky");
-  return (_dx, _dy, _dz, out) => {
-    for (let channel = 0; channel < 3; channel += 1) {
-      out[channel] = read(flat, channel);
-    }
-  };
+  throw fail('sky.kind must be "gradient" or "sh9"');
 }
 
 /**
@@ -565,9 +567,6 @@ function fibonacciDirection(index: number, count: number): [number, number, numb
   return [Math.cos(angle) * radius, y, Math.sin(angle) * radius];
 }
 
-/** The glTF triangles already read from a headless model's bytes, by asset. */
-const gltfCache = new WeakMap<ModelAsset, GltfBakeGeometry | string>();
-
 /** Collects world-space meshes into a {@link TraceScene}. */
 class SceneBuilder {
   readonly vertices: number[] = [];
@@ -646,6 +645,8 @@ function collectTriangles(world: World): { scene: TraceScene; skipped: number; s
   const builder = new SceneBuilder();
   const skips: LightProbeBakeSkip[] = [];
   let skipped = 0;
+  // One read per model asset per bake, however many `Model`s share it.
+  const gltfCache = new Map<ModelAsset, GltfBakeGeometry | string>();
   const skip = (entity: Entity, component: string, reason: string): void => {
     skips.push({ entity: entity.name, uid: entity.uid, component, reason });
   };
@@ -676,7 +677,7 @@ function collectTriangles(world: World): { scene: TraceScene; skipped: number; s
     if (!model.isEnabledInHierarchy) {
       continue;
     }
-    const gltf = readModel(model.model);
+    const gltf = readModel(model.model, gltfCache);
     if (typeof gltf === "string") {
       skipped += 1;
       skip(model.entity, Model.typeId, gltf);
@@ -717,9 +718,13 @@ function primitiveOrNull(
  * A model's glTF triangles, read once per asset.
  *
  * @param handle - The `Model.model` field.
+ * @param gltfCache - What this bake already read, by asset.
  * @returns The geometry, or why there is none.
  */
-function readModel(handle: AssetHandle<ModelAsset> | null): GltfBakeGeometry | string {
+function readModel(
+  handle: AssetHandle<ModelAsset> | null,
+  gltfCache: Map<ModelAsset, GltfBakeGeometry | string>,
+): GltfBakeGeometry | string {
   if (handle === null || handle.state !== "loaded") {
     return "its model is not loaded";
   }
