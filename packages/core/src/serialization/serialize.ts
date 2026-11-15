@@ -592,6 +592,7 @@ function computeOverrides(
       // The instanced root itself instances a scene: those components merged into this root too.
       diffNestedComponents(root, single.sourceUid, link.nestedRootSourceUids, nested);
     }
+    markLive(root, nested);
     diffNestedMembers(root, nested);
     reportLostNestedComponents(root, nested);
   }
@@ -655,6 +656,7 @@ function diffNestedMembers(entity: Entity, nested: NestedDiff): void {
     if (child === undefined || child.isDestroyed || !belongsToInstance(child, root)) {
       continue;
     }
+    markLive(child, nested);
     const origin = entityInternals(child).origin;
     const inside = origin?.instanceRoot ?? null;
     if (origin !== null && inside !== null && inside !== root) {
@@ -680,6 +682,23 @@ function diffNestedMembers(entity: Entity, nested: NestedDiff): void {
 }
 
 /**
+ * Counts an entity's live components that have a baseline record as accounted for, so only the
+ * components of a destroyed entity are reported lost.
+ *
+ * @param entity - The entity.
+ * @param nested - The diff state.
+ */
+function markLive(entity: Entity, nested: NestedDiff): void {
+  const components = entity.components;
+  for (let index = 0; index < components.length; index += 1) {
+    const component = components[index];
+    if (component !== undefined && !component.isDestroyed && nested.baseline.has(component.uid)) {
+      nested.covered.add(component.uid);
+    }
+  }
+}
+
+/**
  * Reports the components added at run time to an entity a nested prefab declares: an override
  * reaches a nested entity's components only by instance path, which an added component has none
  * of, so the saved file drops it.
@@ -698,7 +717,9 @@ function reportAddedToNested(entity: Entity, origin: EntityOrigin, nested: Neste
       component === entity.transform ||
       component.isDestroyed ||
       origin.componentSourceUids.has(component.uid) ||
-      fromFiles?.has(component.uid) === true
+      fromFiles?.has(component.uid) === true ||
+      // Declared by the prefab chain itself, such as a middle prefab's `add` override.
+      nested.baseline.has(component.uid)
     ) {
       continue;
     }

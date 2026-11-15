@@ -584,6 +584,25 @@ describe("serializeScene with nested prefab overrides", () => {
     expect(again.world.activeScene.roots[0]?.getComponent(Everything)?.speed).toBe(9);
   });
 
+  it("reports nothing for an unedited level whose middle prefab adds a component to a nested entity", async () => {
+    const enemy = await createSceneAsset(ENEMY, enemyFile());
+    const squad = await createSceneAsset(
+      SQUAD,
+      squadFile(enemy.hash, [{ op: "add", path: "C/components", value: { uid: "X", type: "test/Everything" } }]),
+      [fakeHandle(ENEMY, enemy)],
+    );
+    const { harness } = await loadLevel(squad, []);
+    const weapon = harness.world.activeScene.roots[0]?.children.find((child) => child.name === "Grunt")?.children[0];
+    expect(weapon?.getComponent(Everything)).not.toBeNull();
+    const issues: string[] = [];
+    const written = serializeScene(harness.world.activeScene, {
+      engineVersion: null,
+      onIssue: (issue) => issues.push(issue.message),
+    });
+    expect(issues).toEqual([]);
+    expect(written.entities[0]?.instance?.overrides).toBeUndefined();
+  });
+
   it("reports a component added to a nested entity and a nested entity destroyed at run time", async () => {
     const { squad } = await assets();
     const { harness } = await loadLevel(squad, []);
