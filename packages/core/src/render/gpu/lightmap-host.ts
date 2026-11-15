@@ -92,6 +92,12 @@ export class LightmapHost {
     const placement = lightmap.placementOf(entity.uid);
     let atlas: LightmapPlacement | null = null;
     if (!isIdentityLightmapPlacement(placement)) {
+      const mesh = owner.mesh;
+      if (mesh === null || mesh.state !== "loaded") {
+        // Whether it has `uvs2` is not known yet; decide once it loaded.
+        this.release(owner);
+        return base.lite.material;
+      }
       if (!settings.uv2) {
         this.#report(
           owner,
@@ -182,6 +188,6 @@ export class LightmapHost {
  */
 function hasSecondUvSet(owner: MeshRenderer): boolean {
   const mesh = owner.mesh;
-  const uvs2 = mesh !== null && mesh.state === "loaded" ? mesh.value.cpuGeometry?.uvs2 : undefined;
+  const uvs2 = mesh?.state === "loaded" ? mesh.value.cpuGeometry?.uvs2 : undefined;
   return uvs2 !== undefined && uvs2.length > 0;
 }

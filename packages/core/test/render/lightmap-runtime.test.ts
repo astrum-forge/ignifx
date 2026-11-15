@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createLightmapRuntime } from "../../src/render/gpu/lightmaps.js";
+import { createLightmapRuntime, LIGHTMAP_PLACEMENT_WARNING_THRESHOLD } from "../../src/render/gpu/lightmaps.js";
 import { createMaterialAsset, pbrMaterialDefinition } from "../../src/render/material-asset.js";
 import { createRenderHarness } from "./support/render-harness.js";
 import type { RenderHarness } from "./support/render-harness.js";
@@ -17,6 +17,8 @@ vi.mock("../../src/lite/gpu/lightmap.js", () => ({
   enableLightmaps: (): Promise<void> => Promise.resolve(),
   applyLightmap: (): boolean => true,
   setLightmapLevel: (): void => undefined,
+  lightmapAtlasWgsl: (atlas: LightmapPlacement): string =>
+    `${String(atlas.scale.x)},${String(atlas.scale.y)},${String(atlas.offset.x)},${String(atlas.offset.y)}`,
 }));
 
 vi.mock("../../src/lite/material.js", async (importOriginal) => {
@@ -76,6 +78,24 @@ describe("the lightmap runtime", () => {
     expect(runtime.count).toBe(2);
     runtime.dispose();
     expect(runtime.count).toBe(0);
+    base.release();
+  });
+
+  it("warns once when more distinct placements than the threshold are alive", async () => {
+    harness = await createRenderHarness();
+    const warnings: string[] = [];
+    const warn = vi.spyOn(harness.app.log, "warn").mockImplementation((message: string) => {
+      warnings.push(message);
+    });
+    const runtime = await createLightmapRuntime(harness.app, {} as LiteScene);
+    const base = createMaterialAsset(harness.app, pbrMaterialDefinition({ metallic: 0, roughness: 1 }), []);
+    for (let index = 0; index <= LIGHTMAP_PLACEMENT_WARNING_THRESHOLD + 1; index += 1) {
+      const placement: LightmapPlacement = { scale: { x: 0.5, y: 0.5 }, offset: { x: index / 1000, y: 0 } };
+      runtime.materialFor({}, base.value, lightmap, settings, placement);
+    }
+    expect(warnings.filter((message) => message.includes("distinct lightmap atlas placements"))).toHaveLength(1);
+    warn.mockRestore();
+    runtime.dispose();
     base.release();
   });
 });
