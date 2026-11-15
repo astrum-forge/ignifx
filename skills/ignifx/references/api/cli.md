@@ -235,7 +235,7 @@ Whether flipped or rotated tiles import unflipped instead of failing the command
 
 ##### kind
 
-> `readonly` **kind**: `"tiled"` \| `"ldtk"`
+> `readonly` **kind**: `"ldtk"` \| `"tiled"`
 
 Which editor wrote it.
 
@@ -1282,7 +1282,9 @@ when it lacks frames the map uses. Objects land in the map's `objects` field, wh
 
 Refused with `IGX-1408`: non-orthogonal or infinite Tiled maps, base64 or compressed layer data,
 XML (`.tsx`) or image-collection tilesets, LDtk layers on different grid sizes, and flipped tiles
-unless `--drop-flips` is passed. Output is deterministic: the same input writes the same bytes.
+unless `--drop-flips` is passed, and maps past `DEFAULT_TILEMAP_SOURCE_LIMITS`. Output is
+deterministic: the same input writes the same bytes. This is a file wrapper over the pure
+`convertTilemapSource` of `@ignifx/cli/tilemap`.
 
 #### Throws
 
