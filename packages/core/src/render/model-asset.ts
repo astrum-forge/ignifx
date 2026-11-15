@@ -120,7 +120,7 @@ export class ModelAsset {
 
   #instances = 0;
 
-  readonly #sourceBytes: ArrayBuffer | null;
+  #sourceBytes: ArrayBuffer | null;
 
   /**
    * Wraps a loaded container. The `model` loader constructs these.
@@ -226,6 +226,8 @@ export class ModelAsset {
     const container = this.#container;
     const scene = this.#scene;
     this.#container = null;
+    // A disposed asset someone still references must not pin the file.
+    this.#sourceBytes = null;
     if (container !== null && scene !== null) {
       removeContainerFromScene(scene, container);
     }

@@ -272,6 +272,9 @@ describe("bakeLightProbes", () => {
     expect(gltf.skips[0]?.reason).toContain("headless");
     expect(gltf.data.coefficients[0]).toBeCloseTo(0.5, 1);
     expect(gltf.data.coefficients[1]).toBeCloseTo(0, 6);
+    // A disposed asset lets go of its file.
+    model.value.dispose();
+    expect(model.value.sourceBytes).toBeNull();
   });
 
   it("names models and meshes it cannot read, and honours a model's material overrides", async () => {
@@ -329,6 +332,11 @@ describe("bakeLightProbes", () => {
     ["an unknown directLight", { directLight: "both" as "include" }],
     ["a non-finite sky", { sky: { r: Number.NaN, g: 0, b: 0, a: 1 } }],
     ["an unknown sky kind", { sky: { kind: "cube" } as never }],
+    ["a null sky", { sky: null as never }],
+    [
+      "a gradient without a horizon",
+      { sky: { kind: "gradient", sky: { r: 1, g: 1, b: 1, a: 1 }, ground: { r: 0, g: 0, b: 0, a: 1 } } as never },
+    ],
     [
       "a gradient with a NaN",
       {

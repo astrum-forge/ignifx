@@ -314,3 +314,64 @@ describe("readGltfTriangles, the accessor and primitive rules", () => {
     expect(() => readGltfTriangles(truncated.buffer)).toThrow("no JSON chunk");
   });
 });
+
+describe("readGltfTriangles, hostile documents", () => {
+  const three = new Uint8Array(new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]).buffer);
+  const position = (accessor: Record<string, unknown>, view: Record<string, unknown>) =>
+    oneNode(
+      { attributes: { POSITION: 0 } },
+      {
+        accessors: [{ bufferView: 0, componentType: 5126, count: 3, type: "VEC3", ...accessor }],
+        bufferViews: [{ buffer: 0, byteLength: 36, ...view }],
+      },
+    );
+
+  it.each<[string, Record<string, unknown>, Record<string, unknown>, string]>([
+    ["a byteStride of 0 and a huge count", { count: 20_000_000 }, { byteStride: 0 }, "byteStride"],
+    ["a byteStride under one element", {}, { byteStride: 4 }, "byteStride"],
+    ["a byteStride over 252", {}, { byteStride: 256 }, "byteStride"],
+    ["a huge count", { count: 20_000_000 }, {}, "runs past its buffer view"],
+    ["a negative accessor offset", { byteOffset: -12 }, {}, "negative or fractional"],
+    ["a fractional view offset", {}, { byteOffset: 0.5 }, "negative or fractional"],
+    ["a view past its buffer", {}, { byteLength: 400 }, "runs past its buffer"],
+    ["an inherited component type", { componentType: "toString" }, {}, "3-component"],
+    ["an inherited accessor type", { type: "constructor" }, {}, "3-component"],
+  ])("skips %s before reading anything", (_name, accessor, view, reason) => {
+    const started = performance.now();
+    const geometry = readGltfTriangles(embedded(position(accessor, view), three));
+    expect(performance.now() - started).toBeLessThan(1000);
+    expect(geometry.primitives).toHaveLength(0);
+    expect(geometry.skipped[0]).toContain(reason);
+  });
+
+  it("visits each node once: duplicated children, diamonds forty levels deep and cycles", () => {
+    const base = {
+      accessors: [{ bufferView: 0, componentType: 5126, count: 3, type: "VEC3" }],
+      bufferViews: [{ buffer: 0, byteLength: 36 }],
+      meshes: [{ primitives: [{ attributes: { POSITION: "toString" } }, { attributes: { POSITION: 0 } }] }],
+    };
+    const twice = readGltfTriangles(
+      embedded({ ...base, scenes: [{ nodes: [0] }], nodes: [{ children: [1, 1] }, { mesh: 0 }] }, three),
+    );
+    expect(twice.primitives).toHaveLength(1);
+    expect(twice.skipped).toEqual([
+      "mesh 0 primitive 0: accessor toString does not exist",
+      expect.stringContaining("node 1 is reached twice"),
+    ]);
+
+    const nodes = Array.from({ length: 40 }, (_, i) => (i === 39 ? { mesh: 0 } : { children: [i + 1, i + 1] }));
+    const started = performance.now();
+    const diamond = readGltfTriangles(embedded({ ...base, scenes: [{ nodes: [0] }], nodes }, three));
+    expect(performance.now() - started).toBeLessThan(1000);
+    expect(diamond.primitives).toHaveLength(1);
+
+    const cycle = readGltfTriangles(
+      embedded(
+        { ...base, scenes: [{ nodes: [0, "toString"] }], nodes: [{ children: [1] }, { children: [0], mesh: 0 }] },
+        three,
+      ),
+    );
+    expect(cycle.primitives).toHaveLength(1);
+    expect(cycle.skipped.at(-1)).toContain("node 0 is reached twice");
+  });
+});

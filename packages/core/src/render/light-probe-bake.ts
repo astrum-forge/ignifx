@@ -322,7 +322,7 @@ export function lightBakeTerms(
 export async function bakeLightProbes(world: World, options: LightProbeBakeOptions): Promise<LightProbeBakeResult> {
   const settings = readBakeOptions(options);
   options.signal?.throwIfAborted();
-  const { scene, skipped, skips } = collectTriangles(world);
+  const { scene, skipped, skips } = collectTriangles(world, options.signal);
   const lights = collectLights(world, settings.includeDirect ? "include" : "exclude");
   const { origin, cellSize, counts } = settings.grid;
   const total = counts.x * counts.y * counts.z;
@@ -421,6 +421,11 @@ function readSky(sky: LightProbeBakeSky | undefined): SkyRadiance {
       out.fill(0);
     };
   }
+  // Widened: a JavaScript caller or a parsed file can pass anything, `null` included.
+  const given: unknown = sky;
+  if (typeof given !== "object" || given === null) {
+    throw fail("sky must be a colour, a gradient or harmonics");
+  }
   if (!("kind" in sky)) {
     const flat = checkedColor(sky, "sky");
     return (_dx, _dy, _dz, out) => {
@@ -481,6 +486,11 @@ function readSky(sky: LightProbeBakeSky | undefined): SkyRadiance {
  * @throws IgnifxError with code `IGX-0734` when a channel is not finite.
  */
 function checkedColor(colour: ColorLike, name: string): number[] {
+  // Widened: a gradient from a parsed file can leave a stop out.
+  const given: unknown = colour;
+  if (typeof given !== "object" || given === null) {
+    throw fail(`${name} must be a colour with finite channels`);
+  }
   const rgb = linearRgb(colour, false);
   if (!rgb.every((channel) => Number.isFinite(channel))) {
     throw fail(`${name} must be a colour with finite channels`);
@@ -639,9 +649,13 @@ class SceneBuilder {
  * Gathers the world-space triangles of every enabled mesh renderer and model the bake can read.
  *
  * @param world - The world.
+ * @param signal - Stops the collection between meshes, models and glTF primitives.
  * @returns The triangles, how many components gave none, and why each part was left out.
  */
-function collectTriangles(world: World): { scene: TraceScene; skipped: number; skips: LightProbeBakeSkip[] } {
+function collectTriangles(
+  world: World,
+  signal: AbortSignal | undefined,
+): { scene: TraceScene; skipped: number; skips: LightProbeBakeSkip[] } {
   const builder = new SceneBuilder();
   const skips: LightProbeBakeSkip[] = [];
   let skipped = 0;
@@ -651,6 +665,7 @@ function collectTriangles(world: World): { scene: TraceScene; skipped: number; s
     skips.push({ entity: entity.name, uid: entity.uid, component, reason });
   };
   for (const renderer of world.components(MeshRenderer)) {
+    signal?.throwIfAborted();
     if (!renderer.isEnabledInHierarchy) {
       continue;
     }
@@ -674,6 +689,7 @@ function collectTriangles(world: World): { scene: TraceScene; skipped: number; s
     );
   }
   for (const model of world.components(Model)) {
+    signal?.throwIfAborted();
     if (!model.isEnabledInHierarchy) {
       continue;
     }
@@ -685,6 +701,7 @@ function collectTriangles(world: World): { scene: TraceScene; skipped: number; s
     }
     let traced = 0;
     for (const primitive of gltf.primitives) {
+      signal?.throwIfAborted();
       const override = primitive.materialName === null ? undefined : model.materialOverrides[primitive.materialName];
       const rgb = override === undefined || override === null ? primitive.albedo : materialAlbedo(override);
       traced += builder.add(primitive.positions, primitive.indices, model.entity.transform.worldMatrix, rgb);

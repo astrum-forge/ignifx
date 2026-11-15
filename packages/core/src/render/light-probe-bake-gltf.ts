@@ -32,11 +32,11 @@ const MODE_TRIANGLES = 4;
 const MODE_TRIANGLE_STRIP = 5;
 const MODE_TRIANGLE_FAN = 6;
 
-/** Bytes per component, by glTF `componentType`. */
-const COMPONENT_BYTES: Readonly<Record<number, number>> = { 5120: 1, 5121: 1, 5122: 2, 5123: 2, 5125: 4, 5126: 4 };
+/** The largest `byteStride` glTF allows. */
+const MAX_BYTE_STRIDE = 252;
 
-/** Components per element, by glTF accessor `type`. */
-const TYPE_COMPONENTS: Readonly<Record<string, number>> = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 };
+/** The most node visits one file may cost; a strict tree visits each node once. */
+const MAX_NODE_VISITS = 65_536;
 
 /** One glTF primitive's triangles in the model's space. */
 export interface GltfBakePrimitive {
@@ -133,15 +133,23 @@ export function readGltfTriangles(bytes: ArrayBuffer): GltfBakeGeometry {
   const primitives: GltfBakePrimitive[] = [];
   const skipped: string[] = [];
   const mirror = [-1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-  const roots = json.scenes?.[json.scene ?? 0]?.nodes ?? [];
-  const visit = (nodeIndex: number, parent: readonly number[], depth: number): void => {
-    const node = json.nodes?.[nodeIndex];
-    if (node === undefined || depth > 256) {
+  const roots = item(item(json.scenes, json.scene ?? 0)?.nodes, "all") ?? [];
+  // glTF nodes form disjoint trees: a node reached twice (a shared child, a cycle) is skipped, so a
+  // hostile graph costs at most one visit per node.
+  const visited = new Set<number>();
+  const visit = (nodeIndex: unknown, parent: readonly number[], depth: number): void => {
+    const node = item(json.nodes, nodeIndex);
+    if (node === undefined || typeof nodeIndex !== "number" || depth > 256) {
       return;
     }
+    if (visited.has(nodeIndex) || visited.size >= MAX_NODE_VISITS) {
+      skipped.push(`node ${String(nodeIndex)} is reached twice or past the node budget; glTF nodes form a tree`);
+      return;
+    }
+    visited.add(nodeIndex);
     const world = multiply(parent, localMatrix(node));
-    const mesh = node.mesh === undefined ? undefined : json.meshes?.[node.mesh];
-    for (const [index, primitive] of (mesh?.primitives ?? []).entries()) {
+    const mesh = node.mesh === undefined ? undefined : item(json.meshes, node.mesh);
+    for (const [index, primitive] of (item(mesh?.primitives, "all") ?? []).entries()) {
       try {
         const read = readPrimitive(json, buffers, primitive, world);
         if (read !== null) {
@@ -152,7 +160,7 @@ export function readGltfTriangles(bytes: ArrayBuffer): GltfBakeGeometry {
         skipped.push(`mesh ${String(node.mesh)} primitive ${String(index)}: ${reason}`);
       }
     }
-    for (const child of node.children ?? []) {
+    for (const child of item(node.children, "all") ?? []) {
       visit(child, world, depth + 1);
     }
   };
@@ -275,7 +283,7 @@ function readPrimitive(
       throw new SkipPrimitive("an index past the last vertex");
     }
   }
-  const material = primitive.material === undefined ? undefined : json.materials?.[primitive.material];
+  const material = primitive.material === undefined ? undefined : item(json.materials, primitive.material);
   return {
     positions,
     indices: toTriangleList(raw, mode),
@@ -300,39 +308,57 @@ function readAccessor(
   index: number,
   components: number,
 ): Float64Array {
-  const accessor = json.accessors?.[index];
+  const accessor = item(json.accessors, index);
   if (accessor === undefined) {
     throw new SkipPrimitive(`accessor ${String(index)} does not exist`);
   }
   if (accessor.sparse !== undefined) {
     throw new SkipPrimitive("a sparse accessor");
   }
-  const width = TYPE_COMPONENTS[accessor.type ?? ""];
-  const size = COMPONENT_BYTES[accessor.componentType ?? 0];
+  const width = typeComponents(accessor.type);
+  const size = componentBytes(accessor.componentType);
   const count = accessor.count ?? 0;
-  if (width !== components || size === undefined || !Number.isSafeInteger(count) || count < 0) {
+  if (width !== components || size === undefined || !isWhole(count)) {
     throw new SkipPrimitive(`accessor ${String(index)} is not a ${String(components)}-component number array`);
   }
-  const view = accessor.bufferView === undefined ? undefined : json.bufferViews?.[accessor.bufferView];
+  const view = accessor.bufferView === undefined ? undefined : item(json.bufferViews, accessor.bufferView);
   if (view === undefined) {
     throw new SkipPrimitive(`accessor ${String(index)} has no buffer view`);
   }
   if (view.extensions?.["EXT_meshopt_compression"] !== undefined) {
     throw new SkipPrimitive("meshopt-compressed (EXT_meshopt_compression)");
   }
-  const buffer = buffers[view.buffer ?? 0];
+  const buffer = item(buffers, view.buffer ?? 0);
   if (buffer === undefined || typeof buffer === "string") {
     throw new SkipPrimitive(buffer ?? `buffer ${String(view.buffer)} does not exist`);
   }
-  const stride = view.byteStride ?? size * width;
-  const start = buffer.byteOffset + (view.byteOffset ?? 0) + (accessor.byteOffset ?? 0);
-  const end = count === 0 ? start : start + stride * (count - 1) + size * width;
-  if (end > buffer.byteOffset + buffer.byteLength) {
-    throw new SkipPrimitive(`accessor ${String(index)} runs past its buffer`);
+  // Every bound is checked before a view is made or a loop runs: an element stride of at least
+  // one element (glTF: up to 252 bytes), whole non-negative offsets, the accessor inside its view
+  // and the view inside its buffer. So `count` can never read more than the buffer holds.
+  const elementBytes = size * width;
+  const stride = view.byteStride ?? elementBytes;
+  const viewOffset = view.byteOffset ?? 0;
+  const viewLength = view.byteLength;
+  const accessorOffset = accessor.byteOffset ?? 0;
+  if (!isWhole(stride) || stride < elementBytes || stride > Math.max(MAX_BYTE_STRIDE, elementBytes)) {
+    throw new SkipPrimitive(
+      `buffer view ${String(accessor.bufferView)} has a byteStride outside ${String(elementBytes)}–252`,
+    );
   }
+  if (!isWhole(viewOffset) || !isWhole(viewLength) || !isWhole(accessorOffset)) {
+    throw new SkipPrimitive(`accessor ${String(index)} or its view has a negative or fractional offset or length`);
+  }
+  if (viewOffset + viewLength > buffer.byteLength) {
+    throw new SkipPrimitive(`buffer view ${String(accessor.bufferView)} runs past its buffer`);
+  }
+  if (count > 0 && accessorOffset + stride * (count - 1) + elementBytes > viewLength) {
+    throw new SkipPrimitive(`accessor ${String(index)} runs past its buffer view`);
+  }
+  const start = buffer.byteOffset + viewOffset + accessorOffset;
   const data = new DataView(buffer.buffer, 0, buffer.byteOffset + buffer.byteLength);
   const out = new Float64Array(count * width);
   const type = accessor.componentType ?? 0;
+
   const normalized = accessor.normalized === true;
   for (let element = 0; element < count; element += 1) {
     for (let c = 0; c < width; c += 1) {
@@ -495,4 +521,83 @@ function multiply(a: readonly number[], b: readonly number[]): number[] {
  */
 function at(values: ArrayLike<number>, index: number): number {
   return values[index] ?? 0;
+}
+
+/**
+ * Whether a value is a whole, non-negative, safe number: what glTF offsets, lengths and counts are.
+ *
+ * @param value - The value.
+ * @returns `true` for 0, 1, 2…
+ */
+function isWhole(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+}
+
+/**
+ * One element of an untrusted array by an untrusted index, or the array itself for `"all"`.
+ *
+ * @remarks
+ * A document can put anything where an index or a list belongs (`"toString"`, `-1`, an object);
+ * only an own element at a whole index, or a real array, comes back.
+ *
+ * @param list - The array, or whatever the document holds there.
+ * @param index - A whole index, or `"all"`.
+ * @returns The element or the array, or `undefined`.
+ */
+function item<T>(list: readonly T[] | undefined, index: "all"): readonly T[] | undefined;
+function item<T>(list: readonly T[] | undefined, index: unknown): T | undefined;
+function item<T>(list: readonly T[] | undefined, index: unknown): T | readonly T[] | undefined {
+  // Widened: the document may hold anything where a list belongs.
+  const given: unknown = list;
+  if (list === undefined || !Array.isArray(given)) {
+    return undefined;
+  }
+  if (index === "all") {
+    return list;
+  }
+  return isWhole(index) && index < list.length ? list[index] : undefined;
+}
+
+/**
+ * Bytes per component of a glTF `componentType`, compared by value so that no inherited key of a
+ * lookup object (`"toString"`) can match.
+ *
+ * @param type - The document's value.
+ * @returns 1, 2 or 4, or `undefined` for anything else.
+ */
+function componentBytes(type: unknown): number | undefined {
+  switch (type) {
+    case 5120:
+    case 5121:
+      return 1;
+    case 5122:
+    case 5123:
+      return 2;
+    case 5125:
+    case 5126:
+      return 4;
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * Components per element of a glTF accessor `type`, compared by value.
+ *
+ * @param type - The document's value.
+ * @returns 1 to 4, or `undefined` for anything else.
+ */
+function typeComponents(type: unknown): number | undefined {
+  switch (type) {
+    case "SCALAR":
+      return 1;
+    case "VEC2":
+      return 2;
+    case "VEC3":
+      return 3;
+    case "VEC4":
+      return 4;
+    default:
+      return undefined;
+  }
 }
