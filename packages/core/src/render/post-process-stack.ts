@@ -427,8 +427,7 @@ export class PostProcessStack extends Component implements ComponentHooks {
     }
     this.#hdrBloomFailed = true;
     renderer.app.log.error(
-      `HDR bloom could not be loaded, so {entity} renders without it. ${String(failure)}`,
-      this.entity.name,
+      `HDR bloom could not be loaded, so ${JSON.stringify(this.entity.name)} renders without it. ${String(failure)}`,
     );
   }
 
@@ -490,10 +489,9 @@ export class PostProcessStack extends Component implements ComponentHooks {
     }
     this.#hasWarnedAboutFeature = true;
     renderer.app.log.warn(
-      `${CoreErrorCode.postProcessingFeatureOff}: {entity} asks for post-processing, but the ` +
+      `${CoreErrorCode.postProcessingFeatureOff}: ${JSON.stringify(this.entity.name)} asks for post-processing, but the ` +
         "rendering.features.postProcessing opt-in is off, so the stack is inert. Declare it in the " +
         "rendering.features block of createApp() or ignifx.config.ts.",
-      this.entity.name,
     );
   }
 
@@ -562,8 +560,7 @@ export class PostProcessStack extends Component implements ComponentHooks {
         this.#failedShaders.add(shader.address);
         const message = isIgnifxError(failure) ? failure.message : String(failure);
         renderer.app.log.error(
-          `${CoreErrorCode.shaderCompileFailed}: {asset} could not be recorded as a custom post effect. ${message}`,
-          shader.address,
+          `${CoreErrorCode.shaderCompileFailed}: ${shader.address} could not be recorded as a custom post effect. ${message}`,
         );
       }
       return null;

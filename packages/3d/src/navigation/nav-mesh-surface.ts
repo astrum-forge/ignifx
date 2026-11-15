@@ -314,9 +314,7 @@ export class NavMeshSurface extends Component implements ComponentHooks {
     try {
       if (this.prebaked !== "") {
         this.app.log.warn(
-          "{surface} names the pre-baked navmesh {file}, which the pinned Babylon Lite cannot read; baking at runtime.",
-          this.entity.name,
-          this.prebaked,
+          `The NavMeshSurface on ${JSON.stringify(this.entity.name)} names the pre-baked navmesh ${JSON.stringify(this.prebaked)}, which the pinned Babylon Lite cannot read; baking at runtime.`,
         );
       }
       const plugin = await this.app.navigation.acquirePlugin();

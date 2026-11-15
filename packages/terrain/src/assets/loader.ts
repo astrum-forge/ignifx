@@ -177,9 +177,8 @@ async function decodeHeightmap(
   const png = await decodePng(view, address);
   if (png.bitDepth === 8) {
     ctx.app.log.warn(
-      `${TerrainErrorCode.eightBitHeightmap}: {file} is an 8-bit heightmap, which terraces; ` +
+      `${TerrainErrorCode.eightBitHeightmap}: ${address} is an 8-bit heightmap, which terraces; ` +
         "convert it with `ignifx import heightmap`.",
-      address,
     );
   }
   return pngToSamples16(png);

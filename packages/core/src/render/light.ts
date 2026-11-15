@@ -452,8 +452,7 @@ export class Light extends Component implements ComponentHooks {
     }
     this.#hasWarnedAboutShadows = true;
     renderer.app.log.warn(
-      "{entity} asks for shadows, but the rendering.features.shadows opt-in is off, so it casts none.",
-      this.entity.name,
+      `${JSON.stringify(this.entity.name)} asks for shadows, but the rendering.features.shadows opt-in is off, so it casts none.`,
     );
   }
 
