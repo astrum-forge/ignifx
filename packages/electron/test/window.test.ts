@@ -8,7 +8,9 @@ import { IGNIFX_SCHEME_PRIVILEGES, registerIgnifxScheme, serveIgnifxProtocol } f
 import {
   ALLOWED_PERMISSIONS,
   createGameWindow,
+  cspHeadersFor,
   installCspHeader,
+  isNavigationAllowed,
   lockNavigation,
   restrictPermissions,
 } from "../src/main/window.js";
@@ -61,7 +63,7 @@ describe("createGameWindow", () => {
   it("injects the packaged CSP for a packaged entry", () => {
     const window = createGameWindow({ entry: "index.html", preload: "/p.cjs" }) as unknown as FakeBrowserWindow;
 
-    expect(window.session.filterHeaders({})["Content-Security-Policy"]).toEqual([defaultCsp()]);
+    expect(window.session.filterHeaders({})?.["Content-Security-Policy"]).toEqual([defaultCsp()]);
   });
 
   it("injects none when the caller asked for none", () => {
@@ -72,6 +74,22 @@ describe("createGameWindow", () => {
     }) as unknown as FakeBrowserWindow;
 
     expect(window.session.headersListener).toBeNull();
+  });
+
+  it("puts its CSP on its own origin's responses only, so a framed document keeps its headers", () => {
+    const window = createGameWindow({
+      entry: "index.html",
+      preload: "/p.cjs",
+      csp: { frameSources: ["http://127.0.0.1:*"] },
+      frameOrigins: ["http://127.0.0.1:5173"],
+    }) as unknown as FakeBrowserWindow;
+
+    expect(window.session.filterHeaders({}, "ignifx://app/index.html")?.["Content-Security-Policy"]?.[0]).toContain(
+      "frame-src http://127.0.0.1:*",
+    );
+    expect(window.session.filterHeaders({}, "http://127.0.0.1:5173/")).toBeNull();
+    expect(window.wouldAllowNavigation("http://127.0.0.1:5173/", "will-frame-navigate", false)).toBe(true);
+    expect(window.wouldAllowNavigation("http://127.0.0.1:5173/", "will-navigate", true)).toBe(false);
   });
 
   it("forwards the window's lifecycle events to the renderer", () => {
@@ -112,18 +130,61 @@ describe("installCspHeader", () => {
       "Content-Type": ["text/html"],
     });
 
-    expect(produced["Content-Security-Policy"]).toEqual([cspFor()]);
+    expect(produced?.["Content-Security-Policy"]).toEqual([cspFor()]);
     // Two policies would intersect, making the effective one something no file states.
-    expect(Object.keys(produced).filter((name) => name.toLowerCase() === "content-security-policy").length).toBe(1);
+    expect(Object.keys(produced ?? {}).filter((name) => name.toLowerCase() === "content-security-policy").length).toBe(
+      1,
+    );
     // Every other header survives.
-    expect(produced["Content-Type"]).toEqual(["text/html"]);
+    expect(produced?.["Content-Type"]).toEqual(["text/html"]);
   });
 
   it("copes with a response that carried no headers at all", () => {
     const session = new FakeSession();
     installCspHeader(session as unknown as Session, "default-src 'none'");
 
-    expect(session.filterHeaders({})["Content-Security-Policy"]).toEqual(["default-src 'none'"]);
+    expect(session.filterHeaders({})?.["Content-Security-Policy"]).toEqual(["default-src 'none'"]);
+  });
+
+  it("without a scope, still covers every response (the original behaviour)", () => {
+    const session = new FakeSession();
+    installCspHeader(session as unknown as Session, "default-src 'none'");
+
+    expect(session.filterHeaders({}, "https://elsewhere.example/")?.["Content-Security-Policy"]).toEqual([
+      "default-src 'none'",
+    ]);
+  });
+
+  it("with an origin scope, leaves every other origin's response unchanged", () => {
+    const session = new FakeSession();
+    installCspHeader(session as unknown as Session, "default-src 'none'", "ignifx://app");
+
+    expect(session.filterHeaders({}, "ignifx://app/index.html")?.["Content-Security-Policy"]).toEqual([
+      "default-src 'none'",
+    ]);
+    // `URL.origin` is "null" for both; the scope compares tuple origins.
+    expect(session.filterHeaders({}, "ignifx://evil/index.html")).toBeNull();
+    expect(
+      session.filterHeaders({ "Content-Security-Policy": ["frame-ancestors x"] }, "http://127.0.0.1:5173/"),
+    ).toBeNull();
+  });
+
+  it("with a predicate scope, asks it for each response URL", () => {
+    const session = new FakeSession();
+    installCspHeader(session as unknown as Session, "default-src 'none'", (url) => url.startsWith("ignifx-editor:"));
+
+    expect(session.filterHeaders({}, "ignifx-editor://app/index.html")).not.toBeNull();
+    expect(session.filterHeaders({}, "http://localhost:5173/")).toBeNull();
+  });
+});
+
+describe("cspHeadersFor", () => {
+  it("copies the received header arrays rather than sharing them", () => {
+    const received = { "X-Thing": ["a"] };
+    const produced = cspHeadersFor({ url: "ignifx://app/", responseHeaders: received }, "p", "ignifx://app");
+
+    expect(produced).toEqual({ "X-Thing": ["a"], "Content-Security-Policy": ["p"] });
+    expect(produced?.["X-Thing"]).not.toBe(received["X-Thing"]);
   });
 });
 
@@ -180,11 +241,65 @@ describe("lockNavigation", () => {
     }
   });
 
+  it("locks the main frame to the app and sub-frames to the caller's allow-list", () => {
+    const window = new FakeBrowserWindow();
+    lockNavigation(window.webContents as unknown as WebContents, "ignifx://app", {
+      frameOrigins: ["http://127.0.0.1:5173"],
+    });
+
+    for (const event of ["will-navigate", "will-redirect", "will-frame-navigate"]) {
+      expect(window.wouldAllowNavigation("ignifx://app/x.html", event, true)).toBe(true);
+      expect(window.wouldAllowNavigation("http://127.0.0.1:5173/", event, true)).toBe(false);
+      expect(window.wouldAllowNavigation("http://127.0.0.1:5173/", event, false)).toBe(true);
+      expect(window.wouldAllowNavigation("http://127.0.0.1:5174/", event, false)).toBe(false);
+      // The app's own origin is not implied for sub-frames once an allow-list is given.
+      expect(window.wouldAllowNavigation("ignifx://app/x.html", event, false)).toBe(false);
+      expect(window.wouldAllowNavigation("about:blank", event, false)).toBe(false);
+    }
+  });
+
+  it("keeps sub-frames on the app's origin when no allow-list is given", () => {
+    const window = new FakeBrowserWindow();
+    lockNavigation(window.webContents as unknown as WebContents, "ignifx://app");
+
+    expect(window.wouldAllowNavigation("ignifx://app/frame.html", "will-frame-navigate", false)).toBe(true);
+    expect(window.wouldAllowNavigation("http://127.0.0.1:5173/", "will-frame-navigate", false)).toBe(false);
+  });
+
+  it("reads a function allow-list on every sub-frame navigation, and never for the main frame", () => {
+    const window = new FakeBrowserWindow();
+    let origins: readonly string[] = [];
+    let calls = 0;
+    lockNavigation(window.webContents as unknown as WebContents, "ignifx://app", {
+      frameOrigins: () => {
+        calls += 1;
+        return origins;
+      },
+    });
+
+    expect(window.wouldAllowNavigation("http://127.0.0.1:5173/", "will-frame-navigate", false)).toBe(false);
+    origins = ["http://127.0.0.1:5173"];
+    expect(window.wouldAllowNavigation("http://127.0.0.1:5173/", "will-frame-navigate", false)).toBe(true);
+    expect(window.wouldAllowNavigation("http://127.0.0.1:5173/", "will-redirect", false)).toBe(true);
+    expect(calls).toBe(3);
+    window.wouldAllowNavigation("ignifx://app/", "will-navigate", true);
+    expect(calls).toBe(3);
+  });
+
   it("refuses a <webview> attachment, the second lock on webviewTag: false", () => {
     const window = new FakeBrowserWindow();
     lockNavigation(window.webContents as unknown as WebContents, "ignifx://app");
 
     expect(window.webviewAttachmentPrevented).toBe(true);
+  });
+});
+
+describe("isNavigationAllowed", () => {
+  it("refuses a URL with no tuple origin in every frame", () => {
+    for (const url of ["about:blank", "data:text/html,x", "javascript:alert(1)", "file:///etc/passwd", ""]) {
+      expect(isNavigationAllowed(url, true, "ignifx://app", ["ignifx://app"])).toBe(false);
+      expect(isNavigationAllowed(url, false, "ignifx://app", ["ignifx://app"])).toBe(false);
+    }
   });
 });
 

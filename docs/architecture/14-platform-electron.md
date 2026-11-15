@@ -70,6 +70,18 @@ base-uri 'none'; form-action 'none'; frame-ancestors 'none'; frame-src 'none'; m
 
 `script-src` never gets `'unsafe-inline'` or `'unsafe-eval'`. It does get `'wasm-unsafe-eval'`, because Chromium refuses `WebAssembly.instantiate` under a CSP without it and both physics extensions need it. `style-src` gets `'unsafe-inline'` because `@ignifx/ui` installs its stylesheet as a `<style>` element and every template's `index.html` carries one.
 
+`createGameWindow` installs the header for the window's **own origin only** (`installCspHeader(session, policy, origin)`): a document from another origin keeps its own headers, which matters only to a window that frames one — given the game's `frame-ancestors 'none'`, a framed page would refuse to load. `installCspHeader` without its third argument still covers every response in the session.
+
+**Framing another origin** (a tool window such as the ignifx editor, which frames its scene view from a loopback dev server) takes three things together, none of which loosens the default policy:
+
+- `cspFor({ frameSources })` replaces `frame-src 'none'` with the listed sources. Each must be one `scheme://host` with an optional `:port` or `:*` (`isFrameSource`); a keyword, a bare scheme, a path, a `*` host, or a list smuggled into one entry throws `IGX-1466`.
+- `installCspHeader(session, policy, scope)` with `scope` the app's origin, or a predicate over the response URL (for a custom scheme), so the framed document is not served the app's `frame-ancestors 'none'`.
+- `lockNavigation(contents, appOrigin, { frameOrigins })` keeps the main frame on the app's origin and lets a sub-frame navigate only to an origin in `frameOrigins`. A function is called on every sub-frame navigation, `will-redirect` included, so the allow-list follows a dev server that moved ports after the document loaded — which the header cannot do, since a loaded document keeps the policy it was served with. `isNavigationAllowed` is the pure rule. `createGameWindow({ frameOrigins, csp: { frameSources } })` wires both.
+
+IPC stays top-frame only: `installHostHandlers` refuses a sub-frame sender with `IGX-1467` whatever the frame allow-list says.
+
+`@ignifx/electron/main` imports nothing from `@ignifx/core`: its errors are `ElectronMainError`s, carrying the same `IGX-####` codes and core's development message format, and `isIgnifxError` is `false` for them.
+
 ## 4. Browser
 
 - Capability page: each template ships its fallback **inside its own `index.html`** — a `#unsupported` block revealed by `document.body.dataset.webgpu = "unavailable"` — rather than as a separate `webgpu-unsupported.html` file. It is shown when `createApp` rejects with `IgnifxError` code `IGX-0701` (WebGPU unavailable), and also when startup fails for any other reason, so a broken build is never a blank window. There is no shared `templates/_shared/` directory and no exported markup helper: the panel is three elements and a stylesheet rule, and every template already styles its own. Verified in all four templates.

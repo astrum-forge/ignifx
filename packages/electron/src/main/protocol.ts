@@ -2,8 +2,9 @@ import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { extname, resolve, sep } from "node:path";
 import { protocol } from "electron";
-import { electronError, ElectronErrorCode } from "../errors.js";
+import { ElectronErrorCode } from "../error-codes.js";
 import { IGNIFX_HOST_AUTHORITY, IGNIFX_SCHEME } from "../host-contract.js";
+import { mainError } from "./main-error.js";
 import type { Readable } from "node:stream";
 
 /**
@@ -138,7 +139,7 @@ const NUL = "\u0000";
  * @param url - The request URL, as `request.url` gives it.
  * @param root - The absolute directory the protocol serves.
  * @returns The absolute path of the file to serve.
- * @throws An `IgnifxError` with code `IGX-1465` when the path resolves outside `root`, cannot be
+ * @throws An `ElectronMainError` with code `IGX-1465` when the path resolves outside `root`, cannot be
  * decoded, or names an authority other than `app`, and one with code `IGX-1466` when `url` is not an
  * `ignifx://` URL.
  *
@@ -155,13 +156,13 @@ export function protocolPathFor(url: string, root: string): string {
   try {
     parsed = new URL(url);
   } catch (error) {
-    throw electronError(ElectronErrorCode.invalidWindowOptions, `"${url}" is not a URL.`, {
+    throw mainError(ElectronErrorCode.invalidWindowOptions, `"${url}" is not a URL.`, {
       context: { option: "url" },
       cause: error,
     });
   }
   if (parsed.protocol !== `${IGNIFX_SCHEME}:`) {
-    throw electronError(ElectronErrorCode.invalidWindowOptions, `"${url}" is not an ${IGNIFX_SCHEME}:// URL.`, {
+    throw mainError(ElectronErrorCode.invalidWindowOptions, `"${url}" is not an ${IGNIFX_SCHEME}:// URL.`, {
       context: { option: "url" },
     });
   }
@@ -172,7 +173,7 @@ export function protocolPathFor(url: string, root: string): string {
   // leaves the case of a non-special scheme's host alone (`new URL("ignifx://APP/x").host` is
   // `"APP"`, measured on Node 25.2.1).
   if (parsed.host.toLowerCase() !== IGNIFX_HOST_AUTHORITY) {
-    throw electronError(
+    throw mainError(
       ElectronErrorCode.protocolPathEscaped,
       `"${url}" is not served: the only ${IGNIFX_SCHEME}:// authority is "${IGNIFX_HOST_AUTHORITY}".`,
       {
@@ -187,13 +188,13 @@ export function protocolPathFor(url: string, root: string): string {
   try {
     relative = decodeURIComponent(parsed.pathname);
   } catch (error) {
-    throw electronError(ElectronErrorCode.protocolPathEscaped, `"${url}" is not decodable.`, {
+    throw mainError(ElectronErrorCode.protocolPathEscaped, `"${url}" is not decodable.`, {
       context: { path: parsed.pathname },
       cause: error,
     });
   }
   if (relative.includes(NUL)) {
-    throw electronError(ElectronErrorCode.protocolPathEscaped, "The path contains a NUL byte.", {
+    throw mainError(ElectronErrorCode.protocolPathEscaped, "The path contains a NUL byte.", {
       context: { path: parsed.pathname },
     });
   }
@@ -209,7 +210,7 @@ export function protocolPathFor(url: string, root: string): string {
 
   const resolved = resolve(base, relative);
   if (resolved !== base && !resolved.startsWith(`${base}${sep}`)) {
-    throw electronError(ElectronErrorCode.protocolPathEscaped, `"${url}" resolves outside the served directory.`, {
+    throw mainError(ElectronErrorCode.protocolPathEscaped, `"${url}" resolves outside the served directory.`, {
       context: { path: relative, root: base },
       hint: "Serve the file from inside the build output.",
     });

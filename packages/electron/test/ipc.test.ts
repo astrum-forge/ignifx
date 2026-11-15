@@ -4,7 +4,6 @@ import { electronMock, fakeInvokeEvent, FakeBrowserWindow, resetElectronMock } f
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { isIgnifxError } from "@ignifx/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { HOST_CHANNELS, HOST_WINDOW_EVENT_CHANNEL } from "../src/host-contract.js";
 import {
@@ -14,6 +13,7 @@ import {
   openDialogOptionsFor,
   resolveHostPaths,
 } from "../src/main/ipc.js";
+import { ElectronMainError } from "../src/main/main-error.js";
 import { FileStorage } from "../src/main/storage-fs.js";
 import { applyWebGpuSwitches, LINUX_FEATURES_SWITCH, WEBGPU_SWITCH } from "../src/main/switches.js";
 import { FORWARDED_WINDOW_EVENTS, forwardWindowEvents } from "../src/main/window.js";
@@ -129,7 +129,7 @@ describe("installHostHandlers", () => {
           await invoke(HOST_CHANNELS.storageSet, "saves", "k", value);
           return "no error";
         } catch (error) {
-          return isIgnifxError(error) ? error.code : "not an IgnifxError";
+          return error instanceof ElectronMainError ? error.code : "not an ElectronMainError";
         }
       }),
     );
@@ -192,7 +192,7 @@ describe("installHostHandlers", () => {
     } catch (error) {
       thrown = error;
     }
-    expect(isIgnifxError(thrown) && thrown.code).toBe("IGX-1464");
+    expect(thrown instanceof ElectronMainError && thrown.code).toBe("IGX-1464");
     // Refused before the shell ever saw it.
     expect(electronMock.opened).toEqual(["https://ignifx.com"]);
   });
@@ -210,7 +210,7 @@ describe("the sender check every handler runs first", () => {
       await invokeAs(event, HOST_CHANNELS.paths);
       return "resolved";
     } catch (error) {
-      return isIgnifxError(error) ? error.code : String(error);
+      return error instanceof ElectronMainError ? error.code : String(error);
     }
   }
 

@@ -1,6 +1,7 @@
 import { app, dialog, ipcMain, shell } from "electron";
-import { electronError, ElectronErrorCode } from "../errors.js";
+import { ElectronErrorCode } from "../error-codes.js";
 import { HOST_CHANNELS, IGNIFX_ORIGIN } from "../host-contract.js";
+import { mainError } from "./main-error.js";
 import { originOfUrl } from "./origin.js";
 import { FileStorage } from "./storage-fs.js";
 import { DEFAULT_EXTERNAL_PROTOCOLS, isDevServerEntry } from "./window.js";
@@ -29,11 +30,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * @param value - The argument.
  * @param what - The parameter's name, for the failure message.
  * @returns The string.
- * @throws An `IgnifxError` with code `IGX-1463` when it is not one.
+ * @throws An `ElectronMainError` with code `IGX-1463` when it is not one.
  */
 function requireString(value: unknown, what: string): string {
   if (typeof value !== "string") {
-    throw electronError(ElectronErrorCode.hostCallFailed, `${what} must be a string.`, {
+    throw mainError(ElectronErrorCode.hostCallFailed, `${what} must be a string.`, {
       context: { channel: what },
     });
   }
@@ -45,7 +46,7 @@ function requireString(value: unknown, what: string): string {
  *
  * @param value - The argument.
  * @returns The stored value.
- * @throws An `IgnifxError` with code `IGX-1463` when it is not one.
+ * @throws An `ElectronMainError` with code `IGX-1463` when it is not one.
  */
 function requireStoredValue(value: unknown): HostStoredValue {
   if (isRecord(value)) {
@@ -58,7 +59,7 @@ function requireStoredValue(value: unknown): HostStoredValue {
       return { kind: "bytes", bytes };
     }
   }
-  throw electronError(ElectronErrorCode.hostCallFailed, "The value is neither JSON text nor bytes.", {
+  throw mainError(ElectronErrorCode.hostCallFailed, "The value is neither JSON text nor bytes.", {
     context: { channel: HOST_CHANNELS.storageSet },
   });
 }
@@ -179,7 +180,7 @@ function senderGateFor(window: BrowserWindow, origins: readonly string[]): Sende
     if (isTrustedSender(sender, origins)) {
       return;
     }
-    throw electronError(
+    throw mainError(
       ElectronErrorCode.hostSenderRefused,
       `${channel} was invoked from a frame that is not the game window's own document.`,
       {
@@ -483,7 +484,7 @@ function installShellHandlers(gate: SenderGate, window: BrowserWindow, protocols
   handleFromGameWindow(gate, HOST_CHANNELS.shellOpenExternal, async (url: unknown): Promise<void> => {
     const text = requireString(url, "url");
     if (!isAllowedExternalUrl(text, protocols)) {
-      throw electronError(ElectronErrorCode.externalUrlRefused, `${text} does not use an allowed protocol.`, {
+      throw mainError(ElectronErrorCode.externalUrlRefused, `${text} does not use an allowed protocol.`, {
         context: { url: text, allowed: protocols.join(" ") },
         hint: `Allowed protocols are ${protocols.join(", ")}.`,
       });

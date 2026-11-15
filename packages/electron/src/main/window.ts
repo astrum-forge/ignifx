@@ -130,6 +130,14 @@ export interface GameWindowOptions {
    * @defaultValue {@link DEFAULT_EXTERNAL_PROTOCOLS}
    */
   readonly externalProtocols?: readonly string[];
+  /**
+   * The origins the window's sub-frames may navigate to: a list, or a function read on every
+   * navigation for a list that changes (a dev server that restarts on another port). Passed to
+   * {@link lockNavigation}; the CSP's `frame-src` must admit them too (`csp: { frameSources }`).
+   *
+   * @defaultValue the window's own origin only, which is what `lockNavigation` has always allowed.
+   */
+  readonly frameOrigins?: FrameOrigins;
 }
 
 /**
@@ -270,36 +278,113 @@ export function cspValueFor(options: GameWindowOptions): string | null {
 }
 
 /**
- * Injects a Content-Security-Policy response header into every response a session serves.
+ * Which responses {@link installCspHeader} puts its policy on: an origin, compared with
+ * {@link originOfUrl}, or a predicate over the response URL (for a scheme, or several origins).
+ *
+ * @public
+ */
+export type CspHeaderScope = string | ((url: string) => boolean);
+
+/**
+ * The part of Electron's `onHeadersReceived` details {@link cspHeadersFor} reads.
+ *
+ * @public
+ */
+export interface CspResponseDetails {
+  /** The response's URL. */
+  readonly url: string;
+  /** The headers the response carried, if any. */
+  readonly responseHeaders?: Readonly<Record<string, readonly string[]>>;
+}
+
+/**
+ * Reports whether a response URL is in a {@link CspHeaderScope}.
+ *
+ * @param url - The response's URL.
+ * @param scope - The scope, or `undefined` for every response.
+ * @returns `true` when the policy goes on the response.
+ */
+function isInCspScope(url: string, scope: CspHeaderScope | undefined): boolean {
+  if (scope === undefined) {
+    return true;
+  }
+  if (typeof scope === "string") {
+    return originOfUrl(url) === scope;
+  }
+  return scope(url);
+}
+
+/**
+ * Decides the headers of one response: in scope, exactly one Content-Security-Policy, replacing
+ * any the response carried; out of scope, nothing changes.
  *
  * @remarks
- * `session.webRequest.onHeadersReceived` (`electron.d.ts` 19657) is the documented hook. The
- * listener replaces any policy the response already carried rather than appending one, because two
- * `Content-Security-Policy` headers intersect and the result is whichever is stricter — which makes
- * the effective policy something no single file states.
+ * Pure, which is what lets the scoping be tested without a session. A policy is replaced rather
+ * than appended because two `Content-Security-Policy` headers intersect, and the effective policy
+ * would then be something no single file states.
  *
- * @param session - The session to filter, normally the window's own.
- * @param csp - The header value to inject.
+ * @param details - The response.
+ * @param csp - The header value.
+ * @param scope - Which responses get it; omitted, every response.
+ * @returns The new headers, or `null` to leave the response as it is.
  *
  * @example
  * ```ts
- * installCspHeader(window.webContents.session, cspFor());
+ * cspHeadersFor({ url: "ignifx://app/index.html" }, cspFor(), "ignifx://app"); // { "Content-Security-Policy": [...] }
+ * cspHeadersFor({ url: "http://127.0.0.1:5173/" }, cspFor(), "ignifx://app");  // null
  * ```
  *
  * @public
  */
-export function installCspHeader(session: Session, csp: string): void {
-  session.webRequest.onHeadersReceived((details, callback): void => {
-    const headers: Record<string, string[]> = {};
-    const received = details.responseHeaders ?? {};
-    for (const name of Object.keys(received)) {
-      if (name.toLowerCase() === "content-security-policy") {
-        continue;
-      }
-      headers[name] = received[name] ?? [];
+export function cspHeadersFor(
+  details: CspResponseDetails,
+  csp: string,
+  scope?: CspHeaderScope,
+): Record<string, string[]> | null {
+  if (!isInCspScope(details.url, scope)) {
+    return null;
+  }
+  const headers: Record<string, string[]> = {};
+  const received = details.responseHeaders ?? {};
+  for (const name of Object.keys(received)) {
+    if (name.toLowerCase() === "content-security-policy") {
+      continue;
     }
-    headers["Content-Security-Policy"] = [csp];
-    callback({ responseHeaders: headers });
+    headers[name] = [...(received[name] ?? [])];
+  }
+  headers["Content-Security-Policy"] = [csp];
+  return headers;
+}
+
+/**
+ * Injects a Content-Security-Policy response header into the responses a session serves: every
+ * response, or only those in `scope`.
+ *
+ * @remarks
+ * `session.webRequest.onHeadersReceived` (`electron.d.ts` 19657) is the documented hook. The
+ * listener replaces any policy the response already carried rather than appending one (see
+ * {@link cspHeadersFor}).
+ *
+ * Pass a `scope` when the window frames another origin: a session-wide policy would also be served
+ * to the framed document, whose `frame-ancestors 'none'` would then refuse to load it. Responses
+ * outside the scope keep their own headers. {@link createGameWindow} scopes to the window's origin.
+ *
+ * @param session - The session to filter, normally the window's own.
+ * @param csp - The header value to inject.
+ * @param scope - The app's origin, or a predicate over the response URL; omitted, every response
+ * (the behaviour before the parameter existed).
+ *
+ * @example
+ * ```ts
+ * installCspHeader(window.webContents.session, cspFor(), "ignifx://app");
+ * ```
+ *
+ * @public
+ */
+export function installCspHeader(session: Session, csp: string, scope?: CspHeaderScope): void {
+  session.webRequest.onHeadersReceived((details, callback): void => {
+    const headers = cspHeadersFor(details, csp, scope);
+    callback(headers === null ? {} : { responseHeaders: headers });
   });
 }
 
@@ -366,7 +451,64 @@ export function forwardWindowEvents(window: BrowserWindow): void {
 }
 
 /**
- * Refuses every navigation and every new window a page tries to open.
+ * The origins a window's sub-frames may navigate to: a fixed list, or a function
+ * {@link lockNavigation} calls on every navigation, for a list that changes while the window is
+ * open.
+ *
+ * @public
+ */
+export type FrameOrigins = readonly string[] | (() => readonly string[]);
+
+/**
+ * What {@link lockNavigation} accepts besides the app's origin.
+ *
+ * @public
+ */
+export interface NavigationLockOptions {
+  /**
+   * The origins a sub-frame may navigate to. Exact origins (`http://127.0.0.1:5173`), compared with
+   * {@link originOfUrl}; the main frame never leaves the app's origin whatever this says.
+   *
+   * @defaultValue the app's origin only.
+   */
+  readonly frameOrigins?: FrameOrigins;
+}
+
+/**
+ * Decides one navigation: the main frame stays on the app's origin, and a sub-frame may go only to
+ * one of `frameOrigins`. A URL with no tuple origin (`about:blank`, `data:`, `javascript:`, `file:`,
+ * or one that does not parse) is refused in every frame.
+ *
+ * @param url - Where the frame would go.
+ * @param isMainFrame - Whether it is the window's top frame.
+ * @param appOrigin - The one origin the top frame may be on.
+ * @param frameOrigins - The origins a sub-frame may be on.
+ * @returns Whether the navigation may proceed.
+ *
+ * @example
+ * ```ts
+ * isNavigationAllowed("http://127.0.0.1:5173/", false, "ignifx://app", ["http://127.0.0.1:5173"]); // true
+ * isNavigationAllowed("http://127.0.0.1:5173/", true, "ignifx://app", ["http://127.0.0.1:5173"]);  // false
+ * ```
+ *
+ * @public
+ */
+export function isNavigationAllowed(
+  url: string,
+  isMainFrame: boolean,
+  appOrigin: string,
+  frameOrigins: readonly string[],
+): boolean {
+  const origin = originOfUrl(url);
+  if (origin === null) {
+    return false;
+  }
+  return isMainFrame ? origin === appOrigin : frameOrigins.includes(origin);
+}
+
+/**
+ * Refuses every new window and every navigation off the app: the main frame is locked to
+ * `allowedOrigin`, and sub-frames to `options.frameOrigins` (by default `allowedOrigin` too).
  *
  * @remarks
  * A packaged game navigates nowhere: its only document is the one it was loaded with, and anything
@@ -382,10 +524,14 @@ export function forwardWindowEvents(window: BrowserWindow): void {
  * - `will-navigate` (`electron.d.ts` 17671) — the top-level document being replaced.
  * - `will-redirect` (`electron.d.ts` 17802) — a **server-side** redirect mid-navigation, which
  *   `will-navigate` never sees: the first hop passes the origin check and the redirect target is
- *   what actually loads.
- * - `will-frame-navigate` (`electron.d.ts` 17652) — the same for a subframe. The policy forbids
- *   frames (`frame-src 'none'`), so this is the layer that says so when the policy is not there —
- *   a development window whose CSP the game replaced, for instance.
+ *   what actually loads. Gated per frame like the rest.
+ * - `will-frame-navigate` (`electron.d.ts` 17652) — any frame, sub-frames included. The default
+ *   policy forbids frames (`frame-src 'none'`), so this is the layer that says so when the policy is
+ *   not there — a development window whose CSP the game replaced, for instance.
+ *
+ * Every event's details carry `isMainFrame`, which selects the rule ({@link isNavigationAllowed}).
+ * A function `frameOrigins` is called on every navigation, so a host whose framed dev server moves
+ * to another port answers with the current origin rather than the one it had at window creation.
  *
  * The origin is read with {@link originOfUrl}, not with `URL.origin`: `ignifx` is not a *special*
  * scheme to the WHATWG parser, so `new URL("ignifx://evil/x").origin` is the string `"null"` and an
@@ -396,19 +542,34 @@ export function forwardWindowEvents(window: BrowserWindow): void {
  * own preferences.
  *
  * @param contents - The window's web contents.
- * @param allowedOrigin - The one origin a navigation may stay on; anything else is blocked.
+ * @param allowedOrigin - The one origin the main frame may stay on; anything else is blocked.
+ * @param options - The origins sub-frames may navigate to.
  *
  * @example
  * ```ts
  * lockNavigation(window.webContents, "ignifx://app");
+ * lockNavigation(editorWindow.webContents, "ignifx-editor://app", {
+ *   frameOrigins: () => (server.running ? [server.origin] : []),
+ * });
  * ```
  *
  * @public
  */
-export function lockNavigation(contents: WebContents, allowedOrigin: string): void {
+export function lockNavigation(
+  contents: WebContents,
+  allowedOrigin: string,
+  options: NavigationLockOptions = {},
+): void {
+  const frameOrigins = options.frameOrigins ?? [allowedOrigin];
+  const currentFrameOrigins = (): readonly string[] =>
+    typeof frameOrigins === "function" ? frameOrigins() : frameOrigins;
   contents.setWindowOpenHandler((): { readonly action: "deny" } => ({ action: "deny" }));
-  const gate = (details: { readonly url: string; preventDefault: () => void }): void => {
-    if (originOfUrl(details.url) !== allowedOrigin) {
+  const gate = (details: { readonly url: string; readonly isMainFrame: boolean; preventDefault: () => void }): void => {
+    // The frame-origin function is called only for a sub-frame navigation.
+    const allowed = details.isMainFrame
+      ? isNavigationAllowed(details.url, true, allowedOrigin, [])
+      : isNavigationAllowed(details.url, false, allowedOrigin, currentFrameOrigins());
+    if (!allowed) {
       details.preventDefault();
     }
   };
@@ -501,16 +662,21 @@ export function restrictPermissions(session: Session, allowed: readonly string[]
  */
 export function createGameWindow(options: GameWindowOptions): BrowserWindow {
   const window = new BrowserWindow(windowOptionsFor(options));
-  const csp = cspValueFor(options);
-  if (csp !== null) {
-    installCspHeader(window.webContents.session, csp);
-  }
-  restrictPermissions(window.webContents.session);
-
   const url = isDevServerEntry(options.entry) ? options.entry : packagedEntryUrl(options.entry);
   // `originOfUrl`, not `new URL(url).origin`: the latter is the string `"null"` for every
-  // `ignifx://` URL, which would have made the check below pass for `ignifx://anything`.
-  lockNavigation(window.webContents, originOfUrl(url) ?? IGNIFX_ORIGIN);
+  // `ignifx://` URL, which would have made the navigation check pass for `ignifx://anything`.
+  const origin = originOfUrl(url) ?? IGNIFX_ORIGIN;
+  const csp = cspValueFor(options);
+  if (csp !== null) {
+    // Scoped to the window's own origin, so a document it frames keeps its own headers.
+    installCspHeader(window.webContents.session, csp, origin);
+  }
+  restrictPermissions(window.webContents.session);
+  lockNavigation(
+    window.webContents,
+    origin,
+    options.frameOrigins === undefined ? {} : { frameOrigins: options.frameOrigins },
+  );
   forwardWindowEvents(window);
 
   if (options.show !== true) {

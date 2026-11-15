@@ -44,8 +44,9 @@ export const DEFAULT_IGNORED_ENTRIES: readonly string[] = [
  * @remarks
  * A browser-only project should not carry them, and not only for tidiness: `electron` and
  * `electron-builder` are large binary downloads that a browser game never runs, and an
- * `electron.vite.config.ts` in a project with no `desktop/` directory is a config that names files
- * that are not there.
+ * `electron.vite.config.ts` or `tsconfig.desktop.json` in a project with no `desktop/` directory is
+ * a config that names files that are not there. The `package.json` scripts that name a removed
+ * entry lose that step (the `typecheck` script's `tsc -p tsconfig.desktop.json`).
  *
  * @public
  */
@@ -53,6 +54,7 @@ export const DESKTOP_ONLY_ENTRIES: readonly string[] = Object.freeze([
   "desktop",
   "electron.vite.config.ts",
   "electron-builder.yml",
+  "tsconfig.desktop.json",
 ]);
 
 /**
@@ -319,7 +321,30 @@ function rewriteWorkspaceRanges(document: unknown, range: string): boolean {
 }
 
 /**
- * Removes the desktop scripts and dependencies from a parsed `package.json`, in place.
+ * Drops the `&&`-joined steps of a script command that name a desktop-only file.
+ *
+ * @param command - The script's command line.
+ * @returns The command without those steps (`""` when every step went), or `null` when nothing
+ * names a desktop-only file.
+ */
+function withoutDesktopSteps(command: string): string | null {
+  // Files only: the `desktop` directory's name is too common a word to search a command line for,
+  // and the scripts that use the directory are the `:desktop` ones, which go whole.
+  const names = (step: string): boolean =>
+    DESKTOP_ONLY_ENTRIES.some((entry) => entry.includes(".") && step.includes(entry));
+  const steps = command.split("&&");
+  if (!steps.some(names)) {
+    return null;
+  }
+  return steps
+    .filter((step) => !names(step))
+    .map((step) => step.trim())
+    .join(" && ");
+}
+
+/**
+ * Removes the desktop scripts and dependencies from a parsed `package.json`, in place, and the steps
+ * of the remaining scripts that name a desktop-only file.
  *
  * @param document - The parsed document; anything that is not an object is left alone.
  * @returns `true` when at least one entry was removed.
@@ -332,10 +357,22 @@ function stripDesktopEntries(document: unknown): boolean {
   const scripts: unknown = document["scripts"];
   if (isRecord(scripts)) {
     for (const name of Object.keys(scripts)) {
+      const command: unknown = scripts[name];
       if (name.endsWith(DESKTOP_SCRIPT_SUFFIX)) {
         delete scripts[name];
         changed = true;
+        continue;
       }
+      const rewritten = typeof command === "string" ? withoutDesktopSteps(command) : null;
+      if (rewritten === null) {
+        continue;
+      }
+      if (rewritten === "") {
+        delete scripts[name];
+      } else {
+        scripts[name] = rewritten;
+      }
+      changed = true;
     }
   }
   for (const blockName of DEPENDENCY_BLOCKS) {

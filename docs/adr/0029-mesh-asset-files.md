@@ -1,6 +1,6 @@
 # ADR-0029 · Primitive meshes as `.mesh.json` files
 
-**Status:** Proposed · **Date:** 2026-10-15 · **Deciders:** Astrum Forge Studios (owner)
+**Status:** Accepted (2026-10-27, ratified by the owner) · **Date:** 2026-10-15 · **Deciders:** Astrum Forge Studios (owner)
 
 ## Context
 

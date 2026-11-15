@@ -386,6 +386,38 @@ describe("the repository's templates and @types/node", () => {
   it.each(templateNames)("%s without --desktop leaves @types/node out", async (template) => {
     expect(await scaffoldDevDependencies(template, false)).not.toHaveProperty(["@types/node"]);
   });
+
+  it.each(templateNames)(
+    "%s without --desktop drops tsconfig.desktop.json and every script naming it",
+    async (template) => {
+      const target = join(workspace, `${template}-browser-tsconfig`);
+      const result = await runCreate([target, "--template", template], recordingIo(join(repoRoot, "templates")));
+      const manifest = JSON.parse(await readFile(join(target, "package.json"), "utf8")) as {
+        readonly scripts: Record<string, string>;
+      };
+
+      expect(result.files).not.toContain("tsconfig.desktop.json");
+      expect(result.files).toContain("tsconfig.json");
+      expect(JSON.stringify(manifest.scripts)).not.toContain("tsconfig.desktop.json");
+      expect(manifest.scripts["typecheck"]).toBe("tsc --noEmit -p tsconfig.json");
+      // The browser tsconfig never referenced the desktop one, so nothing else dangles.
+      expect(await readFile(join(target, "tsconfig.json"), "utf8")).not.toContain("desktop");
+    },
+  );
+
+  it.each(templateNames)("%s --desktop keeps tsconfig.desktop.json and its typecheck step", async (template) => {
+    const target = join(workspace, `${template}-desktop-tsconfig`);
+    const result = await runCreate(
+      [target, "--template", template, "--desktop"],
+      recordingIo(join(repoRoot, "templates")),
+    );
+    const manifest = JSON.parse(await readFile(join(target, "package.json"), "utf8")) as {
+      readonly scripts: Record<string, string>;
+    };
+
+    expect(result.files).toContain("tsconfig.desktop.json");
+    expect(manifest.scripts["typecheck"]).toContain("tsc --noEmit -p tsconfig.desktop.json");
+  });
 });
 
 // Electron 44's npm package has no install script: it downloads its binary the first time

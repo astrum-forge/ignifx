@@ -151,15 +151,19 @@ Everything but `isElectron` and `versions` rejects with `IGX-1462` in a browser 
 
 ### `@ignifx/electron/main`
 
-| Symbol                                   | Does                                                                                    |
-| ---------------------------------------- | --------------------------------------------------------------------------------------- |
-| `applyWebGpuSwitches()`                  | `enable-unsafe-webgpu`, plus `enable-features=Vulkan` on Linux. **Before `whenReady`.** |
-| `registerIgnifxScheme()`                 | `ignifx://` as standard + secure + fetchable + streamable. **Before `whenReady`.**      |
-| `serveIgnifxProtocol(dir)`               | Serves a directory; returns a function that stops it. **After `whenReady`.**            |
-| `createGameWindow(options)`              | The window, hardened. Returns a `BrowserWindow`.                                        |
-| `installHostHandlers({ window, entry })` | The IPC handlers; returns a function that removes them. Pass the same `entry`.          |
-| `windowOptionsFor(options)` / `cspFor()` | Pure builders, so a test can assert the security options.                               |
-| `FileStorage`                            | The file-system store, in `@ignifx/core`'s own on-disk layout.                          |
+| Symbol                                    | Does                                                                                     |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `applyWebGpuSwitches()`                   | `enable-unsafe-webgpu`, plus `enable-features=Vulkan` on Linux. **Before `whenReady`.**  |
+| `registerIgnifxScheme()`                  | `ignifx://` as standard + secure + fetchable + streamable. **Before `whenReady`.**       |
+| `serveIgnifxProtocol(dir)`                | Serves a directory; returns a function that stops it. **After `whenReady`.**             |
+| `createGameWindow(options)`               | The window, hardened. Returns a `BrowserWindow`.                                         |
+| `installHostHandlers({ window, entry })`  | The IPC handlers; returns a function that removes them. Pass the same `entry`.           |
+| `windowOptionsFor(options)` / `cspFor()`  | Pure builders, so a test can assert the security options.                                |
+| `installCspHeader(session, csp, scope?)`  | The CSP header; `scope` (an origin or a URL predicate) limits it to the app's responses. |
+| `lockNavigation(contents, origin, opts?)` | Main frame on `origin`; sub-frames only to `opts.frameOrigins` (list or function).       |
+| `FileStorage`                             | The file-system store, in `@ignifx/core`'s own on-disk layout.                           |
+
+The main entry never imports `@ignifx/core`; it throws `ElectronMainError` (same `IGX-####` codes; test `error.code`, not `isIgnifxError`).
 
 ### Security defaults
 
@@ -168,8 +172,8 @@ Everything but `isElectron` and `versions` rejects with `IGX-1462` in a browser 
 | Layer                   | What it does                                                                                                                                                                                                                                                                                                                                                         |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `webPreferences`        | `contextIsolation: true`, `sandbox: true`, `nodeIntegration` / `nodeIntegrationInWorker` / `nodeIntegrationInSubFrames` off, `webSecurity: true`, `allowRunningInsecureContent: false`, `experimentalFeatures: false`, `enableBlinkFeatures: ""`, `enableWebSQL: false`, `webviewTag: false`. Written **after** your options are spread, so they cannot be weakened. |
-| Content-Security-Policy | A response header on every document and subresource: `default-src 'none'`, `script-src 'self' 'wasm-unsafe-eval'`, `object-src`/`base-uri`/`form-action`/`frame-ancestors`/`frame-src` `'none'`. Never `'unsafe-inline'` or `'unsafe-eval'` on scripts.                                                                                                              |
-| Navigation              | `window.open` denied; `will-navigate`, `will-redirect` and `will-frame-navigate` blocked off the window's own origin; `will-attach-webview` refused.                                                                                                                                                                                                                 |
+| Content-Security-Policy | A response header on every document and subresource of the window's own origin: `default-src 'none'`, `script-src 'self' 'wasm-unsafe-eval'`, `object-src`/`base-uri`/`form-action`/`frame-ancestors`/`frame-src` `'none'`. Never `'unsafe-inline'` or `'unsafe-eval'` on scripts.                                                                                   |
+| Navigation              | `window.open` denied; `will-navigate`, `will-redirect` and `will-frame-navigate` blocked off the window's own origin (sub-frames: off `frameOrigins`, which defaults to that origin); `will-attach-webview` refused.                                                                                                                                                 |
 | Permissions             | Only `pointerLock`, `fullscreen` and `automatic-fullscreen` are granted. Camera, microphone, geolocation, notifications, USB, HID and Serial are denied on the prompt path, the silent-check path, and the per-device grant.                                                                                                                                         |
 | `ignifx://`             | One authority (`app`) and one directory. A path that resolves outside it, carries a NUL byte, or names another authority is refused with `IGX-1465` and answered `403`.                                                                                                                                                                                              |
 | IPC                     | Every handler refuses anything that is not the game window's own **top-level** document on an allowed origin, with `IGX-1467`, before it reads an argument.                                                                                                                                                                                                          |
@@ -181,6 +185,7 @@ What a **game** still has to do:
 - Keep secrets out of the renderer. It is sandboxed from Node, not from the player: everything in `out/renderer` is readable, `asar: true` is an archive and not encryption.
 - Validate anything it loads from outside itself. The engine validates its own scene and manifest formats; a save file a player edited, or a mod directory, is the game's own trust boundary.
 - Add its backend origins to `connect-src` with `csp: cspFor({ connectSources: [...] })`, rather than turning the policy off. `csp: null` means the window has **no** policy at all.
+- Frame another origin only with all three: `csp: { frameSources: ["http://127.0.0.1:*"] }` (exact `scheme://host[:port|:*]` entries, anything else throws `IGX-1466`), `frameOrigins: () => [currentOrigin]` (the exact origins, read per navigation), and the header scoped to the app's origin, which `createGameWindow` does for you.
 - Sign and notarize before shipping. `dist:desktop` produces an unsigned build on purpose; nothing here substitutes for a real signing identity.
 - Bump Electron every quarter. Only the last three majors get Chromium security fixes.
 

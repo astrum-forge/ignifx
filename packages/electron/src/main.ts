@@ -4,8 +4,9 @@
  * handlers behind the preload bridge, and the file-system store `app.storage` writes through
  * (`docs/architecture/14-platform-electron.md` §3).
  *
- * This entry imports `electron` and Node built-ins. A renderer bundle must never reach it; the
- * renderer's half of the package is the root export.
+ * This entry imports `electron` and Node built-ins, and never `@ignifx/core` (its errors are
+ * {@link ElectronMainError}s). A renderer bundle must never reach it; the renderer's half of the
+ * package is the root export.
  *
  * The ordering the main process must follow is a property of Chromium's initialisation, not of this
  * package:
@@ -31,9 +32,12 @@ export {
   CSP_DIRECTIVE_ORDER,
   cspFor,
   defaultCsp,
+  isFrameSource,
   PACKAGED_ORIGIN,
   type CspOptions,
 } from "./main/csp.js";
+export { ELECTRON_ERROR_MESSAGES, ElectronErrorCode } from "./error-codes.js";
+export { ElectronMainError, type ElectronMainErrorContext, type ElectronMainErrorOptions } from "./main/main-error.js";
 export {
   allowedSenderOrigins,
   installHostHandlers,
@@ -67,6 +71,7 @@ export { applyWebGpuSwitches, LINUX_FEATURES_SWITCH, WEBGPU_SWITCH, type Command
 export {
   ALLOWED_PERMISSIONS,
   createGameWindow,
+  cspHeadersFor,
   cspValueFor,
   DEFAULT_EXTERNAL_PROTOCOLS,
   DEFAULT_WINDOW_SIZE,
@@ -75,10 +80,15 @@ export {
   forwardWindowEvents,
   installCspHeader,
   isDevServerEntry,
+  isNavigationAllowed,
   lockNavigation,
   restrictPermissions,
   windowOptionsFor,
+  type CspHeaderScope,
+  type CspResponseDetails,
+  type FrameOrigins,
   type GameWindowOptions,
+  type NavigationLockOptions,
 } from "./main/window.js";
 export {
   HOST_CHANNELS,

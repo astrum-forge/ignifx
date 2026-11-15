@@ -4,8 +4,8 @@ import "./support/electron-mock.js";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { isIgnifxError } from "@ignifx/core";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { ElectronMainError } from "../src/main/main-error.js";
 import {
   mimeTypeFor,
   packagedEntryUrl,
@@ -75,7 +75,7 @@ describe("protocolPathFor", () => {
       } catch (error) {
         thrown = error;
       }
-      expect(isIgnifxError(thrown) && thrown.code).toBe("IGX-1465");
+      expect(thrown instanceof ElectronMainError && thrown.code).toBe("IGX-1465");
     }
   });
 
@@ -93,7 +93,7 @@ describe("protocolPathFor", () => {
     } catch (error) {
       thrown = error;
     }
-    expect(isIgnifxError(thrown) && thrown.code).toBe("IGX-1465");
+    expect(thrown instanceof ElectronMainError && thrown.code).toBe("IGX-1465");
   });
 
   it("refuses a URL that is not ignifx://", () => {
@@ -103,7 +103,7 @@ describe("protocolPathFor", () => {
     } catch (error) {
       thrown = error;
     }
-    expect(isIgnifxError(thrown) && thrown.code).toBe("IGX-1466");
+    expect(thrown instanceof ElectronMainError && thrown.code).toBe("IGX-1466");
   });
 
   it("builds the URL a packaged window loads", () => {
