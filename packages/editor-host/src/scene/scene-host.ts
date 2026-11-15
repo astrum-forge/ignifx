@@ -3,9 +3,10 @@
  * editor's document (`docs/architecture/17-editor-host.md` §6).
  */
 
-import { Camera, canonicalizeNumber, createRay, isIgnifxError, validateSceneFile } from "@ignifx/core";
+import { Camera, canonicalizeNumber, createRay, isIgnifxError, Mat4, validateSceneFile } from "@ignifx/core";
 import { clipHostText, hotReloadedParamsOf, messageOf, relayAppReports } from "../app-reports.js";
 import { InvalidParamsError, Reply, RpcFailure } from "../channel.js";
+import { drawnMeshes } from "../lite/drawn-meshes.js";
 import { createEditorView } from "../lite/gizmos.js";
 import {
   GizmoMode,
@@ -18,6 +19,7 @@ import {
   isFrameParams,
   isOpenSceneParams,
   isPickParams,
+  isPickRectParams,
   isReadBackParams,
   isSetAnimateMaterialsParams,
   isSetEditorLinesParams,
@@ -25,6 +27,8 @@ import {
   isSetGridParams,
   isSetTilemapCellsParams,
   isSetViewModeParams,
+  PICK_RECT_MAX_ENTITIES,
+  PickRectMode,
   PickUnit,
   RenderViewMethod,
   RpcErrorCode,
@@ -49,6 +53,7 @@ import { GameView } from "./game-view.js";
 import { GizmoDragRelay } from "./gizmo-drag.js";
 import { DEFAULT_GRID_SIZE, groundGridPlacement, screenGridPlacement } from "./grid.js";
 import { applyOps, reloadInstance } from "./ops.js";
+import { projectBox, projectBox2D, rectInBackingPixels, rectMatches, unionProjected } from "./rect-pick.js";
 import { sampleAnimation } from "./sample-animation.js";
 import { sampleSpriteAnimation } from "./sample-sprite-animation.js";
 import { schemaSet } from "./schemas.js";
@@ -61,6 +66,7 @@ import {
   CAMERA_2D_TYPE,
   componentTypeOf,
   DEFAULT_PIXELS_PER_UNIT,
+  drawnBoxes2D,
   isCamera2DLike,
   levelCamera2D,
   sceneViewMode,
@@ -73,6 +79,7 @@ import type { EditorAssetChange, PendingReload } from "./asset-reload.js";
 import type { ChangedDefaults } from "./defaults.js";
 import type { ViewClick } from "./editor-camera.js";
 import type { GridPlacement } from "./grid.js";
+import type { ProjectedBox } from "./rect-pick.js";
 import type { PickRayMembers } from "./view-math.js";
 import type { EditorLinesView, LineColor } from "../lite/editor-lines.js";
 import type { EditorView, ViewDrag, WorldBounds } from "../lite/gizmos.js";
@@ -82,13 +89,14 @@ import type {
   GizmoSnap,
   HostErrorParams,
   PickParams,
+  PickRectResult,
   PickResult,
   SchemaSet,
   ScreenshotResult,
   SetTilemapCellsResult,
   SettingsSet,
 } from "../protocol/index.js";
-import type { App, Entity, HotReloadReport, RenderSurface, SceneInstance } from "@ignifx/core";
+import type { App, Entity, FetchLike, HotReloadReport, RenderSurface, SceneInstance } from "@ignifx/core";
 
 /** The name of the host's persistent scene instance for its own objects. */
 export const EDITOR_SCENE_NAME = "editor";
@@ -115,6 +123,8 @@ export interface SceneHostOptions {
    * `HostCapability.thumbnails`.
    */
   readonly createThumbnailApp?: () => Promise<App>;
+  /** The `fetch` the project's assets are read through, for atlas and image thumbnails; `globalThis.fetch` when absent. */
+  readonly fetchAsset?: FetchLike;
 }
 
 /** A point of the view, in backing-store pixels. */
@@ -260,6 +270,9 @@ export class SceneHost {
     if (has(HostCapability.screenshot)) {
       methods.set(SceneMethod.screenshot, async (params) => this.#screenshot(params));
     }
+    if (has(HostCapability.pickRect)) {
+      methods.set(SceneMethod.pickRect, (params) => this.#pickRect(params));
+    }
     if (has(HostCapability.gameView)) {
       methods.set(RenderViewMethod.setGameView, (params) => {
         this.#requireMirror(RenderViewMethod.setGameView);
@@ -274,7 +287,11 @@ export class SceneHost {
     const createThumbnailApp = options.createThumbnailApp;
     this.#thumbnails =
       has(HostCapability.thumbnails) && createThumbnailApp !== undefined
-        ? new ThumbnailRenderer(createThumbnailApp)
+        ? new ThumbnailRenderer(
+            createThumbnailApp,
+            (address) => this.#requireApp().assets.resolveUrl(address),
+            options.fetchAsset ?? (async (input, init) => fetch(input, init)),
+          )
         : null;
     const thumbnails = this.#thumbnails;
     if (thumbnails !== null) {
@@ -737,6 +754,103 @@ export class SceneHost {
       throw new InvalidParamsError('pick takes { x, y, unit: "css" | "backing" }.');
     }
     return this.#pickAt(params);
+  }
+
+  /**
+   * `pickRect`: which document entities a rectangle of the view covers. Changes nothing.
+   *
+   * @param params - `{ x0, y0, x1, y1, unit, mode? }`.
+   * @returns The entities in document order, capped, and whether the cap cut the list.
+   */
+  #pickRect(params: unknown): PickRectResult {
+    const mirror = this.#requireMirror(SceneMethod.pickRect);
+    if (!isPickRectParams(params)) {
+      throw new InvalidParamsError(
+        'pickRect takes { x0, y0, x1, y1, unit: "css" | "backing", mode?: "intersect" | "contain" }.',
+      );
+    }
+    const none: PickRectResult = { entities: [], truncated: false };
+    const canvas = this.#canvas;
+    const index = mirror.index();
+    const scene = mirror.scene;
+    if (canvas === null || index === null || scene === null) {
+      return none;
+    }
+    const rect = rectInBackingPixels(params, viewSurfaceOf(canvas));
+    if (rect === null) {
+      return none;
+    }
+    const boxes = this.#projectedBoxes(index.entities, scene, canvas.width, canvas.height);
+    const mode = params.mode ?? PickRectMode.intersect;
+    const entities: string[] = [];
+    let truncated = false;
+    for (const uid of index.entities.keys()) {
+      const box = boxes.get(uid);
+      if (box === undefined || !rectMatches(box, rect, mode)) {
+        continue;
+      }
+      if (entities.length === PICK_RECT_MAX_ENTITIES) {
+        truncated = true;
+        break;
+      }
+      entities.push(uid);
+    }
+    return { entities, truncated };
+  }
+
+  /**
+   * Each document entity's drawn bounds, projected to the view: the meshes under it through the
+   * editor camera (a mesh inside an instance counts for the instance root) and, in 2D view mode,
+   * its sprites and tilemaps through the 2D editor camera. A `"sprite"`-mode 2D project in 2D view
+   * mode projects no meshes, as its pick does not.
+   *
+   * @param entities - The document entities, by uid.
+   * @param scene - The document's scene instance.
+   * @param width - The view's backing-store width.
+   * @param height - The view's backing-store height.
+   * @returns The projected box of each entity that draws something on screen or off it.
+   */
+  #projectedBoxes(
+    entities: ReadonlyMap<string, Entity>,
+    scene: SceneInstance,
+    width: number,
+    height: number,
+  ): Map<string, ProjectedBox> {
+    const app = this.#requireApp();
+    const boxes = new Map<string, ProjectedBox>();
+    const camera2D = this.#viewMode === ViewMode.twoD ? this.#camera2D : null;
+    if (camera2D !== null) {
+      const view = camera2D.view();
+      for (const { entity, box } of drawnBoxes2D(app, scene)) {
+        const uid = this.#mirror?.documentEntityOf(entity)?.uid;
+        if (uid !== undefined) {
+          const projected = { rect: projectBox2D(view, box), clipped: false };
+          boxes.set(uid, unionProjected(boxes.get(uid), projected));
+        }
+      }
+      if (twoDServiceOf(app)?.mode === "sprite") {
+        return boxes;
+      }
+    }
+    const eye = this.#eye;
+    if (eye === null) {
+      return boxes;
+    }
+    const viewMatrix = eye.getViewMatrix(new Mat4()).elements;
+    const projection = eye.getProjectionMatrix(new Mat4()).elements;
+    const owners = new Map<object, string>();
+    for (const [uid, entity] of entities) {
+      if (!entity.isDestroyed) {
+        owners.set(entity.transform.lite, uid);
+      }
+    }
+    for (const mesh of drawnMeshes(app.lite, owners)) {
+      const projected = projectBox(mesh, mesh.world, viewMatrix, projection, width, height);
+      if (projected !== null) {
+        boxes.set(mesh.owner, unionProjected(boxes.get(mesh.owner), projected));
+      }
+    }
+    return boxes;
   }
 
   /**

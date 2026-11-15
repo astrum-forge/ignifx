@@ -12,3 +12,12 @@ Clips of atlas frames with a rate, a loop flag, and frame events. A clip names i
 | `formatVersion` | `u32` | `1` | The document version this build reads. |
 | `atlas` | `str` | `""` | The .atlas.json address, relative to this document. |
 | `clips` | `array` | `[]` | The clips; the first is the default. Each is a record of name (str, what SpriteAnimator.play takes), frames (array of atlas frame names in play order, which need not be adjacent), from/to (str: an INCLUSIVE range over atlas INDICES used when frames is empty — every index between the two endpoints is played, in atlas order, so a range over non-adjacent frames plays everything in between; to before from plays it backwards), fps (f32, default 12), loop (bool, default true) and events (array of { frame: u32 index within the clip, not the atlas; name: str }). |
+| `clips[].name` | `str` | `""` | The clip's name; what SpriteAnimator.play takes. |
+| `clips[].frames` | `array` | `[]` | Atlas frame names, in play order; they need not be adjacent in the atlas. |
+| `clips[].from` | `str` | `""` | The atlas frame whose INDEX starts the range, when frames is empty. Every atlas index between from and to is played, so the two must bracket a contiguous run. |
+| `clips[].to` | `str` | `""` | The atlas frame whose INDEX ends the range, inclusive; an index below from plays it backwards. |
+| `clips[].fps` | `f32` | `12` | Frames per second. |
+| `clips[].loop` | `bool` | `true` | Whether the clip restarts at its end. |
+| `clips[].events` | `array` | `[]` | Events fired as the clip passes a frame. |
+| `clips[].events[].frame` | `u32` | `0` | The zero-based index within the clip, not the atlas. |
+| `clips[].events[].name` | `str` | `""` | The name emitted on SpriteAnimator.onEvent. |

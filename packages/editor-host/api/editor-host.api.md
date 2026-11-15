@@ -358,6 +358,7 @@ export const HostCapability: {
     readonly screenshot: "screenshot";
     readonly viewMode2d: "viewMode2d";
     readonly pick2d: "pick2d";
+    readonly pickRect: "pickRect";
     readonly logRelay: "logRelay";
     readonly hotReloadDefaults: "hotReloadDefaults";
     readonly queryRuntime: "queryRuntime";
@@ -367,6 +368,9 @@ export const HostCapability: {
     readonly gameViewSize: "gameViewSize";
     readonly gameView2d: "gameView2d";
     readonly thumbnails: "thumbnails";
+    readonly thumbnailMaterials: "thumbnailMaterials";
+    readonly thumbnailAtlases: "thumbnailAtlases";
+    readonly thumbnailTextures: "thumbnailTextures";
     readonly grid: "grid";
     readonly gridOverlay: "gridOverlay";
     readonly tilemapCells: "tilemapCells";
@@ -515,6 +519,12 @@ export function isOpenSceneResult(value: unknown): value is OpenSceneResult;
 
 // @public
 export function isPickParams(value: unknown): value is PickParams;
+
+// @public
+export function isPickRectParams(value: unknown): value is PickRectParams;
+
+// @public
+export function isPickRectResult(value: unknown): value is PickRectResult;
 
 // @public
 export function isPickResult(value: unknown): value is PickResult;
@@ -707,6 +717,9 @@ export interface OpenSceneResult {
 }
 
 // @public
+export const PICK_RECT_MAX_ENTITIES = 2e3;
+
+// @public
 export interface PickParams {
     readonly unit: PickUnit;
     readonly x: number;
@@ -717,6 +730,34 @@ export interface PickParams {
 export interface PickRay {
     readonly direction: Vec3;
     readonly origin: Vec3;
+}
+
+// @public
+export const PickRectMode: {
+    readonly intersect: "intersect";
+    readonly contain: "contain";
+};
+
+// @public
+export type PickRectMode = (typeof PickRectMode)[keyof typeof PickRectMode];
+
+// @public
+export interface PickRectParams {
+    readonly mode?: PickRectMode;
+    readonly unit: PickUnit;
+    readonly x0: number;
+    readonly x1: number;
+    readonly y0: number;
+    readonly y1: number;
+}
+
+// @public
+export type PickRectResponse = RpcSuccessResponse<PickRectResult>;
+
+// @public
+export interface PickRectResult {
+    readonly entities: readonly string[];
+    readonly truncated: boolean;
 }
 
 // @public
@@ -1137,6 +1178,7 @@ export const SceneMethod: {
     readonly setGizmo: "setGizmo";
     readonly frame: "frame";
     readonly pick: "pick";
+    readonly pickRect: "pickRect";
     readonly screenshot: "screenshot";
     readonly getSchemas: "getSchemas";
     readonly describeSettings: "describeSettings";
@@ -1203,7 +1245,7 @@ export const SceneOpKind: {
 export type SceneOpKind = (typeof SceneOpKind)[keyof typeof SceneOpKind];
 
 // @public
-export type SceneRequest = RpcRequestWithParams<typeof SceneMethod.openScene, OpenSceneParams> | RpcRequest<typeof SceneMethod.closeScene, never> | RpcRequestWithParams<typeof SceneMethod.applyOps, ApplyOpsParams> | RpcRequestWithParams<typeof SceneMethod.readBack, ReadBackParams> | RpcRequestWithParams<typeof SceneMethod.select, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.setGizmo, SetGizmoParams> | RpcRequestWithParams<typeof SceneMethod.frame, FrameParams> | RpcRequestWithParams<typeof SceneMethod.pick, PickParams> | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams> | RpcRequest<typeof SceneMethod.getSchemas, never> | RpcRequest<typeof SceneMethod.describeSettings, never> | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams> | RpcRequestWithParams<typeof SceneMethod.setAnimateMaterials, SetAnimateMaterialsParams> | RpcRequestWithParams<typeof SceneMethod.getColliderOutlines, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.sampleAnimation, SampleAnimationParams> | RpcRequestWithParams<typeof SceneMethod.sampleSpriteAnimation, SampleSpriteAnimationParams> | RpcRequestWithParams<typeof SceneMethod.setGrid, SetGridParams> | RpcRequestWithParams<typeof SceneMethod.setTilemapCells, SetTilemapCellsParams> | RpcRequestWithParams<typeof SceneMethod.setEditorLines, SetEditorLinesParams> | RpcRequestWithParams<typeof SceneMethod.clearEditorLines, ClearEditorLinesParams>;
+export type SceneRequest = RpcRequestWithParams<typeof SceneMethod.openScene, OpenSceneParams> | RpcRequest<typeof SceneMethod.closeScene, never> | RpcRequestWithParams<typeof SceneMethod.applyOps, ApplyOpsParams> | RpcRequestWithParams<typeof SceneMethod.readBack, ReadBackParams> | RpcRequestWithParams<typeof SceneMethod.select, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.setGizmo, SetGizmoParams> | RpcRequestWithParams<typeof SceneMethod.frame, FrameParams> | RpcRequestWithParams<typeof SceneMethod.pick, PickParams> | RpcRequestWithParams<typeof SceneMethod.pickRect, PickRectParams> | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams> | RpcRequest<typeof SceneMethod.getSchemas, never> | RpcRequest<typeof SceneMethod.describeSettings, never> | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams> | RpcRequestWithParams<typeof SceneMethod.setAnimateMaterials, SetAnimateMaterialsParams> | RpcRequestWithParams<typeof SceneMethod.getColliderOutlines, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.sampleAnimation, SampleAnimationParams> | RpcRequestWithParams<typeof SceneMethod.sampleSpriteAnimation, SampleSpriteAnimationParams> | RpcRequestWithParams<typeof SceneMethod.setGrid, SetGridParams> | RpcRequestWithParams<typeof SceneMethod.setTilemapCells, SetTilemapCellsParams> | RpcRequestWithParams<typeof SceneMethod.setEditorLines, SetEditorLinesParams> | RpcRequestWithParams<typeof SceneMethod.clearEditorLines, ClearEditorLinesParams>;
 
 // @public
 export interface SchemaDescription {

@@ -39,8 +39,8 @@ export const RenderViewMethod = {
    */
   gameViewFrame: "gameViewFrame",
   /**
-   * Renders one model or prefab asset on its own and answers the image: {@link ThumbnailResult}.
-   * It runs beside the one-at-a-time queue of the other methods, so a thumbnail never holds them
+   * Renders one model or prefab asset on its own (and, with the matching capabilities, a material,
+   * a sprite atlas or an image) and answers the image: {@link ThumbnailResult}. It runs beside the one-at-a-time queue of the other methods, so a thumbnail never holds them
    * up; thumbnails are answered in the order they were asked for.
    */
   renderThumbnail: "renderThumbnail",
@@ -157,7 +157,10 @@ export interface RenderThumbnailParams {
   /**
    * The asset: its address, or a reference whose `type` is `"model"` or `"scene"` (a prefab). An
    * address alone is typed by its extension: `.glb`/`.gltf` for a model, `.prefab.json` or
-   * `.scene.json` for a prefab.
+   * `.scene.json` for a prefab. A host that lists `HostCapability.thumbnailMaterials` also takes
+   * `"material"` (`.material.json`), one with `thumbnailAtlases` `"spriteatlas"` (`.atlas.json`) and
+   * one with `thumbnailTextures` `"texture"` (`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.avif`,
+   * `.bmp`). Any other asset answers `RpcErrorCode.invalidParams`.
    */
   readonly asset: string | SceneFileAssetRef;
   /** The square image's side in pixels, 1 to {@link THUMBNAIL_MAX_SIZE}; {@link THUMBNAIL_DEFAULT_SIZE} when absent. */

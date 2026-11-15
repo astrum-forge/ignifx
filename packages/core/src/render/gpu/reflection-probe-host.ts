@@ -18,7 +18,7 @@ export class ReflectionProbeHost {
 
   readonly #onError: (error: unknown) => void;
 
-  readonly #warn: (message: string, entityName: string) => void;
+  readonly #warn: (message: string) => void;
 
   #runtime: ReflectionProbeRuntime | null = null;
 
@@ -26,19 +26,22 @@ export class ReflectionProbeHost {
 
   #isDisposed = false;
 
+  /** Set from a device loss until Lite's recovery; no frame work runs in between. */
+  #isDeviceLost = false;
+
   /**
    * Creates the host; nothing loads until a probe exists.
    *
    * @param engine - The engine.
    * @param scene - The registered render scene.
    * @param onError - Where a failed chunk load goes.
-   * @param warn - Where a probe's warning goes: a message with an `{entity}` slot, and the name.
+   * @param warn - Where a probe's warning goes, with the entity's name already in the message.
    */
   constructor(
     engine: LiteEngine,
     scene: LiteScene,
     onError: (error: unknown) => void,
-    warn: (message: string, entityName: string) => void,
+    warn: (message: string) => void,
   ) {
     this.#engine = engine;
     this.#scene = scene;
@@ -72,6 +75,9 @@ export class ReflectionProbeHost {
     tier: RenderingQualityPreset | null,
     hasEnvironment: boolean,
   ): void {
+    if (this.#isDeviceLost) {
+      return;
+    }
     if (this.#runtime !== null) {
       this.#runtime.update(world, probes, isHdr, tier, hasEnvironment);
       return;
@@ -97,7 +103,14 @@ export class ReflectionProbeHost {
    * recovery rebuilds the materials; they capture again once frames resume.
    */
   handleDeviceLost(): void {
+    this.#isDeviceLost = true;
     this.#runtime?.handleDeviceLost();
+  }
+
+  /** Resumes probe work once Lite rebuilt the scene (`app.events.onDeviceRecovered`). */
+  handleDeviceRecovered(): void {
+    this.#isDeviceLost = false;
+    this.#runtime?.handleDeviceRecovered();
   }
 
   /** Frees every probe. Idempotent. */

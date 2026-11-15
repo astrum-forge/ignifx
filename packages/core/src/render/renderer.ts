@@ -739,7 +739,7 @@ export class RendererImpl implements Renderer {
   /** The reflection probes' host, created on the first frame of a canvas-backed app (GI B1). */
   #reflectionProbes: ReflectionProbeHost | null = null;
 
-  /** Detaches the reflection probes' `app.events.onDeviceLost` handler. */
+  /** Detaches the reflection probes' `onDeviceLost` and `onDeviceRecovered` handlers. */
   #disconnectProbeDeviceLoss: Disconnect | null = null;
 
   /** The light probes' host, created with the reflection probes' one (GI B2). */
@@ -1766,13 +1766,20 @@ export class RendererImpl implements Renderer {
       this.#app.onError.emit({ error, source: "system", phase: null, entity: null, component: null });
     };
     if (this.#reflectionProbes === null) {
-      const host = new ReflectionProbeHost(this.engine, this.scene, onError, (message, entityName) => {
-        this.#app.log.warn(message, entityName);
+      const host = new ReflectionProbeHost(this.engine, this.scene, onError, (message) => {
+        this.#app.log.warn(message);
       });
       this.#reflectionProbes = host;
-      this.#disconnectProbeDeviceLoss = this.#app.events.onDeviceLost.connect(() => {
+      const disconnectLost = this.#app.events.onDeviceLost.connect(() => {
         host.handleDeviceLost();
       });
+      const disconnectRecovered = this.#app.events.onDeviceRecovered.connect(() => {
+        host.handleDeviceRecovered();
+      });
+      this.#disconnectProbeDeviceLoss = (): void => {
+        disconnectLost();
+        disconnectRecovered();
+      };
     }
     this.#lightProbes ??= new LightProbeHost(this.engine, this.scene, onError);
     this.#reflectionProbes.update(

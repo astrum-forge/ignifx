@@ -9,7 +9,13 @@ import {
   isThumbnailResult,
   THUMBNAIL_MAX_SIZE,
 } from "../src/protocol/index.js";
-import { boundsSettler, thumbnailScene, thumbnailSubject } from "../src/scene/thumbnails.js";
+import {
+  atlasImageUrl,
+  boundsSettler,
+  fitInSquare,
+  thumbnailScene,
+  thumbnailSubject,
+} from "../src/scene/thumbnails.js";
 import { centredLayerView } from "../src/scene/view-2d.js";
 
 /**
@@ -79,6 +85,26 @@ describe("the 2D game view's layer view", () => {
   });
 });
 
+/**
+ * Types an asset as a thumbnail subject.
+ *
+ * @param asset - The address or reference.
+ * @returns Its kind.
+ */
+function kind(asset: string | { $asset: string; type?: string }): string {
+  return thumbnailSubject({ asset, format: "png" }).kind;
+}
+
+/**
+ * Resolves an address under `/assets/`, as an asset service with that root does.
+ *
+ * @param address - The address.
+ * @returns The URL.
+ */
+function resolve(address: string): string {
+  return `/assets/${address}`;
+}
+
 describe("thumbnail subjects", () => {
   it("type an asset by its reference's type, else by its extension", () => {
     expect(thumbnailSubject({ asset: "models/Crate.GLB", format: "png" })).toEqual({
@@ -89,8 +115,39 @@ describe("thumbnail subjects", () => {
     expect(thumbnailSubject({ asset: "door.prefab.json", format: "png" }).kind).toBe("prefab");
     expect(thumbnailSubject({ asset: { $asset: "level.scene.json" }, format: "png" }).kind).toBe("prefab");
     expect(thumbnailSubject({ asset: { $asset: "blob.bin", type: "model" }, format: "png" }).kind).toBe("model");
-    expect(() => thumbnailSubject({ asset: "boom.ogg", format: "png" })).toThrow(/neither/u);
-    expect(() => thumbnailSubject({ asset: { $asset: "x.glb", type: "material" }, format: "png" })).toThrow(/neither/u);
+    expect(() => thumbnailSubject({ asset: "boom.ogg", format: "png" })).toThrow(/none of them/u);
+    expect(() => thumbnailSubject({ asset: { $asset: "x.glb", type: "audio" }, format: "png" })).toThrow(
+      /none of them/u,
+    );
+  });
+
+  it("type materials, sprite atlases and browser-decoded images", () => {
+    expect(kind("materials/Gold.Material.json")).toBe("material");
+    expect(kind({ $asset: "x.glb", type: "material" })).toBe("material");
+    expect(kind("2d/hero.atlas.json")).toBe("atlas");
+    expect(kind({ $asset: "2d/hero", type: "spriteatlas" })).toBe("atlas");
+    for (const image of ["a.png", "b.JPG", "c.jpeg", "d.webp"]) {
+      expect(kind(image)).toBe("texture");
+    }
+    expect(kind({ $asset: "e.png", type: "texture" })).toBe("texture");
+    // A GPU-compressed texture is not decoded by the browser.
+    expect(() => kind("f.ktx2")).toThrow(/none of them/u);
+    expect(() => kind({ $asset: "f.ktx2", type: "texture" })).toThrow(/none of them/u);
+    expect(() => kind("data.json")).toThrow(/none of them/u);
+  });
+
+  it("resolve an atlas image relative to the atlas, or take a URL as it is", () => {
+    expect(atlasImageUrl(resolve, "2d/hero.atlas.json", "hero.png")).toBe("/assets/2d/hero.png");
+    expect(atlasImageUrl(resolve, "2d/chars/hero.atlas.json", "../shared/./pal.png")).toBe("/assets/2d/shared/pal.png");
+    expect(atlasImageUrl(resolve, "hero.atlas.json", "hero.png")).toBe("/assets/hero.png");
+    expect(atlasImageUrl(resolve, "2d/hero.atlas.json", "/public/hero.png")).toBe("/public/hero.png");
+    expect(atlasImageUrl(resolve, "2d/hero.atlas.json", "https://cdn.test/hero.png")).toBe("https://cdn.test/hero.png");
+  });
+
+  it("fit an image in the square, centred, its aspect kept", () => {
+    expect(fitInSquare(256, 128, 128)).toEqual({ x: 0, y: 32, width: 128, height: 64 });
+    expect(fitInSquare(16, 32, 64)).toEqual({ x: 16, y: 0, width: 32, height: 64 });
+    expect(fitInSquare(0, 10, 64)).toEqual({ x: 32, y: 32, width: 0, height: 0 });
   });
 
   it("show a model through a Model component and a prefab as an instance", () => {

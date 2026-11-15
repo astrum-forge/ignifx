@@ -242,6 +242,8 @@ export class MeshRenderer extends Component implements ComponentHooks {
     const changed = this.#ensureClone(renderer);
     const instance = this.#instance;
     if (instance === null) {
+      // No mesh (cleared, or still loading): a lightmapped clone from an earlier mesh goes.
+      renderer.releaseLightmap(this);
       return changed;
     }
     instance.applyMaterial(renderer.lightmapMaterial(this, this.#materialAsset(renderer)));

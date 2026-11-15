@@ -11,9 +11,73 @@ A stateless GPU particle effect: capacity and timing, emission rates and bursts,
 | `format` | `str` | `"ignifx.particles"` | Always ignifx.particles. |
 | `formatVersion` | `u32` | `1` | The document version this build reads. |
 | `main` | `record` | `{"capacity":1000,"duration":5,"looping":true,"prewarm":false,"startDelay":0,"simulationSpace":"local","seed":0,"playOnAwake":true,"timeScale":1,"renderOrder":0}` | Capacity, timing, space, and playback. |
+| `main.capacity` | `u32` | `1000` | How many spawn records the ring holds; older records are overwritten. |
+| `main.duration` | `f32` | `5` | How long one emission cycle lasts, in seconds. |
+| `main.looping` | `bool` | `true` | Whether the cycle repeats. |
+| `main.prewarm` | `bool` | `false` | Whether play() fast-forwards one cycle first. |
+| `main.startDelay` | `f32` | `0` | Seconds after play() before emission starts. |
+| `main.simulationSpace` | `enum` | `"local"` | local follows the entity; world stays put. |
+| `main.seed` | `u32` | `0` | The emission seed; 0 picks one at random. |
+| `main.playOnAwake` | `bool` | `true` | Whether a ParticleSystem starts playing when enabled. |
+| `main.timeScale` | `f32` | `1` | A multiplier on the system's own clock. |
+| `main.renderOrder` | `i32` | `0` | Sort key within the transparent phase; lower draws first. |
 | `emission` | `record` | `{"rateOverTime":10,"rateOverDistance":0,"bursts":[]}` | Rates and bursts. |
+| `emission.rateOverTime` | `f32` | `10` | Particles per second. |
+| `emission.rateOverDistance` | `f32` | `0` | Particles per metre the emitter moves. |
+| `emission.bursts` | `array` | `[]` | The bursts, in order. |
+| `emission.bursts[].time` | `f32` | `0` | Seconds into the cycle. |
+| `emission.bursts[].count` | `custom` | `10` | How many particles; a range is rolled per firing. |
+| `emission.bursts[].cycles` | `u32` | `1` | Firings per cycle; 0 means until the cycle ends. |
+| `emission.bursts[].interval` | `f32` | `0.1` | Seconds between firings. |
+| `emission.bursts[].probability` | `f32` | `1` | The chance a firing happens. |
 | `shape` | `record` | `{"kind":"cone","radius":0.2,"thickness":1,"arc":360,"angle":25,"length":1,"size":[1,1,1],"emitFrom":"volume","randomDirection":0,"spherizeDirection":0,"vertices":[]}` | Where particles start and which way they go. |
+| `shape.kind` | `enum` | `"cone"` | Which shape; directional shapes emit along local +Y. |
+| `shape.radius` | `f32` | `0.2` | Sphere, hemisphere, circle, or cone-base radius. |
+| `shape.thickness` | `f32` | `1` | How much of the radius emits: 0 is the surface, 1 the whole. |
+| `shape.arc` | `f32` | `360` | The angular span, in degrees. |
+| `shape.angle` | `f32` | `25` | A cone's half-angle, in degrees. |
+| `shape.length` | `f32` | `1` | A cone's height, or an edge's length. |
+| `shape.size` | `vec3` | `[1,1,1]` | A box's full extents. |
+| `shape.emitFrom` | `enum` | `"volume"` | volume, shell, or a cone's base. |
+| `shape.randomDirection` | `f32` | `0` | How much of the start direction is random. |
+| `shape.spherizeDirection` | `f32` | `0` | How much the start direction points away from the centre. |
+| `shape.vertices` | `array` | `[]` | A mesh shape's triangles, nine numbers per triangle. |
 | `start` | `record` | `{"lifetime":2,"speed":2,"size":0.2,"size3D":[1,1,1],"rotation":0,"color":[1,1,1,1]}` | What a particle is born with. |
+| `start.lifetime` | `custom` | `2` | Seconds a particle lives. |
+| `start.speed` | `custom` | `2` | Metres per second along the start direction. |
+| `start.size` | `custom` | `0.2` | The particle's size, in metres. |
+| `start.size3D` | `vec3` | `[1,1,1]` | Optional per-axis size multipliers. |
+| `start.rotation` | `custom` | `0` | The start rotation, in degrees. |
+| `start.color` | `custom` | `[1,1,1,1]` | The start colour, sRGB; a range picks between two per particle. |
 | `forces` | `record` | `{"gravity":[0,0,0],"gravityMultiplier":0,"drag":0,"constantForce":[0,0,0],"orbit":{"axis":[0,1,0],"speed":90},"noise":{"strength":0.5,"frequency":1,"scroll":[0,0,0],"octaves":1,"influenceOverLife":1}}` | What acts on a particle. |
+| `forces.gravity` | `vec3` | `[0,0,0]` | An explicit world gravity; omit to scale the app's. |
+| `forces.gravityMultiplier` | `f32` | `0` | How much of the app's gravity applies. |
+| `forces.drag` | `f32` | `0` | Linear drag; 0 is none. |
+| `forces.constantForce` | `vec3` | `[0,0,0]` | A constant acceleration in simulation space, m/s^2. |
+| `forces.orbit` | `record` | `{"axis":[0,1,0],"speed":90}` | A rotation about an axis through the emitter. |
+| `forces.orbit.axis` | `vec3` | `[0,1,0]` | The orbit axis. |
+| `forces.orbit.speed` | `f32` | `90` | Degrees per second. |
+| `forces.noise` | `record` | `{"strength":0.5,"frequency":1,"scroll":[0,0,0],"octaves":1,"influenceOverLife":1}` | A positional noise offset. |
+| `forces.noise.strength` | `f32` | `0.5` | The largest offset, in metres. |
+| `forces.noise.frequency` | `f32` | `1` | How quickly the field varies with position. |
+| `forces.noise.scroll` | `vec3` | `[0,0,0]` | How the field drifts with time. |
+| `forces.noise.octaves` | `u32` | `1` | How many octaves are summed. |
+| `forces.noise.influenceOverLife` | `custom` | `1` | A multiplier on strength over the particle's life. |
 | `overLifetime` | `record` | `{"color":[1,1,1,1],"size":1,"sizeY":1,"sizeZ":1,"rotation":0}` | How a particle changes over its life. |
+| `overLifetime.color` | `custom` | `[1,1,1,1]` | A gradient multiplied onto the start colour over life. |
+| `overLifetime.size` | `custom` | `1` | A multiplier on the start size over life (X when sizeY or sizeZ is set). |
+| `overLifetime.sizeY` | `custom` | `1` | A separate Y multiplier over life. |
+| `overLifetime.sizeZ` | `custom` | `1` | A separate Z multiplier over life. |
+| `overLifetime.rotation` | `custom` | `0` | Angular speed in degrees per second. |
 | `renderer` | `record` | `{"mode":"billboard","mesh":"box","texture":"","sheet":{"tiles":[1,1],"frameOverTime":0},"blend":"premultiplied","lit":false,"pivot":[0,0],"speedScale":0,"lengthScale":1}` | How a particle is drawn. |
+| `renderer.mode` | `enum` | `"billboard"` | How particles are oriented. |
+| `renderer.mesh` | `enum` | `"box"` | The primitive a mesh renderer draws. |
+| `renderer.texture` | `str` | `""` | The texture's asset address, or omitted for a procedural soft disc. |
+| `renderer.sheet` | `record` | `{"tiles":[1,1],"frameOverTime":0}` | The sprite-sheet layout of the texture. |
+| `renderer.sheet.tiles` | `vec2` | `[1,1]` | Columns and rows of the sprite sheet. |
+| `renderer.sheet.frameOverTime` | `custom` | `0` | A curve over life, the string "random", or { fps }. |
+| `renderer.blend` | `enum` | `"premultiplied"` | How particles composite. |
+| `renderer.lit` | `bool` | `false` | Shade with the main light and the ambient colour. |
+| `renderer.pivot` | `vec2` | `[0,0]` | Where the origin sits inside the quad, in size units. |
+| `renderer.speedScale` | `f32` | `0` | How much of the speed a stretched particle adds to its length. |
+| `renderer.lengthScale` | `f32` | `1` | A multiplier on a stretched particle's length. |
