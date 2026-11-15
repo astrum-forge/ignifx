@@ -1,7 +1,7 @@
 // Must come first: it registers the `electron` module mock every import below depends on.
 // eslint-disable-next-line import-x/order -- must be evaluated first; it registers the `electron` module mock.
 import { electronMock, FakeBrowserWindow, FakeSession, resetElectronMock } from "./support/electron-mock.js";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { IGNIFX_SCHEME } from "../src/host-contract.js";
 import { cspFor, defaultCsp } from "../src/main/csp.js";
 import { IGNIFX_SCHEME_PRIVILEGES, registerIgnifxScheme, serveIgnifxProtocol } from "../src/main/protocol.js";
@@ -284,6 +284,23 @@ describe("lockNavigation", () => {
     expect(calls).toBe(3);
     window.wouldAllowNavigation("ignifx://app/", "will-navigate", true);
     expect(calls).toBe(3);
+  });
+
+  it("fails closed when the frameOrigins function throws", () => {
+    const window = new FakeBrowserWindow();
+    const logged = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
+    lockNavigation(window.webContents as unknown as WebContents, "ignifx://app", {
+      frameOrigins: () => {
+        throw new Error("supervisor gone");
+      },
+    });
+
+    expect(window.wouldAllowNavigation("http://127.0.0.1:5173/", "will-frame-navigate", false)).toBe(false);
+    expect(window.wouldAllowNavigation("http://127.0.0.1:5173/", "will-redirect", false)).toBe(false);
+    expect(logged).toHaveBeenCalledTimes(2);
+    // The main frame never consults the function, so it is unaffected.
+    expect(window.wouldAllowNavigation("ignifx://app/x.html", "will-navigate", true)).toBe(true);
+    logged.mockRestore();
   });
 
   it("refuses a <webview> attachment, the second lock on webviewTag: false", () => {

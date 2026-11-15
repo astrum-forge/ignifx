@@ -532,6 +532,8 @@ export function isNavigationAllowed(
  * Every event's details carry `isMainFrame`, which selects the rule ({@link isNavigationAllowed}).
  * A function `frameOrigins` is called on every navigation, so a host whose framed dev server moves
  * to another port answers with the current origin rather than the one it had at window creation.
+ * If it throws, the navigation is refused and the error logged as a Node process warning
+ * (`process.emitWarning`).
  *
  * The origin is read with {@link originOfUrl}, not with `URL.origin`: `ignifx` is not a *special*
  * scheme to the WHATWG parser, so `new URL("ignifx://evil/x").origin` is the string `"null"` and an
@@ -565,10 +567,20 @@ export function lockNavigation(
     typeof frameOrigins === "function" ? frameOrigins() : frameOrigins;
   contents.setWindowOpenHandler((): { readonly action: "deny" } => ({ action: "deny" }));
   const gate = (details: { readonly url: string; readonly isMainFrame: boolean; preventDefault: () => void }): void => {
-    // The frame-origin function is called only for a sub-frame navigation.
-    const allowed = details.isMainFrame
-      ? isNavigationAllowed(details.url, true, allowedOrigin, [])
-      : isNavigationAllowed(details.url, false, allowedOrigin, currentFrameOrigins());
+    // The frame-origin function is called only for a sub-frame navigation. If it throws, the lock
+    // fails closed: the navigation is refused and the error logged, never let through.
+    let allowed = false;
+    try {
+      allowed = details.isMainFrame
+        ? isNavigationAllowed(details.url, true, allowedOrigin, [])
+        : isNavigationAllowed(details.url, false, allowedOrigin, currentFrameOrigins());
+    } catch (error) {
+      // The main process has no `app.log`; a Node process warning is its log channel.
+      process.emitWarning(
+        `lockNavigation refused ${details.url} because the frameOrigins function threw: ${String(error)}`,
+        { type: "IgnifxNavigationLockWarning" },
+      );
+    }
     if (!allowed) {
       details.preventDefault();
     }

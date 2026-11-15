@@ -2329,6 +2329,8 @@ navigation:
 Every event's details carry `isMainFrame`, which selects the rule ([isNavigationAllowed](#isnavigationallowed)).
 A function `frameOrigins` is called on every navigation, so a host whose framed dev server moves
 to another port answers with the current origin rather than the one it had at window creation.
+If it throws, the navigation is refused and the error logged as a Node process warning
+(`process.emitWarning`).
 
 The origin is read with [originOfUrl](#originofurl), not with `URL.origin`: `ignifx` is not a *special*
 scheme to the WHATWG parser, so `new URL("ignifx://evil/x").origin` is the string `"null"` and an
@@ -2437,9 +2439,12 @@ The origin, or `null` when the URL has no tuple origin.
 #### Remarks
 
 Returns `null` — never a guess — for anything with no tuple origin: a URL that does not parse, an
-opaque-origin URL such as `data:`, `blob:`, `javascript:` or `file:`, and a scheme-relative
-reference. A `null` result is a refusal at every call site, so a new URL form is denied rather
-than quietly admitted.
+opaque-origin URL such as `data:`, `javascript:` or `file:`, and a scheme-relative reference. A
+`blob:` URL is not opaque: the WHATWG parser gives it the origin of the document that created it,
+so `blob:https://a.example/<uuid>` returns `"https://a.example"`. A `blob:` URL created under a
+non-special scheme (`blob:ignifx://app/<uuid>`) parses with an empty host and returns `null`. A
+`null` result is a refusal at every call site, so a new URL form is denied rather than quietly
+admitted.
 
 #### Example
 
