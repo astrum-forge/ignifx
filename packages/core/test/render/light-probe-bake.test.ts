@@ -269,7 +269,7 @@ describe("bakeLightProbes", () => {
     expect(gltf.skips).toHaveLength(1);
     expect(gltf.skips[0]?.entity).toBe("No bytes");
     expect(gltf.skips[0]?.component).toBe("ignifx/Model");
-    expect(gltf.skips[0]?.reason).toContain("headless");
+    expect(gltf.skips[0]?.reason).toContain("no instance");
     expect(gltf.data.coefficients[0]).toBeCloseTo(0.5, 1);
     expect(gltf.data.coefficients[1]).toBeCloseTo(0, 6);
     // A disposed asset lets go of its file.

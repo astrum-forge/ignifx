@@ -83,6 +83,139 @@ export interface AssetReloadedParams {
 }
 
 // @public
+export const BAKE_DEFAULT_SPACING = 2;
+
+// @public
+export const BAKE_MAX_COUNT_X = 1024;
+
+// @public
+export const BAKE_MAX_COUNT_YZ = 4096;
+
+// @public
+export const BAKE_MAX_PROBES = 65536;
+
+// @public
+export const BAKE_MAX_RAYS = 4096;
+
+// @public
+export const BAKE_MAX_SKIPS = 256;
+
+// @public
+export const BAKE_PROGRESS_INTERVAL_MS = 100;
+
+// @public
+export const BAKE_SPACING_MAX = 1e3;
+
+// @public
+export const BAKE_SPACING_MIN = .05;
+
+// @public
+export const BakeCancelCause: {
+    readonly cancelBake: "cancelBake";
+    readonly sceneChanged: "sceneChanged";
+};
+
+// @public
+export type BakeCancelCause = (typeof BakeCancelCause)[keyof typeof BakeCancelCause];
+
+// @public
+export interface BakeColor {
+    // (undocumented)
+    readonly a?: number;
+    // (undocumented)
+    readonly b: number;
+    // (undocumented)
+    readonly g: number;
+    // (undocumented)
+    readonly r: number;
+}
+
+// @public
+export interface BakeFailureData {
+    readonly cause?: BakeCancelCause;
+    readonly reason: BakeFailureReason;
+}
+
+// @public
+export const BakeFailureReason: {
+    readonly unknownEntity: "unknownEntity";
+    readonly notAVolume: "notAVolume";
+    readonly invalidGrid: "invalidGrid";
+    readonly busy: "busy";
+    readonly cancelled: "cancelled";
+};
+
+// @public
+export type BakeFailureReason = (typeof BakeFailureReason)[keyof typeof BakeFailureReason];
+
+// @public
+export interface BakeLightProbesParams {
+    readonly counts?: readonly [number, number, number];
+    readonly directLight?: "include" | "exclude";
+    readonly maxDistance?: number;
+    readonly rays?: number;
+    readonly sky?: BakeSky | null;
+    readonly spacing?: number;
+    readonly volume: string;
+}
+
+// @public
+export type BakeLightProbesResponse = RpcSuccessResponse<BakeLightProbesResult>;
+
+// @public
+export interface BakeLightProbesResult {
+    readonly probes: JsonObject;
+    readonly skips: readonly BakeSkip[];
+    readonly sky: BakeSkySource;
+    readonly stats: {
+        readonly probes: number;
+        readonly triangles: number;
+        readonly skipped: number;
+        readonly ms: number;
+    };
+}
+
+// @public
+export type BakeProgressNotification = RpcNotificationWithParams<typeof LightProbeBakeNotification.bakeProgress, BakeProgressParams>;
+
+// @public
+export interface BakeProgressParams {
+    readonly done: number;
+    readonly total: number;
+    readonly volume: string;
+}
+
+// @public
+export interface BakeSkip {
+    readonly component: string;
+    readonly entity: string;
+    readonly reason: string;
+    readonly uid: string;
+}
+
+// @public
+export type BakeSky = BakeColor | {
+    readonly kind: "gradient";
+    readonly sky: BakeColor;
+    readonly horizon: BakeColor;
+    readonly ground: BakeColor;
+} | {
+    readonly kind: "sh9";
+    readonly coefficients: readonly number[];
+};
+
+// @public
+export type BakeSkySource = "request" | "environment" | "none";
+
+// @public
+export type CancelBakeResponse = RpcSuccessResponse<CancelBakeResult>;
+
+// @public
+export interface CancelBakeResult {
+    readonly cancelled: boolean;
+}
+
+// @public
 export interface ClearEditorLinesParams {
     readonly id?: string;
 }
@@ -376,6 +509,7 @@ export const HostCapability: {
     readonly tilemapCells: "tilemapCells";
     readonly editorLines: "editorLines";
     readonly spriteAnimation: "spriteAnimation";
+    readonly bakeLightProbes: "bakeLightProbes";
 };
 
 // @public
@@ -459,6 +593,24 @@ export function isApplyOpsResult(value: unknown): value is ApplyOpsResult;
 
 // @public
 export function isAssetReloadedParams(value: unknown): value is AssetReloadedParams;
+
+// @public
+export function isBakeFailureData(value: unknown): value is BakeFailureData;
+
+// @public
+export function isBakeLightProbesParams(value: unknown): value is BakeLightProbesParams;
+
+// @public
+export function isBakeLightProbesResult(value: unknown): value is BakeLightProbesResult;
+
+// @public
+export function isBakeProgressParams(value: unknown): value is BakeProgressParams;
+
+// @public
+export function isBakeSky(value: unknown): value is BakeSky;
+
+// @public
+export function isCancelBakeResult(value: unknown): value is CancelBakeResult;
 
 // @public
 export function isClearEditorLinesParams(value: unknown): value is ClearEditorLinesParams;
@@ -674,6 +826,26 @@ export type JsonPath = readonly (string | number)[];
 
 // @public
 export type JsonValue = string | number | boolean | null | JsonArray | JsonObject;
+
+// @public
+export const LightProbeBakeMethod: {
+    readonly bakeLightProbes: "bakeLightProbes";
+    readonly cancelBake: "cancelBake";
+};
+
+// @public
+export type LightProbeBakeMethod = (typeof LightProbeBakeMethod)[keyof typeof LightProbeBakeMethod];
+
+// @public
+export const LightProbeBakeNotification: {
+    readonly bakeProgress: "bakeProgress";
+};
+
+// @public
+export type LightProbeBakeNotification = (typeof LightProbeBakeNotification)[keyof typeof LightProbeBakeNotification];
+
+// @public
+export type LightProbeBakeRequest = RpcRequestWithParams<typeof LightProbeBakeMethod.bakeLightProbes, BakeLightProbesParams> | RpcRequestWithParams<typeof LightProbeBakeMethod.cancelBake, Readonly<Record<string, never>>>;
 
 // @beta
 export function listenForEditorPlayControls(options: EditorPlayControlsOptions): EditorPlayConnector;

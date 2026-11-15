@@ -2589,6 +2589,8 @@ export class Model extends Component implements ComponentHooks {
     // @internal
     consumeCasterChange(): boolean;
     static description: string;
+    // @internal
+    get instanceMeshes(): readonly LiteMesh[] | null;
     get lite(): {
         readonly root: LiteSceneNode | null;
     };

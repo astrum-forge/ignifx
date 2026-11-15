@@ -63,6 +63,7 @@ describe("the protocol mirror", () => {
       tilemapCells: "tilemapCells",
       editorLines: "editorLines",
       spriteAnimation: "spriteAnimation",
+      bakeLightProbes: "bakeLightProbes",
     });
     expect(page.RenderViewMethod).toEqual({
       setGameView: "setGameView",

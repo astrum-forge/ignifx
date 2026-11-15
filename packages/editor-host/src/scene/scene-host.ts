@@ -9,6 +9,7 @@ import { InvalidParamsError, Reply, RpcFailure } from "../channel.js";
 import { drawnMeshes } from "../lite/drawn-meshes.js";
 import { createEditorView } from "../lite/gizmos.js";
 import {
+  BakeCancelCause,
   GizmoMode,
   GizmoSpace,
   HostCapability,
@@ -27,6 +28,7 @@ import {
   isSetGridParams,
   isSetTilemapCellsParams,
   isSetViewModeParams,
+  LightProbeBakeMethod,
   PICK_RECT_MAX_ENTITIES,
   PickRectMode,
   PickUnit,
@@ -52,6 +54,7 @@ import { EditorGrid } from "./editor-grid.js";
 import { GameView } from "./game-view.js";
 import { GizmoDragRelay } from "./gizmo-drag.js";
 import { DEFAULT_GRID_SIZE, groundGridPlacement, screenGridPlacement } from "./grid.js";
+import { LightProbeBaker } from "./light-probe-baker.js";
 import { applyOps, reloadInstance } from "./ops.js";
 import { projectBox, projectBox2D, rectInBackingPixels, rectMatches, unionProjected } from "./rect-pick.js";
 import { sampleAnimation } from "./sample-animation.js";
@@ -171,9 +174,18 @@ export class SceneHost {
 
   /**
    * The methods the channel runs beside its queue: `renderThumbnail`, which renders on a stage app
-   * of its own, never reads the document, and can take a couple of seconds.
+   * of its own, never reads the document, and can take a couple of seconds; `bakeLightProbes`,
+   * which reads the world in a queue slot of its own and then traces beside the queue; and
+   * `cancelBake`, which must not wait behind the requests a bake lets through.
    */
-  readonly unqueued: ReadonlySet<string> = new Set<string>([RenderViewMethod.renderThumbnail]);
+  readonly unqueued: ReadonlySet<string> = new Set<string>([
+    RenderViewMethod.renderThumbnail,
+    LightProbeBakeMethod.bakeLightProbes,
+    LightProbeBakeMethod.cancelBake,
+  ]);
+
+  /** The light-probe bake, with `HostCapability.bakeLightProbes`. */
+  readonly #baker: LightProbeBaker | null;
 
   readonly #notify: (method: string, params: unknown) => void;
 
@@ -303,6 +315,21 @@ export class SceneHost {
     if (has(HostCapability.grid)) {
       methods.set(SceneMethod.setGrid, (params) => this.#setGrid(params));
     }
+    this.#baker = has(HostCapability.bakeLightProbes) ? new LightProbeBaker(options.notify) : null;
+    const baker = this.#baker;
+    if (baker !== null) {
+      methods.set(LightProbeBakeMethod.bakeLightProbes, async (params) => {
+        const mirror = this.#requireMirror(LightProbeBakeMethod.bakeLightProbes);
+        // The world is read in a queue slot, so the bake sees every change sent before it; the
+        // trace then runs beside the queue. Wrapped, so the slot does not wait for the bake.
+        const started = await this.#serial(() => ({ bake: baker.start(this.#requireApp(), mirror.scene, params) }));
+        return started.bake.finished;
+      });
+      methods.set(LightProbeBakeMethod.cancelBake, () => {
+        this.#requireMirror(LightProbeBakeMethod.cancelBake);
+        return { cancelled: baker.cancel(BakeCancelCause.cancelBake) };
+      });
+    }
     if (has(HostCapability.tilemapCells)) {
       methods.set(SceneMethod.setTilemapCells, (params) => this.#setTilemapCells(params));
     }
@@ -311,11 +338,26 @@ export class SceneHost {
       methods.set(SceneMethod.clearEditorLines, (params) => this.#clearEditorLines(params));
     }
     // The channel answers one request at a time; an asset reload's rebuild queues with them. An
-    // unqueued method runs at once: the thumbnail renderer keeps its own queue.
+    // unqueued method runs at once: the thumbnail renderer keeps its own queue. A method that
+    // changes the document cancels a running bake first: a bake never mixes the old world and the new.
+    const changesDocument = new Set<string>([
+      SceneMethod.openScene,
+      SceneMethod.closeScene,
+      SceneMethod.applyOps,
+      SceneMethod.setTilemapCells,
+    ]);
     this.methods = new Map(
       [...methods].map(([name, handler]) => [
         name,
-        this.unqueued.has(name) ? handler : async (params: unknown) => this.#serial(() => handler(params)),
+        this.unqueued.has(name)
+          ? handler
+          : async (params: unknown) =>
+              this.#serial(() => {
+                if (changesDocument.has(name)) {
+                  this.#sceneChanged();
+                }
+                return handler(params);
+              }),
       ]),
     );
   }
@@ -484,6 +526,9 @@ export class SceneHost {
     return this.#serial(async () => {
       const index = handle.type === SCENE_ASSET_TYPE ? mirror.index() : null;
       const roots = index === null ? [] : instancesOf(app, index, address);
+      if (roots.length > 0) {
+        this.#sceneChanged();
+      }
       const entities = await this.#rebuildInstances(app, mirror, roots, address, { address });
       this.#setSelection(this.#selection);
       const params: AssetReloadedParams = { address, type: handle.type, entities };
@@ -544,6 +589,7 @@ export class SceneHost {
     if (app === null || mirror === null || index === null) {
       return;
     }
+    this.#sceneChanged();
     applyDefaults(app, mirror, index, changed, (component, typeId, error) => {
       const params: HostErrorParams = {
         code: isIgnifxError(error) ? error.code : null,
@@ -581,6 +627,12 @@ export class SceneHost {
     this.#view = null;
     this.#gameView.dispose();
     this.#thumbnails?.dispose();
+    this.#baker?.dispose();
+  }
+
+  /** Cancels a running bake: the document is about to change. */
+  #sceneChanged(): void {
+    this.#baker?.cancel(BakeCancelCause.sceneChanged);
   }
 
   // -------------------------------------------------------------------------------------------

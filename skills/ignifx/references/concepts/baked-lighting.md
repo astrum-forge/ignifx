@@ -96,9 +96,9 @@ world **once**, when it starts:
 
 - **Geometry.** The triangles of every enabled `MeshRenderer` (a `MeshAsset.fromData` mesh, or a
   primitive such as `MeshAsset.box` or a `.mesh.json`, rebuilt on the CPU at the size Lite draws it)
-  and every enabled `Model` whose glTF was loaded by a **headless** app (`createApp({ headless:
-true })` keeps a model's file for the bake; an app with a device does not, so there models are
-  skipped). glTF node transforms, indices, triangle strips and fans are read; Draco- and
+  and every enabled `Model`: a **headless** app (`createApp({ headless: true })`) keeps a model's
+  file and the bake reads it; an app with a device keeps no file, so the bake reads the CPU
+  triangles Lite keeps on the model's drawn meshes instead (a model not drawn yet is skipped). glTF node transforms, indices, triangle strips and fans are read; Draco- and
   meshopt-compressed primitives, sparse accessors and `.gltf` buffers in separate files are skipped,
   skinned meshes are read in their bind pose. `result.skips` names each thing left out
   (`{ entity, uid, component, reason }`) and `result.skipped` counts the renderers and models that

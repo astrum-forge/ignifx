@@ -1,5 +1,7 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
+import { readMeshBakeSurface } from "../lite/gpu/mesh.js";
+import { readWorldMatrix } from "../lite/node.js";
 import { Color } from "../math/color.js";
 import { createPerformanceClock } from "../time/clock.js";
 import { readLightProbeGrid } from "./light-probe-asset.js";
@@ -16,6 +18,7 @@ import type { MeshPrimitiveDefinition } from "./mesh-asset.js";
 import type { ModelAsset } from "./model-asset.js";
 import type { AssetHandle } from "../assets/types.js";
 import type { Entity } from "../entity/entity.js";
+import type { LiteMesh } from "../lite/gpu/mesh.js";
 import type { ColorLike, Vec3Like } from "../math/types.js";
 import type { World } from "../world/world.js";
 
@@ -25,7 +28,9 @@ import type { World } from "../world/world.js";
  *
  * - **Geometry.** Triangles of every enabled `MeshRenderer` (a `MeshAsset.fromData` mesh's own
  *   arrays, or a primitive rebuilt on the CPU by `light-probe-bake-primitives.ts`) and every enabled
- *   `Model` whose glTF a headless app loaded (`light-probe-bake-gltf.ts`), moved to world space. What
+ *   `Model` — read from the glTF file a headless app loaded (`light-probe-bake-gltf.ts`), or, under
+ *   an app with a device, from its instance's meshes (Lite's `getMeshTriangles`) — moved to world
+ *   space. What
  *   cannot be read is listed in {@link LightProbeBakeResult.skips}. Each mesh keeps a world bounding
  *   box, so a ray tests the triangles of the meshes it passes through only.
  * - **Per probe.** `rays` directions on a Fibonacci sphere. A hit returns the surface's albedo (the
@@ -287,8 +292,10 @@ export function lightBakeTerms(
  * @remarks
  * One bounce, first-order harmonics, deterministic. `MeshRenderer` meshes (built from data, or
  * primitives) and `Model` glTF files cast and bounce light; a model is read from the file a
- * headless app loaded, so under an app with a device models are skipped (see
- * {@link LightProbeBakeResult.skips}), as are Draco- and meshopt-compressed glTF primitives. By
+ * headless app loaded, or, under an app with a device, from the CPU triangles Lite keeps on its
+ * instance's meshes once the model has been drawn (a model not instantiated yet is listed in
+ * {@link LightProbeBakeResult.skips}). Draco- and meshopt-compressed glTF primitives are skipped
+ * headless. By
  * default a probe holds every light's bounce but the direct light of `"baked"` lights only, since
  * the others keep lighting the scene in real time (see {@link LightProbeBakeOptions.directLight} and
  * `Light.bakeMode`). Cost grows with probes × rays × triangles (each mesh's bounding box culls its
@@ -693,6 +700,22 @@ function collectTriangles(
     if (!model.isEnabledInHierarchy) {
       continue;
     }
+    const meshes = liveModelMeshes(model);
+    if (meshes !== null) {
+      // Under an app with a device the file's bytes are not kept: read the instance's own meshes.
+      const reasons: string[] = [];
+      const traced = addLiveModel(builder, model, meshes, reasons, signal);
+      for (const reason of reasons) {
+        skip(model.entity, Model.typeId, reason);
+      }
+      if (traced === 0) {
+        skipped += 1;
+        if (reasons.length === 0) {
+          skip(model.entity, Model.typeId, "the model's instance draws no triangles");
+        }
+      }
+      continue;
+    }
     const gltf = readModel(model.model, gltfCache);
     if (typeof gltf === "string") {
       skipped += 1;
@@ -717,6 +740,60 @@ function collectTriangles(
     }
   }
   return { scene: builder.build(), skipped, skips };
+}
+
+/**
+ * The meshes of a model's live instance, when the bake should read them: the asset kept no file
+ * bytes (an app with a device) and the instance exists.
+ *
+ * @param model - The model.
+ * @returns The meshes, or `null` to read the file instead (or to report why there is nothing).
+ */
+function liveModelMeshes(model: Model): readonly LiteMesh[] | null {
+  const handle = model.model;
+  if (handle === null || handle.state !== "loaded" || handle.value.sourceBytes !== null) {
+    return null;
+  }
+  return model.instanceMeshes;
+}
+
+/**
+ * Adds the triangles of a model's live instance, each mesh at its own world matrix (the glTF node
+ * hierarchy under the entity), coloured by its material or the model's override for that material.
+ *
+ * @param builder - The scene being built.
+ * @param model - The model.
+ * @param meshes - Its instance's meshes.
+ * @param reasons - Receives why a mesh was left out.
+ * @param signal - Stops the collection between meshes.
+ * @returns How many triangles were added.
+ */
+function addLiveModel(
+  builder: SceneBuilder,
+  model: Model,
+  meshes: readonly LiteMesh[],
+  reasons: string[],
+  signal: AbortSignal | undefined,
+): number {
+  const matrix = Array.from({ length: 16 }, () => 0);
+  let traced = 0;
+  for (const mesh of meshes) {
+    signal?.throwIfAborted();
+    const surface = readMeshBakeSurface(mesh);
+    if (surface === null) {
+      reasons.push(`mesh "${mesh.name}" keeps no CPU triangles`);
+      continue;
+    }
+    const override = surface.materialName === null ? undefined : model.materialOverrides[surface.materialName];
+    const rgb =
+      override === undefined || override === null
+        ? surface.albedo === null
+          ? [0.5, 0.5, 0.5]
+          : [...surface.albedo]
+        : materialAlbedo(override);
+    traced += builder.add(surface.positions, surface.indices, readWorldMatrix(mesh, matrix), rgb);
+  }
+  return traced;
 }
 
 /**
@@ -753,7 +830,7 @@ function readModel(
   const bytes = asset.sourceBytes;
   let result: GltfBakeGeometry | string;
   if (bytes === null) {
-    result = "its glTF is read only when a headless app loaded it (createApp({ headless: true }))";
+    result = "its model has no instance to read yet (it is read once a frame has drawn it)";
   } else {
     try {
       result = readGltfTriangles(bytes);
