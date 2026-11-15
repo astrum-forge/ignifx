@@ -66,6 +66,11 @@ export const SceneMethod = {
   frame: "frame",
   /** Asks which entity is under a point of the view, without selecting it. Answers {@link PickResult}. */
   pick: "pick",
+  /**
+   * Asks which entities a rectangle of the view covers, for a box selection, without selecting
+   * them. Needs `HostCapability.pickRect`. Answers {@link PickRectResult}. Additive in 0.3.
+   */
+  pickRect: "pickRect",
   /** Captures the view as an image. Needs `HostCapability.screenshot`. Answers {@link ScreenshotResult}. */
   screenshot: "screenshot",
   /** Describes every registered component's schema. Answers {@link SchemaSet}. */
@@ -601,6 +606,70 @@ export interface PickResult {
    * behind its origin.
    */
   readonly plane?: Vec3;
+}
+
+/**
+ * How `pickRect` matches an entity's projected bounds against the rectangle.
+ *
+ * @public
+ */
+export const PickRectMode = {
+  /** The entity counts when its projected bounds overlap the rectangle at all. */
+  intersect: "intersect",
+  /** The entity counts only when its projected bounds lie wholly inside the rectangle. */
+  contain: "contain",
+} as const;
+
+/**
+ * The union of the modes in `PickRectMode`.
+ *
+ * @public
+ */
+export type PickRectMode = (typeof PickRectMode)[keyof typeof PickRectMode];
+
+/**
+ * The most entities a `pickRect` answer lists; past it the answer sets `truncated`.
+ *
+ * @public
+ */
+export const PICK_RECT_MAX_ENTITIES = 2000;
+
+/**
+ * The parameters of `pickRect`: two opposite corners of a rectangle of the view, in either order,
+ * in the unit `pick` takes.
+ *
+ * @public
+ */
+export interface PickRectParams {
+  /** One corner's x, from the view's left edge, in `unit`. */
+  readonly x0: number;
+  /** One corner's y, from the view's top edge, in `unit`. */
+  readonly y0: number;
+  /** The opposite corner's x, in `unit`. */
+  readonly x1: number;
+  /** The opposite corner's y, in `unit`. */
+  readonly y1: number;
+  /** The unit of the corners, as for `pick`. */
+  readonly unit: PickUnit;
+  /** How bounds match the rectangle. Defaults to `"intersect"`. */
+  readonly mode?: PickRectMode;
+}
+
+/**
+ * The answer to `pickRect`.
+ *
+ * @public
+ */
+export interface PickRectResult {
+  /**
+   * The document entities whose drawn bounds (meshes in 3D; sprites and tilemaps in 2D view mode),
+   * projected to the view, match the rectangle, in document order. A mesh inside an instanced
+   * scene counts for its instance root, as with `pick`; an entity that draws nothing is never
+   * listed. At most {@link PICK_RECT_MAX_ENTITIES}.
+   */
+  readonly entities: readonly string[];
+  /** True when more entities matched than `entities` lists. */
+  readonly truncated: boolean;
 }
 
 /**
@@ -1332,6 +1401,7 @@ export type SceneRequest =
   | RpcRequestWithParams<typeof SceneMethod.setGizmo, SetGizmoParams>
   | RpcRequestWithParams<typeof SceneMethod.frame, FrameParams>
   | RpcRequestWithParams<typeof SceneMethod.pick, PickParams>
+  | RpcRequestWithParams<typeof SceneMethod.pickRect, PickRectParams>
   | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams>
   | RpcRequest<typeof SceneMethod.getSchemas, never>
   | RpcRequest<typeof SceneMethod.describeSettings, never>
@@ -1387,6 +1457,13 @@ export type SelectResponse = RpcSuccessResponse<EntitySelection>;
  * @public
  */
 export type PickResponse = RpcSuccessResponse<PickResult>;
+
+/**
+ * The success answer to `pickRect`.
+ *
+ * @public
+ */
+export type PickRectResponse = RpcSuccessResponse<PickRectResult>;
 
 /**
  * The success answer to `screenshot`.
@@ -1743,6 +1820,44 @@ export function isPickResult(value: unknown): value is PickResult {
     (distance === null || isNonNegative(distance)) &&
     optionalField(value, "ray", isPickRay) &&
     optionalField(value, "plane", (plane) => isNumberTuple(plane, 3))
+  );
+}
+
+/**
+ * Checks the parameters of `pickRect`.
+ *
+ * @param value - The received `params`.
+ * @returns True for four finite corner coordinates, a known unit and, when present, a known mode.
+ *
+ * @public
+ */
+export function isPickRectParams(value: unknown): value is PickRectParams {
+  return (
+    isRecord(value) &&
+    isFiniteNumber(value["x0"]) &&
+    isFiniteNumber(value["y0"]) &&
+    isFiniteNumber(value["x1"]) &&
+    isFiniteNumber(value["y1"]) &&
+    isOneOf(PickUnit, value["unit"]) &&
+    optionalField(value, "mode", (mode) => isOneOf(PickRectMode, mode))
+  );
+}
+
+/**
+ * Checks the result of `pickRect`.
+ *
+ * @param value - The received `result`.
+ * @returns True for at most {@link PICK_RECT_MAX_ENTITIES} uids and a boolean `truncated`.
+ *
+ * @public
+ */
+export function isPickRectResult(value: unknown): value is PickRectResult {
+  return (
+    isRecord(value) &&
+    Array.isArray(value["entities"]) &&
+    value["entities"].length <= PICK_RECT_MAX_ENTITIES &&
+    isArrayOf(value["entities"], isUidString) &&
+    isBoolean(value["truncated"])
   );
 }
 

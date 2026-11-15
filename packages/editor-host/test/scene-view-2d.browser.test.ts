@@ -171,6 +171,7 @@ async function sceneView(): Promise<{ readonly view: EditorHost; readonly opened
     HostCapability.screenshot,
     HostCapability.viewMode2d,
     HostCapability.pick2d,
+    HostCapability.pickRect,
     HostCapability.logRelay,
     HostCapability.hotReloadDefaults,
     HostCapability.gameView,
@@ -178,6 +179,9 @@ async function sceneView(): Promise<{ readonly view: EditorHost; readonly opened
     HostCapability.gameViewSize,
     HostCapability.gameView2d,
     HostCapability.thumbnails,
+    HostCapability.thumbnailMaterials,
+    HostCapability.thumbnailAtlases,
+    HostCapability.thumbnailTextures,
     HostCapability.grid,
     HostCapability.gridOverlay,
     HostCapability.tilemapCells,
@@ -430,6 +434,28 @@ describe("the scene view's 2D mode", () => {
     },
     60_000,
   );
+
+  it("box-picks sprites by their bounds with pickRect, in document order", async () => {
+    const { view } = await sceneView();
+    await call("setViewMode", { mode: "2d" });
+    await call("frame", { entities: "all" });
+    await frames(4);
+    // From the ghost's centre to the hero's: both sprites overlap it, neither lies inside it.
+    const ghost = cssPointOf(view, -3, -1);
+    const hero = cssPointOf(view, 3, 1);
+    const between = { x0: ghost.x, y0: ghost.y, x1: hero.x, y1: hero.y, unit: "css" };
+    expect(await call("pickRect", between)).toEqual({ entities: ["HERO", "GHOST"], truncated: false });
+    expect(await call("pickRect", { ...between, mode: "contain" })).toEqual({ entities: [], truncated: false });
+    // Around the hero only.
+    expect(
+      await call("pickRect", { x0: hero.x - 2, y0: hero.y - 2, x1: hero.x + 2, y1: hero.y + 2, unit: "css" }),
+    ).toEqual({ entities: ["HERO"], truncated: false });
+    // The marker draws nothing, so a rectangle around it lists nothing.
+    const marker = cssPointOf(view, 12, 7);
+    expect(
+      await call("pickRect", { x0: marker.x - 3, y0: marker.y - 3, x1: marker.x + 3, y1: marker.y + 3, unit: "css" }),
+    ).toEqual({ entities: [], truncated: false });
+  }, 60_000);
 
   it("selects the sprite a click lands on, and clears the selection on a click beside it", async () => {
     const { view } = await sceneView();

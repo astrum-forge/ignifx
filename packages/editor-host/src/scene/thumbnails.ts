@@ -1,6 +1,7 @@
 /**
- * `renderThumbnail` (engine ask E8): a model or prefab rendered on its own, in a second app the
- * host keeps for the purpose, through `app.renderer.renderToTexture`.
+ * `renderThumbnail` (engine ask E8): a model, prefab or material rendered on its own, in a second
+ * app the host keeps for the purpose, through `app.renderer.renderToTexture`; a sprite atlas or an
+ * image drawn from its decoded image, fitted in the square on a transparent background.
  *
  * The stage is a separate app on a 1x1 `OffscreenCanvas`, built from the project's own options, so
  * a thumbnail never shows the open document, never lights it, and is never lit by it. It is
@@ -10,15 +11,24 @@
  * waits for hold up no other request; thumbnails queue among themselves here, one stage at a time.
  */
 
-import { Camera, Light } from "@ignifx/core";
+import { assetRef, Camera, Light, MeshAsset, MeshRenderer } from "@ignifx/core";
 import { InvalidParamsError } from "../channel.js";
 import { entityWorldBounds } from "../lite/gizmos.js";
 import { isRenderThumbnailParams, THUMBNAIL_DEFAULT_SIZE } from "../protocol/index.js";
 import { GAME_VIEW_FRAME_WAIT_MS } from "./game-view.js";
-import { encodeCapture } from "./screenshot.js";
+import { encodeBlob, encodeCapture } from "./screenshot.js";
 import type { WorldBounds } from "../lite/gizmos.js";
-import type { RenderThumbnailParams, ThumbnailResult } from "../protocol/index.js";
-import type { App, Entity, RenderTexture, SceneFile, SceneInstance } from "@ignifx/core";
+import type { RenderThumbnailParams, ScreenshotFormat, ThumbnailResult } from "../protocol/index.js";
+import type {
+  App,
+  AssetHandle,
+  Entity,
+  FetchLike,
+  MaterialAsset,
+  RenderTexture,
+  SceneFile,
+  SceneInstance,
+} from "@ignifx/core";
 
 /** The JPEG quality when the request gives none, as for `screenshot`. */
 const DEFAULT_JPEG_QUALITY = 0.9;
@@ -45,8 +55,17 @@ const EMPTY_FRAMES = 4;
 /** The direction from the subject to the camera: in front, above and to the right. */
 const VIEW_DIRECTION = { x: 0.55, y: 0.45, z: -0.7 };
 
+/** The sphere a material is shown on: its diameter, in metres, and its segments. */
+const MATERIAL_SPHERE = { diameter: 1, segments: 48 } as const;
+
+/** The extensions of the images a browser decodes, which an address alone is typed `texture` by. */
+const IMAGE_EXTENSIONS: readonly string[] = [".png", ".jpg", ".jpeg", ".webp"];
+
+/** The URL prefixes an atlas's `image` is fetched verbatim with, as `@ignifx/2d`'s loader does. */
+const ABSOLUTE_PREFIXES: readonly string[] = ["/", "http://", "https://", "blob:", "data:"];
+
 /** What a thumbnail is of. */
-type ThumbnailKind = "model" | "prefab";
+export type ThumbnailKind = "model" | "prefab" | "material" | "atlas" | "texture";
 
 /** The stage app and its fixed objects. */
 interface Stage {
@@ -54,14 +73,28 @@ interface Stage {
   readonly app: App;
   /** The camera that frames each subject. */
   readonly camera: Camera;
+  /** The sphere materials are shown on, created on the first material. */
+  sphere: AssetHandle<MeshAsset> | null;
+}
+
+/** Where an image goes in the square: centred, its aspect kept. */
+export interface FittedRect {
+  /** The left edge, in pixels. */
+  readonly x: number;
+  /** The top edge, in pixels. */
+  readonly y: number;
+  /** The width, in pixels. */
+  readonly width: number;
+  /** The height, in pixels. */
+  readonly height: number;
 }
 
 /**
- * Types the requested asset.
+ * Types the requested asset: by its reference's `type` when it has one, else by its extension.
  *
  * @param params - Checked parameters.
  * @returns The address and what it is.
- * @throws InvalidParamsError for an asset that is neither a model nor a prefab.
+ * @throws InvalidParamsError for an asset of a type the host does not render.
  */
 export function thumbnailSubject(params: RenderThumbnailParams): {
   readonly address: string;
@@ -71,19 +104,81 @@ export function thumbnailSubject(params: RenderThumbnailParams): {
   const address = typeof asset === "string" ? asset : asset.$asset;
   const type = typeof asset === "string" ? undefined : asset.type;
   const lower = address.toLowerCase();
-  if (type === "model" || (type === undefined && (lower.endsWith(".glb") || lower.endsWith(".gltf")))) {
-    return { address, kind: "model" };
+  const byType: Readonly<Record<string, ThumbnailKind>> = {
+    model: "model",
+    scene: "prefab",
+    prefab: "prefab",
+    material: "material",
+    spriteatlas: "atlas",
+    texture: "texture",
+  };
+  const isImage = IMAGE_EXTENSIONS.some((extension) => lower.endsWith(extension));
+  let kind: ThumbnailKind | undefined;
+  if (type !== undefined) {
+    kind = byType[type];
+    // A texture is decoded by the browser, so a GPU-only format (`.ktx2`, `.basis`) is refused.
+    if (kind === "texture" && !isImage) {
+      kind = undefined;
+    }
+  } else if (lower.endsWith(".glb") || lower.endsWith(".gltf")) {
+    kind = "model";
+  } else if (lower.endsWith(".prefab.json") || lower.endsWith(".scene.json")) {
+    kind = "prefab";
+  } else if (lower.endsWith(".material.json")) {
+    kind = "material";
+  } else if (lower.endsWith(".atlas.json")) {
+    kind = "atlas";
+  } else if (isImage) {
+    kind = "texture";
   }
-  if (
-    type === "scene" ||
-    type === "prefab" ||
-    (type === undefined && (lower.endsWith(".prefab.json") || lower.endsWith(".scene.json")))
-  ) {
-    return { address, kind: "prefab" };
+  if (kind === undefined) {
+    throw new InvalidParamsError(
+      `renderThumbnail renders models (.glb, .gltf), prefabs (.prefab.json), materials (.material.json), sprite atlases (.atlas.json) and images (${IMAGE_EXTENSIONS.join(", ")}); ${address} is none of them.`,
+    );
   }
-  throw new InvalidParamsError(
-    `renderThumbnail renders models (.glb, .gltf) and prefabs (.prefab.json); ${address} is neither.`,
-  );
+  return { address, kind };
+}
+
+/**
+ * The URL of a sprite atlas's image, as `@ignifx/2d`'s loader resolves it: a root-relative or
+ * absolute reference is a URL, fetched as it is; anything else is an address relative to the
+ * atlas's own, resolved through the asset service.
+ *
+ * @param resolveUrl - `app.assets.resolveUrl`.
+ * @param atlasAddress - The atlas document's address.
+ * @param image - Its `image` reference.
+ * @returns The URL to fetch.
+ */
+export function atlasImageUrl(resolveUrl: (address: string) => string, atlasAddress: string, image: string): string {
+  if (ABSOLUTE_PREFIXES.some((prefix) => image.startsWith(prefix))) {
+    return image;
+  }
+  const cut = atlasAddress.lastIndexOf("/");
+  const joined = cut < 0 ? image : `${atlasAddress.slice(0, cut)}/${image}`;
+  const segments: string[] = [];
+  for (const segment of joined.split("/")) {
+    if (segment === "..") {
+      segments.pop();
+    } else if (segment !== "" && segment !== ".") {
+      segments.push(segment);
+    }
+  }
+  return resolveUrl(segments.join("/"));
+}
+
+/**
+ * Fits an image in a square: as large as it goes, its aspect kept, centred.
+ *
+ * @param width - The image's width, in pixels.
+ * @param height - The image's height, in pixels.
+ * @param side - The square's side, in pixels.
+ * @returns Where to draw it.
+ */
+export function fitInSquare(width: number, height: number, side: number): FittedRect {
+  const scale = width > 0 && height > 0 ? Math.min(side / width, side / height) : 0;
+  const w = width * scale;
+  const h = height * scale;
+  return { x: (side - w) / 2, y: (side - h) / 2, width: w, height: h };
 }
 
 /**
@@ -93,7 +188,7 @@ export function thumbnailSubject(params: RenderThumbnailParams): {
  * @param kind - What it is.
  * @returns The file.
  */
-export function thumbnailScene(address: string, kind: ThumbnailKind): SceneFile {
+export function thumbnailScene(address: string, kind: "model" | "prefab"): SceneFile {
   const transform = { position: [0, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] } as const;
   const entity =
     kind === "model"
@@ -120,6 +215,10 @@ export function thumbnailScene(address: string, kind: ThumbnailKind): SceneFile 
 export class ThumbnailRenderer {
   readonly #createApp: () => Promise<App>;
 
+  readonly #resolveUrl: (address: string) => string;
+
+  readonly #fetch: FetchLike;
+
   #stage: Promise<Stage> | null = null;
 
   #texture: RenderTexture | null = null;
@@ -138,9 +237,13 @@ export class ThumbnailRenderer {
    * Keeps the factory; nothing is created until the first thumbnail.
    *
    * @param createApp - Creates the stage app from the project's options, unstarted.
+   * @param resolveUrl - Resolves an asset address to the URL to fetch, for atlases and images.
+   * @param fetchAsset - The `fetch` the project's assets are read through, for atlases and images.
    */
-  constructor(createApp: () => Promise<App>) {
+  constructor(createApp: () => Promise<App>, resolveUrl: (address: string) => string, fetchAsset: FetchLike) {
     this.#createApp = createApp;
+    this.#resolveUrl = resolveUrl;
+    this.#fetch = fetchAsset;
   }
 
   /**
@@ -168,31 +271,91 @@ export class ThumbnailRenderer {
       );
     }
     const { address, kind } = thumbnailSubject(params);
+    const size = params.size ?? THUMBNAIL_DEFAULT_SIZE;
+    const quality = params.quality ?? DEFAULT_JPEG_QUALITY;
+    if (kind === "atlas" || kind === "texture") {
+      const url = kind === "texture" ? this.#resolveUrl(address) : await this.#atlasImage(address);
+      const dataUrl = await drawImageThumbnail(this.#fetch, url, size, params.format, quality);
+      return { dataUrl, width: size, height: size };
+    }
     const stage = await (this.#stage ??= this.#open());
-    const { app, camera } = stage;
+    const { app } = stage;
     this.#loads += 1;
+    if (kind === "material") {
+      const material = await app.assets.loadAsync<MaterialAsset>(assetRef(address, "material"));
+      const scene = app.world.createScene(`__ignifx_thumbnail__/${String(this.#loads)}`);
+      try {
+        stage.sphere ??= MeshAsset.sphere(app, MATERIAL_SPHERE);
+        const subject = app.world.createEntity("Thumbnail", { scene });
+        subject.addComponent(MeshRenderer, { mesh: stage.sphere, materials: [material] });
+        return await this.#shoot(stage, scene, params.format, size, quality);
+      } finally {
+        await app.world.unloadScene(scene);
+        material.release();
+      }
+    }
     const instance = await app.world.loadSceneFile(thumbnailScene(address, kind), {
       address: `__ignifx_thumbnail__/${String(this.#loads)}.scene.json`,
       mode: "single",
     });
     try {
-      const bounds = await settledBounds(app, instance, () => this.#isLoading);
-      frameCamera(camera, bounds);
-      await nextFrame();
-      const size = params.size ?? THUMBNAIL_DEFAULT_SIZE;
-      const texture = this.#textureOf(app, size * SUPERSAMPLE);
-      await app.renderer.renderToTexture(camera, texture, { maxWaitMs: GAME_VIEW_FRAME_WAIT_MS });
-      const capture = await texture.readPixels();
-      const dataUrl = await encodeCapture(
-        capture,
-        { width: size, height: size },
-        params.format,
-        params.quality ?? DEFAULT_JPEG_QUALITY,
-      );
-      return { dataUrl, width: size, height: size };
+      return await this.#shoot(stage, instance, params.format, size, quality);
     } finally {
       await app.world.unloadScene(instance);
     }
+  }
+
+  /**
+   * Waits for a subject on the stage to settle, frames it, renders it and encodes it.
+   *
+   * @param stage - The stage.
+   * @param subject - The scene instance that holds the subject.
+   * @param format - The image format.
+   * @param size - The image's side.
+   * @param quality - The JPEG quality.
+   * @returns The image.
+   */
+  async #shoot(
+    stage: Stage,
+    subject: SceneInstance,
+    format: ScreenshotFormat,
+    size: number,
+    quality: number,
+  ): Promise<ThumbnailResult> {
+    const { app, camera } = stage;
+    const bounds = await settledBounds(app, subject, () => this.#isLoading);
+    // A material's textures may still be on their way once the sphere holds still.
+    for (let frame = 0; frame < MAX_SETTLE_FRAMES && this.#isLoading; frame += 1) {
+      // oxlint-disable-next-line no-await-in-loop -- one frame at a time is the point
+      await nextFrame();
+    }
+    frameCamera(camera, bounds);
+    await nextFrame();
+    const texture = this.#textureOf(app, size * SUPERSAMPLE);
+    await app.renderer.renderToTexture(camera, texture, { maxWaitMs: GAME_VIEW_FRAME_WAIT_MS });
+    const capture = await texture.readPixels();
+    const dataUrl = await encodeCapture(capture, { width: size, height: size }, format, quality);
+    return { dataUrl, width: size, height: size };
+  }
+
+  /**
+   * Reads a sprite atlas document and resolves its image's URL.
+   *
+   * @param address - The atlas's address.
+   * @returns The image's URL.
+   * @throws Error when the document cannot be fetched or names no image.
+   */
+  async #atlasImage(address: string): Promise<string> {
+    const response = await this.#fetch(this.#resolveUrl(address), { cache: "no-cache" });
+    if (!response.ok) {
+      throw new Error(`renderThumbnail could not read the atlas ${address}: HTTP ${String(response.status)}.`);
+    }
+    const document: unknown = await response.json();
+    const image: unknown = typeof document === "object" && document !== null ? Reflect.get(document, "image") : null;
+    if (typeof image !== "string" || image === "") {
+      throw new Error(`renderThumbnail could not render the atlas ${address}: it names no image.`);
+    }
+    return atlasImageUrl(this.#resolveUrl, address, image);
   }
 
   /** Disposes the stage app, now or once it has been created. */
@@ -230,7 +393,7 @@ export class ThumbnailRenderer {
     if (this.#isDisposed) {
       app.dispose();
     }
-    return { app, camera };
+    return { app, camera, sphere: null };
   }
 
   /**
@@ -249,6 +412,49 @@ export class ThumbnailRenderer {
     const texture = app.renderer.createRenderTexture(side, side);
     this.#texture = texture;
     return texture;
+  }
+}
+
+/**
+ * Draws an image fitted in a square on a transparent background (a JPEG's shows black) and
+ * encodes it. An image smaller than the square is enlarged without smoothing, so pixel art stays
+ * crisp.
+ *
+ * @param fetchAsset - The `fetch` to read it with.
+ * @param url - The image's URL.
+ * @param size - The square's side, in pixels.
+ * @param format - The image format.
+ * @param quality - The JPEG quality.
+ * @returns The data URL.
+ * @throws Error when the image cannot be fetched or decoded.
+ */
+async function drawImageThumbnail(
+  fetchAsset: FetchLike,
+  url: string,
+  size: number,
+  format: ScreenshotFormat,
+  quality: number,
+): Promise<string> {
+  const response = await fetchAsset(url, { cache: "no-cache" });
+  if (!response.ok) {
+    throw new Error(`renderThumbnail could not read the image ${url}: HTTP ${String(response.status)}.`);
+  }
+  const bitmap = await createImageBitmap(await response.blob());
+  try {
+    const canvas = new OffscreenCanvas(size, size);
+    const context = canvas.getContext("2d");
+    if (context === null) {
+      throw new Error("This browser has no 2D canvas to draw the thumbnail with.");
+    }
+    const fit = fitInSquare(bitmap.width, bitmap.height, size);
+    context.imageSmoothingEnabled = fit.width < bitmap.width;
+    context.imageSmoothingQuality = "high";
+    context.drawImage(bitmap, fit.x, fit.y, fit.width, fit.height);
+    const type = format === "png" ? "image/png" : "image/jpeg";
+    const blob = await canvas.convertToBlob(format === "png" ? { type } : { type, quality });
+    return await encodeBlob(blob, type);
+  } finally {
+    bitmap.close();
   }
 }
 
