@@ -91,6 +91,15 @@
         "data": { "reason": "unknownEntity" }
       }
     },
+    "bakeInvalidGrid": {
+      "jsonrpc": "2.0",
+      "id": 45,
+      "error": {
+        "code": -32602,
+        "message": "A 1025 × 1 × 1 grid is more than a .probes.json holds (X at most 1024, Y × Z at most 4096).",
+        "data": { "reason": "invalidGrid" }
+      }
+    },
     "bakeNotAVolume": {
       "jsonrpc": "2.0",
       "id": 44,

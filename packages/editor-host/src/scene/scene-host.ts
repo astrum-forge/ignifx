@@ -15,6 +15,7 @@ import {
   HostCapability,
   EDITOR_LINES_MAX_SETS,
   isApplyOpsParams,
+  isCancelBakeParams,
   isClearEditorLinesParams,
   isEntitySelection,
   isFrameParams,
@@ -320,13 +321,19 @@ export class SceneHost {
     if (baker !== null) {
       methods.set(LightProbeBakeMethod.bakeLightProbes, async (params) => {
         const mirror = this.#requireMirror(LightProbeBakeMethod.bakeLightProbes);
-        // The world is read in a queue slot, so the bake sees every change sent before it; the
-        // trace then runs beside the queue. Wrapped, so the slot does not wait for the bake.
-        const started = await this.#serial(() => ({ bake: baker.start(this.#requireApp(), mirror.scene, params) }));
+        // Reserved at once, so `cancelBake` can cancel it before its slot runs. The world is read in
+        // a queue slot (a change handled after it cancels the bake as `sceneChanged`); the trace
+        // then runs beside the queue. Wrapped, so the slot does not wait for the bake.
+        const app = this.#requireApp();
+        const pending = baker.reserve();
+        const started = await this.#serial(() => ({ bake: baker.start(app, mirror.scene, params, pending) }));
         return started.bake.finished;
       });
-      methods.set(LightProbeBakeMethod.cancelBake, () => {
+      methods.set(LightProbeBakeMethod.cancelBake, (params) => {
         this.#requireMirror(LightProbeBakeMethod.cancelBake);
+        if (!isCancelBakeParams(params)) {
+          throw new InvalidParamsError("cancelBake takes {} or no parameters.");
+        }
         return { cancelled: baker.cancel(BakeCancelCause.cancelBake) };
       });
     }

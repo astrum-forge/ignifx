@@ -19,7 +19,9 @@ import {
 } from "@ignifx/core";
 import { InvalidParamsError, RpcFailure } from "../channel.js";
 import {
+  BAKE_COEFFICIENT_DIGITS,
   BAKE_DEFAULT_SPACING,
+  BAKE_MAX_COEFFICIENT,
   BAKE_MAX_COUNT_X,
   BAKE_MAX_COUNT_YZ,
   BAKE_MAX_PROBES,
@@ -292,6 +294,31 @@ export interface StartedBake {
   readonly finished: Promise<BakeLightProbesResult>;
 }
 
+/** A bake asked for whose queue slot has not run yet. */
+export interface PendingBake {
+  /** Set by `cancelBake` before the slot runs: the slot then fails without baking. */
+  cancelled: boolean;
+}
+
+/**
+ * Rounds the baked coefficients for the answer: {@link BAKE_COEFFICIENT_DIGITS} significant digits,
+ * `0` below `1e-6` in magnitude.
+ *
+ * @param coefficients - The baked coefficients.
+ * @returns The rounded ones, or `null` when one is not finite or above {@link BAKE_MAX_COEFFICIENT}.
+ */
+export function answerCoefficients(coefficients: readonly number[]): number[] | null {
+  const out: number[] = [];
+  for (const value of coefficients) {
+    if (!Number.isFinite(value) || Math.abs(value) > BAKE_MAX_COEFFICIENT) {
+      return null;
+    }
+    // `+ 0` turns a rounded `-0` into `0`.
+    out.push(Math.abs(value) < 1e-6 ? 0 : Number(value.toPrecision(BAKE_COEFFICIENT_DIGITS)) + 0);
+  }
+  return out;
+}
+
 /** Runs one bake at a time over the scene view's world. */
 export class LightProbeBaker {
   readonly #notify: (method: string, params: unknown) => void;
@@ -299,6 +326,8 @@ export class LightProbeBaker {
   readonly #now: () => number;
 
   #running: AbortController | null = null;
+
+  #pending: PendingBake | null = null;
 
   /**
    * Creates the baker.
@@ -312,12 +341,28 @@ export class LightProbeBaker {
   }
 
   /**
-   * Whether a bake is running.
+   * Whether a bake is pending or running.
    *
-   * @returns True between a start and its end.
+   * @returns True from a reservation to the bake's end.
    */
   get busy(): boolean {
-    return this.#running !== null;
+    return this.#running !== null || this.#pending !== null;
+  }
+
+  /**
+   * Reserves the baker for a request whose queue slot is still to run, so `cancelBake` can cancel it
+   * before it starts and a second request is `busy` at once.
+   *
+   * @returns The reservation, for {@link LightProbeBaker.start}.
+   * @throws RpcFailure `busy` while a bake is pending or running.
+   */
+  reserve(): PendingBake {
+    if (this.busy) {
+      throw busyFailure();
+    }
+    const pending: PendingBake = { cancelled: false };
+    this.#pending = pending;
+    return pending;
   }
 
   /**
@@ -328,11 +373,33 @@ export class LightProbeBaker {
    * @param app - The scene view's app.
    * @param scene - The open document, or `null`.
    * @param params - The request's parameters.
+   * @param pending - The reservation, from {@link LightProbeBaker.reserve}; released here.
    * @returns The started bake.
    * @throws RpcFailure as `BakeFailureReason` lists, `InvalidParamsError` for bad parameters,
    * `RpcErrorCode.noScene` with no document.
    */
-  start(app: App, scene: SceneInstance | null, params: unknown): StartedBake {
+  start(app: App, scene: SceneInstance | null, params: unknown, pending: PendingBake): StartedBake {
+    try {
+      if (pending.cancelled) {
+        throw toFailure(new BakeCancelled(BakeCancelCause.cancelBake));
+      }
+      return this.#start(app, scene, params);
+    } finally {
+      if (this.#pending === pending) {
+        this.#pending = null;
+      }
+    }
+  }
+
+  /**
+   * {@link LightProbeBaker.start}, once the reservation stands.
+   *
+   * @param app - The scene view's app.
+   * @param scene - The open document, or `null`.
+   * @param params - The request's parameters.
+   * @returns The started bake.
+   */
+  #start(app: App, scene: SceneInstance | null, params: unknown): StartedBake {
     if (!isBakeLightProbesParams(params)) {
       throw new InvalidParamsError(
         'bakeLightProbes takes { volume: uid, counts?: [x, y, z] | spacing?: metres, directLight?: "include" | "exclude", sky?, rays?, maxDistance? }.',
@@ -342,9 +409,7 @@ export class LightProbeBaker {
       throw new RpcFailure(RpcErrorCode.noScene, 'No scene is open; send "openScene" before "bakeLightProbes".');
     }
     if (this.#running !== null) {
-      throw bakeFailure(RpcErrorCode.invalidRequest, "A light-probe bake is already running; cancel it or wait.", {
-        reason: BakeFailureReason.busy,
-      });
+      throw busyFailure();
     }
     const entity = app.world.getEntity(params.volume);
     if (entity === null || entity.scene !== scene) {
@@ -391,8 +456,16 @@ export class LightProbeBaker {
     const finished = baking.then(
       (baked): BakeLightProbesResult => {
         this.#end(controller);
+        const coefficients = answerCoefficients(baked.data.coefficients);
+        if (coefficients === null) {
+          throw bakeFailure(
+            RpcErrorCode.invalidRequest,
+            `The bake gave a coefficient that is not finite or above ${String(BAKE_MAX_COEFFICIENT)}: a light or the sky is far too bright.`,
+            { reason: BakeFailureReason.outOfRange },
+          );
+        }
         // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- `writeLightProbeFile` writes numbers, strings and plain records only.
-        const probes = writeLightProbeFile(baked.data) as JsonObject;
+        const probes = writeLightProbeFile({ ...baked.data, coefficients }) as JsonObject;
         return {
           probes,
           stats: {
@@ -416,15 +489,21 @@ export class LightProbeBaker {
   }
 
   /**
-   * Cancels the running bake, if any.
+   * Cancels the running bake, if any, or with `cancelBake` the pending one. A document change leaves
+   * a pending bake alone: it has not read the world yet, and will read the changed one.
    *
    * @param cause - What cancels it.
-   * @returns Whether one was running.
+   * @returns Whether one was cancelled.
    */
   cancel(cause: BakeCancelCause): boolean {
     const running = this.#running;
     if (running === null) {
-      return false;
+      const pending = this.#pending;
+      if (pending === null || pending.cancelled || cause !== BakeCancelCause.cancelBake) {
+        return false;
+      }
+      pending.cancelled = true;
+      return true;
     }
     this.#running = null;
     running.abort(new BakeCancelled(cause));
@@ -470,6 +549,17 @@ export class LightProbeBaker {
     const fromEnvironment = environmentSky(app, scene);
     return fromEnvironment === null ? { sky: null, source: "none" } : { sky: fromEnvironment, source: "environment" };
   }
+}
+
+/**
+ * The failure of a request made while a bake is pending or running.
+ *
+ * @returns The failure.
+ */
+function busyFailure(): RpcFailure {
+  return bakeFailure(RpcErrorCode.invalidRequest, "A light-probe bake is already running; cancel it or wait.", {
+    reason: BakeFailureReason.busy,
+  });
 }
 
 /**

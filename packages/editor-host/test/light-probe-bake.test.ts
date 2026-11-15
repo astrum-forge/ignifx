@@ -2,19 +2,29 @@ import { readFileSync } from "node:fs";
 import { MeshRenderer, Model, stringifySceneFile } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  BAKE_MAX_COEFFICIENT,
   BAKE_MAX_PROBES,
+  BAKE_MAX_SKY,
+  BAKE_MAX_UID_LENGTH,
   BAKE_PROGRESS_INTERVAL_MS,
   HostCapability,
   isBakeFailureData,
   isBakeLightProbesParams,
   isBakeLightProbesResult,
   isBakeProgressParams,
+  isCancelBakeParams,
   isCancelBakeResult,
   LightProbeBakeMethod,
   LightProbeBakeNotification,
+  RpcErrorCode,
   SceneNotification,
 } from "../src/protocol/index.js";
-import { bakeGridForVolume, ProgressThrottle, skyFromPreScaledHarmonics } from "../src/scene/light-probe-baker.js";
+import {
+  answerCoefficients,
+  bakeGridForVolume,
+  ProgressThrottle,
+  skyFromPreScaledHarmonics,
+} from "../src/scene/light-probe-baker.js";
 import { startLiveHost } from "./support/scene-project.js";
 import type { Received } from "./support/editor.js";
 import type { LiveHost, Wire } from "./support/scene-project.js";
@@ -282,6 +292,7 @@ describe("the fixture", () => {
       "bakeBusy",
       "bakeUnknownEntity",
       "bakeNotAVolume",
+      "bakeInvalidGrid",
     ]) {
       expect(isBakeFailureData(member(wire(name), "error")["data"])).toBe(true);
     }
@@ -292,8 +303,17 @@ describe("the fixture", () => {
     expect(isBakeLightProbesParams(base)).toBe(true);
     expect(isBakeLightProbesParams({ ...base, counts: [1, 1, 1], spacing: 2 })).toBe(false);
     expect(isBakeLightProbesParams({ ...base, counts: [0, 1, 1] })).toBe(false);
-    expect(isBakeLightProbesParams({ ...base, counts: [1025, 1, 1] })).toBe(false);
-    expect(isBakeLightProbesParams({ ...base, counts: [64, 64, 64] })).toBe(false);
+    // Whole counts from 1 pass the guard; the host refuses a grid over the limits as `invalidGrid`.
+    expect(isBakeLightProbesParams({ ...base, counts: [1025, 1, 1] })).toBe(true);
+    expect(isBakeLightProbesParams({ ...base, counts: [1.5, 1, 1] })).toBe(false);
+    expect(isBakeLightProbesParams({ volume: "v".repeat(BAKE_MAX_UID_LENGTH + 1) })).toBe(false);
+    expect(isBakeLightProbesParams({ ...base, sky: { r: BAKE_MAX_SKY * 10, g: 0, b: 0 } })).toBe(false);
+    expect(
+      isBakeLightProbesParams({ ...base, sky: { kind: "sh9", coefficients: Array.from({ length: 27 }, () => 1e300) } }),
+    ).toBe(false);
+    expect(isCancelBakeParams(undefined)).toBe(true);
+    expect(isCancelBakeParams({})).toBe(true);
+    expect(isCancelBakeParams({ volume: VOLUME })).toBe(false);
     expect(isBakeLightProbesParams({ ...base, spacing: 0.01 })).toBe(false);
     expect(isBakeLightProbesParams({ ...base, directLight: "both" })).toBe(false);
     expect(isBakeLightProbesParams({ ...base, rays: 0 })).toBe(false);
@@ -337,7 +357,31 @@ describe("bakeGridForVolume", () => {
     expect(bakeGridForVolume(matrix([10_000, 1, 1], [0, 0, 0]), { spacing: 1 })).toHaveProperty("problem");
     expect(bakeGridForVolume(matrix([100, 100, 100], [0, 0, 0]), { spacing: 1 })).toHaveProperty("problem");
     expect(bakeGridForVolume(matrix([1, 1, 1], [Number.NaN, 0, 0]), {})).toHaveProperty("problem");
-    expect(BAKE_MAX_PROBES).toBe(65_536);
+    expect(BAKE_MAX_PROBES).toBe(16_384);
+  });
+});
+
+describe("answerCoefficients", () => {
+  it("rounds to six significant digits and drops what is below 1e-6", () => {
+    expect(answerCoefficients([0.123_456_789, -1.234_567_89e-7, 12_345_678.9, -0])).toEqual([
+      0.123_457, 0, 12_345_700, 0,
+    ]);
+  });
+
+  it("refuses a coefficient that is not finite or out of range", () => {
+    expect(answerCoefficients([1, Number.NaN])).toBeNull();
+    expect(answerCoefficients([Number.POSITIVE_INFINITY])).toBeNull();
+    expect(answerCoefficients([BAKE_MAX_COEFFICIENT * 2])).toBeNull();
+  });
+
+  it("keeps the largest document under 4 MiB", () => {
+    // The longest a rounded coefficient can print, a comma included, times every coefficient.
+    const longest = Math.max(
+      JSON.stringify(-999_999_000_000).length,
+      JSON.stringify(-0.000_012_345_7).length,
+      JSON.stringify(-1.234_57e-6).length,
+    );
+    expect((longest + 1) * 12 * BAKE_MAX_PROBES).toBeLessThan(4 * 1024 * 1024 - 1024);
   });
 });
 
@@ -449,6 +493,17 @@ describe("bakeLightProbes on a live host", () => {
     expect(failure(unknown)).toEqual(failure(wire("bakeUnknownEntity")));
     const floor = await peer.request({ jsonrpc: "2.0", id: 44, method: "bakeLightProbes", params: { volume: FLOOR } });
     expect(failure(floor)).toEqual(failure(wire("bakeNotAVolume")));
+    const wide = await peer.request({
+      jsonrpc: "2.0",
+      id: 45,
+      method: "bakeLightProbes",
+      params: { volume: VOLUME, counts: [1025, 1, 1] },
+    });
+    expect(failure(wide)).toEqual(failure(wire("bakeInvalidGrid")));
+    expect(await call(peer, LightProbeBakeMethod.cancelBake, { volume: VOLUME })).toHaveProperty(
+      "error.code",
+      RpcErrorCode.invalidParams,
+    );
   });
 
   it("answers busy while a bake runs, and cancels on cancelBake", async () => {
@@ -466,6 +521,24 @@ describe("bakeLightProbes on a live host", () => {
     expect(progress.every((message) => isBakeProgressParams(message["params"]))).toBe(true);
     // Nothing runs now.
     expect(await call(peer, LightProbeBakeMethod.cancelBake, {})).toHaveProperty("result", { cancelled: false });
+  });
+
+  it("cancels a bake still waiting for its queue slot, without running it", async () => {
+    const { peer } = await opened();
+    // The reopen holds the queue while its assets load; the bake waits behind it.
+    peer.send({
+      jsonrpc: "2.0",
+      id: 39,
+      method: "openScene",
+      params: { file: LEVEL, address: "scenes/bake.scene.json" },
+    });
+    peer.send(slowBake(40));
+    expect(await peer.request(wire("cancelBake"))).toEqual(wire("cancelBakeResult"));
+    expect(await peer.answer(39)).toHaveProperty("result");
+    expect(failure(await peer.answer(40))).toEqual(failure(wire("bakeCancelled")));
+    expect(peer.notifications.some((message) => message["method"] === LightProbeBakeNotification.bakeProgress)).toBe(
+      false,
+    );
   });
 
   it("cancels a bake when the document changes, and keeps answering meanwhile", async () => {

@@ -287,12 +287,16 @@ export {
 } from "./scene-ops.js";
 export { PROTOCOL_VERSION, protocolVersionIsCompatible, type ProtocolVersion } from "./version.js";
 export {
+  BAKE_COEFFICIENT_DIGITS,
   BAKE_DEFAULT_SPACING,
+  BAKE_MAX_COEFFICIENT,
   BAKE_MAX_COUNT_X,
   BAKE_MAX_COUNT_YZ,
   BAKE_MAX_PROBES,
   BAKE_MAX_RAYS,
   BAKE_MAX_SKIPS,
+  BAKE_MAX_SKY,
+  BAKE_MAX_UID_LENGTH,
   BAKE_PROGRESS_INTERVAL_MS,
   BAKE_SPACING_MAX,
   BAKE_SPACING_MIN,
@@ -303,6 +307,7 @@ export {
   isBakeLightProbesResult,
   isBakeProgressParams,
   isBakeSky,
+  isCancelBakeParams,
   isCancelBakeResult,
   LightProbeBakeMethod,
   LightProbeBakeNotification,

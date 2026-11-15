@@ -19,8 +19,10 @@ import type { RpcNotificationWithParams, RpcRequestWithParams } from "./scene.js
  * @remarks
  * A host lists `HostCapability.bakeLightProbes` when it answers them; one that does not answers
  * `RpcErrorCode.methodNotFound`. Both run beside the one-at-a-time queue of the other methods:
- * the bake starts in that queue (so it sees every change sent before it), then traces in slices
- * while the queue goes on, so the view keeps answering `applyOps`, `pick` and the rest.
+ * the bake reads the world in a slot of the host's queue, then traces in slices while the queue
+ * goes on, so the view keeps answering `applyOps`, `pick` and the rest. A document change the host
+ * handles after the bake has read the world cancels it (`cancelled`, cause `sceneChanged`): a bake
+ * never mixes the old world with the new, but it may start before a change sent just ahead of it.
  *
  * @public
  */
@@ -31,7 +33,11 @@ export const LightProbeBakeMethod = {
    * {@link BakeFailureData} that `BakeFailureReason` lists.
    */
   bakeLightProbes: "bakeLightProbes",
-  /** Cancels the running bake, if any; answers {@link CancelBakeResult}. The bake then fails as `cancelled`. */
+  /**
+   * Cancels the running or pending bake, if any; answers {@link CancelBakeResult}. The bake then
+   * fails as `cancelled` (cause `cancelBake`), a pending one without running. Takes `{}` or no
+   * parameters.
+   */
   cancelBake: "cancelBake",
 } as const;
 
@@ -106,11 +112,43 @@ export const BAKE_MAX_COUNT_X = 1024;
 export const BAKE_MAX_COUNT_YZ = 4096;
 
 /**
- * The most probes one bake traces.
+ * The most probes one bake traces. With coefficients rounded to {@link BAKE_COEFFICIENT_DIGITS}
+ * significant digits and bounded by {@link BAKE_MAX_COEFFICIENT}, the largest `probes` document is
+ * under 3 MiB of JSON, inside the editor's 4 MiB message limits.
  *
  * @public
  */
-export const BAKE_MAX_PROBES = 65_536;
+export const BAKE_MAX_PROBES = 16_384;
+
+/**
+ * The significant digits each answered coefficient is rounded to; a coefficient below `1e-6` in
+ * magnitude is answered as `0`.
+ *
+ * @public
+ */
+export const BAKE_COEFFICIENT_DIGITS = 6;
+
+/**
+ * The largest coefficient magnitude a bake answers. A bake whose probes exceed it (lights or a sky
+ * of absurd intensity) fails as `outOfRange` rather than writing a grid no renderer can use.
+ *
+ * @public
+ */
+export const BAKE_MAX_COEFFICIENT = 1e12;
+
+/**
+ * The largest magnitude of a sky channel or harmonic a request may give.
+ *
+ * @public
+ */
+export const BAKE_MAX_SKY = 1e6;
+
+/**
+ * The longest `volume` uid a request may give, in UTF-16 code units.
+ *
+ * @public
+ */
+export const BAKE_MAX_UID_LENGTH = 128;
 
 /**
  * The most rays per probe (`bakeLightProbes`' own limit).
@@ -272,8 +310,11 @@ export interface CancelBakeResult {
  *
  * - `unknownEntity` (`RpcErrorCode.unknownEntity`): `volume` names no entity of the open scene;
  * - `notAVolume` (`RpcErrorCode.invalidParams`): the entity has no `LightProbeVolume`;
- * - `invalidGrid` (`RpcErrorCode.invalidParams`): the grid is more than a `.probes.json` holds or
+ * - `invalidGrid` (`RpcErrorCode.invalidParams`): the grid (from `counts` or `spacing`) is more
+ *   than a `.probes.json` holds (X ≤ {@link BAKE_MAX_COUNT_X}, Y × Z ≤ {@link BAKE_MAX_COUNT_YZ}) or
  *   more than {@link BAKE_MAX_PROBES}, or the volume's transform is not finite;
+ * - `outOfRange` (`RpcErrorCode.invalidRequest`): a baked coefficient is not finite or above
+ *   {@link BAKE_MAX_COEFFICIENT} (a light of absurd intensity);
  * - `busy` (`RpcErrorCode.invalidRequest`): a bake is running; cancel it or wait;
  * - `cancelled` (`RpcErrorCode.invalidRequest`): `cancelBake`, or a change to the document, stopped
  *   it (`data.cause`).
@@ -284,6 +325,7 @@ export const BakeFailureReason = {
   unknownEntity: "unknownEntity",
   notAVolume: "notAVolume",
   invalidGrid: "invalidGrid",
+  outOfRange: "outOfRange",
   busy: "busy",
   cancelled: "cancelled",
 } as const;
@@ -360,7 +402,17 @@ export type BakeLightProbesResponse = RpcSuccessResponse<BakeLightProbesResult>;
 export type CancelBakeResponse = RpcSuccessResponse<CancelBakeResult>;
 
 /**
- * Tells whether a value is a colour with finite `r`, `g`, `b` and, when present, `a`.
+ * Tells whether a value is a sky number: finite, at most {@link BAKE_MAX_SKY} in magnitude.
+ *
+ * @param value - The value to test.
+ * @returns True for a number in range.
+ */
+function isSkyNumber(value: unknown): value is number {
+  return isFiniteNumber(value) && Math.abs(value) <= BAKE_MAX_SKY;
+}
+
+/**
+ * Tells whether a value is a colour with `r`, `g`, `b` and, when present, `a` in sky range.
  *
  * @param value - The value to test.
  * @returns True for a colour.
@@ -368,9 +420,9 @@ export type CancelBakeResponse = RpcSuccessResponse<CancelBakeResult>;
 function isBakeColor(value: unknown): value is BakeColor {
   return (
     isRecord(value) &&
-    isFiniteNumber(value["r"]) &&
-    isFiniteNumber(value["g"]) &&
-    isFiniteNumber(value["b"]) &&
+    isSkyNumber(value["r"]) &&
+    isSkyNumber(value["g"]) &&
+    isSkyNumber(value["b"]) &&
     optionalField(value, "a", isFiniteNumber)
   );
 }
@@ -379,7 +431,8 @@ function isBakeColor(value: unknown): value is BakeColor {
  * Checks a sky.
  *
  * @param value - The value to test.
- * @returns True for a colour, a gradient of three colours, or 27 finite harmonics.
+ * @returns True for a colour, a gradient of three colours, or 27 harmonics, every channel finite and
+ * at most {@link BAKE_MAX_SKY} in magnitude.
  *
  * @public
  */
@@ -394,30 +447,27 @@ export function isBakeSky(value: unknown): value is BakeSky {
   if (kind === "gradient") {
     return isBakeColor(value["sky"]) && isBakeColor(value["horizon"]) && isBakeColor(value["ground"]);
   }
-  return kind === "sh9" && isNumberTuple(value["coefficients"], 27);
+  const coefficients = value["coefficients"];
+  return (
+    kind === "sh9" &&
+    isNumberTuple(coefficients, 27) &&
+    Array.isArray(coefficients) &&
+    coefficients.every((coefficient) => isSkyNumber(coefficient))
+  );
 }
 
 /**
- * Tells whether a value is three probe counts the format holds, no more than {@link BAKE_MAX_PROBES} in all.
+ * Tells whether a value is three probe counts: whole numbers from 1. The format's and the bake's
+ * limits are the host's to check, as `invalidGrid`.
  *
  * @param value - The value to test.
- * @returns True for three whole numbers from 1 in range.
+ * @returns True for three whole numbers from 1.
  */
 function isBakeCounts(value: unknown): boolean {
-  if (!Array.isArray(value) || value.length !== 3 || !value.every((count) => Number.isSafeInteger(count))) {
-    return false;
-  }
-  const [x, y, z] = value.map(Number);
   return (
-    x !== undefined &&
-    y !== undefined &&
-    z !== undefined &&
-    x >= 1 &&
-    y >= 1 &&
-    z >= 1 &&
-    x <= BAKE_MAX_COUNT_X &&
-    y * z <= BAKE_MAX_COUNT_YZ &&
-    x * y * z <= BAKE_MAX_PROBES
+    Array.isArray(value) &&
+    value.length === 3 &&
+    value.every((count) => Number.isSafeInteger(count) && Number(count) >= 1)
   );
 }
 
@@ -425,7 +475,8 @@ function isBakeCounts(value: unknown): boolean {
  * Checks the parameters of `bakeLightProbes`.
  *
  * @param value - The received `params`.
- * @returns True for a volume uid and, when given, counts or a spacing (not both), a direct-light
+ * @returns True for a volume uid of at most {@link BAKE_MAX_UID_LENGTH} and, when given, whole counts
+ * from 1 or a spacing (not both), a direct-light
  * rule, a sky or `null`, rays and a ray length in range.
  *
  * @public
@@ -434,6 +485,7 @@ export function isBakeLightProbesParams(value: unknown): value is BakeLightProbe
   return (
     isRecord(value) &&
     isUidString(value["volume"]) &&
+    value["volume"].length <= BAKE_MAX_UID_LENGTH &&
     !(value["counts"] !== undefined && value["spacing"] !== undefined) &&
     optionalField(value, "counts", isBakeCounts) &&
     optionalField(
@@ -542,4 +594,16 @@ export function isBakeFailureData(value: unknown): value is BakeFailureData {
     Object.values(BakeFailureReason).some((reason) => reason === value["reason"]) &&
     optionalField(value, "cause", (cause) => Object.values(BakeCancelCause).some((known) => known === cause))
   );
+}
+
+/**
+ * Checks the parameters of `cancelBake`.
+ *
+ * @param value - The received `params`.
+ * @returns True for none, or an empty object.
+ *
+ * @public
+ */
+export function isCancelBakeParams(value: unknown): boolean {
+  return value === undefined || (isRecord(value) && Object.keys(value).length === 0);
 }
