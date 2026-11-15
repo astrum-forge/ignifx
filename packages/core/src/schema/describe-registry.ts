@@ -23,7 +23,9 @@ function componentPackage(registry: ComponentRegistry, typeId: string): string {
  * Describes every component an app has registered, the engine's, its extensions' and the game's,
  * the way {@link describeSchema} describes one, plus what only the registry knows: whether an
  * entity may hold more than one (`allowMultiple`), which package registered it (`package`), and
- * which components it adds when they are missing (`requires`, its classes' type ids).
+ * which components it adds when they are missing (`requires`, its classes' type ids; `null` for a
+ * class not registered under its own type id, such as an unregistered subclass that only inherits
+ * its parent's, because naming the parent would describe a different component).
  * This is what an external inspector, such as the ignifx editor, is generated from.
  *
  * @remarks
@@ -74,7 +76,13 @@ export function describeRegisteredSchemas(
       allowMultiple: info.allowMultiple,
       package: componentPackage(registry, typeId),
       ...(builtIn ? { builtIn } : {}),
-      ...(info.requires.length === 0 ? {} : { requires: info.requires.map((required) => required.typeId ?? null) }),
+      ...(info.requires.length === 0
+        ? {}
+        : {
+            requires: info.requires.map((required) =>
+              registry.isRegistered(required) ? registry.requireTypeId(required) : null,
+            ),
+          }),
     });
   }
   return described;

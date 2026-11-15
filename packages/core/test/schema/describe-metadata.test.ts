@@ -344,6 +344,19 @@ describe("describeRegisteredSchemas", () => {
     expect(described["acme/Beacon"]).not.toHaveProperty("requires");
   });
 
+  it("writes null, not the parent's id, for a required subclass that is not registered (E33b)", () => {
+    // The subclass inherits Beacon's typeId; naming Beacon would tell an editor the requirement is
+    // met by a Beacon, while addComponent adds the subclass next to it.
+    class Brighter extends Beacon {}
+    class Watcher extends Component {
+      static typeId = "mygame/Watcher";
+      static requires = [Brighter, Beacon];
+    }
+    const registry = new ComponentRegistry();
+    registry.registerAll([Beacon, Watcher]);
+    expect(describeRegisteredSchemas(registry)["mygame/Watcher"]?.requires).toEqual([null, "acme/Beacon"]);
+  });
+
   it("titles and summarises a component from its class's own statics, under the curated record", () => {
     class Lamp extends Component.define({ lit: bool(true) }) {
       static typeId = "acme/Lamp";
