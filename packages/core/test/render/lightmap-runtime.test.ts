@@ -5,7 +5,7 @@ import { createRenderHarness } from "./support/render-harness.js";
 import type { RenderHarness } from "./support/render-harness.js";
 import type { LitePbrMaterial } from "../../src/lite/material.js";
 import type { LiteScene } from "../../src/lite/scene.js";
-import type { LightmapAsset } from "../../src/render/lightmap-asset.js";
+import type { LightmapAsset, LightmapPlacement } from "../../src/render/lightmap-asset.js";
 import type { MeshRendererLightmap } from "../../src/render/mesh-renderer.js";
 
 /**
@@ -43,12 +43,12 @@ describe("the lightmap runtime", () => {
     const base = createMaterialAsset(harness.app, pbrMaterialDefinition({ metallic: 0, roughness: 1 }), []);
     base.value.setMetallicRoughness(0.25, 0.5);
     const owner = {};
-    const first = runtime.materialFor(owner, base.value, lightmap, settings) as LitePbrMaterial;
+    const first = runtime.materialFor(owner, base.value, lightmap, settings, null) as LitePbrMaterial;
     expect(first).not.toBe(base.value.lite.material);
     expect(first.metallicFactor).toBe(0.25);
     base.value.setMetallicRoughness(0.75, 0.125);
     base.value.setAlpha(0.5);
-    const second = runtime.materialFor(owner, base.value, lightmap, settings) as LitePbrMaterial;
+    const second = runtime.materialFor(owner, base.value, lightmap, settings, null) as LitePbrMaterial;
     expect(second).toBe(first);
     expect(second.metallicFactor).toBe(0.75);
     expect(second.roughnessFactor).toBe(0.125);
@@ -56,6 +56,26 @@ describe("the lightmap runtime", () => {
     runtime.release(owner);
     expect(runtime.count).toBe(0);
     runtime.dispose();
+    base.release();
+  });
+
+  it("keeps a renderer's clone for the same placement and makes a new one for another", async () => {
+    harness = await createRenderHarness();
+    const runtime = await createLightmapRuntime(harness.app, {} as LiteScene);
+    const base = createMaterialAsset(harness.app, pbrMaterialDefinition({ metallic: 0, roughness: 1 }), []);
+    const left: LightmapPlacement = { scale: { x: 0.5, y: 1 }, offset: { x: 0, y: 0 } };
+    const right: LightmapPlacement = { scale: { x: 0.5, y: 1 }, offset: { x: 0.5, y: 0 } };
+    const owner = {};
+    const first = runtime.materialFor(owner, base.value, lightmap, settings, left);
+    expect(runtime.materialFor(owner, base.value, lightmap, settings, left)).toBe(first);
+    const moved = runtime.materialFor(owner, base.value, lightmap, settings, right);
+    expect(moved).not.toBe(first);
+    expect(runtime.materialFor(owner, base.value, lightmap, settings, null)).not.toBe(moved);
+    const other = {};
+    expect(runtime.materialFor(other, base.value, lightmap, settings, right)).not.toBe(moved);
+    expect(runtime.count).toBe(2);
+    runtime.dispose();
+    expect(runtime.count).toBe(0);
     base.release();
   });
 });

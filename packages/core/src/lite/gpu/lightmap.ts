@@ -1,6 +1,6 @@
-import { enablePbrLightmap, isPbrMaterial, setPbrLightmap } from "@babylonjs/lite";
+import { enableMaterialPlugins, enablePbrLightmap, isPbrMaterial, setPbrLightmap } from "@babylonjs/lite";
 import { markMaterialDirty } from "../material.js";
-import type { Material, Texture2D } from "@babylonjs/lite";
+import type { Material, MaterialPlugin, SceneContext, Texture2D } from "@babylonjs/lite";
 
 /**
  * Lightmaps on the GPU (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B3). Loaded with
@@ -18,8 +18,20 @@ import type { Material, Texture2D } from "@babylonjs/lite";
  *   decode onto one material and claims TEXCOORD_1 for it, so a renderer gets its own material
  *   before the call. Only `level` is a uniform (`writeLightmapUBO`); the rest are feature bits, so a
  *   change of them needs a new material.
- * - **No UV transform.** The fragment samples `input.uv2` raw (line 24), so atlas scale and offset
- *   are not applied (GI plan §5, spike P2).
+ * - **Atlas placement (GI plan §5, spike P2).** The fragment samples `input.uv2` raw (line 24) and
+ *   ignores the texture's `uScale`/`uOffset`, so Lite has no lightmap UV transform. The PBR vertex
+ *   template writes `out.uv2 = uv2;` just before the `CUSTOM_VERTEX_MAIN_END` slot
+ *   (`lib/material/pbr/pbr-template.js` 133, `pbr-template-ext.js` 71), so a plugin there rewrites
+ *   the varying the lightmap reads: {@link lightmapAtlasPlugin}. The scale and offset are WGSL
+ *   constants rather than uniforms, because a vertex-visible plugin uniform needs
+ *   `enablePbrMaterialPluginVertexData` (`index.d.ts` 5349), whose bridge maps
+ *   `CUSTOM_FRAGMENT_BEFORE_FINALCOLORCOMPOSITION` to the `NI` slot only
+ *   (`lib/material/plugin/pbr-plugin-vertex-data.js` versus `plugin-bridge-shared.js`, which also
+ *   injects it at `AI`), and the light-probe, HDR-output and SSGI plugins count on the double
+ *   injection. So each distinct placement is its own pipeline variant. The varying exists only
+ *   when the lightmap samples TEXCOORD_1 and the mesh has a `uvs2` buffer (`pbr-compose.js` 42), so
+ *   the plugin is only for that case. Lite's own V flip, when the texture asks for one, applies to
+ *   the transformed coordinate, as it does to the raw one.
  */
 
 /**
@@ -36,6 +48,93 @@ export interface LiteLightmapOptions {
   readonly gamma: boolean;
   /** Sample with the second UV set (`TEXCOORD_1`) rather than the first. */
   readonly uv2: boolean;
+  /**
+   * Where the renderer's UV2 square sits in the texture (`uv2 · scale + offset`), or `null` for the
+   * whole texture. Only honoured with `uv2` on a mesh that has a second UV set.
+   */
+  readonly atlas: LiteLightmapAtlas | null;
+}
+
+/**
+ * One renderer's placement in a lightmap atlas, as plain numbers.
+ *
+ * @internal
+ */
+export interface LiteLightmapAtlas {
+  /** The atlas-space size of the renderer's UV2 square. */
+  readonly scale: { readonly x: number; readonly y: number };
+  /** The atlas-space position of the square's `(0, 0)` corner. */
+  readonly offset: { readonly x: number; readonly y: number };
+}
+
+/** The atlas plugins made so far, by WGSL; a plugin holds no state, so one per placement does. */
+let atlasPlugins: Map<string, MaterialPlugin> | null = null;
+
+/** The name every atlas plugin carries; the WGSL tells placements apart in Lite's cache key. */
+export const LIGHTMAP_ATLAS_PLUGIN_NAME = "ignifx-lightmap-atlas";
+
+/**
+ * A WGSL float literal, always with a decimal point or an exponent.
+ *
+ * @param value - A finite number.
+ * @returns The literal.
+ */
+function float(value: number): string {
+  const text = String(value);
+  return /[.e]/.test(text) ? text : `${text}.0`;
+}
+
+/**
+ * The vertex code that moves the lightmap's UV2 varying into the renderer's atlas square.
+ *
+ * @param atlas - The placement.
+ * @returns WGSL for `CUSTOM_VERTEX_MAIN_END`.
+ *
+ * @internal
+ */
+export function lightmapAtlasWgsl(atlas: LiteLightmapAtlas): string {
+  const { scale, offset } = atlas;
+  return (
+    `out.uv2=out.uv2*vec2<f32>(${float(scale.x)},${float(scale.y)})` +
+    `+vec2<f32>(${float(offset.x)},${float(offset.y)});`
+  );
+}
+
+/**
+ * The plugin that applies one atlas placement, shared by every material with that placement.
+ *
+ * @remarks
+ * Only valid on a material whose lightmap samples TEXCOORD_1 drawn on a mesh with a `uvs2` buffer:
+ * anywhere else `out.uv2` does not exist and the pipeline fails to compile.
+ *
+ * @param atlas - The placement.
+ * @returns The plugin; the same object for the same placement.
+ *
+ * @internal
+ */
+export function lightmapAtlasPlugin(atlas: LiteLightmapAtlas): MaterialPlugin {
+  const code = lightmapAtlasWgsl(atlas);
+  atlasPlugins ??= new Map();
+  let plugin = atlasPlugins.get(code);
+  if (plugin === undefined) {
+    const vertex = { CUSTOM_VERTEX_MAIN_END: code };
+    plugin = {
+      name: LIGHTMAP_ATLAS_PLUGIN_NAME,
+      getCustomCode: (stage) => (stage === "vertex" ? vertex : null),
+    };
+    atlasPlugins.set(code, plugin);
+  }
+  return plugin;
+}
+
+/**
+ * Whether a plugin is an atlas plugin.
+ *
+ * @param plugin - Any plugin.
+ * @returns `true` for one {@link lightmapAtlasPlugin} made.
+ */
+function isAtlasPlugin(plugin: MaterialPlugin): boolean {
+  return plugin.name === LIGHTMAP_ATLAS_PLUGIN_NAME;
 }
 
 /**
@@ -52,6 +151,13 @@ export function enableLightmaps(): Promise<void> {
 /**
  * Gives a PBR material a lightmap.
  *
+ * @remarks
+ * With an `atlas` placement (and `uv2`), the material also gets the {@link lightmapAtlasPlugin} for
+ * it, replacing an earlier one, and the scene's material-plugin bridges are installed first
+ * (idempotent; light probes install them after `registerScene` the same way). The caller rebuilds
+ * the material's pipelines afterwards.
+ *
+ * @param scene - The registered scene.
  * @param material - A material no other mesh shares, not yet built with other lightmap options.
  * @param texture - The lightmap.
  * @param options - How it is drawn.
@@ -59,7 +165,12 @@ export function enableLightmaps(): Promise<void> {
  *
  * @internal
  */
-export function applyLightmap(material: Material, texture: Texture2D, options: LiteLightmapOptions): boolean {
+export function applyLightmap(
+  scene: SceneContext,
+  material: Material,
+  texture: Texture2D,
+  options: LiteLightmapOptions,
+): boolean {
   if (!isPbrMaterial(material)) {
     return false;
   }
@@ -69,6 +180,14 @@ export function applyLightmap(material: Material, texture: Texture2D, options: L
     useAsShadowmap: options.shadowmap,
     gamma: options.gamma,
   });
+  const current = material.plugins ?? [];
+  const kept = current.some(isAtlasPlugin) ? current.filter((plugin) => !isAtlasPlugin(plugin)) : current;
+  if (options.atlas !== null && options.uv2) {
+    enableMaterialPlugins(scene);
+    material.plugins = [...kept, lightmapAtlasPlugin(options.atlas)];
+  } else if (kept !== current) {
+    material.plugins = kept;
+  }
   return true;
 }
 

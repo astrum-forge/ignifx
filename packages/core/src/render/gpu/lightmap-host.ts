@@ -4,6 +4,7 @@ import type { LightmapRuntime } from "./lightmaps.js";
 import type { App } from "../../app/types.js";
 import type { LiteMaterial } from "../../lite/material.js";
 import type { LiteScene } from "../../lite/scene.js";
+import type { LightmapPlacement } from "../lightmap-asset.js";
 import type { MaterialAsset } from "../material-asset.js";
 import type { MeshRenderer } from "../mesh-renderer.js";
 
@@ -59,7 +60,10 @@ export class LightmapHost {
    * @remarks
    * A renderer samples its lightmap when its `lightmap.asset` is loaded, its entity is static and its
    * material is PBR; otherwise it draws with `base`, and a static or PBR mismatch logs `IGX-0735`
-   * once. A placement other than the identity also logs `IGX-0735`, and the whole texture is used.
+   * once. Its entry's placement (scale and offset) moves its UV2 into its square of the atlas. A
+   * placement other than the identity needs `uv2: true` and a mesh with `uvs2`, since the first UV
+   * set also drives the material's own textures; without them it logs `IGX-0735` once and samples
+   * the whole texture.
    *
    * @param owner - The renderer.
    * @param base - The material it declares (or the default material).
@@ -85,18 +89,29 @@ export class LightmapHost {
       this.release(owner);
       return base.lite.material;
     }
-    if (!isIdentityLightmapPlacement(lightmap.placementOf(entity.uid))) {
-      this.#report(
-        owner,
-        "its lightmap entry has a scale or offset, which is not applied yet; it samples the whole texture",
-      );
+    const placement = lightmap.placementOf(entity.uid);
+    let atlas: LightmapPlacement | null = null;
+    if (!isIdentityLightmapPlacement(placement)) {
+      if (!settings.uv2) {
+        this.#report(
+          owner,
+          "its lightmap entry has a scale or offset, which needs uv2: true (the first UV set also maps the material's textures); it samples the whole texture",
+        );
+      } else if (!hasSecondUvSet(owner)) {
+        this.#report(
+          owner,
+          "its lightmap entry has a scale or offset, but its mesh has no uvs2; it samples the whole texture with the first UV set",
+        );
+      } else {
+        atlas = placement;
+      }
     }
     const runtime = this.#runtime;
     if (runtime === null) {
       this.#load();
       return base.lite.material;
     }
-    return runtime.materialFor(owner, base, lightmap, settings);
+    return runtime.materialFor(owner, base, lightmap, settings, atlas);
   }
 
   /**
@@ -153,4 +168,20 @@ export class LightmapHost {
       `${CoreErrorCode.lightmapNotApplied}: the MeshRenderer lightmap of ${JSON.stringify(owner.entity.name)}: ${problem}.`,
     );
   }
+}
+
+/**
+ * Whether a renderer's mesh has a second UV set, which Lite turns into the `uv2` varying an atlas
+ * placement rewrites.
+ *
+ * @remarks
+ * Only a mesh built with `MeshAsset.fromData` and `uvs2` has one; Lite's primitives make none.
+ *
+ * @param owner - The renderer.
+ * @returns `true` when its loaded mesh carries `uvs2`.
+ */
+function hasSecondUvSet(owner: MeshRenderer): boolean {
+  const mesh = owner.mesh;
+  const uvs2 = mesh !== null && mesh.state === "loaded" ? mesh.value.cpuGeometry?.uvs2 : undefined;
+  return uvs2 !== undefined && uvs2.length > 0;
 }

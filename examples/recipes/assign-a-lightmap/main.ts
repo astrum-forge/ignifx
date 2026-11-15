@@ -16,8 +16,9 @@
  * `gamma: true` decodes an sRGB texture the loader did not already decode.
  *
  * ignifx bakes no lightmaps yet: the texture comes from an external tool, or from a future editor
- * baker. Per-entity atlas `entries` are validated but only the identity is drawn until the atlas
- * transform lands, so give each static renderer its own texture, or one whose UV2 already spans it.
+ * baker. Several renderers can share one atlas texture: give each entity uid an `entries` placement
+ * `{ scale: { x, y }, offset: { x, y } }` and it samples at `uv2 · scale + offset`. That needs
+ * `uv2: true` and a mesh built with `uvs2` (`MeshAsset.fromData`); this primitive floor has neither.
  */
 import { Camera, Light, MeshAsset, MeshRenderer, createApp } from "@ignifx/core";
 import type { LightmapAsset } from "@ignifx/core";

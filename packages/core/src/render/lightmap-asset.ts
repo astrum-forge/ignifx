@@ -41,7 +41,8 @@ export const LIGHTMAP_FORMAT_VERSION = 1;
 
 /**
  * Where one renderer's UV2 square sits in a lightmap atlas: the lightmap is sampled at
- * `uv2 · scale + offset`.
+ * `uv2 · scale + offset`, component-wise. No rotation: an atlas packer that rotates a chart writes
+ * the rotation into the UV2 it bakes.
  *
  * @public
  */
@@ -78,10 +79,12 @@ export interface LightmapFileData {
  * A loaded lightmap: a texture and where each entity's UV2 square sits in it.
  *
  * @remarks
- * A `MeshRenderer` names it in its `lightmap` record. Only placements equal to
- * {@link IDENTITY_LIGHTMAP_PLACEMENT} are honoured for now: Babylon Lite 1.34's lightmap fragment
- * samples `uv2` without a transform, so a renderer with another placement logs `IGX-0735` once and
- * samples the whole texture until the atlas transform lands (GI plan §5, spike P2).
+ * A `MeshRenderer` names it in its `lightmap` record. Many renderers can share one atlas
+ * texture: each samples it at `uv2 · scale + offset`, with its entity's entry as the placement, in
+ * the same UV space as an entity without one (so a V flip the texture asks for applies to the
+ * placed coordinate too). A placement other than {@link IDENTITY_LIGHTMAP_PLACEMENT} needs the
+ * renderer's `lightmap.uv2` on and a mesh with `uvs2`; otherwise it logs `IGX-0735` once and
+ * samples the whole texture. Each distinct placement compiles its own pipeline variant.
  *
  * @example
  * ```ts
@@ -233,7 +236,7 @@ export function readLightmapEntries(value: unknown, address: string): Readonly<R
 }
 
 /**
- * Whether a placement is the identity, the only one Babylon Lite 1.34 can draw (GI plan §5, P2).
+ * Whether a placement is the identity, which needs no atlas transform.
  *
  * @param placement - The placement.
  * @returns `true` for scale `(1, 1)` and offset `(0, 0)`.
