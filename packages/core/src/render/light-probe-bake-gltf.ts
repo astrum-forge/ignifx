@@ -171,6 +171,30 @@ export function readGltfTriangles(bytes: ArrayBuffer): GltfBakeGeometry {
 }
 
 /**
+ * The flat linear albedo of each named material of a `.glb` or `.gltf`, as the bake reads
+ * materials. Only the JSON is parsed.
+ *
+ * @param bytes - The file.
+ * @returns The albedos by material name; empty when the file cannot be read or names none.
+ *
+ * @internal
+ */
+export function readGltfMaterialAlbedos(bytes: ArrayBuffer): ReadonlyMap<string, readonly [number, number, number]> {
+  const out = new Map<string, readonly [number, number, number]>();
+  try {
+    const { json } = splitContainer(bytes);
+    for (const material of item(json.materials, "all") ?? []) {
+      if (typeof material.name === "string" && !out.has(material.name)) {
+        out.set(material.name, materialAlbedo(material));
+      }
+    }
+  } catch {
+    // A file Lite loaded but this reader cannot parse leaves the bake its grey fallback.
+  }
+  return out;
+}
+
+/**
  * Splits a `.glb` into its JSON and BIN chunks, or parses a `.gltf`.
  *
  * @param bytes - The file.

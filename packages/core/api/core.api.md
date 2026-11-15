@@ -2630,10 +2630,14 @@ export class ModelAsset {
     // @beta
     readonly animations: readonly LiteAnimationGroup[];
     static assetType: string;
+    // @internal
+    get bakeAlbedos(): ReadonlyMap<string, readonly [number, number, number]> | null;
     dispose(): void;
     get instanceCount(): number;
     instantiate(parent: LiteSceneNode | null): ModelInstantiation | null;
     get lite(): ModelAssetLiteHandles;
+    // @internal
+    recordBakeAlbedos(albedos: ReadonlyMap<string, readonly [number, number, number]>): void;
     releaseInstance(): void;
     retainInstance(): void;
     // @beta

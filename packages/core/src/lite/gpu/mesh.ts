@@ -694,9 +694,9 @@ export interface MeshBakeSurface {
   readonly materialName: string | null;
   /**
    * The material's linear diffuse colour: a PBR material's `baseColorFactor` times
-   * `1 − metallicFactor` (no metallic when an ORM texture drives it, as the headless glTF reader
-   * reads `metallicRoughnessTexture`), a Standard material's `diffuseColor`; `null` for any other
-   * family.
+   * `1 − metallicFactor` (no metallic when an ORM texture drives it), a Standard material's
+   * `diffuseColor`; `null` for any other family, and for a PBR material without a factor (Lite
+   * bakes an untextured glTF material's colour into a texture).
    */
   readonly albedo: readonly [number, number, number] | null;
 }
@@ -723,9 +723,13 @@ export function readMeshBakeSurface(mesh: Mesh): MeshBakeSurface | null {
   if (family === "pbr") {
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the family says it is a PBR material.
     const pbr = material as PbrMaterialProps;
-    const base = pbr.baseColorFactor ?? [1, 1, 1, 1];
-    const keep = 1 - (pbr.ormTexture === undefined ? clamp01(pbr.metallicFactor ?? 1) : 0);
-    albedo = [clamp01(base[0]) * keep, clamp01(base[1]) * keep, clamp01(base[2]) * keep];
+    // An untextured glTF material's factor lives in a 1×1 texture, not here
+    // (`lib/loader-gltf/gltf-pbr-builder.js`): without a factor the colour is unknown.
+    const base = pbr.baseColorFactor;
+    if (base !== undefined) {
+      const keep = 1 - (pbr.ormTexture === undefined ? clamp01(pbr.metallicFactor ?? 1) : 0);
+      albedo = [clamp01(base[0]) * keep, clamp01(base[1]) * keep, clamp01(base[2]) * keep];
+    }
   } else if (family === "standard") {
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the family says it is a Standard material.
     const standard = material as StandardMaterialProps;

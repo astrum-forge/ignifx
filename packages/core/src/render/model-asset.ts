@@ -122,6 +122,8 @@ export class ModelAsset {
 
   #sourceBytes: ArrayBuffer | null;
 
+  #bakeAlbedos: ReadonlyMap<string, readonly [number, number, number]> | null = null;
+
   /**
    * Wraps a loaded container. The `model` loader constructs these.
    *
@@ -162,6 +164,30 @@ export class ModelAsset {
    */
   get sourceBytes(): ArrayBuffer | null {
     return this.#sourceBytes;
+  }
+
+  /**
+   * The flat linear albedo of each named glTF material, which a load with a device records for the
+   * light-probe bake: Lite bakes an untextured material's `baseColorFactor` into a 1×1 texture
+   * (`lib/loader-gltf/gltf-pbr-builder.js`), so the drawn material cannot tell its colour.
+   *
+   * @returns The albedos by material name, or `null` when none were recorded.
+   *
+   * @internal
+   */
+  get bakeAlbedos(): ReadonlyMap<string, readonly [number, number, number]> | null {
+    return this.#bakeAlbedos;
+  }
+
+  /**
+   * Records {@link ModelAsset.bakeAlbedos}. The `model` loader calls it.
+   *
+   * @param albedos - The albedos by material name.
+   *
+   * @internal
+   */
+  recordBakeAlbedos(albedos: ReadonlyMap<string, readonly [number, number, number]>): void {
+    this.#bakeAlbedos = albedos;
   }
 
   /**

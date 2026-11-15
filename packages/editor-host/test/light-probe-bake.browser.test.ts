@@ -1,4 +1,4 @@
-import { Environment, Model } from "@ignifx/core";
+import { createAssetManifest, Environment, Model } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import { startEditorHost } from "../src/host.js";
 import {
@@ -10,7 +10,7 @@ import {
 import { connect, EDITOR_ORIGIN } from "./support/editor.js";
 import type { EditorHost } from "../src/host.js";
 import type { EditorPeer, Received } from "./support/editor.js";
-import type { FetchLike, SceneFile } from "@ignifx/core";
+import type { SceneFile } from "@ignifx/core";
 
 /**
  * `bakeLightProbes` on a real WebGPU canvas: under a GPU a model keeps no file bytes, so the bake
@@ -49,24 +49,12 @@ const SCENE: SceneFile = {
   ],
 };
 
-/**
- * Serves the repository's `Box.glb`, `studio.env` and `brdf-lut.png` fixtures.
- *
- * @param input - The request.
- * @returns The file, or a 404.
- */
-const fetchFiles: FetchLike = async (input: RequestInfo | URL): Promise<Response> => {
-  const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-  const address = url.replace(/^.*?assets\//u, "").replace(/^\//u, "");
-  const fixture = { "models/Box.glb": "Box.glb", "environments/studio.env": "studio.env" }[address];
-  if (fixture !== undefined) {
-    return fetch(`/tests/fixtures/assets/${fixture}`);
-  }
-  if (address === "environments/brdf-lut.png") {
-    return fetch("/tests/fixtures/assets/brdf-lut.png");
-  }
-  return new Response(null, { status: 404 });
-};
+/** The repository's fixtures, by address; the BRDF table is fetched by Lite itself, so URLs, not a `fetch`. */
+const MANIFEST = createAssetManifest([
+  { address: "models/Box.glb", url: "/tests/fixtures/assets/Box.glb", type: "model" },
+  { address: "environments/studio.env", url: "/tests/fixtures/assets/studio.env", type: "environment" },
+  { address: "environments/brdf-lut.png", url: "/tests/fixtures/assets/brdf-lut.png", type: "texture" },
+]);
 
 let host: EditorHost | null = null;
 let peer: EditorPeer | null = null;
@@ -106,7 +94,7 @@ describe("bakeLightProbes in a scene view with a GPU", () => {
       canvas,
       messageTarget: target,
       settings: { rendering: { brdfLut: "environments/brdf-lut.png" } },
-      assets: { fetch: fetchFiles },
+      assets: { manifest: MANIFEST },
       heartbeatIntervalMs: 60_000,
     });
     peer = connect(target);
@@ -131,6 +119,7 @@ describe("bakeLightProbes in a scene view with a GPU", () => {
       counts: [1, 1, 1],
       rays: 64,
     });
+    expect(answer).not.toHaveProperty("error");
     const result: unknown = answer["result"];
     expect(isBakeLightProbesResult(result)).toBe(true);
     expect(result).toHaveProperty("sky", "environment");

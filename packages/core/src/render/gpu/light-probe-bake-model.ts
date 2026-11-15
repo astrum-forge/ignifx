@@ -67,11 +67,12 @@ export function traceLiveModel(
   signal: AbortSignal | undefined,
 ): number | null {
   const handle = model.model;
-  const meshes =
-    handle === null || handle.state !== "loaded" || handle.value.sourceBytes !== null ? null : model.instanceMeshes;
-  if (meshes === null) {
+  const asset = handle === null || handle.state !== "loaded" ? null : handle.value;
+  const meshes = asset === null || asset.sourceBytes !== null ? null : model.instanceMeshes;
+  if (asset === null || meshes === null) {
     return null;
   }
+  const fileAlbedos = asset.bakeAlbedos;
   const matrix = Array.from({ length: 16 }, () => 0);
   let traced = 0;
   let reasons = 0;
@@ -84,7 +85,11 @@ export function traceLiveModel(
       continue;
     }
     const override = surface.materialName === null ? undefined : model.materialOverrides[surface.materialName];
-    const rgb = override === undefined || override === null ? (surface.albedo ?? MID_GREY) : albedo(override);
+    // A model's override wins; else the file's colour for that material, which Lite bakes into a
+    // texture the drawn material cannot be asked for; else what the drawn material says.
+    const fromFile = surface.materialName === null ? undefined : fileAlbedos?.get(surface.materialName);
+    const rgb =
+      override !== undefined && override !== null ? albedo(override) : (fromFile ?? surface.albedo ?? MID_GREY);
     traced += sink.add(surface.positions, surface.indices, readWorldMatrix(mesh, matrix), rgb);
   }
   if (traced > 0) {

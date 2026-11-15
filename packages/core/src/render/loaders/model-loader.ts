@@ -1,5 +1,6 @@
 import { loadGltfFromBytes } from "../../lite/gpu/gltf.js";
 import { assertModelDecodersIncluded, configureDecoders } from "../decoder-urls.js";
+import { readGltfMaterialAlbedos } from "../light-probe-bake-gltf.js";
 import { createModelAsset, MODEL_ASSET_TYPE, MODEL_FILE_EXTENSIONS } from "../model-asset.js";
 import type { AssetLoader, LoaderContext } from "../../assets/types.js";
 import type { ModelAsset } from "../model-asset.js";
@@ -64,7 +65,10 @@ export function createModelLoader(): AssetLoader<ModelAsset> {
       }
       await configureDecoders(ctx.app);
       const container = await loadGltfFromBytes(ctx.lite.engine, bytes);
-      return createModelAsset(ctx.address, container, ctx.app.lite.scene);
+      const asset = createModelAsset(ctx.address, container, ctx.app.lite.scene);
+      // The file is not kept; its material colours are, for the light-probe bake.
+      asset.recordBakeAlbedos(readGltfMaterialAlbedos(bytes));
+      return asset;
     },
     unload(value: ModelAsset): void {
       value.dispose();
