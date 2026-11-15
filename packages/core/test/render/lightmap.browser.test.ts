@@ -17,7 +17,8 @@ import type { BrowserApp } from "./support/browser-harness.js";
 /**
  * `MeshRenderer.lightmap` (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B3): a white quad
  * whose UV2 spans a lightmap black on its left texel and white on its right reads dark on one half
- * and lit on the other, but only on a static entity.
+ * and lit on the other, but only on a static entity. Two quads sharing one atlas through their
+ * `.lightmap.json` placements (GI plan §5, spike P2) each read only their own half of it.
  */
 
 /** The canvas edge. */
@@ -112,5 +113,81 @@ describe("MeshRenderer.lightmap", () => {
     const message = JSON.stringify(result);
     expect(result.lightmapped, message).toBe(0);
     expect(Math.min(result.left, result.right), message).toBeGreaterThan(60);
+  }, 120_000);
+
+  it("gives two renderers sharing an atlas each their own square of it", async () => {
+    const gpu = gpuDeviceErrors();
+    try {
+      const running = await createBrowserApp({
+        size: SIZE,
+        startEmpty: false,
+        settings: { rendering: { msaaSamples: 1 } },
+      });
+      harness = running;
+      const { app, world } = running;
+      addCameraAndLight(running, 3);
+      // Two quads, 0.9 wide, either side of the centre; each one's UV2 spans the unit square.
+      const quadAt = (x0: number): ReturnType<typeof MeshAsset.fromData> => {
+        const x1 = x0 + 0.9;
+        return MeshAsset.fromData(app, `quad ${String(x0)}`, {
+          positions: Float32Array.of(x0, -1, 0, x1, -1, 0, x1, 1, 0, x0, 1, 0),
+          normals: Float32Array.of(0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1),
+          uvs: Float32Array.of(0, 0, 1, 0, 1, 1, 0, 1),
+          uvs2: Float32Array.of(0, 0, 1, 0, 1, 1, 0, 1),
+          indices: Uint32Array.of(0, 1, 2, 0, 2, 3),
+        });
+      };
+      const material = createMaterialAsset(
+        app,
+        pbrMaterialDefinition({ baseColor: { r: 1, g: 1, b: 1, a: 1 }, metallic: 0, roughness: 1, doubleSided: true }),
+        [],
+      );
+      // Eight texels: the left four black, the right four white, so bilinear filtering stays pure
+      // within each half away from the seam.
+      const texels = new Uint8Array(8 * 4);
+      for (let index = 4; index < 8; index += 1) {
+        texels.fill(255, index * 4, index * 4 + 4);
+      }
+      for (let index = 0; index < 4; index += 1) {
+        texels[index * 4 + 3] = 255;
+      }
+      const texture = TextureAsset.fromPixels(app, "atlas", texels, 8, 1);
+      const dark = world.createEntity("Dark");
+      const lit = world.createEntity("Lit");
+      const atlas = createLightmapAsset(app, texture, {
+        [dark.uid]: { scale: { x: 0.5, y: 1 }, offset: { x: 0, y: 0 } },
+        [lit.uid]: { scale: { x: 0.5, y: 1 }, offset: { x: 0.5, y: 0 } },
+      });
+      for (const [entity, x0] of [
+        [dark, -1],
+        [lit, 0.1],
+      ] as const) {
+        entity.isStatic = true;
+        entity.addComponent(MeshRenderer, {
+          mesh: quadAt(x0),
+          materials: [material],
+          lightmap: { asset: atlas, mode: "shadowmap", level: 1, gamma: false, uv2: true },
+        });
+      }
+      await running.start();
+      await settle(running, SETTLE_FRAMES * 3);
+      expect(running.errors).toEqual([]);
+      const y = SIZE >> 1;
+      const at = async (fraction: number): Promise<number> =>
+        pixelLuminance(await running.pixelAt(Math.round(SIZE * fraction), y));
+      // Two points on each quad, at different UV2 u; whichever side the camera puts each quad on,
+      // a quad's two points agree only if it samples one half of the atlas.
+      const one = [await at(0.22), await at(0.34)];
+      const other = [await at(0.66), await at(0.78)];
+      const message = JSON.stringify({ one, other, lightmapped: running.renderer.lightmapHost?.count });
+      expect(running.renderer.lightmapHost?.count, message).toBe(2);
+      expect(gpu.errors.slice(0, 1)).toEqual([]);
+      const darkSide = Math.max(...one) < Math.max(...other) ? one : other;
+      const litSide = darkSide === one ? other : one;
+      expect(Math.max(...darkSide), message).toBeLessThan(25);
+      expect(Math.min(...litSide), message).toBeGreaterThan(60);
+    } finally {
+      gpu.stop();
+    }
   }, 120_000);
 });
