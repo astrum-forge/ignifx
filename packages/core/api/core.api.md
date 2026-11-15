@@ -1848,6 +1848,8 @@ export function lerpAngleDegrees(fromDegrees: number, toDegrees: number, t: numb
 export class Light extends Component implements ComponentHooks {
     constructor();
     static allowMultiple: boolean;
+    // @beta
+    bakeMode: LightBakeMode;
     // (undocumented)
     color: ColorLike;
     static description: string;
@@ -1884,6 +1886,9 @@ export class Light extends Component implements ComponentHooks {
     static typeId: string;
 }
 
+// @beta
+export const LIGHT_BAKE_MODES: readonly ["realtime", "mixed", "baked"];
+
 // @public
 export const LIGHT_PROBE_ASSET_TYPE = "lightprobes";
 
@@ -1898,6 +1903,15 @@ export const LIGHT_PROBE_FORMAT_VERSION = 1;
 
 // @public
 export const LIGHT_TYPES: readonly ["directional", "point", "spot", "hemispheric"];
+
+// @beta
+export type LightBakeMode = (typeof LIGHT_BAKE_MODES)[number];
+
+// @beta
+export function lightBakeTerms(bakeMode: LightBakeMode, directLight: LightProbeBakeDirectLight): {
+    readonly direct: boolean;
+    readonly bounce: boolean;
+};
 
 // @public
 export const LIGHTMAP_ASSET_TYPE = "lightmap";
@@ -1964,14 +1978,40 @@ export interface LightProbeBakeOptions {
     readonly origin: Vec3Like;
     readonly rays?: number;
     readonly signal?: AbortSignal;
-    readonly sky?: ColorLike;
+    readonly sky?: LightProbeBakeSky;
 }
 
 // @beta
 export interface LightProbeBakeResult {
     readonly data: LightProbeData;
     readonly skipped: number;
+    readonly skips: readonly LightProbeBakeSkip[];
     readonly triangles: number;
+}
+
+// @beta
+export interface LightProbeBakeSkip {
+    readonly component: string;
+    readonly entity: string;
+    readonly reason: string;
+    readonly uid: string;
+}
+
+// @beta
+export type LightProbeBakeSky = ColorLike | LightProbeBakeSkyGradient | LightProbeBakeSkyHarmonics;
+
+// @beta
+export interface LightProbeBakeSkyGradient {
+    readonly ground: ColorLike;
+    readonly horizon: ColorLike;
+    readonly kind: "gradient";
+    readonly sky: ColorLike;
+}
+
+// @beta
+export interface LightProbeBakeSkyHarmonics {
+    readonly coefficients: readonly number[];
+    readonly kind: "sh9";
 }
 
 // @public
@@ -2407,7 +2447,7 @@ export const MESH_PRIMITIVES: readonly ["box", "sphere", "plane", "ground", "cyl
 export class MeshAsset {
     [Symbol.dispose](): void;
     // @internal
-    constructor(name: string, mesh: LiteMesh | null, scene: LiteScene | null, geometry?: MeshGeometryData | null, engine?: LiteEngine | null);
+    constructor(name: string, mesh: LiteMesh | null, scene: LiteScene | null, geometry?: MeshGeometryData | null, engine?: LiteEngine | null, primitive?: MeshPrimitiveDefinition | null);
     static assetType: string;
     static box(app: App, options?: BoxMeshOptions): AssetHandle<MeshAsset>;
     static capsule(app: App, options?: CapsuleMeshOptions): AssetHandle<MeshAsset>;
@@ -2422,6 +2462,8 @@ export class MeshAsset {
     get lite(): MeshAssetLiteHandles;
     readonly name: string;
     static plane(app: App, options?: PlaneMeshOptions): AssetHandle<MeshAsset>;
+    // @internal
+    get primitive(): MeshPrimitiveDefinition | null;
     static sphere(app: App, options?: SphereMeshOptions): AssetHandle<MeshAsset>;
     static torus(app: App, options?: TorusMeshOptions): AssetHandle<MeshAsset>;
     updateColors(data: Float32Array, vertexOffset?: number, vertexCount?: number): void;
@@ -2581,7 +2623,7 @@ export const MODEL_FILE_EXTENSIONS: readonly string[];
 export class ModelAsset {
     [Symbol.dispose](): void;
     // @internal
-    constructor(address: string, container: LiteAssetContainer | null, animations: readonly LiteAnimationGroup[], skeletons: readonly LiteSkeleton[], scene: LiteScene | null);
+    constructor(address: string, container: LiteAssetContainer | null, animations: readonly LiteAnimationGroup[], skeletons: readonly LiteSkeleton[], scene: LiteScene | null, sourceBytes?: ArrayBuffer | null);
     readonly address: string;
     // @beta
     readonly animations: readonly LiteAnimationGroup[];
@@ -2594,6 +2636,8 @@ export class ModelAsset {
     retainInstance(): void;
     // @beta
     readonly skeletons: readonly LiteSkeleton[];
+    // @internal
+    get sourceBytes(): ArrayBuffer | null;
 }
 
 // @public

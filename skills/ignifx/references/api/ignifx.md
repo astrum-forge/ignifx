@@ -2169,7 +2169,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-53)
+[`Script`](#abstract-script).[`entity`](#entity-54)
 
 ##### handle
 
@@ -2306,7 +2306,7 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-51)
+[`Script`](#abstract-script).[`uid`](#uid-52)
 
 ##### world
 
@@ -3390,7 +3390,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-53)
+[`Script`](#abstract-script).[`entity`](#entity-54)
 
 ##### handle
 
@@ -3569,7 +3569,7 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-51)
+[`Script`](#abstract-script).[`uid`](#uid-52)
 
 ##### world
 
@@ -7270,7 +7270,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-53)
+[`Script`](#abstract-script).[`entity`](#entity-54)
 
 ##### handle
 
@@ -7392,7 +7392,7 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-51)
+[`Script`](#abstract-script).[`uid`](#uid-52)
 
 ##### world
 
@@ -17372,7 +17372,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-53)
+[`Script`](#abstract-script).[`entity`](#entity-54)
 
 ##### handle
 
@@ -17564,7 +17564,7 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-51)
+[`Script`](#abstract-script).[`uid`](#uid-52)
 
 ##### verticalVelocity
 
@@ -20849,7 +20849,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-62)
+[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-63)
 
 ##### handle
 
@@ -21021,7 +21021,7 @@ The identifier.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`uid`](#uid-58)
+[`TextComponent`](#abstract-textcomponent).[`uid`](#uid-59)
 
 ##### world
 
@@ -24316,6 +24316,8 @@ local `+Z`, a point light sits at its origin, and a hemispheric light's sky dire
 
 A disabled light, or one on an inactive entity, contributes nothing: its intensity reaches Lite
 as `0` and its shadow generator is released. Enabling it again restores both on the next frame.
+A light whose `bakeMode` is `"baked"` is dimmed the same way: its light reaches the scene only
+through a light-probe bake (`bakeLightProbes`).
 
 #### Example
 
@@ -24356,6 +24358,15 @@ Applies the schema defaults, exactly as `Component.define` would.
 > `static` **allowMultiple**: `boolean`
 
 At most one light per entity: two lights from one transform want two entities.
+
+##### bakeMode
+
+> **bakeMode**: `"realtime"` \| `"mixed"` \| `"baked"`
+
+**`Beta`**
+
+How the light takes part in baked lighting; see [LightBakeMode](#lightbakemode-1). Defaults to
+`"realtime"`.
 
 ##### color
 
@@ -31389,7 +31400,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-53)
+[`Script`](#abstract-script).[`entity`](#entity-54)
 
 ##### handle
 
@@ -31553,7 +31564,7 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-51)
+[`Script`](#abstract-script).[`uid`](#uid-52)
 
 ##### world
 
@@ -37956,7 +37967,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-53)
+[`Script`](#abstract-script).[`entity`](#entity-54)
 
 ##### handle
 
@@ -38092,7 +38103,7 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-51)
+[`Script`](#abstract-script).[`uid`](#uid-52)
 
 ##### world
 
@@ -40210,7 +40221,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-53)
+[`Script`](#abstract-script).[`entity`](#entity-54)
 
 ##### handle
 
@@ -40332,7 +40343,7 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-51)
+[`Script`](#abstract-script).[`uid`](#uid-52)
 
 ##### world
 
@@ -43884,7 +43895,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-53)
+[`Script`](#abstract-script).[`entity`](#entity-54)
 
 ##### handle
 
@@ -44006,7 +44017,7 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-51)
+[`Script`](#abstract-script).[`uid`](#uid-52)
 
 ##### world
 
@@ -51934,7 +51945,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-53)
+[`Script`](#abstract-script).[`entity`](#entity-54)
 
 ##### handle
 
@@ -52084,7 +52095,7 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-51)
+[`Script`](#abstract-script).[`uid`](#uid-52)
 
 ##### world
 
@@ -52609,7 +52620,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`entity`](#entity-53)
+[`Script`](#abstract-script).[`entity`](#entity-54)
 
 ##### handle
 
@@ -52787,7 +52798,7 @@ The identifier.
 
 ###### Inherited from
 
-[`Script`](#abstract-script).[`uid`](#uid-51)
+[`Script`](#abstract-script).[`uid`](#uid-52)
 
 ##### verticalVelocity
 
@@ -56896,13 +56907,13 @@ The camera, or `null` when the world has none enabled.
 
 ###### Get Signature
 
-> **get** **mode**(): `"sprite"` \| `"mixed"`
+> **get** **mode**(): `"mixed"` \| `"sprite"`
 
 Whether sprites are the whole frame or composite over the 3D scene.
 
 ###### Returns
 
-`"sprite"` \| `"mixed"`
+`"mixed"` \| `"sprite"`
 
 The mode.
 
@@ -63866,7 +63877,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-62)
+[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-63)
 
 ##### handle
 
@@ -64037,7 +64048,7 @@ The identifier.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`uid`](#uid-58)
+[`TextComponent`](#abstract-textcomponent).[`uid`](#uid-59)
 
 ##### world
 
@@ -64489,7 +64500,7 @@ The owning entity.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-62)
+[`TextComponent`](#abstract-textcomponent).[`entity`](#entity-63)
 
 ##### handle
 
@@ -64660,7 +64671,7 @@ The identifier.
 
 ###### Inherited from
 
-[`TextComponent`](#abstract-textcomponent).[`uid`](#uid-58)
+[`TextComponent`](#abstract-textcomponent).[`uid`](#uid-59)
 
 ##### world
 
@@ -65738,7 +65749,7 @@ Resolved project settings.
 
 The asynchronous key-value store settings, save games, and input rebindings live in
 (`docs/architecture/14-platform-electron.md` §2). The backend is chosen from
-[PlatformInfo.kind](#kind-35) — IndexedDB in a browser, memory under Node — unless `createApp` was
+[PlatformInfo.kind](#kind-37) — IndexedDB in a browser, memory under Node — unless `createApp` was
 given one.
 
 ##### time
@@ -73335,7 +73346,7 @@ The gap between adjacent cells, in pixels. Defaults to `0`.
 
 ### GroundMeshOptions
 
-How [MeshAsset.ground](#ground) sizes and subdivides its grid, which lies in the XZ plane facing
+How [MeshAsset.ground](#ground-1) sizes and subdivides its grid, which lies in the XZ plane facing
 `+Y`.
 
 #### Properties
@@ -75209,16 +75220,17 @@ How many probes along X, Y and Z.
 
 **`Beta`**
 
-Whether each probe also stores the light it receives straight from the directional, point and
-spot lights it sees. Defaults to `"exclude"`.
+Whether each probe also stores the light it receives straight from the `"realtime"` lights it
+sees (`Light.bakeMode`). Defaults to `"exclude"`.
 
 ###### Remarks
 
-Those lights keep lighting the scene in real time while a `LightProbeVolume` is on, so a probe
-that also holds their direct light counts it twice. `"exclude"` bakes only the bounce: the
-light that reached surfaces from those lights (shadowed) and came back, plus the sky and the
-hemispheric lights. Use `"include"` when the baked lights will be disabled at run time, or to
-read a probe's total light with `sampleLightProbes`.
+A real-time light keeps lighting the scene while a `LightProbeVolume` is on, so a probe that
+also holds its direct light counts it twice. `"exclude"` bakes only its bounce: the light that
+reached surfaces from it (shadowed) and came back. That holds for hemispheric lights too, whose
+direct part is what a probe sees of their sky and ground. Use `"include"` to read a probe's
+total light with `sampleLightProbes`. A `"baked"` light's direct light is always stored and a
+`"mixed"` light's never, whatever this says.
 
 ##### maxDistance?
 
@@ -75280,11 +75292,18 @@ Stops the bake between probes; the promise then rejects with the signal's reason
 
 ##### sky?
 
-> `readonly` `optional` **sky?**: [`ColorLike`](#colorlike)
+> `readonly` `optional` **sky?**: [`LightProbeBakeSky`](#lightprobebakesky)
 
 **`Beta`**
 
-The linear radiance of rays that hit nothing, before hemispheric lights. Defaults to black.
+What rays that hit nothing return, in linear radiance: a colour, a
+[LightProbeBakeSkyGradient](#lightprobebakeskygradient) or [LightProbeBakeSkyHarmonics](#lightprobebakeskyharmonics). Defaults to black.
+
+###### Remarks
+
+Hemispheric lights are not part of the sky: they follow the light rules
+([LightProbeBakeOptions.directLight](#directlight)). The scene's `Environment` is not read, because its
+harmonics live in the `.env` file a headless app does not load; pass them here.
 
 ***
 
@@ -75310,7 +75329,16 @@ The grid, ready for `createLightProbeAsset` or `writeLightProbeFile`.
 
 **`Beta`**
 
-How many enabled mesh renderers were skipped because their triangles are not on the CPU.
+How many enabled mesh renderers and models gave no triangles at all.
+
+##### skips
+
+> `readonly` **skips**: readonly [`LightProbeBakeSkip`](#lightprobebakeskip)[]
+
+**`Beta`**
+
+Every renderer or model left out, and every glTF primitive left out of a model that was traced
+otherwise, with the reason.
 
 ##### triangles
 
@@ -75319,6 +75347,124 @@ How many enabled mesh renderers were skipped because their triangles are not on 
 **`Beta`**
 
 How many triangles the rays were traced against.
+
+***
+
+### LightProbeBakeSkip
+
+**`Beta`**
+
+Something the bake could not trace, and why.
+
+#### Properties
+
+##### component
+
+> `readonly` **component**: `string`
+
+**`Beta`**
+
+The component's type id: `ignifx/MeshRenderer` or `ignifx/Model`.
+
+##### entity
+
+> `readonly` **entity**: `string`
+
+**`Beta`**
+
+The entity's name.
+
+##### reason
+
+> `readonly` **reason**: `string`
+
+**`Beta`**
+
+Why, in one line.
+
+##### uid
+
+> `readonly` **uid**: `string`
+
+**`Beta`**
+
+The entity's uid.
+
+***
+
+### LightProbeBakeSkyGradient
+
+**`Beta`**
+
+A sky gradient for [LightProbeBakeOptions.sky](#sky): linear radiance straight up, at the horizon
+and straight down, blended linearly by the ray's height.
+
+#### Properties
+
+##### ground
+
+> `readonly` **ground**: [`ColorLike`](#colorlike)
+
+**`Beta`**
+
+Linear radiance straight down.
+
+##### horizon
+
+> `readonly` **horizon**: [`ColorLike`](#colorlike)
+
+**`Beta`**
+
+Linear radiance at the horizon.
+
+##### kind
+
+> `readonly` **kind**: `"gradient"`
+
+**`Beta`**
+
+Selects the gradient form.
+
+##### sky
+
+> `readonly` **sky**: [`ColorLike`](#colorlike)
+
+**`Beta`**
+
+Linear radiance straight up.
+
+***
+
+### LightProbeBakeSkyHarmonics
+
+**`Beta`**
+
+A sky as nine spherical-harmonic coefficients for [LightProbeBakeOptions.sky](#sky).
+
+#### Remarks
+
+`coefficients` holds 27 numbers: nine linear-RGB triples of **radiance** in the real SH basis,
+in the usual graphics order: `Y00`, `Y1-1 (y)`, `Y10 (z)`, `Y11 (x)`, `Y2-2 (xy)`, `Y2-1 (yz)`,
+`Y20 (3z²−1)`, `Y21 (xz)`, `Y22 (x²−y²)`, where `x`, `y` and `z` are the world axes (Y up). A ray
+that hits nothing returns `Σ cᵢ·Yᵢ(d)`, clamped at 0.
+
+#### Properties
+
+##### coefficients
+
+> `readonly` **coefficients**: readonly `number`[]
+
+**`Beta`**
+
+27 finite numbers.
+
+##### kind
+
+> `readonly` **kind**: `"sh9"`
+
+**`Beta`**
+
+Selects the harmonics form.
 
 ***
 
@@ -88280,7 +88426,7 @@ What `twoD()` accepts. Every field overrides the matching `twoD` settings sectio
 
 ##### mode?
 
-> `readonly` `optional` **mode?**: `"sprite"` \| `"mixed"`
+> `readonly` `optional` **mode?**: `"mixed"` \| `"sprite"`
 
 Whether sprites are the whole frame (`"sprite"`) or composite over the 3D scene (`"mixed"`).
 
@@ -88486,7 +88632,7 @@ export default defineConfig({
 
 ##### mode
 
-> `readonly` **mode**: `"sprite"` \| `"mixed"`
+> `readonly` **mode**: `"mixed"` \| `"sprite"`
 
 Whether sprites are the whole frame (`"sprite"`) or composite over the 3D scene (`"mixed"`).
 
@@ -90258,6 +90404,19 @@ The union of [KINEMATIC\_SYNC\_MODES](#kinematic_sync_modes).
 
 ***
 
+### LightBakeMode
+
+> **LightBakeMode** = *typeof* [`LIGHT_BAKE_MODES`](#light_bake_modes)\[`number`\]
+
+**`Beta`**
+
+One of [LIGHT\_BAKE\_MODES](#light_bake_modes): `"realtime"` lights draw at run time and a light-probe bake stores
+only their bounce (their direct light too with `directLight: "include"`); `"mixed"` lights draw at
+run time and the bake stores only their bounce; `"baked"` lights do not draw at run time and the
+bake stores their direct light and their bounce.
+
+***
+
 ### LightmapMode
 
 > **LightmapMode** = *typeof* [`LIGHTMAP_MODES`](#lightmap_modes)\[`number`\]
@@ -90276,6 +90435,16 @@ One of [LIGHTMAP\_MODES](#lightmap_modes).
 
 Whether a light-probe bake adds the light a probe receives straight from directional, point and
 spot lights. See [LightProbeBakeOptions.directLight](#directlight).
+
+***
+
+### LightProbeBakeSky
+
+> **LightProbeBakeSky** = [`ColorLike`](#colorlike) \| [`LightProbeBakeSkyGradient`](#lightprobebakeskygradient) \| [`LightProbeBakeSkyHarmonics`](#lightprobebakeskyharmonics)
+
+**`Beta`**
+
+What a ray that hits nothing returns: one linear colour, a gradient, or harmonics.
 
 ***
 
@@ -94863,6 +95032,16 @@ The name given to the synthetic tileset that carries IntGrid colliders.
 
 ***
 
+### LIGHT\_BAKE\_MODES
+
+> `const` **LIGHT\_BAKE\_MODES**: readonly \[`"realtime"`, `"mixed"`, `"baked"`\]
+
+**`Beta`**
+
+How a light takes part in baked lighting (`docs/architecture/07-rendering.md` §2.15).
+
+***
+
 ### LIGHT\_PROBE\_ASSET\_TYPE
 
 > `const` **LIGHT\_PROBE\_ASSET\_TYPE**: `"lightprobes"` = `"lightprobes"`
@@ -98872,11 +99051,14 @@ The grid and what was traced.
 
 #### Remarks
 
-One bounce, first-order harmonics, deterministic. Only meshes built with `MeshAsset.fromData`
-cast and bounce light (see [LightProbeBakeResult.skipped](#skipped)). By default a probe holds the
-bounce but not the direct light of directional, point and spot lights, which keep lighting the
-scene in real time (see [LightProbeBakeOptions.directLight](#directlight)). Cost grows with probes × rays ×
-triangles; it is meant for small scenes and tools, not for every frame.
+One bounce, first-order harmonics, deterministic. `MeshRenderer` meshes (built from data, or
+primitives) and `Model` glTF files cast and bounce light; a model is read from the file a
+headless app loaded, so under an app with a device models are skipped (see
+[LightProbeBakeResult.skips](#skips)), as are Draco- and meshopt-compressed glTF primitives. By
+default a probe holds every light's bounce but the direct light of `"baked"` lights only, since
+the others keep lighting the scene in real time (see [LightProbeBakeOptions.directLight](#directlight) and
+`Light.bakeMode`). Cost grows with probes × rays × triangles (each mesh's bounding box culls its
+triangles); it is meant for tools, not for every frame.
 
 The bake is asynchronous: it yields to the host after every ~8 ms of work, reports progress
 through `onProgress` after each probe, and stops at the next probe once `signal` aborts.
@@ -98886,7 +99068,9 @@ through `onProgress` after each probe, and stops at the next probe once `signal`
 IgnifxError with code `IGX-0734`, before tracing anything, for a grid the `.probes.json`
 format cannot hold (whole counts, `counts.x` ≤ 1024, `counts.y × counts.z` ≤ 4096, finite
 `origin` and positive `cellSize`), `rays` outside 1–4096, a `maxDistance` that is not finite
-and positive, or a `directLight` other than `"include"` or `"exclude"`. The promise rejects with `signal.reason` when the bake is aborted.
+and positive, a `directLight` other than `"include"` or `"exclude"`, or a `sky` that is not a
+finite colour, gradient or 27 finite harmonics. The promise rejects with `signal.reason` when the
+bake is aborted.
 
 #### Example
 
@@ -105436,6 +105620,52 @@ The interpolated angle. It is not wrapped, so feeding the result back in is stab
 ```ts
 lerpAngleDegrees(350, 10, 0.5); // 360
 ```
+
+***
+
+### lightBakeTerms()
+
+> **lightBakeTerms**(`bakeMode`, `directLight`): `object`
+
+**`Beta`**
+
+What one light gives a light-probe bake, by its `bakeMode` and the bake's `directLight`.
+
+#### Parameters
+
+##### bakeMode
+
+`"realtime"` \| `"mixed"` \| `"baked"`
+
+The light's `bakeMode`.
+
+##### directLight
+
+[`LightProbeBakeDirectLight`](#lightprobebakedirectlight)
+
+The bake's `directLight` option.
+
+#### Returns
+
+`object`
+
+Whether the probes store its direct light, and whether its bounce is baked.
+
+##### bounce
+
+> `readonly` **bounce**: `boolean`
+
+##### direct
+
+> `readonly` **direct**: `boolean`
+
+#### Remarks
+
+Every light bounces: the light it puts on surfaces is traced back to the probes. Whether a probe
+also stores the light it receives straight from it depends on who draws that light at run time:
+a `"baked"` light is not drawn, so the probe holds it; a `"mixed"` light is drawn, so the probe
+never does; a `"realtime"` light is drawn too, and `directLight: "include"` is how a bake asks
+for its direct light anyway (to read a probe's total light).
 
 ***
 

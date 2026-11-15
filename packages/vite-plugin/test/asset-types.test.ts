@@ -18,6 +18,8 @@ describe("assetTypeForAddress", () => {
     ["prefabs/enemy.prefab.json", "scene"],
     ["materials/hero.material.json", "material"],
     ["meshes/crate.mesh.json", "mesh"],
+    ["levels/hall.probes.json", "lightprobes"],
+    ["levels/hall.lightmap.json", "lightmap"],
     ["input/game.input.json", "inputactions"],
     ["audio/mix.audio.json", "audiobuses"],
     ["physics/ice.physicsmaterial.json", "physicsmaterial"],

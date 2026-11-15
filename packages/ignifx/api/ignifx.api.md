@@ -718,11 +718,14 @@ import { LdtkImportOptions } from '@ignifx/2d';
 import { lerp } from '@ignifx/core';
 import { lerpAngleDegrees } from '@ignifx/core';
 import { Light } from '@ignifx/core';
+import { LIGHT_BAKE_MODES } from '@ignifx/core';
 import { LIGHT_PROBE_ASSET_TYPE } from '@ignifx/core';
 import { LIGHT_PROBE_FILE_EXTENSIONS } from '@ignifx/core';
 import { LIGHT_PROBE_FILE_FORMAT } from '@ignifx/core';
 import { LIGHT_PROBE_FORMAT_VERSION } from '@ignifx/core';
 import { LIGHT_TYPES } from '@ignifx/core';
+import { LightBakeMode } from '@ignifx/core';
+import { lightBakeTerms } from '@ignifx/core';
 import { LIGHTMAP_ASSET_TYPE } from '@ignifx/core';
 import { LIGHTMAP_FILE_EXTENSIONS } from '@ignifx/core';
 import { LIGHTMAP_FILE_FORMAT } from '@ignifx/core';
@@ -736,6 +739,10 @@ import { LightProbeAsset } from '@ignifx/core';
 import { LightProbeBakeDirectLight } from '@ignifx/core';
 import { LightProbeBakeOptions } from '@ignifx/core';
 import { LightProbeBakeResult } from '@ignifx/core';
+import { LightProbeBakeSkip } from '@ignifx/core';
+import { LightProbeBakeSky } from '@ignifx/core';
+import { LightProbeBakeSkyGradient } from '@ignifx/core';
+import { LightProbeBakeSkyHarmonics } from '@ignifx/core';
 import { LightProbeData } from '@ignifx/core';
 import { LightProbeVolume } from '@ignifx/core';
 import { LightShadowSettings } from '@ignifx/core';
@@ -3049,6 +3056,8 @@ export { lerpAngleDegrees }
 
 export { Light }
 
+export { LIGHT_BAKE_MODES }
+
 export { LIGHT_PROBE_ASSET_TYPE }
 
 export { LIGHT_PROBE_FILE_EXTENSIONS }
@@ -3058,6 +3067,10 @@ export { LIGHT_PROBE_FILE_FORMAT }
 export { LIGHT_PROBE_FORMAT_VERSION }
 
 export { LIGHT_TYPES }
+
+export { LightBakeMode }
+
+export { lightBakeTerms }
 
 export { LIGHTMAP_ASSET_TYPE }
 
@@ -3084,6 +3097,14 @@ export { LightProbeBakeDirectLight }
 export { LightProbeBakeOptions }
 
 export { LightProbeBakeResult }
+
+export { LightProbeBakeSkip }
+
+export { LightProbeBakeSky }
+
+export { LightProbeBakeSkyGradient }
+
+export { LightProbeBakeSkyHarmonics }
 
 export { LightProbeData }
 
