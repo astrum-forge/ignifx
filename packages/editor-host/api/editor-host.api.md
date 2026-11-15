@@ -83,7 +83,13 @@ export interface AssetReloadedParams {
 }
 
 // @public
+export const BAKE_COEFFICIENT_DIGITS = 6;
+
+// @public
 export const BAKE_DEFAULT_SPACING = 2;
+
+// @public
+export const BAKE_MAX_COEFFICIENT = 0xe8d4a51000;
 
 // @public
 export const BAKE_MAX_COUNT_X = 1024;
@@ -92,13 +98,19 @@ export const BAKE_MAX_COUNT_X = 1024;
 export const BAKE_MAX_COUNT_YZ = 4096;
 
 // @public
-export const BAKE_MAX_PROBES = 65536;
+export const BAKE_MAX_PROBES = 16384;
 
 // @public
 export const BAKE_MAX_RAYS = 4096;
 
 // @public
 export const BAKE_MAX_SKIPS = 256;
+
+// @public
+export const BAKE_MAX_SKY = 1e6;
+
+// @public
+export const BAKE_MAX_UID_LENGTH = 128;
 
 // @public
 export const BAKE_PROGRESS_INTERVAL_MS = 100;
@@ -141,6 +153,7 @@ export const BakeFailureReason: {
     readonly unknownEntity: "unknownEntity";
     readonly notAVolume: "notAVolume";
     readonly invalidGrid: "invalidGrid";
+    readonly outOfRange: "outOfRange";
     readonly busy: "busy";
     readonly cancelled: "cancelled";
 };
@@ -608,6 +621,9 @@ export function isBakeProgressParams(value: unknown): value is BakeProgressParam
 
 // @public
 export function isBakeSky(value: unknown): value is BakeSky;
+
+// @public
+export function isCancelBakeParams(value: unknown): boolean;
 
 // @public
 export function isCancelBakeResult(value: unknown): value is CancelBakeResult;

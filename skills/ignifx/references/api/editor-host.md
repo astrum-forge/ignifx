@@ -4482,11 +4482,29 @@ disagrees with the document the op was checked against. The last two are the hos
 
 ***
 
+### BAKE\_COEFFICIENT\_DIGITS
+
+> `const` **BAKE\_COEFFICIENT\_DIGITS**: `6` = `6`
+
+The significant digits each answered coefficient is rounded to; a coefficient below `1e-6` in
+magnitude is answered as `0`.
+
+***
+
 ### BAKE\_DEFAULT\_SPACING
 
 > `const` **BAKE\_DEFAULT\_SPACING**: `2` = `2`
 
 The distance between probes when a request gives neither `counts` nor `spacing`, in metres.
+
+***
+
+### BAKE\_MAX\_COEFFICIENT
+
+> `const` **BAKE\_MAX\_COEFFICIENT**: `1000000000000` = `1e12`
+
+The largest coefficient magnitude a bake answers. A bake whose probes exceed it (lights or a sky
+of absurd intensity) fails as `outOfRange` rather than writing a grid no renderer can use.
 
 ***
 
@@ -4508,9 +4526,11 @@ The most probes in one Y × Z slice (the `.probes.json` format's limit).
 
 ### BAKE\_MAX\_PROBES
 
-> `const` **BAKE\_MAX\_PROBES**: `65536` = `65_536`
+> `const` **BAKE\_MAX\_PROBES**: `16384` = `16_384`
 
-The most probes one bake traces.
+The most probes one bake traces. With coefficients rounded to [BAKE\_COEFFICIENT\_DIGITS](#bake_coefficient_digits)
+significant digits and bounded by [BAKE\_MAX\_COEFFICIENT](#bake_max_coefficient), the largest `probes` document is
+under 3 MiB of JSON, inside the editor's 4 MiB message limits.
 
 ***
 
@@ -4527,6 +4547,22 @@ The most rays per probe (`bakeLightProbes`' own limit).
 > `const` **BAKE\_MAX\_SKIPS**: `256` = `256`
 
 The most skips an answer lists; the count in `stats.skipped` is never cut.
+
+***
+
+### BAKE\_MAX\_SKY
+
+> `const` **BAKE\_MAX\_SKY**: `1000000` = `1e6`
+
+The largest magnitude of a sky channel or harmonic a request may give.
+
+***
+
+### BAKE\_MAX\_UID\_LENGTH
+
+> `const` **BAKE\_MAX\_UID\_LENGTH**: `128` = `128`
+
+The longest `volume` uid a request may give, in UTF-16 code units.
 
 ***
 
@@ -4582,8 +4618,11 @@ Why `bakeLightProbes` failed, in its error's `data.reason`, with the error code 
 
 - `unknownEntity` (`RpcErrorCode.unknownEntity`): `volume` names no entity of the open scene;
 - `notAVolume` (`RpcErrorCode.invalidParams`): the entity has no `LightProbeVolume`;
-- `invalidGrid` (`RpcErrorCode.invalidParams`): the grid is more than a `.probes.json` holds or
+- `invalidGrid` (`RpcErrorCode.invalidParams`): the grid (from `counts` or `spacing`) is more
+  than a `.probes.json` holds (X ≤ [BAKE\_MAX\_COUNT\_X](#bake_max_count_x), Y × Z ≤ [BAKE\_MAX\_COUNT\_YZ](#bake_max_count_yz)) or
   more than [BAKE\_MAX\_PROBES](#bake_max_probes), or the volume's transform is not finite;
+- `outOfRange` (`RpcErrorCode.invalidRequest`): a baked coefficient is not finite or above
+  [BAKE\_MAX\_COEFFICIENT](#bake_max_coefficient) (a light of absurd intensity);
 - `busy` (`RpcErrorCode.invalidRequest`): a bake is running; cancel it or wait;
 - `cancelled` (`RpcErrorCode.invalidRequest`): `cancelBake`, or a change to the document, stopped
   it (`data.cause`).
@@ -4605,6 +4644,10 @@ Why `bakeLightProbes` failed, in its error's `data.reason`, with the error code 
 ##### notAVolume
 
 > `readonly` **notAVolume**: `"notAVolume"` = `"notAVolume"`
+
+##### outOfRange
+
+> `readonly` **outOfRange**: `"outOfRange"` = `"outOfRange"`
 
 ##### unknownEntity
 
@@ -5175,14 +5218,18 @@ with `RpcErrorCode.noScene` while no scene is open, and otherwise with the code 
 
 > `readonly` **cancelBake**: `"cancelBake"` = `"cancelBake"`
 
-Cancels the running bake, if any; answers [CancelBakeResult](#cancelbakeresult). The bake then fails as `cancelled`.
+Cancels the running or pending bake, if any; answers [CancelBakeResult](#cancelbakeresult). The bake then
+fails as `cancelled` (cause `cancelBake`), a pending one without running. Takes `{}` or no
+parameters.
 
 #### Remarks
 
 A host lists `HostCapability.bakeLightProbes` when it answers them; one that does not answers
 `RpcErrorCode.methodNotFound`. Both run beside the one-at-a-time queue of the other methods:
-the bake starts in that queue (so it sees every change sent before it), then traces in slices
-while the queue goes on, so the view keeps answering `applyOps`, `pick` and the rest.
+the bake reads the world in a slot of the host's queue, then traces in slices while the queue
+goes on, so the view keeps answering `applyOps`, `pick` and the rest. A document change the host
+handles after the bake has read the world cancels it (`cancelled`, cause `sceneChanged`): a bake
+never mixes the old world with the new, but it may start before a change sent just ahead of it.
 
 ***
 
@@ -6172,7 +6219,8 @@ The received `params`.
 
 `value is BakeLightProbesParams`
 
-True for a volume uid and, when given, counts or a spacing (not both), a direct-light
+True for a volume uid of at most [BAKE\_MAX\_UID\_LENGTH](#bake_max_uid_length) and, when given, whole counts
+from 1 or a spacing (not both), a direct-light
 rule, a sky or `null`, rays and a ray length in range.
 
 ***
@@ -6240,7 +6288,30 @@ The value to test.
 
 `value is BakeSky`
 
-True for a colour, a gradient of three colours, or 27 finite harmonics.
+True for a colour, a gradient of three colours, or 27 harmonics, every channel finite and
+at most [BAKE\_MAX\_SKY](#bake_max_sky) in magnitude.
+
+***
+
+### isCancelBakeParams()
+
+> **isCancelBakeParams**(`value`): `boolean`
+
+Checks the parameters of `cancelBake`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`boolean`
+
+True for none, or an empty object.
 
 ***
 
