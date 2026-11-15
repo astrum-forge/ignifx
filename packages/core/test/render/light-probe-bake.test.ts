@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { isIgnifxError } from "../../src/errors/ignifx-error.js";
-import { bakeLightProbes } from "../../src/render/light-probe-bake.js";
+import { bakeLightProbes, lightBakeTerms } from "../../src/render/light-probe-bake.js";
 import { Light } from "../../src/render/light.js";
 import {
   createMaterialAsset,
@@ -9,6 +9,9 @@ import {
 } from "../../src/render/material-asset.js";
 import { MeshAsset } from "../../src/render/mesh-asset.js";
 import { MeshRenderer } from "../../src/render/mesh-renderer.js";
+import { createModelAsset, MODEL_ASSET_TYPE } from "../../src/render/model-asset.js";
+import { Model } from "../../src/render/model.js";
+import { glbOf } from "./support/gltf-bytes.js";
 import { createRenderHarness } from "./support/render-harness.js";
 import type { RenderHarness } from "./support/render-harness.js";
 
@@ -107,11 +110,10 @@ describe("bakeLightProbes", () => {
     harness = await createRenderHarness();
     addSun(harness);
     addQuad(harness, -1, 1000);
-    harness.world.createEntity("Box").addComponent(MeshRenderer, { mesh: MeshAsset.box(harness.app) });
     harness.frame();
     const both = { ...ONE_PROBE, rays: 256, maxDistance: 1e6 };
     const lit = await bakeLightProbes(harness.world, { ...both, directLight: "include" });
-    expect(lit.skipped).toBe(1);
+    expect(lit.skipped).toBe(0);
     // The lobe from above (c0 0.25, up 0.5) plus a white floor of radiance 1 below (c0 0.5, up -0.5).
     expect(lit.data.coefficients[0]).toBeCloseTo(0.75, 1);
     expect(Math.abs(lit.data.coefficients[3] ?? 1)).toBeLessThan(0.05);
@@ -125,10 +127,14 @@ describe("bakeLightProbes", () => {
     harness = await createRenderHarness();
     harness.world.createEntity("Sky").addComponent(Light, { type: "hemispheric", intensity: 1 });
     harness.frame();
-    const hemi = await bakeLightProbes(harness.world, { ...ONE_PROBE, rays: 256 });
+    const hemi = await bakeLightProbes(harness.world, { ...ONE_PROBE, rays: 256, directLight: "include" });
     // White above, black below: half the sphere at radiance 1.
     expect(hemi.data.coefficients[0]).toBeCloseTo(0.5, 2);
     expect(hemi.data.coefficients[3]).toBeCloseTo(0.5, 1);
+    // A real-time hemispheric light keeps lighting the scene, so by default the probe does not
+    // store what it sees of it: that was the light counted twice under a volume.
+    const runtime = await bakeLightProbes(harness.world, { ...ONE_PROBE, rays: 256 });
+    expect(runtime.data.coefficients.every((value) => value === 0)).toBe(true);
     harness.dispose();
 
     harness = await createRenderHarness();
@@ -168,6 +174,154 @@ describe("bakeLightProbes", () => {
   });
 
   it.each([
+    ["realtime", "exclude", false],
+    ["realtime", "include", true],
+    ["mixed", "exclude", false],
+    ["mixed", "include", false],
+    ["baked", "exclude", true],
+    ["baked", "include", true],
+  ] as const)("stores a %s light's direct light under %s: %s", (mode, directLight, direct) => {
+    expect(lightBakeTerms(mode, directLight)).toEqual({ direct, bounce: true });
+  });
+
+  it("follows each light's bakeMode", async () => {
+    harness = await createRenderHarness();
+    const sun = harness.world.createEntity("Sun");
+    sun.transform.lookAt({ x: 0, y: -1, z: 0 }, { x: 0, y: 0, z: 1 });
+    const light = sun.addComponent(Light, { type: "directional", intensity: 1, bakeMode: "baked" });
+    harness.world.createEntity("Sky").addComponent(Light, { type: "hemispheric", intensity: 1, bakeMode: "mixed" });
+    harness.frame();
+    expect(new Light().bakeMode).toBe("realtime");
+    const baked = await bakeLightProbes(harness.world, { ...ONE_PROBE, rays: 64 });
+    // The baked sun's lobe only: the mixed hemispheric light keeps its direct light to run time.
+    expect(baked.data.coefficients[0]).toBeCloseTo(0.25, 3);
+    expect(baked.data.coefficients[3]).toBeCloseTo(0.5, 3);
+    light.bakeMode = "mixed";
+    const mixed = await bakeLightProbes(harness.world, { ...ONE_PROBE, rays: 64, directLight: "include" });
+    expect(mixed.data.coefficients.every((value) => value === 0)).toBe(true);
+  });
+
+  it("bakes a gradient or harmonic sky for rays that miss", async () => {
+    harness = await createRenderHarness();
+    const white = { r: 1, g: 1, b: 1, a: 1 };
+    const black = { r: 0, g: 0, b: 0, a: 1 };
+    const gradient = await bakeLightProbes(harness.world, {
+      ...ONE_PROBE,
+      rays: 512,
+      sky: { kind: "gradient", sky: white, horizon: white, ground: black },
+    });
+    // White above; below, from white at the horizon to black straight down (mean ½): c0 = ¾.
+    expect(gradient.data.coefficients[0]).toBeCloseTo(0.75, 2);
+    expect(gradient.data.coefficients[3]).toBeGreaterThan(0.2);
+    const ambient = 0.5 / 0.282_094_791_773_878_1;
+    const harmonics = await bakeLightProbes(harness.world, {
+      ...ONE_PROBE,
+      sky: { kind: "sh9", coefficients: [ambient, ambient, ambient, ...Array.from({ length: 24 }, () => 0)] },
+    });
+    expect(harmonics.data.coefficients[0]).toBeCloseTo(0.5, 6);
+    const refused: unknown = await bakeLightProbes(harness.world, {
+      ...ONE_PROBE,
+      sky: { kind: "sh9", coefficients: [1, 2, 3] },
+    }).catch((error: unknown) => error);
+    expect(isIgnifxError(refused) ? refused.code : null).toBe("IGX-0734");
+  });
+
+  it("traces primitives and headless glTF models, and names what it skips", async () => {
+    harness = await createRenderHarness();
+    const h = harness;
+    addSun(h);
+    // A 1000 m box under the probe, its top 0.5 m below it: a white floor of radiance 1.
+    const box = MeshAsset.box(h.app, { width: 1000, height: 1, depth: 1000 });
+    const white = createMaterialAsset(
+      h.app,
+      pbrMaterialDefinition({ baseColor: { r: 1, g: 1, b: 1, a: 1 }, metallic: 0, roughness: 1 }),
+      [],
+    );
+    const floor = h.world.createEntity("Floor");
+    floor.transform.localPosition.set(0, -1, 0);
+    floor.addComponent(MeshRenderer, { mesh: box, materials: [white] });
+    h.frame();
+    const both = { ...ONE_PROBE, rays: 256, maxDistance: 1e6 };
+    const primitive = await bakeLightProbes(h.world, both);
+    expect(primitive.triangles).toBe(12);
+    expect(primitive.skipped).toBe(0);
+    expect(primitive.data.coefficients[0]).toBeCloseTo(0.5, 1);
+    floor.active = false;
+
+    // The same floor as a glTF model: one red triangle pair, read from the bytes a headless load keeps.
+    const half = 500;
+    const quad = [-half, 0, -half, half, 0, -half, half, 0, half];
+    const other = [-half, 0, -half, half, 0, half, -half, 0, half];
+    const bytes = glbOf([
+      { positions: quad, baseColor: [1, 0, 0, 1] },
+      { positions: other, baseColor: [1, 0, 0, 1] },
+    ]);
+    const model = h.app.assets.register(createModelAsset("floor.glb", null, null, bytes), { type: MODEL_ASSET_TYPE });
+    const ground = h.world.createEntity("Model floor");
+    ground.transform.localPosition.set(0, -0.5, 0);
+    ground.addComponent(Model, { model });
+    const bare = h.app.assets.register(createModelAsset("gpu.glb", null, null), { type: MODEL_ASSET_TYPE });
+    h.world.createEntity("No bytes").addComponent(Model, { model: bare });
+    h.frame();
+    const gltf = await bakeLightProbes(h.world, both);
+    expect(gltf.triangles).toBe(2);
+    expect(gltf.skipped).toBe(1);
+    expect(gltf.skips).toHaveLength(1);
+    expect(gltf.skips[0]?.entity).toBe("No bytes");
+    expect(gltf.skips[0]?.component).toBe("ignifx/Model");
+    expect(gltf.skips[0]?.reason).toContain("headless");
+    expect(gltf.data.coefficients[0]).toBeCloseTo(0.5, 1);
+    expect(gltf.data.coefficients[1]).toBeCloseTo(0, 6);
+    // A disposed asset lets go of its file.
+    model.value.dispose();
+    expect(model.value.sourceBytes).toBeNull();
+  });
+
+  it("names models and meshes it cannot read, and honours a model's material overrides", async () => {
+    harness = await createRenderHarness();
+    const h = harness;
+    addSun(h);
+    const register = (bytes: ArrayBuffer | null, name: string) =>
+      h.app.assets.register(createModelAsset(name, null, null, bytes), { type: MODEL_ASSET_TYPE });
+    const broken = register(new TextEncoder().encode("not json").buffer, "broken.glb");
+    const empty = register(glbOf([]), "empty.glb");
+    const draco = register(glbOf([{ positions: [0, 0, 0, 1, 0, 0, 0, 1, 0], draco: true }]), "draco.glb");
+    const half = 500;
+    const floor = register(
+      glbOf([
+        { positions: [-half, 0, -half, half, 0, -half, half, 0, half], baseColor: [1, 0, 0, 1], name: "Paint" },
+        { positions: [-half, 0, -half, half, 0, half, -half, 0, half], baseColor: [1, 0, 0, 1], name: "Paint" },
+      ]),
+      "floor.glb",
+    );
+    const green = createMaterialAsset(h.app, standardMaterialDefinition({ diffuse: { r: 0, g: 1, b: 0, a: 1 } }), []);
+    h.world.createEntity("Broken").addComponent(Model, { model: broken });
+    h.world.createEntity("Empty").addComponent(Model, { model: empty });
+    h.world.createEntity("Draco").addComponent(Model, { model: draco });
+    h.world.createEntity("Unset").addComponent(Model);
+    h.world.createEntity("No mesh").addComponent(MeshRenderer);
+    const ground = h.world.createEntity("Floor");
+    ground.transform.localPosition.set(0, -0.5, 0);
+    ground.addComponent(Model, { model: floor, materialOverrides: { Paint: green } });
+    h.world.createEntity("Floor twin", { position: { x: 0, y: -0.6, z: 0 } }).addComponent(Model, { model: floor });
+    h.frame();
+    const baked = await bakeLightProbes(h.world, { ...ONE_PROBE, rays: 64, maxDistance: 1e6 });
+    expect(baked.triangles).toBe(4);
+    expect(baked.skipped).toBe(5);
+    const reasons = baked.skips.map((skip) => `${skip.entity}: ${skip.reason}`);
+    expect(reasons).toEqual([
+      "No mesh: its mesh is not loaded",
+      expect.stringContaining("Broken: its glTF could not be read"),
+      "Empty: the model's default scene draws no triangles",
+      "Draco: mesh 0 primitive 0: Draco-compressed (KHR_draco_mesh_compression)",
+      "Unset: its model is not loaded",
+    ]);
+    // The override paints the nearer floor green: the probe sees green, not red.
+    expect(baked.data.coefficients[1]).toBeGreaterThan(0.1);
+    expect(baked.data.coefficients[0]).toBeCloseTo(0, 6);
+  });
+
+  it.each([
     ["fractional counts", { counts: { x: 1.5, y: 1, z: 1 } }],
     ["too many probes along X", { counts: { x: 2000, y: 1, z: 1 } }],
     ["a NaN origin", { origin: { x: Number.NaN, y: 0, z: 0 } }],
@@ -176,6 +330,24 @@ describe("bakeLightProbes", () => {
     ["fractional rays", { rays: 1.5 }],
     ["an infinite distance", { maxDistance: Number.POSITIVE_INFINITY }],
     ["an unknown directLight", { directLight: "both" as "include" }],
+    ["a non-finite sky", { sky: { r: Number.NaN, g: 0, b: 0, a: 1 } }],
+    ["an unknown sky kind", { sky: { kind: "cube" } as never }],
+    ["a null sky", { sky: null as never }],
+    [
+      "a gradient without a horizon",
+      { sky: { kind: "gradient", sky: { r: 1, g: 1, b: 1, a: 1 }, ground: { r: 0, g: 0, b: 0, a: 1 } } as never },
+    ],
+    [
+      "a gradient with a NaN",
+      {
+        sky: {
+          kind: "gradient",
+          sky: { r: 1, g: 1, b: 1, a: 1 },
+          horizon: { r: 1, g: Number.NaN, b: 1, a: 1 },
+          ground: { r: 0, g: 0, b: 0, a: 1 },
+        },
+      } as const,
+    ],
   ])("refuses %s with IGX-0734 before tracing", async (_name, patch) => {
     harness = await createRenderHarness();
     const failure: unknown = await bakeLightProbes(harness.world, { ...ONE_PROBE, ...patch }).catch(

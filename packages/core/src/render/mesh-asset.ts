@@ -259,6 +259,8 @@ export class MeshAsset {
 
   readonly #engine: LiteEngine | null;
 
+  readonly #primitive: MeshPrimitiveDefinition | null;
+
   #mesh: LiteMesh | null;
 
   #isDisposed = false;
@@ -274,6 +276,7 @@ export class MeshAsset {
    * {@link MeshAsset.fromData}; `null` for a primitive, whose arrays Lite generated and never
    * handed back. It is what makes the `update*` methods legal.
    * @param engine - The engine an update writes through, or `null` under a headless app.
+   * @param primitive - The primitive and options it was built from, or `null` for data.
    *
    * @internal
    */
@@ -283,12 +286,14 @@ export class MeshAsset {
     scene: LiteScene | null,
     geometry: MeshGeometryData | null = null,
     engine: LiteEngine | null = null,
+    primitive: MeshPrimitiveDefinition | null = null,
   ) {
     this.name = name;
     this.#mesh = mesh;
     this.#scene = scene;
     this.#geometry = geometry;
     this.#engine = engine;
+    this.#primitive = primitive;
   }
 
   /**
@@ -319,6 +324,18 @@ export class MeshAsset {
    */
   get cpuGeometry(): MeshGeometryData | null {
     return this.#geometry;
+  }
+
+  /**
+   * The primitive and options the asset was built from, so a light-probe bake can rebuild its
+   * triangles on the CPU.
+   *
+   * @returns The definition, or `null` for a mesh built with {@link MeshAsset.fromData}.
+   *
+   * @internal
+   */
+  get primitive(): MeshPrimitiveDefinition | null {
+    return this.#primitive;
   }
 
   /**
@@ -707,7 +724,7 @@ export function createPrimitiveMeshAsset(app: App, name: string, definition: Mes
   const handles = buildMeshTemplate(app.isHeadless, app.lite.scene, app.lite.engine, (engine) =>
     buildPrimitiveTemplate(engine, definition),
   );
-  return new MeshAsset(name, handles.mesh, handles.scene, null, handles.engine);
+  return new MeshAsset(name, handles.mesh, handles.scene, null, handles.engine, definition);
 }
 
 /**

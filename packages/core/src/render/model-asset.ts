@@ -120,6 +120,8 @@ export class ModelAsset {
 
   #instances = 0;
 
+  #sourceBytes: ArrayBuffer | null;
+
   /**
    * Wraps a loaded container. The `model` loader constructs these.
    *
@@ -128,6 +130,8 @@ export class ModelAsset {
    * @param animations - The clips taken off the container.
    * @param skeletons - The skeletons the loader found.
    * @param scene - The scene the container is released through, or `null` when headless.
+   * @param sourceBytes - The file's bytes, kept by a headless load for the light-probe bake; `null`
+   * otherwise.
    *
    * @internal
    */
@@ -137,12 +141,27 @@ export class ModelAsset {
     animations: readonly LiteAnimationGroup[],
     skeletons: readonly LiteSkeleton[],
     scene: LiteScene | null,
+    sourceBytes: ArrayBuffer | null = null,
   ) {
     this.address = address;
     this.#container = container;
     this.animations = animations;
     this.skeletons = skeletons;
     this.#scene = scene;
+    this.#sourceBytes = sourceBytes;
+  }
+
+  /**
+   * The `.glb` or `.gltf` bytes a headless load kept, which `bakeLightProbes` reads its triangles
+   * from. A load with a device keeps none: the container already holds the model, and holding the
+   * file as well would double what a game keeps in memory.
+   *
+   * @returns The bytes, or `null`.
+   *
+   * @internal
+   */
+  get sourceBytes(): ArrayBuffer | null {
+    return this.#sourceBytes;
   }
 
   /**
@@ -207,6 +226,8 @@ export class ModelAsset {
     const container = this.#container;
     const scene = this.#scene;
     this.#container = null;
+    // A disposed asset someone still references must not pin the file.
+    this.#sourceBytes = null;
     if (container !== null && scene !== null) {
       removeContainerFromScene(scene, container);
     }
@@ -224,6 +245,7 @@ export class ModelAsset {
  * @param address - The address it was loaded from.
  * @param container - The container, or `null` when the app is headless.
  * @param scene - The scene the container is released through, or `null` when headless.
+ * @param sourceBytes - The file's bytes, kept only by a headless load (see `ModelAsset.sourceBytes`).
  * @returns The asset.
  *
  * @internal
@@ -232,9 +254,10 @@ export function createModelAsset(
   address: string,
   container: LiteAssetContainer | null,
   scene: LiteScene | null,
+  sourceBytes: ArrayBuffer | null = null,
 ): ModelAsset {
   if (container === null) {
-    return new ModelAsset(address, null, [], [], null);
+    return new ModelAsset(address, null, [], [], null, sourceBytes);
   }
   const animations = takeAnimationGroups(container);
   const skeletons = container.skeletons ?? [];

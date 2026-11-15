@@ -3,10 +3,11 @@
  *
  * `bakeLightProbes(world, options)` traces one bounce of diffuse light on the CPU, so it needs no
  * GPU: run it in a Node tool (as here), in an editor, or in the game while it loads. It reads the
- * world once — every enabled `Light`, and the triangles of every enabled `MeshRenderer` whose mesh
- * was built with `MeshAsset.fromData` — and returns `LightProbeData`. Primitives (`MeshAsset.box`,
- * `ground`) and glTF models keep their triangles on the GPU only, so they neither block nor bounce
- * light; `result.skipped` counts them. Give the bake stand-in `fromData` copies of such meshes.
+ * world once — every enabled `Light`, and the triangles of every enabled `MeshRenderer` (data or a
+ * primitive such as `MeshAsset.box`) and of every `Model` a headless app loaded — and returns
+ * `LightProbeData`. Whatever it cannot read (a model under an app with a device, a Draco-compressed
+ * glTF primitive) is listed in `result.skips`. A light's `bakeMode` decides whether the probes also
+ * hold its direct light: `"baked"` lights only, by default, since the others draw at run time.
  *
  * `writeLightProbeFile` adds the `ignifx-probes` header; save the JSON under the asset root as a
  * `.probes.json` and the game loads it like any other asset. A `LightProbeVolume` then replaces the
@@ -61,7 +62,7 @@ const baked = await bakeLightProbes(tool.world, {
     if (done === total) tool.log.info(`baked ${String(total)} probes`);
   },
 });
-tool.log.info("traced triangles:", baked.triangles, "skipped renderers:", baked.skipped);
+tool.log.info("traced triangles:", baked.triangles, "skipped:", baked.skips.length);
 
 // A real tool writes this text to `assets/lighting/room.probes.json` (`node:fs`, or an editor's save).
 const saved = JSON.stringify(writeLightProbeFile(baked.data));

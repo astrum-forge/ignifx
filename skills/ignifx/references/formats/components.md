@@ -379,6 +379,7 @@ A directional, point, spot, or hemispheric light, with optional shadow casting.
 | `shadows.cascadeBlend` | `f32` | `0.1` | CSM only: the fraction of a cascade that fades into the next; 0 shows hard seams. |
 | `includeOnly` | `array` | `[]` | Light only these entities' renderers. |
 | `exclude` | `array` | `[]` | Never light these entities' renderers. |
+| `bakeMode` | `enum` | `"realtime"` | Baked lighting: realtime and mixed draw at run time (a probe bake keeps their bounce); baked draws only through the bake. |
 
 ## LightProbeVolume (`ignifx/LightProbeVolume`)
 

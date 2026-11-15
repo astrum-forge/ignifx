@@ -108,7 +108,8 @@
               "cascadeBlend": 0.1
             },
             "includeOnly": [],
-            "exclude": []
+            "exclude": [],
+            "bakeMode": "realtime"
           }
         }
       ]
@@ -171,7 +172,8 @@
               "cascadeBlend": 0.1
             },
             "includeOnly": [],
-            "exclude": []
+            "exclude": [],
+            "bakeMode": "realtime"
           }
         }
       ]
