@@ -1,5 +1,11 @@
 # @ignifx/cli
 
+## 0.21.0
+
+### Patch Changes
+
+- 602776b: Leave `tsconfig.desktop.json` out of a browser-only scaffold, and drop its step from the `typecheck` script.
+
 ## 0.20.0
 
 ### Minor Changes

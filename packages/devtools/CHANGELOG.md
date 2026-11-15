@@ -1,5 +1,16 @@
 # @ignifx/devtools
 
+## 0.21.0
+
+### Patch Changes
+
+- @ignifx/audio@0.21.0
+  - @ignifx/core@0.21.0
+  - @ignifx/input@0.21.0
+  - @ignifx/physics@0.21.0
+  - @ignifx/physics-2d@0.21.0
+  - @ignifx/ui@0.21.0
+
 ## 0.20.0
 
 ### Patch Changes

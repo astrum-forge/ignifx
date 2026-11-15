@@ -1,5 +1,12 @@
 # @ignifx/editor-host
 
+## 0.21.0
+
+### Patch Changes
+
+- @ignifx/core@0.21.0
+  - @ignifx/vite-plugin@0.21.0
+
 ## 0.20.0
 
 ### Minor Changes
