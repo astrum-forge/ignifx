@@ -1246,6 +1246,10 @@ before [ASSET\_TYPE\_BY\_EXTENSION](#asset_type_by_extension) because every one 
 
 > `readonly` **.input.json**: `"inputactions"` = `"inputactions"`
 
+###### .lightmap.json
+
+> `readonly` **.lightmap.json**: `"lightmap"` = `"lightmap"`
+
 ###### .material.json
 
 > `readonly` **.material.json**: `"material"` = `"material"`
@@ -1265,6 +1269,10 @@ before [ASSET\_TYPE\_BY\_EXTENSION](#asset_type_by_extension) because every one 
 ###### .prefab.json
 
 > `readonly` **.prefab.json**: `"scene"` = `"scene"`
+
+###### .probes.json
+
+> `readonly` **.probes.json**: `"lightprobes"` = `"lightprobes"`
 
 ###### .scene.json
 

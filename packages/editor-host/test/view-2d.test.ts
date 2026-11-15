@@ -5,6 +5,7 @@ import { startEditorHost } from "../src/host.js";
 import { RpcErrorCode, SceneNotification } from "../src/protocol/index.js";
 import {
   boundsOf2D,
+  drawnBoxes2D,
   fitView,
   levelCamera2D,
   orthographicSizeFor,
@@ -148,6 +149,28 @@ describe("the 2D toolkit, by data", () => {
     // A tilemap that has not loaded has no extent yet.
     child.addComponent(Tilemap);
     expect(boundsOf2D(app, [child])).toEqual({ minX: 5, minY: 1, maxX: 5, maxY: 1 });
+  });
+
+  it("leaves disabled sprites and tilemaps, and those on inactive entities, out of pickRect's boxes", async () => {
+    const { app, scene } = await twoDScene();
+    const quad = { min: { x: 0, y: 0 }, max: { x: 1, y: 1 } };
+    const holder = app.world.createEntity("Holder", { scene });
+    const sprite = holder.addComponent(SpriteRenderer);
+    // Headless, nothing syncs the quad or loads the map: stand in for both.
+    Object.defineProperty(sprite, "bounds", { value: quad });
+    const map = holder.addComponent(Tilemap);
+    Object.defineProperty(map, "layerCount", { value: 1 });
+    Object.defineProperty(map, "layerSize", { value: () => ({ x: 2, y: 3 }) });
+    Object.defineProperty(map, "cellSize", { value: 1 });
+    expect(drawnBoxes2D(app, scene).map(({ entity }) => entity.name)).toEqual(["Holder", "Holder"]);
+    sprite.enabled = false;
+    expect(drawnBoxes2D(app, scene)).toHaveLength(1);
+    sprite.enabled = true;
+    map.enabled = false;
+    expect(drawnBoxes2D(app, scene)).toHaveLength(1);
+    map.enabled = true;
+    holder.active = false;
+    expect(drawnBoxes2D(app, scene)).toEqual([]);
   });
 });
 

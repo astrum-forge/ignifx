@@ -1,9 +1,9 @@
 ---
 name: editor-host
-description: Connects an ignifx project to the ignifx editor with @ignifx/editor-host: the Vite plugin that serves the editor's scene view from the project's own dev server, the virtual:ignifx/editor play controls a game's main.ts hands its app to (play, pause, step, stop, playState, playStateChanged, playStats, screenshot, queryRuntime, sendInput), and the host half of the editor protocol 0.3 over a MessagePort (hello/ready, heartbeat, and the scene document methods openScene, applyOps, readBack, select, pick, frame, setGizmo, setViewMode, screenshot, getSchemas, describeSettings, setAnimateMaterials, getColliderOutlines, sampleAnimation, sampleSpriteAnimation), including the 2D view mode. Use when wiring a project or template for the editor, when the user mentions @ignifx/editor-host, editorHostPlugin, attachEditorPlayControls, virtual:ignifx/editor, startEditorHost or /__ignifx_editor__/, or when debugging why the editor cannot connect to a view or why the scene view disagrees with the editor's document.
+description: Connects an ignifx project to the ignifx editor with @ignifx/editor-host: the Vite plugin that serves the editor's scene view from the project's own dev server, the virtual:ignifx/editor play controls a game's main.ts hands its app to (play, pause, step, stop, playState, playStateChanged, playStats, screenshot, queryRuntime, sendInput), and the host half of the editor protocol 0.3 over a MessagePort (hello/ready, heartbeat, and the scene document methods openScene, applyOps, readBack, select, pick, pickRect, frame, setGizmo, setViewMode, screenshot, getSchemas, describeSettings, setAnimateMaterials, getColliderOutlines, sampleAnimation, sampleSpriteAnimation), including the 2D view mode. Use when wiring a project or template for the editor, when the user mentions @ignifx/editor-host, editorHostPlugin, attachEditorPlayControls, virtual:ignifx/editor, startEditorHost or /__ignifx_editor__/, or when debugging why the editor cannot connect to a view or why the scene view disagrees with the editor's document.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.19.0"
+  ignifx-version: "0.20.0"
 ---
 
 # @ignifx/editor-host
@@ -25,7 +25,7 @@ editor's, even though its name starts with `editor-`.
 
 ## Environment
 
-- Engine: ignifx `0.19.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
+- Engine: ignifx `0.20.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - Peers: `@ignifx/core` and `@babylonjs/lite` (the scene view's gizmos); for the `./vite` entry,
   `@ignifx/vite-plugin` and `vite`.
 - A development dependency of the project, at the same version as its `@ignifx/core`.
@@ -69,7 +69,7 @@ each view ◀── MessagePort ──▶ editor     JSON-RPC 2.0, protocol 0.3
    scene view: schemasChanged → openScene → applyOps… / readBack / select / pick / frame / setGizmo / screenshot
                / setViewMode / getSchemas / describeSettings (on request only)
                / setAnimateMaterials / getColliderOutlines / sampleAnimation / sampleSpriteAnimation
-               / setGrid / setTilemapCells
+               / setGrid / setTilemapCells / pickRect (with a canvas)
                / setEditorLines / clearEditorLines (with a canvas)
                ← sceneOpened, selectionChanged, transformDragging/Dragged, hotReloaded, assetReloaded,
                  hostError, log
@@ -139,27 +139,30 @@ host.dispose();
 
 `skills/ignifx/references/api/editor-host.md` and `editor-host-vite.md` have the generated surface.
 
-| Member                                                               | What it does                                                                                                                       |
-| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `editorHostPlugin(options)` (`/vite`)                                | The two Vite plugins: the scene view's page (dev only) and `virtual:ignifx/editor`                                                 |
-| `attachEditorPlayControls(app)`                                      | From `virtual:ignifx/editor`: hands the game's app to the editor; returns a detach                                                 |
-| `startEditorHost(options)`                                           | Starts the scene view's host and its edit-mode app; resolves to a disposable `EditorHost`                                          |
-| `listenForEditorPlayControls(options)`                               | What `virtual:ignifx/editor` calls in development: keeps the editor's port until `attach(app)` starts the controls on it           |
-| `startEditorPlayControls(app, options)`                              | The play controls on their own, listening from the call                                                                            |
-| `EDITOR_CONNECT_MESSAGE_TYPE`, `isEditorConnectMessage`              | The window message that carries the port, and its check                                                                            |
-| `PROTOCOL_VERSION`, `RpcErrorCode`, `isRpcMessage`, `isPlayState`    | The protocol 0.3 values and checks, mirrored from `@ignifx/editor-protocol`; before 1.0 the major and minor must both match        |
-| `SceneMethod`, `SceneNotification`, `SceneOp`, `isApplyOpsParams`, … | The scene document methods, notifications, the thirteen ops, and their guards                                                      |
-| `EditorHost.editorScene`                                             | The persistent `editor` scene instance holding the host's own objects                                                              |
-| `EditorHost.assetChanged(change)`                                    | Reloads an asset changed on disk in place and sends `assetReloaded`; the generated page calls it on `ignifx:asset-changed`         |
-| `PlayMethod`, `PlayState`                                            | `play`, `pause`, `step`, `stop`, and what each answers; `playState` reads the state without changing it                            |
-| `PlayNotification`, `PlayPhase`, `isPlayStateReport`                 | `playStateChanged` and `playState`'s `{ state: "playing" \| "paused" \| "stopped", frameCount, time }`                             |
-| `PlayStats`, `isPlayStats`                                           | `playStats`'s `{ fps, frameTimeMs, entityCount, frameCount }`: the newest second of `app.diagnostics` frames, the world's entities |
-| `HostCapability.hotReloadDefaults`                                   | The scene view gives fields the document leaves out their new default after a script's hot reload                                  |
-| `RenderViewMethod`, `HostCapability.gameView`, `.thumbnails`         | `setGameView`/`gameViewFrame`: the document's own camera as an image; `renderThumbnail`: a model or prefab rendered alone          |
-| `HostCapability.gameViewOnDemand`, `.gameViewSize`, `.gameView2d`    | `gameViewFrame` answers while the host is hidden, takes `width`/`height`, and renders a `Camera2D` scene's sprites                 |
-| `HostCapability.logRelay`, `isAppErrorData`, `LoggedError`           | Both views relay `log` (with the first `Error` a line carries), `hostError` (entity, component, phase, stack) and `hotReloaded`    |
-| `HOST_TEXT_MAX_LENGTH`, `HOST_LIST_MAX_LENGTH`                       | The editor's caps on a report's strings (1 MiB) and lists (4096); both views clip to them, a string ending `… [clipped]`           |
-| `EditorHostErrorCode`                                                | `IGX-1801` bad origin, `IGX-1802` no window, `IGX-1803` bad option                                                                 |
+| Member                                                                              | What it does                                                                                                                                                                                                                             |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `editorHostPlugin(options)` (`/vite`)                                               | The two Vite plugins: the scene view's page (dev only) and `virtual:ignifx/editor`                                                                                                                                                       |
+| `attachEditorPlayControls(app)`                                                     | From `virtual:ignifx/editor`: hands the game's app to the editor; returns a detach                                                                                                                                                       |
+| `startEditorHost(options)`                                                          | Starts the scene view's host and its edit-mode app; resolves to a disposable `EditorHost`                                                                                                                                                |
+| `listenForEditorPlayControls(options)`                                              | What `virtual:ignifx/editor` calls in development: keeps the editor's port until `attach(app)` starts the controls on it                                                                                                                 |
+| `startEditorPlayControls(app, options)`                                             | The play controls on their own, listening from the call                                                                                                                                                                                  |
+| `EDITOR_CONNECT_MESSAGE_TYPE`, `isEditorConnectMessage`                             | The window message that carries the port, and its check                                                                                                                                                                                  |
+| `PROTOCOL_VERSION`, `RpcErrorCode`, `isRpcMessage`, `isPlayState`                   | The protocol 0.3 values and checks, mirrored from `@ignifx/editor-protocol`; before 1.0 the major and minor must both match                                                                                                              |
+| `SceneMethod`, `SceneNotification`, `SceneOp`, `isApplyOpsParams`, …                | The scene document methods, notifications, the thirteen ops, and their guards                                                                                                                                                            |
+| `EditorHost.editorScene`                                                            | The persistent `editor` scene instance holding the host's own objects                                                                                                                                                                    |
+| `EditorHost.assetChanged(change)`                                                   | Reloads an asset changed on disk in place and sends `assetReloaded`; the generated page calls it on `ignifx:asset-changed`                                                                                                               |
+| `PlayMethod`, `PlayState`                                                           | `play`, `pause`, `step`, `stop`, and what each answers; `playState` reads the state without changing it                                                                                                                                  |
+| `PlayNotification`, `PlayPhase`, `isPlayStateReport`                                | `playStateChanged` and `playState`'s `{ state: "playing" \| "paused" \| "stopped", frameCount, time }`                                                                                                                                   |
+| `PlayStats`, `isPlayStats`                                                          | `playStats`'s `{ fps, frameTimeMs, entityCount, frameCount }`: the newest second of `app.diagnostics` frames, the world's entities                                                                                                       |
+| `HostCapability.hotReloadDefaults`                                                  | The scene view gives fields the document leaves out their new default after a script's hot reload                                                                                                                                        |
+| `RenderViewMethod`, `HostCapability.gameView`, `.thumbnails`                        | `setGameView`/`gameViewFrame`: the document's own camera as an image; `renderThumbnail`: a model or prefab rendered alone                                                                                                                |
+| `HostCapability.thumbnailMaterials`, `.thumbnailAtlases`, `.thumbnailTextures`      | `renderThumbnail` also takes a `.material.json` (on a sphere), an `.atlas.json` and a `.png`/`.jpg`/`.jpeg`/`.webp` (fitted, transparent)                                                                                                |
+| `LightProbeBakeMethod`, `HostCapability.bakeLightProbes`, `isBakeLightProbesResult` | `bakeLightProbes { volume, counts? \| spacing?, directLight?, sky?, rays? }` bakes a `LightProbeVolume` over the live world and answers the `.probes.json` document; `bakeProgress` (≤ 10/s), `cancelBake`; a document change cancels it |
+| `SceneMethod.pickRect`, `HostCapability.pickRect`, `PICK_RECT_MAX_ENTITIES`         | Box selection: the document entities whose drawn bounds a view rectangle overlaps or contains, capped at 2 000 with `truncated`                                                                                                          |
+| `HostCapability.gameViewOnDemand`, `.gameViewSize`, `.gameView2d`                   | `gameViewFrame` answers while the host is hidden, takes `width`/`height`, and renders a `Camera2D` scene's sprites                                                                                                                       |
+| `HostCapability.logRelay`, `isAppErrorData`, `LoggedError`                          | Both views relay `log` (with the first `Error` a line carries), `hostError` (entity, component, phase, stack) and `hotReloaded`                                                                                                          |
+| `HOST_TEXT_MAX_LENGTH`, `HOST_LIST_MAX_LENGTH`                                      | The editor's caps on a report's strings (1 MiB) and lists (4096); both views clip to them, a string ending `… [clipped]`                                                                                                                 |
+| `EditorHostErrorCode`                                                               | `IGX-1801` bad origin, `IGX-1802` no window, `IGX-1803` bad option                                                                                                                                                                       |
 
 ## Recipes
 
@@ -357,6 +360,12 @@ object `openScene` sends, through `world.loadSceneFile`; `readBack` answers with
   `ray: { origin, direction }` (world space, from the editor camera's `screenToRay` at the converted
   backing pixel) and, when the ray crosses `z = 0` ahead of the camera, `plane: [x, y, 0]`. A 3D
   editor drops an asset where `ray` meets `y = 0`; a 2D one uses `plane`.
+- **Box selection is `pickRect`.** `pickRect { x0, y0, x1, y1, unit, mode? }` takes two opposite
+  corners in `pick`'s unit and answers `{ entities, truncated }`: the document entities whose drawn
+  bounds (each visible mesh's 8 bounds corners projected through the editor camera; sprites and
+  tilemaps too in 2D view mode) overlap the rectangle, or with `mode: "contain"` lie wholly inside
+  it and in front of the camera, in document order. A prefab member counts for its instance root,
+  as with `pick`; an entity that draws nothing (a light, an empty) is never listed.
 - **The 2D view mode needs a canvas, not a dependency.** On a canvas the host lists `viewMode2d` and
   `pick2d`. `openScene` and `sceneOpened` report `viewMode`: `"2d"` for `twoD.mode: "sprite"` or a
   scene whose cameras are all `Camera2D`. `setViewMode { mode: "2d" }` enables the host's own

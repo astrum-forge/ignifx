@@ -737,9 +737,7 @@ export class Physics2DRuntime {
       return layer;
     }
     this.#ctx.log.warn(
-      `${Physics2DErrorCode.layerOutOfRange}: {entity} is on layer {layer}, which is outside the sixteen layers Rapier 2D can filter by.`,
-      subject,
-      String(layer),
+      `${Physics2DErrorCode.layerOutOfRange}: ${JSON.stringify(subject)} is on layer ${String(layer)}, which is outside the sixteen layers Rapier 2D can filter by.`,
     );
     return 0;
   }
@@ -867,8 +865,7 @@ export class Physics2DRuntime {
     if (entity.parent !== null && !this.#warnedChildren.has(entity)) {
       this.#warnedChildren.add(entity);
       this.#ctx.log.warn(
-        `${Physics2DErrorCode.bodyOnChildEntity}: {entity} carries a 2D physics body but is not a root entity; Rapier writes its world pose.`,
-        entity.name,
+        `${Physics2DErrorCode.bodyOnChildEntity}: ${JSON.stringify(entity.name)} carries a 2D physics body but is not a root entity; Rapier writes its world pose.`,
       );
     }
     const record = this.#build(entity, entity.getComponent(Rigidbody2D), controller, colliders);
@@ -1011,8 +1008,7 @@ export class Physics2DRuntime {
     });
     if (collider === null) {
       this.#ctx.log.warn(
-        `${Physics2DErrorCode.colliderGeometryInvalid}: {entity} has a 2D collider whose geometry Rapier cannot build a shape from.`,
-        record.entity.name,
+        `${Physics2DErrorCode.colliderGeometryInvalid}: ${JSON.stringify(record.entity.name)} has a 2D collider whose geometry Rapier cannot build a shape from.`,
       );
       return null;
     }
@@ -1404,8 +1400,7 @@ export class Physics2DRuntime {
     record.staticVersion = version;
     record.reportedMove = true;
     this.#ctx.log.warn(
-      `${Physics2DErrorCode.movedStaticBody}: {entity} has 2D colliders but no Rigidbody2D, and it moved after its body was placed.`,
-      record.entity.name,
+      `${Physics2DErrorCode.movedStaticBody}: ${JSON.stringify(record.entity.name)} has 2D colliders but no Rigidbody2D, and it moved after its body was placed.`,
     );
   }
 

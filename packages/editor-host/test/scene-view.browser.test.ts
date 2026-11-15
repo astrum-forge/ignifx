@@ -279,6 +279,7 @@ async function sceneView(scene: SceneFile = SCENE, framed = "BOX"): Promise<Edit
     HostCapability.screenshot,
     HostCapability.viewMode2d,
     HostCapability.pick2d,
+    HostCapability.pickRect,
     HostCapability.logRelay,
     HostCapability.hotReloadDefaults,
     HostCapability.gameView,
@@ -286,11 +287,15 @@ async function sceneView(scene: SceneFile = SCENE, framed = "BOX"): Promise<Edit
     HostCapability.gameViewSize,
     HostCapability.gameView2d,
     HostCapability.thumbnails,
+    HostCapability.thumbnailMaterials,
+    HostCapability.thumbnailAtlases,
+    HostCapability.thumbnailTextures,
     HostCapability.grid,
     HostCapability.gridOverlay,
     HostCapability.tilemapCells,
     HostCapability.editorLines,
     HostCapability.spriteAnimation,
+    HostCapability.bakeLightProbes,
   ]);
   host = await starting;
   announced = (await peer.nextNotification(SceneNotification.schemasChanged))["params"];
@@ -465,6 +470,58 @@ describe("the scene view on a WebGPU canvas", () => {
     renderer.displayHidden = false;
     await frames(2);
     expect(await call("pick", at)).toMatchObject({ entity: "BOX" });
+  }, 60_000);
+
+  it("box-picks the box with pickRect in both modes, and nothing in an empty corner", async () => {
+    Object.defineProperty(globalThis, "devicePixelRatio", { configurable: true, value: 2 });
+    const view = await sceneView();
+    // Framing the sun too leaves the box small in the view, with room around it.
+    await call("frame", { entities: "all" });
+    await frames(2);
+    const camera = view.app.world.mainCamera;
+    const screen = new Vec3();
+    expect(camera?.worldToScreen({ x: 0, y: 0, z: 0 }, screen)).toBe(true);
+    const around = { x0: screen.x - 8, y0: screen.y - 8, x1: screen.x + 8, y1: screen.y + 8, unit: "backing" };
+    // The sun draws nothing, so only the box is listed.
+    expect(await call("pickRect", around)).toEqual({ entities: ["BOX"], truncated: false });
+    // The same rectangle in CSS pixels, corners swapped.
+    expect(
+      await call("pickRect", {
+        x0: (screen.x + 8) / 2,
+        y0: (screen.y + 8) / 2,
+        x1: (screen.x - 8) / 2,
+        y1: (screen.y - 8) / 2,
+        unit: "css",
+      }),
+    ).toEqual({ entities: ["BOX"], truncated: false });
+    // A small rectangle inside the box does not contain it; the whole view does.
+    expect(await call("pickRect", { ...around, mode: "contain" })).toEqual({ entities: [], truncated: false });
+    expect(await call("pickRect", { x0: 0, y0: 0, x1: WIDTH, y1: HEIGHT, unit: "css", mode: "contain" })).toMatchObject(
+      { entities: ["BOX"] },
+    );
+    expect(await call("pickRect", { x0: 0, y0: 0, x1: 3, y1: 3, unit: "css" })).toEqual({
+      entities: [],
+      truncated: false,
+    });
+    const refused: Received | undefined = await peer?.request("pickRect", { x0: 0, y0: 0, x1: 1, unit: "css" });
+    expect(refused).toHaveProperty("error.code", -32_602);
+  }, 60_000);
+
+  it("box-picks a glTF model as its entity", async () => {
+    const view = await sceneView(MODEL_SCENE, "CRATE");
+    await frames(20);
+    const camera = view.app.world.mainCamera;
+    const screen = new Vec3();
+    expect(camera?.worldToScreen({ x: 0, y: 0, z: 0 }, screen)).toBe(true);
+    expect(
+      await call("pickRect", {
+        x0: screen.x - 4,
+        y0: screen.y - 4,
+        x1: screen.x + 4,
+        y1: screen.y + 4,
+        unit: "backing",
+      }),
+    ).toEqual({ entities: ["CRATE"], truncated: false });
   }, 60_000);
 
   it("describes the project's scripts and core's components with their inspector metadata", async () => {

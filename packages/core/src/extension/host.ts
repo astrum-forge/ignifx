@@ -441,9 +441,7 @@ export class ExtensionHost implements ExtensionContextHost {
         // `ctx.tryGet` in `onStart`.
         if (this.#options.mode === "development") {
           this.#options.log.debug(
-            "Dropped the optional dependency {extension} -> {optional} because it would form a cycle.",
-            extension.name,
-            name,
+            `Dropped the optional dependency ${extension.name} -> ${name} because it would form a cycle.`,
           );
         }
         continue;

@@ -41,7 +41,8 @@ export const LIGHTMAP_FORMAT_VERSION = 1;
 
 /**
  * Where one renderer's UV2 square sits in a lightmap atlas: the lightmap is sampled at
- * `uv2 · scale + offset`.
+ * `uv2 · scale + offset`, component-wise. No rotation: an atlas packer that rotates a chart writes
+ * the rotation into the UV2 it bakes.
  *
  * @public
  */
@@ -78,10 +79,12 @@ export interface LightmapFileData {
  * A loaded lightmap: a texture and where each entity's UV2 square sits in it.
  *
  * @remarks
- * A `MeshRenderer` names it in its `lightmap` record. Only placements equal to
- * {@link IDENTITY_LIGHTMAP_PLACEMENT} are honoured for now: Babylon Lite 1.34's lightmap fragment
- * samples `uv2` without a transform, so a renderer with another placement logs `IGX-0735` once and
- * samples the whole texture until the atlas transform lands (GI plan §5, spike P2).
+ * A `MeshRenderer` names it in its `lightmap` record. Many renderers can share one atlas
+ * texture: each samples it at `uv2 · scale + offset`, with its entity's entry as the placement, in
+ * the same UV space as an entity without one (so a V flip the texture asks for applies to the
+ * placed coordinate too). A placement other than {@link IDENTITY_LIGHTMAP_PLACEMENT} needs the
+ * renderer's `lightmap.uv2` on and a mesh with `uvs2`; otherwise it logs `IGX-0735` once and
+ * samples the whole texture. Each distinct placement compiles its own pipeline variant.
  *
  * @example
  * ```ts
@@ -219,12 +222,18 @@ export function readLightmapEntries(value: unknown, address: string): Readonly<R
   const entries: Record<string, LightmapPlacement> = {};
   for (const id of Object.keys(record)) {
     const entry = asRecord(record[id]);
-    const scale = entry === null ? null : readVec2(entry["scale"], IDENTITY_LIGHTMAP_PLACEMENT.scale, (n) => n > 0);
-    const offset = entry === null ? null : readVec2(entry["offset"], IDENTITY_LIGHTMAP_PLACEMENT.offset, () => true);
+    const scale =
+      entry === null
+        ? null
+        : readVec2(entry["scale"], IDENTITY_LIGHTMAP_PLACEMENT.scale, (n) => n > 0 && n <= MAX_PLACEMENT_MAGNITUDE);
+    const offset =
+      entry === null
+        ? null
+        : readVec2(entry["offset"], IDENTITY_LIGHTMAP_PLACEMENT.offset, (n) => Math.abs(n) <= MAX_PLACEMENT_MAGNITUDE);
     if (id === "" || scale === null || offset === null) {
       throw invalid(
         address,
-        `entries["${id}"] must be { scale?: { x, y }, offset?: { x, y } } with finite numbers and a scale above 0`,
+        `entries["${id}"] must be { scale?: { x, y }, offset?: { x, y } } with finite numbers, a scale above 0 and every component within ±${String(MAX_PLACEMENT_MAGNITUDE)}`,
       );
     }
     entries[id] = { scale, offset };
@@ -233,7 +242,7 @@ export function readLightmapEntries(value: unknown, address: string): Readonly<R
 }
 
 /**
- * Whether a placement is the identity, the only one Babylon Lite 1.34 can draw (GI plan §5, P2).
+ * Whether a placement is the identity, which needs no atlas transform.
  *
  * @param placement - The placement.
  * @returns `true` for scale `(1, 1)` and offset `(0, 0)`.
@@ -244,6 +253,13 @@ export function isIdentityLightmapPlacement(placement: LightmapPlacement): boole
   const { scale, offset } = placement;
   return scale.x === 1 && scale.y === 1 && offset.x === 0 && offset.y === 0;
 }
+
+/**
+ * The largest magnitude a placement component may have. Atlas coordinates live near `0..1`; the
+ * bound keeps every value well inside `f32`, since the placement is written into WGSL as a constant
+ * and an out-of-range literal fails shader creation.
+ */
+const MAX_PLACEMENT_MAGNITUDE = 1e6;
 
 /**
  * Reads `{ x, y }` whose components are finite and pass a check, or takes a default when absent.

@@ -227,6 +227,236 @@ Its asset type, as the manifest records it: `"scene"` for a scene or a prefab.
 
 ***
 
+### BakeColor
+
+A linear colour, each channel finite (`a` is ignored).
+
+#### Properties
+
+##### a?
+
+> `readonly` `optional` **a?**: `number`
+
+##### b
+
+> `readonly` **b**: `number`
+
+##### g
+
+> `readonly` **g**: `number`
+
+##### r
+
+> `readonly` **r**: `number`
+
+***
+
+### BakeFailureData
+
+The `data` of a failed `bakeLightProbes`.
+
+#### Properties
+
+##### cause?
+
+> `readonly` `optional` **cause?**: [`BakeCancelCause`](#bakecancelcause-1)
+
+What cancelled it, for `cancelled`.
+
+##### reason
+
+> `readonly` **reason**: [`BakeFailureReason`](#bakefailurereason-1)
+
+Why.
+
+***
+
+### BakeLightProbesParams
+
+The parameters of `bakeLightProbes`.
+
+#### Properties
+
+##### counts?
+
+> `readonly` `optional` **counts?**: readonly \[`number`, `number`, `number`\]
+
+The probes along X, Y and Z, each a whole number from 1, spread over the box (one probe on an
+axis sits at the centre). Not with `spacing`.
+
+##### directLight?
+
+> `readonly` `optional` **directLight?**: `"include"` \| `"exclude"`
+
+Whether the probes also store the direct light of `"realtime"` lights (core's
+`LightProbeBakeOptions.directLight`). Defaults to `"exclude"`.
+
+##### maxDistance?
+
+> `readonly` `optional` **maxDistance?**: `number`
+
+How far a ray looks for a surface, in metres; above 0. Defaults to 100.
+
+##### rays?
+
+> `readonly` `optional` **rays?**: `number`
+
+Rays per probe, 1 to [BAKE\_MAX\_RAYS](#bake_max_rays). Defaults to 128.
+
+##### sky?
+
+> `readonly` `optional` **sky?**: [`BakeSky`](#bakesky) \| `null`
+
+What rays that hit nothing return. Absent: the scene's `Environment` diffuse harmonics, rotated
+as the environment is, when the host has them (a host with a GPU, an installed `.env`); black
+otherwise. `null`: black.
+
+##### spacing?
+
+> `readonly` `optional` **spacing?**: `number`
+
+The largest distance between neighbouring probes, in metres, from [BAKE\_SPACING\_MIN](#bake_spacing_min) to
+[BAKE\_SPACING\_MAX](#bake_spacing_max); each axis of size above 0 gets at least two probes, on its faces.
+Defaults to [BAKE\_DEFAULT\_SPACING](#bake_default_spacing) when `counts` is absent too. Not with `counts`.
+
+##### volume
+
+> `readonly` **volume**: `string`
+
+The uid of the entity whose `LightProbeVolume` is baked. Its world position is the box's
+centre and its world scale the box's size in metres; the grid is axis-aligned (a rotation is
+ignored). An axis with a size of 0 gets one probe, at the centre.
+
+***
+
+### BakeLightProbesResult
+
+The answer to `bakeLightProbes`.
+
+#### Properties
+
+##### probes
+
+> `readonly` **probes**: [`JsonObject`](#jsonobject)
+
+The `.probes.json` document (`writeLightProbeFile`), for the editor to write.
+
+##### skips
+
+> `readonly` **skips**: readonly [`BakeSkip`](#bakeskip)[]
+
+What the bake left out, and why; at most [BAKE\_MAX\_SKIPS](#bake_max_skips).
+
+##### sky
+
+> `readonly` **sky**: [`BakeSkySource`](#bakeskysource)
+
+Where the sky came from.
+
+##### stats
+
+> `readonly` **stats**: `object`
+
+What was baked.
+
+###### ms
+
+> `readonly` **ms**: `number`
+
+Wall-clock milliseconds, from the start of the bake to its end.
+
+###### probes
+
+> `readonly` **probes**: `number`
+
+Probes in the grid.
+
+###### skipped
+
+> `readonly` **skipped**: `number`
+
+Enabled mesh renderers and models that gave no triangles at all.
+
+###### triangles
+
+> `readonly` **triangles**: `number`
+
+Triangles the rays were traced against.
+
+***
+
+### BakeProgressParams
+
+The parameters of `bakeProgress`.
+
+#### Properties
+
+##### done
+
+> `readonly` **done**: `number`
+
+Probes baked so far.
+
+##### total
+
+> `readonly` **total**: `number`
+
+Probes in the grid.
+
+##### volume
+
+> `readonly` **volume**: `string`
+
+The volume being baked.
+
+***
+
+### BakeSkip
+
+Something the bake could not trace, and why (core's `LightProbeBakeSkip`).
+
+#### Properties
+
+##### component
+
+> `readonly` **component**: `string`
+
+The component's type id: `ignifx/MeshRenderer` or `ignifx/Model`.
+
+##### entity
+
+> `readonly` **entity**: `string`
+
+The entity's name.
+
+##### reason
+
+> `readonly` **reason**: `string`
+
+Why, in one line.
+
+##### uid
+
+> `readonly` **uid**: `string`
+
+The entity's uid.
+
+***
+
+### CancelBakeResult
+
+The answer to `cancelBake`.
+
+#### Properties
+
+##### cancelled
+
+> `readonly` **cancelled**: `boolean`
+
+Whether a bake was running (it now fails as `cancelled`).
+
+***
+
 ### ClearEditorLinesParams
 
 The parameters of `clearEditorLines`.
@@ -1472,6 +1702,74 @@ Where the ray starts, in metres: the point under the cursor on the camera's near
 
 ***
 
+### PickRectParams
+
+The parameters of `pickRect`: two opposite corners of a rectangle of the view, in either order,
+in the unit `pick` takes.
+
+#### Properties
+
+##### mode?
+
+> `readonly` `optional` **mode?**: [`PickRectMode`](#pickrectmode-1)
+
+How bounds match the rectangle. Defaults to `"intersect"`.
+
+##### unit
+
+> `readonly` **unit**: [`PickUnit`](#pickunit-1)
+
+The unit of the corners, as for `pick`.
+
+##### x0
+
+> `readonly` **x0**: `number`
+
+One corner's x, from the view's left edge, in `unit`.
+
+##### x1
+
+> `readonly` **x1**: `number`
+
+The opposite corner's x, in `unit`.
+
+##### y0
+
+> `readonly` **y0**: `number`
+
+One corner's y, from the view's top edge, in `unit`.
+
+##### y1
+
+> `readonly` **y1**: `number`
+
+The opposite corner's y, in `unit`.
+
+***
+
+### PickRectResult
+
+The answer to `pickRect`.
+
+#### Properties
+
+##### entities
+
+> `readonly` **entities**: readonly `string`[]
+
+The document entities whose drawn bounds (meshes in 3D; sprites and tilemaps in 2D view mode),
+projected to the view, match the rectangle, in document order. A mesh inside an instanced
+scene counts for its instance root, as with `pick`; an entity that draws nothing is never
+listed. At most [PICK\_RECT\_MAX\_ENTITIES](#pick_rect_max_entities).
+
+##### truncated
+
+> `readonly` **truncated**: `boolean`
+
+True when more entities matched than `entities` lists.
+
+***
+
 ### PickResult
 
 The answer to `pick`.
@@ -1891,7 +2189,10 @@ The parameters of `renderThumbnail`.
 
 The asset: its address, or a reference whose `type` is `"model"` or `"scene"` (a prefab). An
 address alone is typed by its extension: `.glb`/`.gltf` for a model, `.prefab.json` or
-`.scene.json` for a prefab.
+`.scene.json` for a prefab. A host that lists `HostCapability.thumbnailMaterials` also takes
+`"material"` (`.material.json`), one with `thumbnailAtlases` `"spriteatlas"` (`.atlas.json`) and
+one with `thumbnailTextures` `"texture"` (`.png`, `.jpg`, `.jpeg`, `.webp`). Any other asset,
+`.gif`, `.avif` and `.bmp` included, answers `RpcErrorCode.invalidParams`.
 
 ##### format
 
@@ -3498,6 +3799,64 @@ The success answer to `applyOps`.
 
 ***
 
+### BakeCancelCause
+
+> **BakeCancelCause** = *typeof* [`BakeCancelCause`](#bakecancelcause)\[keyof *typeof* [`BakeCancelCause`](#bakecancelcause)\]
+
+The union of the names in `BakeCancelCause`.
+
+***
+
+### BakeFailureReason
+
+> **BakeFailureReason** = *typeof* [`BakeFailureReason`](#bakefailurereason)\[keyof *typeof* [`BakeFailureReason`](#bakefailurereason)\]
+
+The union of the names in `BakeFailureReason`.
+
+***
+
+### BakeLightProbesResponse
+
+> **BakeLightProbesResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`BakeLightProbesResult`](#bakelightprobesresult)\>
+
+The success answer to `bakeLightProbes`.
+
+***
+
+### BakeProgressNotification
+
+> **BakeProgressNotification** = [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`bakeProgress`](#bakeprogress), [`BakeProgressParams`](#bakeprogressparams)\>
+
+Scene host → editor: `bakeProgress`.
+
+***
+
+### BakeSky
+
+> **BakeSky** = [`BakeColor`](#bakecolor) \| \{ `ground`: [`BakeColor`](#bakecolor); `horizon`: [`BakeColor`](#bakecolor); `kind`: `"gradient"`; `sky`: [`BakeColor`](#bakecolor); \} \| \{ `coefficients`: readonly `number`[]; `kind`: `"sh9"`; \}
+
+What rays that hit nothing return, in linear radiance, as core's `LightProbeBakeSky` takes it: a
+colour, a gradient, or nine spherical-harmonic RGB triples (27 numbers in the order
+`Y00, Y1-1, Y10, Y11, Y2-2, Y2-1, Y20, Y21, Y22`, on the world axes, Y up).
+
+***
+
+### BakeSkySource
+
+> **BakeSkySource** = `"request"` \| `"environment"` \| `"none"`
+
+Where a bake's sky came from: the request, the scene's environment, or nowhere (black).
+
+***
+
+### CancelBakeResponse
+
+> **CancelBakeResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`CancelBakeResult`](#cancelbakeresult)\>
+
+The success answer to `cancelBake`.
+
+***
+
 ### ColliderOutlinesResponse
 
 > **ColliderOutlinesResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`ColliderOutlineSet`](#collideroutlineset)\>
@@ -3649,6 +4008,30 @@ Any JSON value. The engine's `JsonValue`.
 
 ***
 
+### LightProbeBakeMethod
+
+> **LightProbeBakeMethod** = *typeof* [`LightProbeBakeMethod`](#lightprobebakemethod)\[keyof *typeof* [`LightProbeBakeMethod`](#lightprobebakemethod)\]
+
+The union of the names in `LightProbeBakeMethod`.
+
+***
+
+### LightProbeBakeNotification
+
+> **LightProbeBakeNotification** = *typeof* [`LightProbeBakeNotification`](#lightprobebakenotification)\[keyof *typeof* [`LightProbeBakeNotification`](#lightprobebakenotification)\]
+
+The union of the names in `LightProbeBakeNotification`.
+
+***
+
+### LightProbeBakeRequest
+
+> **LightProbeBakeRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`bakeLightProbes`](#bakelightprobes-1), [`BakeLightProbesParams`](#bakelightprobesparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`cancelBake`](#cancelbake-1), `Readonly`\<`Record`\<`string`, `never`\>\>\>
+
+Editor → scene host: one of the `LightProbeBakeMethod`s.
+
+***
+
 ### LogLevel
 
 > **LogLevel** = `"debug"` \| `"info"` \| `"warn"` \| `"error"`
@@ -3671,6 +4054,22 @@ The success answer of the `SceneMethod`s that return nothing: `closeScene`, `set
 > **OpenSceneResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`OpenSceneResult`](#opensceneresult)\>
 
 The success answer to `openScene`.
+
+***
+
+### PickRectMode
+
+> **PickRectMode** = *typeof* [`PickRectMode`](#pickrectmode)\[keyof *typeof* [`PickRectMode`](#pickrectmode)\]
+
+The union of the modes in `PickRectMode`.
+
+***
+
+### PickRectResponse
+
+> **PickRectResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`PickRectResult`](#pickrectresult)\>
+
+The success answer to `pickRect`.
 
 ***
 
@@ -3901,7 +4300,7 @@ The union of the names in `SceneOpKind`.
 
 ### SceneRequest
 
-> **SceneRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`openScene`](#openscene), [`OpenSceneParams`](#opensceneparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`closeScene`](#closescene), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`applyOps`](#applyops), [`ApplyOpsParams`](#applyopsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`readBack`](#readback), [`ReadBackParams`](#readbackparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`select`](#select), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGizmo`](#setgizmo), [`SetGizmoParams`](#setgizmoparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`frame`](#frame-1), [`FrameParams`](#frameparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pick`](#pick), [`PickParams`](#pickparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-2), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`getSchemas`](#getschemas), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`describeSettings`](#describesettings), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setViewMode`](#setviewmode), [`SetViewModeParams`](#setviewmodeparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setAnimateMaterials`](#setanimatematerials), [`SetAnimateMaterialsParams`](#setanimatematerialsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`getColliderOutlines`](#getcollideroutlines), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleAnimation`](#sampleanimation), [`SampleAnimationParams`](#sampleanimationparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleSpriteAnimation`](#samplespriteanimation), [`SampleSpriteAnimationParams`](#samplespriteanimationparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGrid`](#setgrid), [`SetGridParams`](#setgridparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setTilemapCells`](#settilemapcells), [`SetTilemapCellsParams`](#settilemapcellsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setEditorLines`](#seteditorlines), [`SetEditorLinesParams`](#seteditorlinesparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`clearEditorLines`](#cleareditorlines), [`ClearEditorLinesParams`](#cleareditorlinesparams)\>
+> **SceneRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`openScene`](#openscene), [`OpenSceneParams`](#opensceneparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`closeScene`](#closescene), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`applyOps`](#applyops), [`ApplyOpsParams`](#applyopsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`readBack`](#readback), [`ReadBackParams`](#readbackparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`select`](#select), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGizmo`](#setgizmo), [`SetGizmoParams`](#setgizmoparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`frame`](#frame-1), [`FrameParams`](#frameparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pick`](#pick), [`PickParams`](#pickparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pickRect`](#pickrect-1), [`PickRectParams`](#pickrectparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-2), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`getSchemas`](#getschemas), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`describeSettings`](#describesettings), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setViewMode`](#setviewmode), [`SetViewModeParams`](#setviewmodeparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setAnimateMaterials`](#setanimatematerials), [`SetAnimateMaterialsParams`](#setanimatematerialsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`getColliderOutlines`](#getcollideroutlines), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleAnimation`](#sampleanimation), [`SampleAnimationParams`](#sampleanimationparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleSpriteAnimation`](#samplespriteanimation), [`SampleSpriteAnimationParams`](#samplespriteanimationparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGrid`](#setgrid), [`SetGridParams`](#setgridparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setTilemapCells`](#settilemapcells), [`SetTilemapCellsParams`](#settilemapcellsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setEditorLines`](#seteditorlines), [`SetEditorLinesParams`](#seteditorlinesparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`clearEditorLines`](#cleareditorlines), [`ClearEditorLinesParams`](#cleareditorlinesparams)\>
 
 Editor → scene host: one of the `SceneMethod`s. `closeScene`, `getSchemas` and `describeSettings`
 take no parameters.
@@ -4080,6 +4479,179 @@ The host cannot apply this op to a live world yet; the editor reopens the scene 
 
 The first ten are `@ignifx/editor-core`'s `OpErrorCode`s, with its meanings, for a world that
 disagrees with the document the op was checked against. The last two are the host's own.
+
+***
+
+### BAKE\_COEFFICIENT\_DIGITS
+
+> `const` **BAKE\_COEFFICIENT\_DIGITS**: `6` = `6`
+
+The significant digits each answered coefficient is rounded to; a coefficient below `1e-6` in
+magnitude is answered as `0`.
+
+***
+
+### BAKE\_DEFAULT\_SPACING
+
+> `const` **BAKE\_DEFAULT\_SPACING**: `2` = `2`
+
+The distance between probes when a request gives neither `counts` nor `spacing`, in metres.
+
+***
+
+### BAKE\_MAX\_COEFFICIENT
+
+> `const` **BAKE\_MAX\_COEFFICIENT**: `1000000000000` = `1e12`
+
+The largest coefficient magnitude a bake answers. A bake whose probes exceed it (lights or a sky
+of absurd intensity) fails as `outOfRange` rather than writing a grid no renderer can use.
+
+***
+
+### BAKE\_MAX\_COUNT\_X
+
+> `const` **BAKE\_MAX\_COUNT\_X**: `1024` = `1024`
+
+The most probes along X (the `.probes.json` format's limit).
+
+***
+
+### BAKE\_MAX\_COUNT\_YZ
+
+> `const` **BAKE\_MAX\_COUNT\_YZ**: `4096` = `4096`
+
+The most probes in one Y × Z slice (the `.probes.json` format's limit).
+
+***
+
+### BAKE\_MAX\_PROBES
+
+> `const` **BAKE\_MAX\_PROBES**: `16384` = `16_384`
+
+The most probes one bake traces. With coefficients rounded to [BAKE\_COEFFICIENT\_DIGITS](#bake_coefficient_digits)
+significant digits and bounded by [BAKE\_MAX\_COEFFICIENT](#bake_max_coefficient), the largest `probes` document is
+under 3 MiB of JSON, inside the editor's 4 MiB message limits.
+
+***
+
+### BAKE\_MAX\_RAYS
+
+> `const` **BAKE\_MAX\_RAYS**: `4096` = `4096`
+
+The most rays per probe (`bakeLightProbes`' own limit).
+
+***
+
+### BAKE\_MAX\_SKIPS
+
+> `const` **BAKE\_MAX\_SKIPS**: `256` = `256`
+
+The most skips an answer lists; the count in `stats.skipped` is never cut.
+
+***
+
+### BAKE\_MAX\_SKY
+
+> `const` **BAKE\_MAX\_SKY**: `1000000` = `1e6`
+
+The largest magnitude of a sky channel or harmonic a request may give.
+
+***
+
+### BAKE\_MAX\_UID\_LENGTH
+
+> `const` **BAKE\_MAX\_UID\_LENGTH**: `128` = `128`
+
+The longest `volume` uid a request may give, in UTF-16 code units.
+
+***
+
+### BAKE\_PROGRESS\_INTERVAL\_MS
+
+> `const` **BAKE\_PROGRESS\_INTERVAL\_MS**: `100` = `100`
+
+The shortest time between two `bakeProgress` notifications, in milliseconds (ten a second).
+
+***
+
+### BAKE\_SPACING\_MAX
+
+> `const` **BAKE\_SPACING\_MAX**: `1000` = `1000`
+
+The largest `spacing` a request may give, in metres.
+
+***
+
+### BAKE\_SPACING\_MIN
+
+> `const` **BAKE\_SPACING\_MIN**: `0.05` = `0.05`
+
+The smallest `spacing` a request may give, in metres.
+
+***
+
+### BakeCancelCause
+
+> `const` **BakeCancelCause**: `object`
+
+What stopped a cancelled bake: `cancelBake`, or a change to the open document (`openScene`,
+`closeScene`, `applyOps`, `setTilemapCells`, an asset reload that rebuilt instances, or a hot
+reload's new defaults), since a bake must not mix the old world with the new.
+
+#### Type Declaration
+
+##### cancelBake
+
+> `readonly` **cancelBake**: `"cancelBake"` = `"cancelBake"`
+
+##### sceneChanged
+
+> `readonly` **sceneChanged**: `"sceneChanged"` = `"sceneChanged"`
+
+***
+
+### BakeFailureReason
+
+> `const` **BakeFailureReason**: `object`
+
+Why `bakeLightProbes` failed, in its error's `data.reason`, with the error code each comes with:
+
+- `unknownEntity` (`RpcErrorCode.unknownEntity`): `volume` names no entity of the open scene;
+- `notAVolume` (`RpcErrorCode.invalidParams`): the entity has no `LightProbeVolume`;
+- `invalidGrid` (`RpcErrorCode.invalidParams`): the grid (from `counts` or `spacing`) is more
+  than a `.probes.json` holds (X ≤ [BAKE\_MAX\_COUNT\_X](#bake_max_count_x), Y × Z ≤ [BAKE\_MAX\_COUNT\_YZ](#bake_max_count_yz)) or
+  more than [BAKE\_MAX\_PROBES](#bake_max_probes), or the volume's transform is not finite;
+- `outOfRange` (`RpcErrorCode.invalidRequest`): a baked coefficient is not finite or above
+  [BAKE\_MAX\_COEFFICIENT](#bake_max_coefficient) (a light of absurd intensity);
+- `busy` (`RpcErrorCode.invalidRequest`): a bake is running; cancel it or wait;
+- `cancelled` (`RpcErrorCode.invalidRequest`): `cancelBake`, or a change to the document, stopped
+  it (`data.cause`).
+
+#### Type Declaration
+
+##### busy
+
+> `readonly` **busy**: `"busy"` = `"busy"`
+
+##### cancelled
+
+> `readonly` **cancelled**: `"cancelled"` = `"cancelled"`
+
+##### invalidGrid
+
+> `readonly` **invalidGrid**: `"invalidGrid"` = `"invalidGrid"`
+
+##### notAVolume
+
+> `readonly` **notAVolume**: `"notAVolume"` = `"notAVolume"`
+
+##### outOfRange
+
+> `readonly` **outOfRange**: `"outOfRange"` = `"outOfRange"`
+
+##### unknownEntity
+
+> `readonly` **unknownEntity**: `"unknownEntity"` = `"unknownEntity"`
 
 ***
 
@@ -4360,6 +4932,16 @@ The optional features a host lists in its `ready` result.
 
 #### Type Declaration
 
+##### bakeLightProbes
+
+> `readonly` **bakeLightProbes**: `"bakeLightProbes"` = `"bakeLightProbes"`
+
+The scene host answers `bakeLightProbes` and `cancelBake` and sends `bakeProgress`
+(`LightProbeBakeMethod`): it bakes a `LightProbeVolume` from its live edit-mode world (prefab
+instances, models, lights, the environment's sky) and answers the `.probes.json` document for
+the editor to write. Additive in 0.3; without it, the host answers both with
+`RpcErrorCode.methodNotFound`.
+
 ##### editorLines
 
 > `readonly` **editorLines**: `"editorLines"` = `"editorLines"`
@@ -4458,6 +5040,14 @@ notifications, the play view as play notifications. Additive in 0.3.
 The scene host picks sprites in 2D view mode (`app.twoD.pickAt` from `@ignifx/2d`); without it,
 `pick` and view clicks in 2D mode resolve through the 3D picker only.
 
+##### pickRect
+
+> `readonly` **pickRect**: `"pickRect"` = `"pickRect"`
+
+The scene host answers `pickRect`: the document entities whose drawn bounds, projected to the
+view, a rectangle of the view covers (a box selection). Additive in 0.3; without it, the scene
+host answers `pickRect` with `RpcErrorCode.methodNotFound`.
+
 ##### playControls
 
 > `readonly` **playControls**: `"playControls"` = `"playControls"`
@@ -4498,6 +5088,23 @@ The scene host answers `sampleSpriteAnimation`: one frame of a clip on an entity
 (additive in 0.3); without it, the scene host answers `sampleSpriteAnimation` with
 `RpcErrorCode.methodNotFound`.
 
+##### thumbnailAtlases
+
+> `readonly` **thumbnailAtlases**: `"thumbnailAtlases"` = `"thumbnailAtlases"`
+
+The scene host's `renderThumbnail` also renders sprite atlases (`.atlas.json`, or a reference
+typed `"spriteatlas"`): the atlas's whole image fitted in the square on a transparent
+background. Listed only with `thumbnails`. Additive in 0.3; without it, an atlas answers
+`RpcErrorCode.invalidParams`.
+
+##### thumbnailMaterials
+
+> `readonly` **thumbnailMaterials**: `"thumbnailMaterials"` = `"thumbnailMaterials"`
+
+The scene host's `renderThumbnail` also renders materials (`.material.json`, or a reference
+typed `"material"`): the material on a sphere under the thumbnail lighting. Listed only with
+`thumbnails`. Additive in 0.3; without it, a material answers `RpcErrorCode.invalidParams`.
+
 ##### thumbnails
 
 > `readonly` **thumbnails**: `"thumbnails"` = `"thumbnails"`
@@ -4505,6 +5112,15 @@ The scene host answers `sampleSpriteAnimation`: one frame of a clip on an entity
 The scene host answers `renderThumbnail`: a model or prefab asset rendered on its own
 (`RenderViewMethod`). From engine ask E8 (additive in 0.3); without it, the host answers it with
 `RpcErrorCode.methodNotFound`.
+
+##### thumbnailTextures
+
+> `readonly` **thumbnailTextures**: `"thumbnailTextures"` = `"thumbnailTextures"`
+
+The scene host's `renderThumbnail` also renders images (`.png`, `.jpg`, `.jpeg`, `.webp`, or
+a reference typed `"texture"`), fitted in the square on a transparent background; `.gif`,
+`.avif` and `.bmp` answer `RpcErrorCode.invalidParams`. Listed only with `thumbnails`.
+Additive in 0.3; without it, an image answers `RpcErrorCode.invalidParams`.
 
 ##### tilemapCells
 
@@ -4525,8 +5141,9 @@ The scene host accepts `setViewMode` with `"2d"`: a 2D editor camera and planar 
 The play controls send `"heartbeat"`, `"playControls"`, `"logRelay"` and `"queryRuntime"`, plus
 `"screenshot"` when the game has a canvas and `"sendInput"` when it has `app.input`. The scene
 host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"`,
-`"pick2d"`, `"gameView"`, `"gameViewOnDemand"`, `"gameViewSize"`, `"gameView2d"`, `"thumbnails"`,
-`"grid"`, `"tilemapCells"`, `"editorLines"` and `"spriteAnimation"` it supports; every
+`"pick2d"`, `"pickRect"`, `"gameView"`, `"gameViewOnDemand"`, `"gameViewSize"`, `"gameView2d"`,
+`"thumbnails"`, `"thumbnailMaterials"`, `"thumbnailAtlases"`, `"thumbnailTextures"`, `"grid"`,
+`"gridOverlay"`, `"tilemapCells"`, `"editorLines"` and `"spriteAnimation"` it supports; every
 `SceneMethod` not tied to one of them is required of a 0.3 scene host.
 
 ***
@@ -4578,6 +5195,89 @@ Host → editor, every [DEFAULT\_HEARTBEAT\_INTERVAL\_MS](#default_heartbeat_int
 > `const` **JSON\_RPC\_VERSION**: `"2.0"` = `"2.0"`
 
 The value of every envelope's `jsonrpc` field.
+
+***
+
+### LightProbeBakeMethod
+
+> `const` **LightProbeBakeMethod**: `object`
+
+Editor → scene host: the light-probe bake methods, answered after `ready`.
+
+#### Type Declaration
+
+##### bakeLightProbes
+
+> `readonly` **bakeLightProbes**: `"bakeLightProbes"` = `"bakeLightProbes"`
+
+Bakes one `LightProbeVolume` and answers [BakeLightProbesResult](#bakelightprobesresult) when it is done. Fails
+with `RpcErrorCode.noScene` while no scene is open, and otherwise with the code and the
+[BakeFailureData](#bakefailuredata) that `BakeFailureReason` lists.
+
+##### cancelBake
+
+> `readonly` **cancelBake**: `"cancelBake"` = `"cancelBake"`
+
+Cancels the running or pending bake, if any; answers [CancelBakeResult](#cancelbakeresult). The bake then
+fails as `cancelled` (cause `cancelBake`), a pending one without running. Takes `{}` or no
+parameters.
+
+#### Remarks
+
+A host lists `HostCapability.bakeLightProbes` when it answers them; one that does not answers
+`RpcErrorCode.methodNotFound`. Both run beside the one-at-a-time queue of the other methods:
+the bake reads the world in a slot of the host's queue, then traces in slices while the queue
+goes on, so the view keeps answering `applyOps`, `pick` and the rest. A document change the host
+handles after the bake has read the world cancels it (`cancelled`, cause `sceneChanged`): a bake
+never mixes the old world with the new, but it may start before a change sent just ahead of it.
+
+***
+
+### LightProbeBakeNotification
+
+> `const` **LightProbeBakeNotification**: `object`
+
+Scene host → editor: the light-probe bake notifications.
+
+#### Type Declaration
+
+##### bakeProgress
+
+> `readonly` **bakeProgress**: `"bakeProgress"` = `"bakeProgress"`
+
+How far the running bake is: [BakeProgressParams](#bakeprogressparams). At most one per
+[BAKE\_PROGRESS\_INTERVAL\_MS](#bake_progress_interval_ms); the first comes once the first probe is baked. The answer to
+`bakeLightProbes` follows the last one.
+
+***
+
+### PICK\_RECT\_MAX\_ENTITIES
+
+> `const` **PICK\_RECT\_MAX\_ENTITIES**: `2000` = `2000`
+
+The most entities a `pickRect` answer lists; past it the answer sets `truncated`.
+
+***
+
+### PickRectMode
+
+> `const` **PickRectMode**: `object`
+
+How `pickRect` matches an entity's projected bounds against the rectangle.
+
+#### Type Declaration
+
+##### contain
+
+> `readonly` **contain**: `"contain"` = `"contain"`
+
+The entity counts only when its projected bounds lie wholly inside the rectangle.
+
+##### intersect
+
+> `readonly` **intersect**: `"intersect"` = `"intersect"`
+
+The entity counts when its projected bounds overlap the rectangle at all.
 
 ***
 
@@ -4842,8 +5542,8 @@ request; one with `HostCapability.gameView2d` renders a `Camera2D` document came
 
 > `readonly` **renderThumbnail**: `"renderThumbnail"` = `"renderThumbnail"`
 
-Renders one model or prefab asset on its own and answers the image: [ThumbnailResult](#thumbnailresult).
-It runs beside the one-at-a-time queue of the other methods, so a thumbnail never holds them
+Renders one model or prefab asset on its own (and, with the matching capabilities, a material,
+a sprite atlas or an image) and answers the image: [ThumbnailResult](#thumbnailresult). It runs beside the one-at-a-time queue of the other methods, so a thumbnail never holds them
 up; thumbnails are answered in the order they were asked for.
 
 ##### setGameView
@@ -5027,6 +5727,13 @@ Opens a scene from the editor's document, replacing any open scene. Answers [Ope
 > `readonly` **pick**: `"pick"` = `"pick"`
 
 Asks which entity is under a point of the view, without selecting it. Answers [PickResult](#pickresult).
+
+##### pickRect
+
+> `readonly` **pickRect**: `"pickRect"` = `"pickRect"`
+
+Asks which entities a rectangle of the view covers, for a box selection, without selecting
+them. Needs `HostCapability.pickRect`. Answers [PickRectResult](#pickrectresult). Additive in 0.3.
 
 ##### readBack
 
@@ -5469,6 +6176,164 @@ The received `params`.
 `value is AssetReloadedParams`
 
 True for `{ address, type, entities }` with a non-empty address and type.
+
+***
+
+### isBakeFailureData()
+
+> **isBakeFailureData**(`value`): `value is BakeFailureData`
+
+Checks the `data` of a failed `bakeLightProbes`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received error `data`.
+
+#### Returns
+
+`value is BakeFailureData`
+
+True for a known reason and, when present, a known cause.
+
+***
+
+### isBakeLightProbesParams()
+
+> **isBakeLightProbesParams**(`value`): `value is BakeLightProbesParams`
+
+Checks the parameters of `bakeLightProbes`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is BakeLightProbesParams`
+
+True for a volume uid of at most [BAKE\_MAX\_UID\_LENGTH](#bake_max_uid_length) and, when given, whole counts
+from 1 or a spacing (not both), a direct-light
+rule, a sky or `null`, rays and a ray length in range.
+
+***
+
+### isBakeLightProbesResult()
+
+> **isBakeLightProbesResult**(`value`): `value is BakeLightProbesResult`
+
+Checks the result of `bakeLightProbes`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is BakeLightProbesResult`
+
+True for a `.probes.json` document, whole-number stats, at most [BAKE\_MAX\_SKIPS](#bake_max_skips)
+skips and a sky source.
+
+***
+
+### isBakeProgressParams()
+
+> **isBakeProgressParams**(`value`): `value is BakeProgressParams`
+
+Checks the parameters of `bakeProgress`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is BakeProgressParams`
+
+True for a volume uid and `0 ≤ done ≤ total`, whole numbers.
+
+***
+
+### isBakeSky()
+
+> **isBakeSky**(`value`): `value is BakeSky`
+
+Checks a sky.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The value to test.
+
+#### Returns
+
+`value is BakeSky`
+
+True for a colour, a gradient of three colours, or 27 harmonics, every channel finite and
+at most [BAKE\_MAX\_SKY](#bake_max_sky) in magnitude.
+
+***
+
+### isCancelBakeParams()
+
+> **isCancelBakeParams**(`value`): `boolean`
+
+Checks the parameters of `cancelBake`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`boolean`
+
+True for none, or an empty object.
+
+***
+
+### isCancelBakeResult()
+
+> **isCancelBakeResult**(`value`): `value is CancelBakeResult`
+
+Checks the result of `cancelBake`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is CancelBakeResult`
+
+True for `{ cancelled: boolean }`.
 
 ***
 
@@ -5925,6 +6790,50 @@ The received `params`.
 `value is PickParams`
 
 True for finite `x` and `y` and a known unit.
+
+***
+
+### isPickRectParams()
+
+> **isPickRectParams**(`value`): `value is PickRectParams`
+
+Checks the parameters of `pickRect`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is PickRectParams`
+
+True for four finite corner coordinates, a known unit and, when present, a known mode.
+
+***
+
+### isPickRectResult()
+
+> **isPickRectResult**(`value`): `value is PickRectResult`
+
+Checks the result of `pickRect`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is PickRectResult`
+
+True for at most [PICK\_RECT\_MAX\_ENTITIES](#pick_rect_max_entities) uids and a boolean `truncated`.
 
 ***
 

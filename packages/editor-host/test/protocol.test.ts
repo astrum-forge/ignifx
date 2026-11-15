@@ -45,6 +45,7 @@ describe("the protocol mirror", () => {
       screenshot: "screenshot",
       viewMode2d: "viewMode2d",
       pick2d: "pick2d",
+      pickRect: "pickRect",
       logRelay: "logRelay",
       hotReloadDefaults: "hotReloadDefaults",
       queryRuntime: "queryRuntime",
@@ -54,11 +55,15 @@ describe("the protocol mirror", () => {
       gameViewSize: "gameViewSize",
       gameView2d: "gameView2d",
       thumbnails: "thumbnails",
+      thumbnailMaterials: "thumbnailMaterials",
+      thumbnailAtlases: "thumbnailAtlases",
+      thumbnailTextures: "thumbnailTextures",
       grid: "grid",
       gridOverlay: "gridOverlay",
       tilemapCells: "tilemapCells",
       editorLines: "editorLines",
       spriteAnimation: "spriteAnimation",
+      bakeLightProbes: "bakeLightProbes",
     });
     expect(page.RenderViewMethod).toEqual({
       setGameView: "setGameView",

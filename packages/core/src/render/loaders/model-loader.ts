@@ -1,5 +1,6 @@
 import { loadGltfFromBytes } from "../../lite/gpu/gltf.js";
 import { assertModelDecodersIncluded, configureDecoders } from "../decoder-urls.js";
+import { readGltfMaterialAlbedos } from "../light-probe-bake-gltf.js";
 import { createModelAsset, MODEL_ASSET_TYPE, MODEL_FILE_EXTENSIONS } from "../model-asset.js";
 import type { AssetLoader, LoaderContext } from "../../assets/types.js";
 import type { ModelAsset } from "../model-asset.js";
@@ -35,7 +36,8 @@ import type { ModelAsset } from "../model-asset.js";
  * `engine._device` (ADR-0002 Validation). So a headless load skips it entirely and produces an
  * asset with no container — the `gpu: null` shape §5 requires — rather than failing. The bytes are
  * still fetched, so a headless test still exercises the address, the manifest, and the byte
- * counters.
+ * counters, and the asset keeps them for `bakeLightProbes`, which reads a model's triangles from
+ * the file because a headless app has no container to read them from.
  */
 
 /**
@@ -58,11 +60,15 @@ export function createModelLoader(): AssetLoader<ModelAsset> {
       const bytes = await ctx.fetchBytes();
       assertModelDecodersIncluded(ctx.app, ctx.address, bytes);
       if (ctx.app.isHeadless) {
-        return createModelAsset(ctx.address, null, null);
+        // The bytes stay with a headless asset: they are what `bakeLightProbes` traces.
+        return createModelAsset(ctx.address, null, null, bytes);
       }
       await configureDecoders(ctx.app);
       const container = await loadGltfFromBytes(ctx.lite.engine, bytes);
-      return createModelAsset(ctx.address, container, ctx.app.lite.scene);
+      const asset = createModelAsset(ctx.address, container, ctx.app.lite.scene);
+      // The file is not kept; its material colours are, for the light-probe bake.
+      asset.recordBakeAlbedos(readGltfMaterialAlbedos(bytes));
+      return asset;
     },
     unload(value: ModelAsset): void {
       value.dispose();

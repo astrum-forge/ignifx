@@ -177,24 +177,34 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
         HostCapability.screenshot,
         HostCapability.viewMode2d,
         HostCapability.pick2d,
+        HostCapability.pickRect,
         HostCapability.logRelay,
         HostCapability.hotReloadDefaults,
         HostCapability.gameView,
         HostCapability.gameViewOnDemand,
         HostCapability.gameViewSize,
         HostCapability.gameView2d,
-        ...(canRenderThumbnails(options) ? [HostCapability.thumbnails] : []),
+        ...(canRenderThumbnails(options)
+          ? [
+              HostCapability.thumbnails,
+              HostCapability.thumbnailMaterials,
+              HostCapability.thumbnailAtlases,
+              HostCapability.thumbnailTextures,
+            ]
+          : []),
         HostCapability.grid,
         HostCapability.gridOverlay,
         HostCapability.tilemapCells,
         HostCapability.editorLines,
         HostCapability.spriteAnimation,
+        HostCapability.bakeLightProbes,
       ]
     : [
         HostCapability.heartbeat,
         HostCapability.logRelay,
         HostCapability.hotReloadDefaults,
         HostCapability.spriteAnimation,
+        HostCapability.bakeLightProbes,
       ];
   let channel: Channel | null = null;
   const scene = new SceneHost({
@@ -203,6 +213,7 @@ export async function startEditorHost(options: EditorHostOptions): Promise<Edito
       channel?.notify(method, params);
     },
     createThumbnailApp: async () => createThumbnailApp(options),
+    ...(options.assets?.fetch === undefined ? {} : { fetchAsset: options.assets.fetch }),
   });
   // The channel opens before the first `await`, so a port posted while the app is created is kept.
   const opened = openChannel({

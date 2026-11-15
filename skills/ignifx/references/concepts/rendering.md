@@ -18,13 +18,13 @@ what they mean.
 | Component               | What it adds                                                                                               | Notes                                                                                                                                                                 |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Camera`                | A view. The **entity's transform is the view**; no follow logic                                            | `projection`, `fov` (degrees), `orthographicSize`, `near`/`far`, `viewport`, `clearColor`, `priority`                                                                 |
-| `Light`                 | `"directional" \| "point" \| "spot" \| "hemispheric"`                                                      | `shadows` is a sub-record; only directional and spot lights can cast (`IGX-0703`)                                                                                     |
+| `Light`                 | `"directional" \| "point" \| "spot" \| "hemispheric"`                                                      | `shadows` is a sub-record; only directional and spot lights can cast (`IGX-0703`); `bakeMode` (`@beta`) `"realtime"`, `"mixed"` or `"baked"` (not drawn)              |
 | `MeshRenderer`          | One clone of a `MeshAsset`, drawn with a `MaterialAsset`                                                   | `allowMultiple`; several renderers per entity are fine; `lightmap` samples a baked `.lightmap.json` on a static entity (`@beta`)                                      |
 | `InstancedMeshRenderer` | One mesh drawn many times from a caller-owned matrix slab                                                  | `setMatrices(slab, count)`, `setColors`, `setCount`, `markDirty(range)`; `capacity`, `gpuCulling` and `lod` are fixed before `app.start()` (`IGX-0717`)               |
 | `Model`                 | One instance of a loaded glTF, cloned under the entity's node                                              | `nodes`, `attachToNode(name, entity)`, `materialOverrides`; `animations`/`skeletons` are `@beta`                                                                      |
 | `Environment`           | Image-based lighting, skybox, fog, image processing, clear colour                                          | **One per world**; a second enabled one logs `IGX-0705` and the most recent wins. Assign a different **loaded** handle to `environment` to switch lighting at runtime |
 | `PostProcessStack`      | `bloom`, `smaa`, `imageProcessing`, as one frame-graph chain; `contactShadows`, `ssgi` before it           | Needs `features.postProcessing`, or it logs `IGX-0710` and does nothing (§3)                                                                                          |
-| `ReflectionProbe`       | A cube map of the scene around the entity that nearby shiny PBR materials reflect (`@beta`)                | `size`, `refreshMode` (`once`/`onDemand`/`everyFrame`), `boxProjection`, `cullingMask`, `refresh()`; needs a loaded `Environment` and a canvas                        |
+| `ReflectionProbe`       | A cube map of the scene around the entity that nearby shiny PBR materials reflect (`@beta`)                | `size`, `refreshMode` (`once`/`onDemand`/`everyFrame`), `boxProjection`, `blendDistance`, `cullingMask`, `refresh()`; needs a loaded `Environment` and a canvas       |
 | `LightProbeVolume`      | Lights PBR materials with a baked `.probes.json` grid instead of the environment's diffuse light (`@beta`) | `probes` (a `LightProbeAsset`), `intensity`; needs a loaded `Environment` and a canvas; the most recent enabled volume wins                                           |
 
 - `Camera` also answers geometry questions: `screenToRay(x, y)`, `worldToScreen(point, out)`,
@@ -122,7 +122,9 @@ on [`baked-lighting.md`](baked-lighting.md); the bullets below are each componen
   lit PBR material reflects the nearest probe instead of the `Environment`: a probe whose
   `boxProjection` box (full size in metres, centred on the probe) holds the mesh wins, then the
   closest. `boxProjection` also makes reflections line up with the room's walls (parallax); `null`
-  makes them look infinitely far away. A material shared by several meshes follows the first. Use
+  makes them look infinitely far away. A material shared by several meshes follows the first. With
+  two or more box probes and a `blendDistance` above 0 on one, every lit PBR material blends them per
+  pixel instead (at most four overlapping at a point). Use
   `refreshMode: "once"` (default) and call `probe.refresh()` after the static scene changes;
   `"everyFrame"` costs six extra scene passes a frame: use it for one probe, on desktop at the
   `high` quality tier only. Diffuse light still comes from the
@@ -172,13 +174,12 @@ on [`baked-lighting.md`](baked-lighting.md); the bullets below are each componen
 
 - `await bakeLightProbes(world, { origin, cellSize, counts, rays?, maxDistance?, sky?, directLight?,
 signal?, onProgress? })` bakes a grid on the CPU, headless included, yielding to the host about every 8 ms: one bounce, from the world's lights and the triangles of every
-  enabled `MeshRenderer` whose mesh was built with `MeshAsset.fromData`. Primitives and glTF models
-  keep their triangles on the GPU and are skipped (`result.skipped` counts them). `sky` is the
-  linear radiance of rays that hit nothing; hemispheric lights add to it. `directLight` defaults to
-  `"exclude"`: directional, point and spot lights keep lighting the scene in real time, so the probes
-  hold only their bounce (the light they put on surfaces, shadowed, coming back) and the sky, not
-  their direct light, which would count it twice. Pass `"include"` when those lights will be
-  disabled at run time. Save `result.data` with
+  enabled `MeshRenderer` (data or primitives) and of every `Model` a headless app loaded; what it
+  cannot read is listed in `result.skips`. `sky` is a linear colour, a gradient or SH9 harmonics
+  for rays that hit nothing. Every light bounces; a probe also stores a light's direct light only
+  when its `Light.bakeMode` is `"baked"` (such a light no longer draws at run time), or when it is
+  `"realtime"` and `directLight` is `"include"`, so a light that keeps drawing is never counted
+  twice — hemispheric lights included. Save `result.data` with
   `writeLightProbeFile` or use it at once with `createLightProbeAsset`. It costs probes × rays ×
   triangles, so bake small scenes, in a tool or at load, never per frame. A bad grid, `rays` outside
   1–4096 or a non-finite `maxDistance` is `IGX-0734` before any tracing; an aborted `signal` rejects
@@ -209,9 +210,9 @@ signal?, onProgress? })` bakes a grid on the CPU, headless included, yielding to
   copy of its material, so later edits of the shared `MaterialAsset` do not reach it, and it shows
   the lightmap one frame after the copy is made. A `.lightmap.json` (`format: "ignifx-lightmap"`)
   names the `texture` by asset address and may give per-entity-uid `entries` of
-  `{ scale: { x, y }, offset: { x, y } }` for an atlas; they are validated, but only the identity is
-  drawn until the atlas transform lands (anything else logs `IGX-0735` and samples the whole
-  texture). `createLightmapAsset(app, texture)` publishes one built in code. The GPU code loads only
+  `{ scale: { x, y }, offset: { x, y } }` for an atlas: the renderer samples it at
+  `uv2 · scale + offset`, which needs `uv2: true` and a mesh with `uvs2` (otherwise `IGX-0735` and
+  the whole texture), one pipeline variant per distinct placement. `createLightmapAsset(app, texture)` publishes one built in code. The GPU code loads only
   once a renderer samples a lightmap; `rendering.features.lightmaps` is not needed. ignifx bakes no
   lightmaps yet: the editor's baker will write them.
 

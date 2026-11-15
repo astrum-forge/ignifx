@@ -3,21 +3,25 @@
  * editor's document (`docs/architecture/17-editor-host.md` §6).
  */
 
-import { Camera, canonicalizeNumber, createRay, isIgnifxError, validateSceneFile } from "@ignifx/core";
+import { Camera, canonicalizeNumber, createRay, isIgnifxError, Mat4, validateSceneFile } from "@ignifx/core";
 import { clipHostText, hotReloadedParamsOf, messageOf, relayAppReports } from "../app-reports.js";
 import { InvalidParamsError, Reply, RpcFailure } from "../channel.js";
+import { drawnMeshes } from "../lite/drawn-meshes.js";
 import { createEditorView } from "../lite/gizmos.js";
 import {
+  BakeCancelCause,
   GizmoMode,
   GizmoSpace,
   HostCapability,
   EDITOR_LINES_MAX_SETS,
   isApplyOpsParams,
+  isCancelBakeParams,
   isClearEditorLinesParams,
   isEntitySelection,
   isFrameParams,
   isOpenSceneParams,
   isPickParams,
+  isPickRectParams,
   isReadBackParams,
   isSetAnimateMaterialsParams,
   isSetEditorLinesParams,
@@ -25,6 +29,9 @@ import {
   isSetGridParams,
   isSetTilemapCellsParams,
   isSetViewModeParams,
+  LightProbeBakeMethod,
+  PICK_RECT_MAX_ENTITIES,
+  PickRectMode,
   PickUnit,
   RenderViewMethod,
   RpcErrorCode,
@@ -48,7 +55,9 @@ import { EditorGrid } from "./editor-grid.js";
 import { GameView } from "./game-view.js";
 import { GizmoDragRelay } from "./gizmo-drag.js";
 import { DEFAULT_GRID_SIZE, groundGridPlacement, screenGridPlacement } from "./grid.js";
+import { LightProbeBaker } from "./light-probe-baker.js";
 import { applyOps, reloadInstance } from "./ops.js";
+import { projectBox, projectBox2D, rectInBackingPixels, rectMatches, unionProjected } from "./rect-pick.js";
 import { sampleAnimation } from "./sample-animation.js";
 import { sampleSpriteAnimation } from "./sample-sprite-animation.js";
 import { schemaSet } from "./schemas.js";
@@ -61,6 +70,7 @@ import {
   CAMERA_2D_TYPE,
   componentTypeOf,
   DEFAULT_PIXELS_PER_UNIT,
+  drawnBoxes2D,
   isCamera2DLike,
   levelCamera2D,
   sceneViewMode,
@@ -73,6 +83,7 @@ import type { EditorAssetChange, PendingReload } from "./asset-reload.js";
 import type { ChangedDefaults } from "./defaults.js";
 import type { ViewClick } from "./editor-camera.js";
 import type { GridPlacement } from "./grid.js";
+import type { ProjectedBox } from "./rect-pick.js";
 import type { PickRayMembers } from "./view-math.js";
 import type { EditorLinesView, LineColor } from "../lite/editor-lines.js";
 import type { EditorView, ViewDrag, WorldBounds } from "../lite/gizmos.js";
@@ -82,13 +93,14 @@ import type {
   GizmoSnap,
   HostErrorParams,
   PickParams,
+  PickRectResult,
   PickResult,
   SchemaSet,
   ScreenshotResult,
   SetTilemapCellsResult,
   SettingsSet,
 } from "../protocol/index.js";
-import type { App, Entity, HotReloadReport, RenderSurface, SceneInstance } from "@ignifx/core";
+import type { App, Entity, FetchLike, HotReloadReport, RenderSurface, SceneInstance } from "@ignifx/core";
 
 /** The name of the host's persistent scene instance for its own objects. */
 export const EDITOR_SCENE_NAME = "editor";
@@ -115,6 +127,8 @@ export interface SceneHostOptions {
    * `HostCapability.thumbnails`.
    */
   readonly createThumbnailApp?: () => Promise<App>;
+  /** The `fetch` the project's assets are read through, for atlas and image thumbnails; `globalThis.fetch` when absent. */
+  readonly fetchAsset?: FetchLike;
 }
 
 /** A point of the view, in backing-store pixels. */
@@ -161,9 +175,18 @@ export class SceneHost {
 
   /**
    * The methods the channel runs beside its queue: `renderThumbnail`, which renders on a stage app
-   * of its own, never reads the document, and can take a couple of seconds.
+   * of its own, never reads the document, and can take a couple of seconds; `bakeLightProbes`,
+   * which reads the world in a queue slot of its own and then traces beside the queue; and
+   * `cancelBake`, which must not wait behind the requests a bake lets through.
    */
-  readonly unqueued: ReadonlySet<string> = new Set<string>([RenderViewMethod.renderThumbnail]);
+  readonly unqueued: ReadonlySet<string> = new Set<string>([
+    RenderViewMethod.renderThumbnail,
+    LightProbeBakeMethod.bakeLightProbes,
+    LightProbeBakeMethod.cancelBake,
+  ]);
+
+  /** The light-probe bake, with `HostCapability.bakeLightProbes`. */
+  readonly #baker: LightProbeBaker | null;
 
   readonly #notify: (method: string, params: unknown) => void;
 
@@ -260,6 +283,9 @@ export class SceneHost {
     if (has(HostCapability.screenshot)) {
       methods.set(SceneMethod.screenshot, async (params) => this.#screenshot(params));
     }
+    if (has(HostCapability.pickRect)) {
+      methods.set(SceneMethod.pickRect, (params) => this.#pickRect(params));
+    }
     if (has(HostCapability.gameView)) {
       methods.set(RenderViewMethod.setGameView, (params) => {
         this.#requireMirror(RenderViewMethod.setGameView);
@@ -274,7 +300,11 @@ export class SceneHost {
     const createThumbnailApp = options.createThumbnailApp;
     this.#thumbnails =
       has(HostCapability.thumbnails) && createThumbnailApp !== undefined
-        ? new ThumbnailRenderer(createThumbnailApp)
+        ? new ThumbnailRenderer(
+            createThumbnailApp,
+            (address) => this.#requireApp().assets.resolveUrl(address),
+            options.fetchAsset ?? (async (input, init) => fetch(input, init)),
+          )
         : null;
     const thumbnails = this.#thumbnails;
     if (thumbnails !== null) {
@@ -286,6 +316,27 @@ export class SceneHost {
     if (has(HostCapability.grid)) {
       methods.set(SceneMethod.setGrid, (params) => this.#setGrid(params));
     }
+    this.#baker = has(HostCapability.bakeLightProbes) ? new LightProbeBaker(options.notify) : null;
+    const baker = this.#baker;
+    if (baker !== null) {
+      methods.set(LightProbeBakeMethod.bakeLightProbes, async (params) => {
+        const mirror = this.#requireMirror(LightProbeBakeMethod.bakeLightProbes);
+        // Reserved at once, so `cancelBake` can cancel it before its slot runs. The world is read in
+        // a queue slot (a change handled after it cancels the bake as `sceneChanged`); the trace
+        // then runs beside the queue. Wrapped, so the slot does not wait for the bake.
+        const app = this.#requireApp();
+        const pending = baker.reserve();
+        const started = await this.#serial(() => ({ bake: baker.start(app, mirror.scene, params, pending) }));
+        return started.bake.finished;
+      });
+      methods.set(LightProbeBakeMethod.cancelBake, (params) => {
+        this.#requireMirror(LightProbeBakeMethod.cancelBake);
+        if (!isCancelBakeParams(params)) {
+          throw new InvalidParamsError("cancelBake takes {} or no parameters.");
+        }
+        return { cancelled: baker.cancel(BakeCancelCause.cancelBake) };
+      });
+    }
     if (has(HostCapability.tilemapCells)) {
       methods.set(SceneMethod.setTilemapCells, (params) => this.#setTilemapCells(params));
     }
@@ -294,11 +345,26 @@ export class SceneHost {
       methods.set(SceneMethod.clearEditorLines, (params) => this.#clearEditorLines(params));
     }
     // The channel answers one request at a time; an asset reload's rebuild queues with them. An
-    // unqueued method runs at once: the thumbnail renderer keeps its own queue.
+    // unqueued method runs at once: the thumbnail renderer keeps its own queue. A method that
+    // changes the document cancels a running bake first: a bake never mixes the old world and the new.
+    const changesDocument = new Set<string>([
+      SceneMethod.openScene,
+      SceneMethod.closeScene,
+      SceneMethod.applyOps,
+      SceneMethod.setTilemapCells,
+    ]);
     this.methods = new Map(
       [...methods].map(([name, handler]) => [
         name,
-        this.unqueued.has(name) ? handler : async (params: unknown) => this.#serial(() => handler(params)),
+        this.unqueued.has(name)
+          ? handler
+          : async (params: unknown) =>
+              this.#serial(() => {
+                if (changesDocument.has(name)) {
+                  this.#sceneChanged();
+                }
+                return handler(params);
+              }),
       ]),
     );
   }
@@ -467,6 +533,9 @@ export class SceneHost {
     return this.#serial(async () => {
       const index = handle.type === SCENE_ASSET_TYPE ? mirror.index() : null;
       const roots = index === null ? [] : instancesOf(app, index, address);
+      if (roots.length > 0) {
+        this.#sceneChanged();
+      }
       const entities = await this.#rebuildInstances(app, mirror, roots, address, { address });
       this.#setSelection(this.#selection);
       const params: AssetReloadedParams = { address, type: handle.type, entities };
@@ -527,6 +596,7 @@ export class SceneHost {
     if (app === null || mirror === null || index === null) {
       return;
     }
+    this.#sceneChanged();
     applyDefaults(app, mirror, index, changed, (component, typeId, error) => {
       const params: HostErrorParams = {
         code: isIgnifxError(error) ? error.code : null,
@@ -564,6 +634,12 @@ export class SceneHost {
     this.#view = null;
     this.#gameView.dispose();
     this.#thumbnails?.dispose();
+    this.#baker?.dispose();
+  }
+
+  /** Cancels a running bake: the document is about to change. */
+  #sceneChanged(): void {
+    this.#baker?.cancel(BakeCancelCause.sceneChanged);
   }
 
   // -------------------------------------------------------------------------------------------
@@ -737,6 +813,103 @@ export class SceneHost {
       throw new InvalidParamsError('pick takes { x, y, unit: "css" | "backing" }.');
     }
     return this.#pickAt(params);
+  }
+
+  /**
+   * `pickRect`: which document entities a rectangle of the view covers. Changes nothing.
+   *
+   * @param params - `{ x0, y0, x1, y1, unit, mode? }`.
+   * @returns The entities in document order, capped, and whether the cap cut the list.
+   */
+  #pickRect(params: unknown): PickRectResult {
+    const mirror = this.#requireMirror(SceneMethod.pickRect);
+    if (!isPickRectParams(params)) {
+      throw new InvalidParamsError(
+        'pickRect takes { x0, y0, x1, y1, unit: "css" | "backing", mode?: "intersect" | "contain" }.',
+      );
+    }
+    const none: PickRectResult = { entities: [], truncated: false };
+    const canvas = this.#canvas;
+    const index = mirror.index();
+    const scene = mirror.scene;
+    if (canvas === null || index === null || scene === null) {
+      return none;
+    }
+    const rect = rectInBackingPixels(params, viewSurfaceOf(canvas));
+    if (rect === null) {
+      return none;
+    }
+    const boxes = this.#projectedBoxes(index.entities, scene, canvas.width, canvas.height);
+    const mode = params.mode ?? PickRectMode.intersect;
+    const entities: string[] = [];
+    let truncated = false;
+    for (const uid of index.entities.keys()) {
+      const box = boxes.get(uid);
+      if (box === undefined || !rectMatches(box, rect, mode)) {
+        continue;
+      }
+      if (entities.length === PICK_RECT_MAX_ENTITIES) {
+        truncated = true;
+        break;
+      }
+      entities.push(uid);
+    }
+    return { entities, truncated };
+  }
+
+  /**
+   * Each document entity's drawn bounds, projected to the view: the meshes under it through the
+   * editor camera (a mesh inside an instance counts for the instance root) and, in 2D view mode,
+   * its sprites and tilemaps through the 2D editor camera. A `"sprite"`-mode 2D project in 2D view
+   * mode projects no meshes, as its pick does not.
+   *
+   * @param entities - The document entities, by uid.
+   * @param scene - The document's scene instance.
+   * @param width - The view's backing-store width.
+   * @param height - The view's backing-store height.
+   * @returns The projected box of each entity that draws something on screen or off it.
+   */
+  #projectedBoxes(
+    entities: ReadonlyMap<string, Entity>,
+    scene: SceneInstance,
+    width: number,
+    height: number,
+  ): Map<string, ProjectedBox> {
+    const app = this.#requireApp();
+    const boxes = new Map<string, ProjectedBox>();
+    const camera2D = this.#viewMode === ViewMode.twoD ? this.#camera2D : null;
+    if (camera2D !== null) {
+      const view = camera2D.view();
+      for (const { entity, box } of drawnBoxes2D(app, scene)) {
+        const uid = this.#mirror?.documentEntityOf(entity)?.uid;
+        if (uid !== undefined) {
+          const projected = { rect: projectBox2D(view, box), clipped: false };
+          boxes.set(uid, unionProjected(boxes.get(uid), projected));
+        }
+      }
+      if (twoDServiceOf(app)?.mode === "sprite") {
+        return boxes;
+      }
+    }
+    const eye = this.#eye;
+    if (eye === null) {
+      return boxes;
+    }
+    const viewMatrix = eye.getViewMatrix(new Mat4()).elements;
+    const projection = eye.getProjectionMatrix(new Mat4()).elements;
+    const owners = new Map<object, string>();
+    for (const [uid, entity] of entities) {
+      if (!entity.isDestroyed) {
+        owners.set(entity.transform.lite, uid);
+      }
+    }
+    for (const mesh of drawnMeshes(app.lite, owners)) {
+      const projected = projectBox(mesh, mesh.world, viewMatrix, projection, width, height);
+      if (projected !== null) {
+        boxes.set(mesh.owner, unionProjected(boxes.get(mesh.owner), projected));
+      }
+    }
+    return boxes;
   }
 
   /**

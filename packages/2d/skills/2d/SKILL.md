@@ -3,7 +3,7 @@ name: 2d
 description: Builds 2D games in ignifx with @ignifx/2d: Camera2D, SpriteRenderer, SpriteAnimator, texture atlases, Tilemap rendering and import, sorting layers and Y-sort, pixel-perfect cameras, parallax layers, sprite batches, and 2D picking. Use when adding or editing sprites, sprite animation, tilemaps, atlases, sorting layers, sprite batches, or a 2D camera in an ignifx project, or when the user mentions @ignifx/2d, Camera2D, SpriteRenderer, SpriteBatch, or Tilemap.
 license: Apache-2.0
 metadata:
-  ignifx-version: "0.19.0"
+  ignifx-version: "0.20.0"
 ---
 
 # @ignifx/2d
@@ -21,7 +21,7 @@ parse, `SpriteAnimator` advances on the stepped clock. Only the pixels need a GP
 
 ## Environment
 
-- Engine: ignifx `0.19.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
+- Engine: ignifx `0.20.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
 - WebGPU only, browser and Electron. Babylon Lite `1.34.0` is a peer dependency.
 - Register it like any extension; nothing happens at import time.
 
@@ -241,6 +241,28 @@ Flipped tiles fail the command (a cell has no flip) unless `--drop-flips` import
 ```sh
 ignifx import tilemap assets/maps/cave.tmj --pixels-per-unit 16
 ignifx import tilemap assets/maps/world.ldtk assets/levels --pixels-per-unit 16
+```
+
+A tool that imports maps itself, such as an editor, calls the same conversion without the file
+system: `convertTilemapSource` from `@ignifx/cli/tilemap` takes the map's text, its kind (`"tiled"` or
+`"ldtk"`) and an async `read(path)` for the files the map references (`null` when absent), and
+returns the documents to write (`{ path, kind, json, text }`) and the warnings. Paths are POSIX
+paths relative to one base folder; `options.path` is the map's. It refuses a map past
+`DEFAULT_TILEMAP_SOURCE_LIMITS` (map and layer cells, layers, tiles per tileset, levels, JSON
+length) with `IGX-1408` before allocating for it; `options.limits` changes the caps.
+
+```ts ignore-check
+import { convertTilemapSource } from "@ignifx/cli/tilemap";
+import { readFile } from "node:fs/promises";
+
+const text = await readFile("assets/maps/cave.tmj", "utf8");
+const { documents, warnings } = await convertTilemapSource(
+  text,
+  "tiled",
+  async (path) => readFile(path, "utf8").catch(() => null),
+  { path: "assets/maps/cave.tmj", pixelsPerUnit: 16 },
+);
+// Each document's path is relative to the base folder, here the working directory.
 ```
 
 ### A map built in code

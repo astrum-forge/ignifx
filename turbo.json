@@ -63,7 +63,10 @@
     },
     "@ignifx/cli#docs:api": {
       "dependsOn": ["build"],
-      "outputs": ["$TURBO_ROOT$/skills/ignifx/references/api/cli.md"],
+      "outputs": [
+        "$TURBO_ROOT$/skills/ignifx/references/api/cli.md",
+        "$TURBO_ROOT$/skills/ignifx/references/api/cli-tilemap.md"
+      ],
       "outputLogs": "errors-only"
     },
     "@ignifx/core#docs:api": {

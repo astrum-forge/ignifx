@@ -83,6 +83,152 @@ export interface AssetReloadedParams {
 }
 
 // @public
+export const BAKE_COEFFICIENT_DIGITS = 6;
+
+// @public
+export const BAKE_DEFAULT_SPACING = 2;
+
+// @public
+export const BAKE_MAX_COEFFICIENT = 0xe8d4a51000;
+
+// @public
+export const BAKE_MAX_COUNT_X = 1024;
+
+// @public
+export const BAKE_MAX_COUNT_YZ = 4096;
+
+// @public
+export const BAKE_MAX_PROBES = 16384;
+
+// @public
+export const BAKE_MAX_RAYS = 4096;
+
+// @public
+export const BAKE_MAX_SKIPS = 256;
+
+// @public
+export const BAKE_MAX_SKY = 1e6;
+
+// @public
+export const BAKE_MAX_UID_LENGTH = 128;
+
+// @public
+export const BAKE_PROGRESS_INTERVAL_MS = 100;
+
+// @public
+export const BAKE_SPACING_MAX = 1e3;
+
+// @public
+export const BAKE_SPACING_MIN = .05;
+
+// @public
+export const BakeCancelCause: {
+    readonly cancelBake: "cancelBake";
+    readonly sceneChanged: "sceneChanged";
+};
+
+// @public
+export type BakeCancelCause = (typeof BakeCancelCause)[keyof typeof BakeCancelCause];
+
+// @public
+export interface BakeColor {
+    // (undocumented)
+    readonly a?: number;
+    // (undocumented)
+    readonly b: number;
+    // (undocumented)
+    readonly g: number;
+    // (undocumented)
+    readonly r: number;
+}
+
+// @public
+export interface BakeFailureData {
+    readonly cause?: BakeCancelCause;
+    readonly reason: BakeFailureReason;
+}
+
+// @public
+export const BakeFailureReason: {
+    readonly unknownEntity: "unknownEntity";
+    readonly notAVolume: "notAVolume";
+    readonly invalidGrid: "invalidGrid";
+    readonly outOfRange: "outOfRange";
+    readonly busy: "busy";
+    readonly cancelled: "cancelled";
+};
+
+// @public
+export type BakeFailureReason = (typeof BakeFailureReason)[keyof typeof BakeFailureReason];
+
+// @public
+export interface BakeLightProbesParams {
+    readonly counts?: readonly [number, number, number];
+    readonly directLight?: "include" | "exclude";
+    readonly maxDistance?: number;
+    readonly rays?: number;
+    readonly sky?: BakeSky | null;
+    readonly spacing?: number;
+    readonly volume: string;
+}
+
+// @public
+export type BakeLightProbesResponse = RpcSuccessResponse<BakeLightProbesResult>;
+
+// @public
+export interface BakeLightProbesResult {
+    readonly probes: JsonObject;
+    readonly skips: readonly BakeSkip[];
+    readonly sky: BakeSkySource;
+    readonly stats: {
+        readonly probes: number;
+        readonly triangles: number;
+        readonly skipped: number;
+        readonly ms: number;
+    };
+}
+
+// @public
+export type BakeProgressNotification = RpcNotificationWithParams<typeof LightProbeBakeNotification.bakeProgress, BakeProgressParams>;
+
+// @public
+export interface BakeProgressParams {
+    readonly done: number;
+    readonly total: number;
+    readonly volume: string;
+}
+
+// @public
+export interface BakeSkip {
+    readonly component: string;
+    readonly entity: string;
+    readonly reason: string;
+    readonly uid: string;
+}
+
+// @public
+export type BakeSky = BakeColor | {
+    readonly kind: "gradient";
+    readonly sky: BakeColor;
+    readonly horizon: BakeColor;
+    readonly ground: BakeColor;
+} | {
+    readonly kind: "sh9";
+    readonly coefficients: readonly number[];
+};
+
+// @public
+export type BakeSkySource = "request" | "environment" | "none";
+
+// @public
+export type CancelBakeResponse = RpcSuccessResponse<CancelBakeResult>;
+
+// @public
+export interface CancelBakeResult {
+    readonly cancelled: boolean;
+}
+
+// @public
 export interface ClearEditorLinesParams {
     readonly id?: string;
 }
@@ -358,6 +504,7 @@ export const HostCapability: {
     readonly screenshot: "screenshot";
     readonly viewMode2d: "viewMode2d";
     readonly pick2d: "pick2d";
+    readonly pickRect: "pickRect";
     readonly logRelay: "logRelay";
     readonly hotReloadDefaults: "hotReloadDefaults";
     readonly queryRuntime: "queryRuntime";
@@ -367,11 +514,15 @@ export const HostCapability: {
     readonly gameViewSize: "gameViewSize";
     readonly gameView2d: "gameView2d";
     readonly thumbnails: "thumbnails";
+    readonly thumbnailMaterials: "thumbnailMaterials";
+    readonly thumbnailAtlases: "thumbnailAtlases";
+    readonly thumbnailTextures: "thumbnailTextures";
     readonly grid: "grid";
     readonly gridOverlay: "gridOverlay";
     readonly tilemapCells: "tilemapCells";
     readonly editorLines: "editorLines";
     readonly spriteAnimation: "spriteAnimation";
+    readonly bakeLightProbes: "bakeLightProbes";
 };
 
 // @public
@@ -457,6 +608,27 @@ export function isApplyOpsResult(value: unknown): value is ApplyOpsResult;
 export function isAssetReloadedParams(value: unknown): value is AssetReloadedParams;
 
 // @public
+export function isBakeFailureData(value: unknown): value is BakeFailureData;
+
+// @public
+export function isBakeLightProbesParams(value: unknown): value is BakeLightProbesParams;
+
+// @public
+export function isBakeLightProbesResult(value: unknown): value is BakeLightProbesResult;
+
+// @public
+export function isBakeProgressParams(value: unknown): value is BakeProgressParams;
+
+// @public
+export function isBakeSky(value: unknown): value is BakeSky;
+
+// @public
+export function isCancelBakeParams(value: unknown): boolean;
+
+// @public
+export function isCancelBakeResult(value: unknown): value is CancelBakeResult;
+
+// @public
 export function isClearEditorLinesParams(value: unknown): value is ClearEditorLinesParams;
 
 // @public
@@ -515,6 +687,12 @@ export function isOpenSceneResult(value: unknown): value is OpenSceneResult;
 
 // @public
 export function isPickParams(value: unknown): value is PickParams;
+
+// @public
+export function isPickRectParams(value: unknown): value is PickRectParams;
+
+// @public
+export function isPickRectResult(value: unknown): value is PickRectResult;
 
 // @public
 export function isPickResult(value: unknown): value is PickResult;
@@ -665,6 +843,26 @@ export type JsonPath = readonly (string | number)[];
 // @public
 export type JsonValue = string | number | boolean | null | JsonArray | JsonObject;
 
+// @public
+export const LightProbeBakeMethod: {
+    readonly bakeLightProbes: "bakeLightProbes";
+    readonly cancelBake: "cancelBake";
+};
+
+// @public
+export type LightProbeBakeMethod = (typeof LightProbeBakeMethod)[keyof typeof LightProbeBakeMethod];
+
+// @public
+export const LightProbeBakeNotification: {
+    readonly bakeProgress: "bakeProgress";
+};
+
+// @public
+export type LightProbeBakeNotification = (typeof LightProbeBakeNotification)[keyof typeof LightProbeBakeNotification];
+
+// @public
+export type LightProbeBakeRequest = RpcRequestWithParams<typeof LightProbeBakeMethod.bakeLightProbes, BakeLightProbesParams> | RpcRequestWithParams<typeof LightProbeBakeMethod.cancelBake, Readonly<Record<string, never>>>;
+
 // @beta
 export function listenForEditorPlayControls(options: EditorPlayControlsOptions): EditorPlayConnector;
 
@@ -707,6 +905,9 @@ export interface OpenSceneResult {
 }
 
 // @public
+export const PICK_RECT_MAX_ENTITIES = 2e3;
+
+// @public
 export interface PickParams {
     readonly unit: PickUnit;
     readonly x: number;
@@ -717,6 +918,34 @@ export interface PickParams {
 export interface PickRay {
     readonly direction: Vec3;
     readonly origin: Vec3;
+}
+
+// @public
+export const PickRectMode: {
+    readonly intersect: "intersect";
+    readonly contain: "contain";
+};
+
+// @public
+export type PickRectMode = (typeof PickRectMode)[keyof typeof PickRectMode];
+
+// @public
+export interface PickRectParams {
+    readonly mode?: PickRectMode;
+    readonly unit: PickUnit;
+    readonly x0: number;
+    readonly x1: number;
+    readonly y0: number;
+    readonly y1: number;
+}
+
+// @public
+export type PickRectResponse = RpcSuccessResponse<PickRectResult>;
+
+// @public
+export interface PickRectResult {
+    readonly entities: readonly string[];
+    readonly truncated: boolean;
 }
 
 // @public
@@ -1137,6 +1366,7 @@ export const SceneMethod: {
     readonly setGizmo: "setGizmo";
     readonly frame: "frame";
     readonly pick: "pick";
+    readonly pickRect: "pickRect";
     readonly screenshot: "screenshot";
     readonly getSchemas: "getSchemas";
     readonly describeSettings: "describeSettings";
@@ -1203,7 +1433,7 @@ export const SceneOpKind: {
 export type SceneOpKind = (typeof SceneOpKind)[keyof typeof SceneOpKind];
 
 // @public
-export type SceneRequest = RpcRequestWithParams<typeof SceneMethod.openScene, OpenSceneParams> | RpcRequest<typeof SceneMethod.closeScene, never> | RpcRequestWithParams<typeof SceneMethod.applyOps, ApplyOpsParams> | RpcRequestWithParams<typeof SceneMethod.readBack, ReadBackParams> | RpcRequestWithParams<typeof SceneMethod.select, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.setGizmo, SetGizmoParams> | RpcRequestWithParams<typeof SceneMethod.frame, FrameParams> | RpcRequestWithParams<typeof SceneMethod.pick, PickParams> | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams> | RpcRequest<typeof SceneMethod.getSchemas, never> | RpcRequest<typeof SceneMethod.describeSettings, never> | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams> | RpcRequestWithParams<typeof SceneMethod.setAnimateMaterials, SetAnimateMaterialsParams> | RpcRequestWithParams<typeof SceneMethod.getColliderOutlines, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.sampleAnimation, SampleAnimationParams> | RpcRequestWithParams<typeof SceneMethod.sampleSpriteAnimation, SampleSpriteAnimationParams> | RpcRequestWithParams<typeof SceneMethod.setGrid, SetGridParams> | RpcRequestWithParams<typeof SceneMethod.setTilemapCells, SetTilemapCellsParams> | RpcRequestWithParams<typeof SceneMethod.setEditorLines, SetEditorLinesParams> | RpcRequestWithParams<typeof SceneMethod.clearEditorLines, ClearEditorLinesParams>;
+export type SceneRequest = RpcRequestWithParams<typeof SceneMethod.openScene, OpenSceneParams> | RpcRequest<typeof SceneMethod.closeScene, never> | RpcRequestWithParams<typeof SceneMethod.applyOps, ApplyOpsParams> | RpcRequestWithParams<typeof SceneMethod.readBack, ReadBackParams> | RpcRequestWithParams<typeof SceneMethod.select, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.setGizmo, SetGizmoParams> | RpcRequestWithParams<typeof SceneMethod.frame, FrameParams> | RpcRequestWithParams<typeof SceneMethod.pick, PickParams> | RpcRequestWithParams<typeof SceneMethod.pickRect, PickRectParams> | RpcRequestWithParams<typeof SceneMethod.screenshot, ScreenshotParams> | RpcRequest<typeof SceneMethod.getSchemas, never> | RpcRequest<typeof SceneMethod.describeSettings, never> | RpcRequestWithParams<typeof SceneMethod.setViewMode, SetViewModeParams> | RpcRequestWithParams<typeof SceneMethod.setAnimateMaterials, SetAnimateMaterialsParams> | RpcRequestWithParams<typeof SceneMethod.getColliderOutlines, EntitySelection> | RpcRequestWithParams<typeof SceneMethod.sampleAnimation, SampleAnimationParams> | RpcRequestWithParams<typeof SceneMethod.sampleSpriteAnimation, SampleSpriteAnimationParams> | RpcRequestWithParams<typeof SceneMethod.setGrid, SetGridParams> | RpcRequestWithParams<typeof SceneMethod.setTilemapCells, SetTilemapCellsParams> | RpcRequestWithParams<typeof SceneMethod.setEditorLines, SetEditorLinesParams> | RpcRequestWithParams<typeof SceneMethod.clearEditorLines, ClearEditorLinesParams>;
 
 // @public
 export interface SchemaDescription {

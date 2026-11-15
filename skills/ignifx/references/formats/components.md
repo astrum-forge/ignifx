@@ -6,7 +6,7 @@
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `animator` | `asset` | `null` | The .animator.json document this state machine runs. |
+| `animator` | `asset (animator)` | `null` | The .animator.json document this state machine runs. |
 | `defaultLayer` | `str` | `""` | The layer play() and currentState() use when given no name. |
 | `speed` | `f32` | `1` | A multiplier on every state's own rate. |
 | `updateWhenPaused` | `bool` | `false` | Whether the animator keeps advancing while app.pause() holds. |
@@ -25,7 +25,7 @@ A sound attached to an entity: which clip, which bus, how loud, how many at once
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `clip` | `asset` | `null` | The sound to play. |
+| `clip` | `asset (audio)` | `null` | The sound to play. |
 | `bus` | `str` | `"SFX"` | Which mixer bus this source routes into. |
 | `volume` | `f32` | `1` | The sound's own linear gain. |
 | `pitch` | `f32` | `1` | Playback rate; takes effect on the next play(). |
@@ -38,6 +38,9 @@ A sound attached to an entity: which clip, which bus, how loud, how many at once
 | `rolloff` | `f32` | `1` | How steeply the sound falls off with distance. |
 | `distanceModel` | `enum` | `"inverse"` | Which attenuation curve to use. |
 | `cone` | `record` | `{"innerAngle":360,"outerAngle":360,"outerVolume":0}` | Directionality of a spatial source; 360/360 is omnidirectional. |
+| `cone.innerAngle` | `f32` | `360` | Full-volume cone angle, in degrees. |
+| `cone.outerAngle` | `f32` | `360` | Outer cone angle, in degrees. |
+| `cone.outerVolume` | `f32` | `0` | Gain outside the outer cone. |
 | `pan` | `f32` | `0` | Stereo pan of a non-spatial source. |
 
 ## Billboard (`ignifx/Billboard`)
@@ -55,8 +58,11 @@ A box collision shape, sized in local units and scaled by the entity.
 |---|---|---|---|
 | `center` | `vec3` | `[0,0,0]` |  |
 | `isTrigger` | `bool` | `false` |  |
-| `material` | `asset` | `null` |  |
+| `material` | `asset (physicsmaterial)` | `null` |  |
 | `inlineMaterial` | `optional` | `null` |  |
+| `inlineMaterial.friction` | `f32` | `0.6` |  |
+| `inlineMaterial.staticFriction` | `f32` | `0.6` |  |
+| `inlineMaterial.restitution` | `f32` | `0` |  |
 | `layerOverride` | `str` | `""` |  |
 | `size` | `vec3` | `[1,1,1]` |  |
 
@@ -68,8 +74,10 @@ An axis-aligned box, sized in local metres and scaled by the entity.
 |---|---|---|---|
 | `offset` | `vec2` | `[0,0]` |  |
 | `isTrigger` | `bool` | `false` |  |
-| `material` | `asset` | `null` |  |
+| `material` | `asset (physicsmaterial)` | `null` |  |
 | `inlineMaterial` | `optional` | `null` |  |
+| `inlineMaterial.friction` | `f32` | `0.6` |  |
+| `inlineMaterial.restitution` | `f32` | `0` |  |
 | `frictionCombine` | `enum` | `"average"` |  |
 | `restitutionCombine` | `enum` | `"average"` |  |
 | `oneWay` | `bool` | `false` |  |
@@ -88,6 +96,10 @@ The camera an entity renders the world through; the entity's transform is the vi
 | `near` | `f32` | `0.1` | Near clip plane, in metres. |
 | `far` | `f32` | `1000` | Far clip plane, in metres. |
 | `viewport` | `record` | `{"x":0,"y":0,"width":1,"height":1}` | Normalized viewport; y is measured from the bottom. |
+| `viewport.x` | `f32` | `0` |  |
+| `viewport.y` | `f32` | `0` |  |
+| `viewport.width` | `f32` | `1` |  |
+| `viewport.height` | `f32` | `1` |  |
 | `clearColor` | `optional` | `null` | Overrides the scene clear colour while this camera renders. |
 | `priority` | `i32` | `0` | The enabled camera with the highest priority renders. |
 
@@ -116,8 +128,11 @@ A capsule collision shape standing along X, Y, or Z.
 |---|---|---|---|
 | `center` | `vec3` | `[0,0,0]` |  |
 | `isTrigger` | `bool` | `false` |  |
-| `material` | `asset` | `null` |  |
+| `material` | `asset (physicsmaterial)` | `null` |  |
 | `inlineMaterial` | `optional` | `null` |  |
+| `inlineMaterial.friction` | `f32` | `0.6` |  |
+| `inlineMaterial.staticFriction` | `f32` | `0.6` |  |
+| `inlineMaterial.restitution` | `f32` | `0` |  |
 | `layerOverride` | `str` | `""` |  |
 | `radius` | `f32` | `0.5` |  |
 | `height` | `f32` | `2` |  |
@@ -131,8 +146,10 @@ A capsule standing along X or Y.
 |---|---|---|---|
 | `offset` | `vec2` | `[0,0]` |  |
 | `isTrigger` | `bool` | `false` |  |
-| `material` | `asset` | `null` |  |
+| `material` | `asset (physicsmaterial)` | `null` |  |
 | `inlineMaterial` | `optional` | `null` |  |
+| `inlineMaterial.friction` | `f32` | `0.6` |  |
+| `inlineMaterial.restitution` | `f32` | `0` |  |
 | `frictionCombine` | `enum` | `"average"` |  |
 | `restitutionCombine` | `enum` | `"average"` |  |
 | `oneWay` | `bool` | `false` |  |
@@ -181,8 +198,10 @@ A circle; the larger scale axis wins.
 |---|---|---|---|
 | `offset` | `vec2` | `[0,0]` |  |
 | `isTrigger` | `bool` | `false` |  |
-| `material` | `asset` | `null` |  |
+| `material` | `asset (physicsmaterial)` | `null` |  |
 | `inlineMaterial` | `optional` | `null` |  |
+| `inlineMaterial.friction` | `f32` | `0.6` |  |
+| `inlineMaterial.restitution` | `f32` | `0` |  |
 | `frictionCombine` | `enum` | `"average"` |  |
 | `restitutionCombine` | `enum` | `"average"` |  |
 | `oneWay` | `bool` | `false` |  |
@@ -197,8 +216,11 @@ A cylinder collision shape standing along Y.
 |---|---|---|---|
 | `center` | `vec3` | `[0,0,0]` |  |
 | `isTrigger` | `bool` | `false` |  |
-| `material` | `asset` | `null` |  |
+| `material` | `asset (physicsmaterial)` | `null` |  |
 | `inlineMaterial` | `optional` | `null` |  |
+| `inlineMaterial.friction` | `f32` | `0.6` |  |
+| `inlineMaterial.staticFriction` | `f32` | `0.6` |  |
+| `inlineMaterial.restitution` | `f32` | `0` |  |
 | `layerOverride` | `str` | `""` |  |
 | `radius` | `f32` | `0.5` |  |
 | `height` | `f32` | `2` |  |
@@ -211,8 +233,10 @@ An open chain of line segments — a platformer's ground contour.
 |---|---|---|---|
 | `offset` | `vec2` | `[0,0]` |  |
 | `isTrigger` | `bool` | `false` |  |
-| `material` | `asset` | `null` |  |
+| `material` | `asset (physicsmaterial)` | `null` |  |
 | `inlineMaterial` | `optional` | `null` |  |
+| `inlineMaterial.friction` | `f32` | `0.6` |  |
+| `inlineMaterial.restitution` | `f32` | `0` |  |
 | `frictionCombine` | `enum` | `"average"` |  |
 | `restitutionCombine` | `enum` | `"average"` |  |
 | `oneWay` | `bool` | `false` |  |
@@ -225,12 +249,22 @@ The world's image-based lighting, skybox, fog, image processing, and clear colou
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `environment` | `asset` | `null` | The .env image-based lighting to install. |
+| `environment` | `asset (environment)` | `null` | The .env image-based lighting to install. |
 | `rotation` | `f32` | `0` | Rotation of the environment around world Y, in degrees. |
 | `blur` | `f32` | `0` | How blurred the visible skybox is, 0 to 1. Reflections and lighting are not blurred. |
 | `skybox` | `record` | `{"enabled":true,"size":20}` | The background, as the installed .environment.json declared it. Read-only in practice. |
+| `skybox.enabled` | `bool` | `true` | Whether a skybox is drawn; set it in the .environment.json. |
+| `skybox.size` | `f32` | `20` | The skybox cube's size in metres; set it in the .environment.json. |
 | `fog` | `record` | `{"mode":"none","color":[0.784314,0.784314,0.784314,1],"density":0.01,"start":10,"end":100}` | Distance fog. |
+| `fog.mode` | `enum` | `"none"` | Fog falloff, or none. |
+| `fog.color` | `color` | `[0.784314,0.784314,0.784314,1]` | The fog's sRGB colour. |
+| `fog.density` | `f32` | `0.01` | Density, for the exponential modes. |
+| `fog.start` | `f32` | `10` | Where linear fog begins, in metres. |
+| `fog.end` | `f32` | `100` | Where linear fog reaches full strength, in metres. |
 | `imageProcessing` | `record` | `{"exposure":1,"contrast":1,"toneMapping":"none"}` | Exposure, contrast, and tone mapping. Recompiles PBR pipelines when it changes. |
+| `imageProcessing.exposure` | `f32` | `1` | Exposure multiplier. |
+| `imageProcessing.contrast` | `f32` | `1` | Contrast multiplier. |
+| `imageProcessing.toneMapping` | `enum` | `"none"` | The tone-mapping curve. |
 | `clearColor` | `optional` | `null` | The sRGB colour the scene is cleared to, through imageProcessing; null leaves the rendering.clearColor setting. |
 
 ## First person controller (`ignifx/FirstPersonController`)
@@ -269,8 +303,11 @@ A terrain collision shape built from a regular grid of height samples.
 |---|---|---|---|
 | `center` | `vec3` | `[0,0,0]` |  |
 | `isTrigger` | `bool` | `false` |  |
-| `material` | `asset` | `null` |  |
+| `material` | `asset (physicsmaterial)` | `null` |  |
 | `inlineMaterial` | `optional` | `null` |  |
+| `inlineMaterial.friction` | `f32` | `0.6` |  |
+| `inlineMaterial.staticFriction` | `f32` | `0.6` |  |
+| `inlineMaterial.restitution` | `f32` | `0` |  |
 | `layerOverride` | `str` | `""` |  |
 | `heights` | `array` | `[]` |  |
 | `samplesX` | `u32` | `2` |  |
@@ -283,7 +320,7 @@ Pixel-space text drawn by Babylon Lite, anchored to a corner of the render targe
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `font` | `asset` | `null` | The TTF or OTF the glyphs come from. |
+| `font` | `asset (font)` | `null` | The TTF or OTF the glyphs come from. |
 | `text` | `str` | `""` | The literal string to draw; ignored when i18nKey is set. |
 | `i18nKey` | `str` | `""` | A translation key looked up in app.i18n; wins over text. |
 | `fontSize` | `f32` | `32` | The em size, in render-target pixels. |
@@ -302,7 +339,7 @@ Draws one mesh many times from a caller-owned matrix slab, in a single draw call
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `mesh` | `asset` | `null` | The geometry template every instance draws. |
+| `mesh` | `asset (mesh)` | `null` | The geometry template every instance draws. |
 | `materials` | `array` | `[]` | Index 0 draws; empty uses the default material. |
 | `capacity` | `u32` | `1024` | The largest instance count; fixed once the scene is registered. |
 | `gpuCulling` | `bool` | `true` | Cull instances on the GPU; fixed once the scene is registered. The lod partner needs it. |
@@ -311,6 +348,9 @@ Draws one mesh many times from a caller-owned matrix slab, in a single draw call
 | `renderOrder` | `i32` | `0` | Sort key within the opaque or transparent phase; lower draws first. |
 | `pickable` | `bool` | `false` | Whether picking considers the instances; a hit names the instance it hit. |
 | `lod` | `optional` | `null` | An optional coarse mesh for far instances; draws only while gpuCulling is on. |
+| `lod.mesh` | `asset (mesh)` | `null` | The coarse mesh drawn beyond the switch distance. |
+| `lod.distance` | `f32` | `40` | Camera distance, in metres, at which an instance switches. |
+| `lod.band` | `f32` | `6` | Width of the per-instance dither window centred on the distance. |
 
 ## Light (`ignifx/Light`)
 
@@ -326,8 +366,20 @@ A directional, point, spot, or hemispheric light, with optional shadow casting.
 | `spotExponent` | `f32` | `2` | A spot light's falloff exponent; higher is sharper. |
 | `groundColor` | `color` | `[0,0,0,1]` | A hemispheric light's sRGB colour from below. |
 | `shadows` | `record` | `{"enabled":false,"technique":"pcf","mapSize":1024,"bias":0.00005,"normalBias":0,"darkness":0,"cascades":4,"maxDistance":0,"stabilizeCascades":false,"cascadeLambda":0.5,"cascadeBlend":0.1}` | Shadow casting; point and hemispheric lights cannot cast (IGX-0703). |
+| `shadows.enabled` | `bool` | `false` | Whether this light casts shadows. |
+| `shadows.technique` | `enum` | `"pcf"` | Directional lights only; spot lights use PCF. |
+| `shadows.mapSize` | `u32` | `1024` | Shadow map resolution, in texels per side. |
+| `shadows.bias` | `f32` | `0.00005` | Depth bias applied while sampling. |
+| `shadows.normalBias` | `f32` | `0` | Offset along the surface normal, PCF only. |
+| `shadows.darkness` | `f32` | `0` | How dark a fully shadowed texel is. |
+| `shadows.cascades` | `u32` | `4` | Cascade count, CSM only. |
+| `shadows.maxDistance` | `f32` | `0` | Shadow distance in metres; 0 takes Lite's default. |
+| `shadows.stabilizeCascades` | `bool` | `false` | CSM only: a stable cascade fit, so shadow edges do not shimmer as the camera moves. |
+| `shadows.cascadeLambda` | `f32` | `0.5` | CSM only: cascade split spacing, 0 even to 1 logarithmic (more detail near the camera). |
+| `shadows.cascadeBlend` | `f32` | `0.1` | CSM only: the fraction of a cascade that fades into the next; 0 shows hard seams. |
 | `includeOnly` | `array` | `[]` | Light only these entities' renderers. |
 | `exclude` | `array` | `[]` | Never light these entities' renderers. |
+| `bakeMode` | `enum` | `"realtime"` | Baked lighting: realtime and mixed draw at run time (a probe bake keeps their bounce); baked draws only through the bake. |
 
 ## LightProbeVolume (`ignifx/LightProbeVolume`)
 
@@ -335,7 +387,7 @@ Lights PBR materials with a baked light-probe grid instead of the environment's 
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `probes` | `asset` | `null` | The baked .probes.json grid. |
+| `probes` | `asset (lightprobes)` | `null` | The baked .probes.json grid. |
 | `intensity` | `f32` | `1` | A multiplier on the probes' light. |
 
 ## LOD group (`ignifx/LodGroup`)
@@ -343,6 +395,8 @@ Lights PBR materials with a baked light-probe grid instead of the environment's 
 | Field | Kind | Default | Description |
 |---|---|---|---|
 | `levels` | `array` | `[]` | The levels, nearest first. |
+| `levels[].distance` | `f32` | `10` | Beyond this distance, in metres, the level takes over. |
+| `levels[].renderer` | `componentRef` | `null` | The renderer this level draws. |
 | `hysteresis` | `f32` | `0.1` | How far past a threshold a switch waits, as a fraction. |
 
 ## MeshCollider (`ignifx/MeshCollider`)
@@ -353,10 +407,13 @@ A triangle-mesh or convex-hull shape built from real geometry; needs a GPU app.
 |---|---|---|---|
 | `center` | `vec3` | `[0,0,0]` |  |
 | `isTrigger` | `bool` | `false` |  |
-| `material` | `asset` | `null` |  |
+| `material` | `asset (physicsmaterial)` | `null` |  |
 | `inlineMaterial` | `optional` | `null` |  |
+| `inlineMaterial.friction` | `f32` | `0.6` |  |
+| `inlineMaterial.staticFriction` | `f32` | `0.6` |  |
+| `inlineMaterial.restitution` | `f32` | `0` |  |
 | `layerOverride` | `str` | `""` |  |
-| `mesh` | `asset` | `null` |  |
+| `mesh` | `asset (mesh)` | `null` |  |
 | `convex` | `bool` | `false` |  |
 | `includeChildren` | `bool` | `true` |  |
 
@@ -366,13 +423,18 @@ Draws one clone of a mesh asset with a material.
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `mesh` | `asset` | `null` | The geometry template to clone. |
+| `mesh` | `asset (mesh)` | `null` | The geometry template to clone. |
 | `materials` | `array` | `[]` | One per submesh; empty uses the default material. |
 | `castShadows` | `bool` | `true` | Whether this mesh is rendered into shadow maps. |
 | `receiveShadows` | `bool` | `true` | Whether shadow maps darken this mesh. |
 | `renderOrder` | `i32` | `0` | Sort key within the opaque or transparent phase; lower draws first. |
 | `pickable` | `bool` | `true` | Whether picking considers this mesh at all. |
 | `lightmap` | `optional` | `null` | A baked lightmap; drawn only on a static entity with a PBR material. |
+| `lightmap.asset` | `asset (lightmap)` | `null` | The baked .lightmap.json to sample. |
+| `lightmap.mode` | `enum` | `"add"` | add adds the baked light to the shading; shadowmap multiplies the shading by it. |
+| `lightmap.level` | `f32` | `1` | A multiplier on the lightmap sample. |
+| `lightmap.gamma` | `bool` | `false` | Decode the sample from sRGB to linear; off for a texture already decoded. |
+| `lightmap.uv2` | `bool` | `true` | Sample with the mesh's second UV set; off uses the first. |
 
 ## Model (`ignifx/Model`)
 
@@ -380,7 +442,7 @@ One instance of a loaded glTF, cloned under the entity's node.
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `model` | `asset` | `null` | The glTF template to instantiate. |
+| `model` | `asset (model)` | `null` | The glTF template to instantiate. |
 | `materialOverrides` | `map` | `{}` | Replaces a glTF material, by its name. |
 | `castShadows` | `bool` | `true` | Whether the instance is rendered into shadow maps. |
 | `receiveShadows` | `bool` | `true` | Whether shadow maps darken the instance. |
@@ -478,7 +540,7 @@ The particles project settings section.
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `definition` | `asset` | `null` | The .particles.json this system plays. |
+| `definition` | `asset (particles)` | `null` | The .particles.json this system plays. |
 | `playOnAwake` | `bool` | `true` | Play the first frame the system is enabled, if the definition agrees. |
 | `seed` | `u32` | `0` | The emission seed; 0 uses the definition's, and 0 there picks at random. |
 
@@ -488,8 +550,8 @@ Draws a .particles.json effect as sprites on a sorting layer.
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `definition` | `asset` | `null` | The .particles.json this system plays. |
-| `atlas` | `asset` | `null` | The atlas whose frames the particles draw. |
+| `definition` | `asset (particles)` | `null` | The .particles.json this system plays. |
+| `atlas` | `asset (spriteatlas)` | `null` | The atlas whose frames the particles draw. |
 | `playOnAwake` | `bool` | `true` | Play the first frame the system is enabled, if the definition agrees. |
 | `seed` | `u32` | `0` | The emission seed; 0 uses the definition's, and 0 there picks at random. |
 | `sortingLayer` | `str` | `"Default"` | Which sorting layer the particles draw on. |
@@ -509,7 +571,7 @@ Binds an entity to an input actions document and one device slot, for local mult
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `actions` | `asset` | `null` |  |
+| `actions` | `asset (inputactions)` | `null` |  |
 | `deviceSlot` | `i32` | `0` |  |
 | `scheme` | `str` | `""` |  |
 
@@ -521,8 +583,10 @@ The convex hull of a point list, in local metres.
 |---|---|---|---|
 | `offset` | `vec2` | `[0,0]` |  |
 | `isTrigger` | `bool` | `false` |  |
-| `material` | `asset` | `null` |  |
+| `material` | `asset (physicsmaterial)` | `null` |  |
 | `inlineMaterial` | `optional` | `null` |  |
+| `inlineMaterial.friction` | `f32` | `0.6` |  |
+| `inlineMaterial.restitution` | `f32` | `0` |  |
 | `frictionCombine` | `enum` | `"average"` |  |
 | `restitutionCombine` | `enum` | `"average"` |  |
 | `oneWay` | `bool` | `false` |  |
@@ -536,11 +600,45 @@ Bloom, SMAA, image processing, and custom .post.wgsl effects, inserted into the 
 | Field | Kind | Default | Description |
 |---|---|---|---|
 | `bloom` | `record` | `{"enabled":false,"order":0,"weight":0.15,"kernel":64,"threshold":0.9,"exposure":1,"scale":0.5,"intensity":0.1,"radius":0.7,"hdrThreshold":0}` | Bloom. With rendering.hdr on, HDR bloom on the linear scene colour replaces the LDR pass and reads intensity, radius and hdrThreshold; without it, the other fields apply. |
+| `bloom.enabled` | `bool` | `false` | Whether the glow pass runs. |
+| `bloom.order` | `i32` | `0` | Position in the chain; lower runs first. |
+| `bloom.weight` | `f32` | `0.15` | How strongly the glow is mixed back in. |
+| `bloom.kernel` | `u32` | `64` | Blur kernel width, in pixels. |
+| `bloom.threshold` | `f32` | `0.9` | The luminance above which a pixel glows. |
+| `bloom.exposure` | `f32` | `1` | Exposure applied while extracting highlights. |
+| `bloom.scale` | `f32` | `0.5` | Fraction of full resolution the blur runs at. |
+| `bloom.intensity` | `f32` | `0.1` | HDR bloom only: how much glow is mixed into the frame. |
+| `bloom.radius` | `f32` | `0.7` | HDR bloom only: how far the glow spreads, from tight (0) to wide (1). |
+| `bloom.hdrThreshold` | `f32` | `0` | HDR bloom only: linear luminance below which nothing glows; 0 lets every pixel glow by its energy. |
 | `smaa` | `record` | `{"enabled":false,"order":1,"threshold":0.05,"maxSearchSteps":16,"diagonalDetection":false,"cornerDetection":false}` | SMAA anti-aliasing. Needs a single-sample source. |
+| `smaa.enabled` | `bool` | `false` | Whether subpixel morphological anti-aliasing runs. |
+| `smaa.order` | `i32` | `1` | Position in the chain; lower runs first. |
+| `smaa.threshold` | `f32` | `0.05` | The luma difference that counts as an edge. |
+| `smaa.maxSearchSteps` | `u32` | `16` | How far the pattern search runs along an edge. |
+| `smaa.diagonalDetection` | `bool` | `false` | Detect 45-degree patterns. |
+| `smaa.cornerDetection` | `bool` | `false` | Attenuate corner patterns. |
 | `imageProcessing` | `record` | `{"enabled":false,"order":2}` | Exposure, contrast, and tone mapping as a pass — the alternative to Environment. |
+| `imageProcessing.enabled` | `bool` | `false` | Whether a full-screen grading pass runs. |
+| `imageProcessing.order` | `i32` | `2` | Position in the chain; lower runs first. |
 | `custom` | `array` | `[]` | Custom full-screen WGSL effects, ordered among the built-ins by order. |
+| `custom[].shader` | `asset (shader)` | `null` | The .post.wgsl whose mainFragment runs full-screen. |
+| `custom[].enabled` | `bool` | `true` | Whether the effect runs. |
+| `custom[].order` | `i32` | `10` | Position in the chain; lower runs first. |
+| `custom[].values` | `custom` | `{}` | Overrides of the file's declared uniform defaults, by declared name. |
+| `custom[].textures` | `map` | `{}` | Textures for the file's declared samplers. |
 | `contactShadows` | `record` | `{"enabled":false,"intensity":0.6,"length":0.3,"thickness":0.35,"samples":8}` | Short shadows where objects meet, towards the main directional light. Runs on the scene colour before the chain; needs rendering.features.postProcessing. |
+| `contactShadows.enabled` | `bool` | `false` | Whether screen-space contact shadows run. |
+| `contactShadows.intensity` | `f32` | `0.6` | How dark a contact gets. |
+| `contactShadows.length` | `f32` | `0.3` | How far each ray marches towards the light, in world units. |
+| `contactShadows.thickness` | `f32` | `0.35` | Assumed thickness behind each depth sample, in world units. |
+| `contactShadows.samples` | `u32` | `8` | March steps per pixel. |
 | `ssgi` | `record` | `{"enabled":false,"intensity":1,"radius":2,"samples":8,"halfResolution":true,"environmentDiffuse":0.5}` | One bounce of the lit scene colour (beta, desktop tier). Runs on the scene colour before the chain; needs rendering.features.postProcessing. |
+| `ssgi.enabled` | `bool` | `false` | Whether screen-space global illumination runs (beta, desktop tier). |
+| `ssgi.intensity` | `f32` | `1` | How strongly the bounced light is added. |
+| `ssgi.radius` | `f32` | `2` | How far each ray marches, in world units. |
+| `ssgi.samples` | `u32` | `8` | March steps per ray. |
+| `ssgi.halfResolution` | `bool` | `true` | Trace at half resolution. A change rebuilds the pass. |
+| `ssgi.environmentDiffuse` | `f32` | `0.5` | How much of the environment's diffuse light remains while SSGI runs, so the bounce is not counted twice. Needs rendering.hdr or the materialPlugins feature. |
 
 ## Projectile (`ignifx/Projectile`)
 
@@ -561,6 +659,7 @@ Captures the scene around it into a cube map that nearby PBR materials reflect.
 | `size` | `u32` | `128` | Cube face size in pixels, rounded down to a power of two. Larger is sharper and slower to capture. Quality tiers cap it (low 64, medium 128, high 256). |
 | `refreshMode` | `enum` | `"once"` | once: capture when ready and on refresh(); onDemand: only on refresh(); everyFrame: every frame (costly; one probe; the low and medium quality tiers treat it as once). |
 | `boxProjection` | `optional` | `null` | Full size in metres of the box, centred on the probe, that reflections are projected onto; null for none. |
+| `blendDistance` | `f32` | `0` | How far inside its box, in metres, the probe fades out where it overlaps another box probe; 0 for no blending. Needs boxProjection. |
 | `cullingMask` | `layerMask` | `[]` | The layers the probe captures; empty captures every layer. |
 | `near` | `f32` | `0.1` | Near clip distance of the capture, in metres. |
 | `far` | `f32` | `1000` | Far clip distance of the capture, in metres. |
@@ -575,6 +674,9 @@ Makes an entity's colliders a dynamic, kinematic, or static Havok body.
 | `mass` | `f32` | `1` |  |
 | `startAsleep` | `bool` | `false` |  |
 | `freezeRotation` | `record` | `{"x":false,"y":false,"z":false}` |  |
+| `freezeRotation.x` | `bool` | `false` |  |
+| `freezeRotation.y` | `bool` | `false` |  |
+| `freezeRotation.z` | `bool` | `false` |  |
 | `interpolation` | `enum` | `"interpolate"` |  |
 | `collisionEvents` | `enum` | `"auto"` |  |
 | `kinematicSync` | `enum` | `"teleport"` |  |
@@ -612,8 +714,11 @@ A sphere collision shape; the largest scale axis wins.
 |---|---|---|---|
 | `center` | `vec3` | `[0,0,0]` |  |
 | `isTrigger` | `bool` | `false` |  |
-| `material` | `asset` | `null` |  |
+| `material` | `asset (physicsmaterial)` | `null` |  |
 | `inlineMaterial` | `optional` | `null` |  |
+| `inlineMaterial.friction` | `f32` | `0.6` |  |
+| `inlineMaterial.staticFriction` | `f32` | `0.6` |  |
+| `inlineMaterial.restitution` | `f32` | `0` |  |
 | `layerOverride` | `str` | `""` |  |
 | `radius` | `f32` | `0.5` |  |
 
@@ -623,7 +728,7 @@ Plays a clip of atlas frames on ignifx's clock, respecting timeScale and pause.
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `animations` | `asset` | `null` | The .spriteanim.json document holding the clips. |
+| `animations` | `asset (spriteanimation)` | `null` | The .spriteanim.json document holding the clips. |
 | `defaultClip` | `str` | `""` | Which clip to start on; empty plays the document's first. |
 | `playOnAwake` | `bool` | `true` | Start the default clip as soon as the document has loaded. |
 | `speed` | `f32` | `1` | A multiplier on each clip's own frame rate. |
@@ -646,7 +751,7 @@ One sprite drawn from one frame of one atlas, on one sorting layer.
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `sprite` | `asset` | `null` | The atlas this sprite draws a frame of. |
+| `sprite` | `asset (spriteatlas)` | `null` | The atlas this sprite draws a frame of. |
 | `frameName` | `str` | `""` | The atlas frame drawn, by name; empty draws the first frame. |
 | `color` | `color` | `[1,1,1,1]` | Tint multiplied into every texel. |
 | `flipX` | `bool` | `false` | Mirror horizontally. |
@@ -662,7 +767,7 @@ One sprite drawn from one frame of one atlas, on one sorting layer.
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `definition` | `asset` | `null` | The .terrain.json this terrain draws. |
+| `definition` | `asset (terrain)` | `null` | The .terrain.json this terrain draws. |
 | `lodBias` | `f32` | `1` | Multiplies every LOD threshold; above 1 keeps detail further out. |
 | `receiveShadows` | `bool` | `true` | Whether shadow maps darken the terrain. |
 | `frustumCulling` | `bool` | `true` | Whether chunks outside the camera's frustum are hidden. |
@@ -671,9 +776,9 @@ One sprite drawn from one frame of one atlas, on one sorting layer.
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `mesh` | `asset` | `null` | The mesh every instance draws. |
-| `material` | `asset` | `null` | The material, normally from foliageMaterialDefinition. |
-| `lodMesh` | `asset` | `null` | A cheaper mesh drawn past lodDistance; null for none. |
+| `mesh` | `asset (mesh)` | `null` | The mesh every instance draws. |
+| `material` | `asset (material)` | `null` | The material, normally from foliageMaterialDefinition. |
+| `lodMesh` | `asset (mesh)` | `null` | A cheaper mesh drawn past lodDistance; null for none. |
 | `lodDistance` | `f32` | `40` | Metres past which the LOD mesh takes over. |
 | `density` | `f32` | `0.5` | Instances per square metre. |
 | `layers` | `array` | `[]` | Splat layers to place on; empty places everywhere. |
@@ -742,7 +847,7 @@ A grid of tile ids with cell arithmetic and merged collision geometry.
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `map` | `asset` | `null` | The .tilemap.json document. |
+| `map` | `asset (tilemap)` | `null` | The .tilemap.json document. |
 | `chunkSize` | `u32` | `32` | How many cells one render and collision chunk spans. |
 | `cellSizeOverride` | `f32` | `0` | Metres per cell, overriding the document's own; 0 uses it. |
 
@@ -754,8 +859,10 @@ The merged collision surface of a Tilemap, rebuilt when its tiles change.
 |---|---|---|---|
 | `offset` | `vec2` | `[0,0]` |  |
 | `isTrigger` | `bool` | `false` |  |
-| `material` | `asset` | `null` |  |
+| `material` | `asset (physicsmaterial)` | `null` |  |
 | `inlineMaterial` | `optional` | `null` |  |
+| `inlineMaterial.friction` | `f32` | `0.6` |  |
+| `inlineMaterial.restitution` | `f32` | `0` |  |
 | `frictionCombine` | `enum` | `"average"` |  |
 | `restitutionCombine` | `enum` | `"average"` |  |
 | `oneWay` | `bool` | `false` |  |
@@ -767,7 +874,7 @@ Draws a Tilemap's cells as sprites, materialising only the chunks the camera see
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `atlas` | `asset` | `null` | The atlas the tile frames come from. |
+| `atlas` | `asset (spriteatlas)` | `null` | The atlas the tile frames come from. |
 | `sortingLayer` | `str` | `"Default"` | Sorting layer used when a map layer names none. |
 | `cullChunks` | `bool` | `true` | Drop chunks outside the camera's visible bounds. |
 
@@ -801,7 +908,7 @@ Keeps a DOM element at an entity's screen position, with clamping and distance s
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `font` | `asset` | `null` | The TTF or OTF the glyphs come from. |
+| `font` | `asset (font)` | `null` | The TTF or OTF the glyphs come from. |
 | `text` | `str` | `""` | The literal string to draw; ignored when i18nKey is set. |
 | `i18nKey` | `str` | `""` | A translation key looked up in app.i18n; wins over text. |
 | `fontSize` | `f32` | `32` | The em size, in render-target pixels. |
@@ -821,7 +928,7 @@ Pixel-space text placed at an entity's projected position: damage numbers and na
 
 | Field | Kind | Default | Description |
 |---|---|---|---|
-| `font` | `asset` | `null` | The TTF or OTF the glyphs come from. |
+| `font` | `asset (font)` | `null` | The TTF or OTF the glyphs come from. |
 | `text` | `str` | `""` | The literal string to draw; ignored when i18nKey is set. |
 | `i18nKey` | `str` | `""` | A translation key looked up in app.i18n; wins over text. |
 | `fontSize` | `f32` | `32` | The em size, in render-target pixels. |

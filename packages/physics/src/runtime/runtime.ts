@@ -1055,8 +1055,7 @@ export class PhysicsRuntime {
     if (entity.parent !== null && !this.#warnedChildren.has(entity)) {
       this.#warnedChildren.add(entity);
       this.#ctx.log.warn(
-        `${PhysicsErrorCode.bodyOnChildEntity}: {entity} carries a physics body but is not a root entity; Havok writes its local pose.`,
-        entity.name,
+        `${PhysicsErrorCode.bodyOnChildEntity}: ${JSON.stringify(entity.name)} carries a physics body but is not a root entity; Havok writes its local pose.`,
       );
     }
     const record = this.#build(entity, rigidbody, colliders);
@@ -1409,8 +1408,7 @@ export class PhysicsRuntime {
     record.staticVersion = version;
     record.reportedMove = true;
     this.#ctx.log.warn(
-      `${PhysicsErrorCode.movedStaticBody}: {entity} has colliders but no Rigidbody, and it moved after its static body was placed.`,
-      record.entity.name,
+      `${PhysicsErrorCode.movedStaticBody}: ${JSON.stringify(record.entity.name)} has colliders but no Rigidbody, and it moved after its static body was placed.`,
     );
   }
 

@@ -33,7 +33,7 @@ export const CONVERT_TILEMAP_USAGE: string;
 // @public
 export interface ConvertTilemapCommand {
     readonly dropFlips: boolean;
-    readonly kind: "tiled" | "ldtk";
+    readonly kind: TilemapSourceKind;
     readonly output: string | null;
     readonly pixelsPerUnit: number;
     readonly source: string;
@@ -195,6 +195,9 @@ export function runImportTilemap(argv: readonly string[], io: ImportIo): Promise
 
 // @public
 export const TEMPLATE_ROOT_CANDIDATES: readonly string[];
+
+// @public
+export type TilemapSourceKind = "tiled" | "ldtk";
 
 // @public
 export const USAGE = "Usage: create-ignifx <target-dir> [--template <name>] [--overwrite] [--desktop]";

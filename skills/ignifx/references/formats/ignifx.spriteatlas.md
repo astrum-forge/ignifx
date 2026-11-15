@@ -14,3 +14,11 @@ An image plus the frame rectangles inside it, in pixels with a top-left origin.
 | `sampling` | `enum` | `"linear"` | Min/mag filter; nearest for pixel art. |
 | `premultipliedAlpha` | `bool` | `false` | Whether the image's RGB is already multiplied by its alpha. |
 | `frames` | `array` | `[]` | The frames, in the order they are indexed. Each is a record of name (str, what SpriteRenderer.frameName names), x/y (f32, the top-left corner in image pixels), w/h (f32, the size in image pixels), pivot (vec2 in [0,1] of the frame; [0,0] is top-left) sourceSize (vec2, the untrimmed size when the packer trimmed the frame) and sourceOffset (vec2, the trimmed rectangle's top-left inside that source, in pixels, as spriteSourceSize.x/y; with it the frame draws at w/h, offset to where the untrimmed frame would be, and its pivot is in [0,1] of sourceSize). |
+| `frames[].name` | `str` | `""` | The frame's name; what SpriteRenderer.frameName names. |
+| `frames[].x` | `f32` | `0` | The left edge, in image pixels. |
+| `frames[].y` | `f32` | `0` | The top edge, in image pixels. |
+| `frames[].w` | `f32` | `0` | The width, in image pixels. |
+| `frames[].h` | `f32` | `0` | The height, in image pixels. |
+| `frames[].pivot` | `vec2` | `[0.5,0.5]` | Pivot in [0,1] of the frame; [0,0] is top-left. |
+| `frames[].sourceSize` | `vec2` | `[0,0]` | The untrimmed size, when the packer trimmed the frame. |
+| `frames[].sourceOffset` | `vec2` | `[0,0]` | The trimmed rectangle's top-left inside the untrimmed source, in pixels; needs sourceSize. |

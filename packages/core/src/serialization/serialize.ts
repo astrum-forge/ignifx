@@ -528,11 +528,14 @@ function writeInstance(
  * Diffs every direct member of an instance against the record the instanced file holds for it.
  *
  * @remarks
- * Only entities the instanced file itself declares are diffed. Content that came from a scene the
- * instanced scene itself instanced is not diffed: an override can address a nested prefab's
- * component by instance path, but the diff would need the nested file with the outer prefab's own
- * overrides applied, so deep edits inside a nested prefab are not written back; `flatten: true` is
- * the escape hatch.
+ * Entities the instanced file itself declares are diffed field by field. Components that came
+ * from a scene the instanced scene itself instanced are diffed against the records the expansion
+ * kept for them (`EntityInstanceLink.nestedBaseline`: the nested file with the outer prefab's own
+ * overrides applied), and a changed prop or `enabled` flag, or a removed component, is written as
+ * an override whose component segment is an instance path; so are the components a scene the
+ * instanced single root itself instances merged into the instance root. Nested entities' own
+ * fields are not written back; a component added to a nested entity and a nested entity destroyed
+ * at run time cannot be, and are reported (`IGX-0609`). `flatten: true` is the escape hatch.
  *
  * An instance root that stands for its scene's single root is diffed against that root's record
  * too, but only for the components the scene put on it: its name, transform, and other entity
@@ -581,7 +584,231 @@ function computeOverrides(
     }
     diffEntity(entity, record, overrides, references, report, localize);
   }
+  const baseline = link.nestedBaseline;
+  if (baseline !== null) {
+    const covered = new Set<string>();
+    const nested: NestedDiff = { root, baseline, overrides, references, report, covered };
+    if (single !== null && link.nestedRootSourceUids !== null) {
+      // The instanced root itself instances a scene: those components merged into this root too.
+      diffNestedComponents(root, single.sourceUid, link.nestedRootSourceUids, nested);
+    }
+    markLive(root, nested);
+    diffNestedMembers(root, nested);
+    reportLostNestedComponents(root, nested);
+  }
   return overrides;
+}
+
+/** What the nested half of an instance diff threads through. */
+interface NestedDiff {
+  /** The instance root. */
+  readonly root: Entity;
+  /** Runtime component uid to the record the instanced scene alone gives it. */
+  readonly baseline: ReadonlyMap<string, SceneFileComponent>;
+  /** Where patches are appended. */
+  readonly overrides: SceneFileOverride[];
+  /** How references resolve, for the written values. */
+  readonly references: ReferenceEncoder;
+  /** Receives problems. */
+  readonly report: (code: string, message: string) => void;
+  /** The baseline uids an entity still alive accounted for. */
+  readonly covered: Set<string>;
+}
+
+/**
+ * Reports the nested-prefab components no live entity of the instance accounts for: their entity
+ * was destroyed at run time (or sits where an override cannot address it), and an override cannot
+ * say so, so the saved file brings them back.
+ *
+ * @param root - The instance root.
+ * @param nested - The diff state.
+ */
+function reportLostNestedComponents(root: Entity, nested: NestedDiff): void {
+  let lost = 0;
+  for (const uid of nested.baseline.keys()) {
+    if (!nested.covered.has(uid)) {
+      lost += 1;
+    }
+  }
+  if (lost > 0) {
+    nested.report(
+      CoreErrorCode.invalidOverridePath,
+      `${String(lost)} component(s) of a prefab nested in the instance ${JSON.stringify(root.name)} belong to an ` +
+        "entity destroyed at run time; an override cannot remove a nested entity, so the saved file keeps it. " +
+        "Destroy it in the nested prefab, or save with flatten: true.",
+    );
+  }
+}
+
+/**
+ * Diffs the components an instance's nested prefabs produced against their baseline records, below
+ * one entity of the instance, and reports the components added at run time to an entity a nested
+ * prefab declares, which an override cannot add.
+ *
+ * @param entity - Where to walk from.
+ * @param nested - The diff state.
+ */
+function diffNestedMembers(entity: Entity, nested: NestedDiff): void {
+  const root = nested.root;
+  const children = entity.children;
+  for (let index = 0; index < children.length; index += 1) {
+    const child = children[index];
+    if (child === undefined || child.isDestroyed || !belongsToInstance(child, root)) {
+      continue;
+    }
+    markLive(child, nested);
+    const origin = entityInternals(child).origin;
+    const inside = origin?.instanceRoot ?? null;
+    if (origin !== null && inside !== null && inside !== root) {
+      const prefix = nestedPathOf(inside, root);
+      if (prefix !== null) {
+        diffNestedComponents(child, prefix, origin.componentSourceUids, nested);
+      }
+      reportAddedToNested(child, origin, nested);
+    }
+    const link = origin?.instanced ?? null;
+    const merged = link?.root ?? null;
+    if (link !== null && merged !== null) {
+      const prefix = nestedPathOf(child, root);
+      if (prefix !== null) {
+        diffNestedComponents(child, prefix, merged.componentSourceUids, nested);
+        if (link.nestedRootSourceUids !== null) {
+          diffNestedComponents(child, prefix, link.nestedRootSourceUids, nested);
+        }
+      }
+    }
+    diffNestedMembers(child, nested);
+  }
+}
+
+/**
+ * Counts an entity's live components that have a baseline record as accounted for, so only the
+ * components of a destroyed entity are reported lost.
+ *
+ * @param entity - The entity.
+ * @param nested - The diff state.
+ */
+function markLive(entity: Entity, nested: NestedDiff): void {
+  const components = entity.components;
+  for (let index = 0; index < components.length; index += 1) {
+    const component = components[index];
+    if (component !== undefined && !component.isDestroyed && nested.baseline.has(component.uid)) {
+      nested.covered.add(component.uid);
+    }
+  }
+}
+
+/**
+ * Reports the components added at run time to an entity a nested prefab declares: an override
+ * reaches a nested entity's components only by instance path, which an added component has none
+ * of, so the saved file drops it.
+ *
+ * @param entity - The nested entity.
+ * @param origin - Its origin.
+ * @param nested - The diff state.
+ */
+function reportAddedToNested(entity: Entity, origin: EntityOrigin, nested: NestedDiff): void {
+  const fromFiles = origin.instanced?.root?.components;
+  const components = entity.components;
+  for (let index = 0; index < components.length; index += 1) {
+    const component = components[index];
+    if (
+      component === undefined ||
+      component === entity.transform ||
+      component.isDestroyed ||
+      origin.componentSourceUids.has(component.uid) ||
+      fromFiles?.has(component.uid) === true ||
+      // Declared by the prefab chain itself, such as a middle prefab's `add` override.
+      nested.baseline.has(component.uid)
+    ) {
+      continue;
+    }
+    const typeId = component.world.registry.describe(component.constructor).typeId ?? component.constructor.name;
+    nested.report(
+      CoreErrorCode.invalidOverridePath,
+      `${typeId} was added at run time to ${JSON.stringify(entity.name)}, which a prefab nested in the instance ` +
+        `${JSON.stringify(nested.root.name)} declares; an override cannot add a component there, so it is not saved. ` +
+        "Add it in the nested prefab, or save with flatten: true.",
+    );
+  }
+}
+
+/**
+ * The instance path, from an outer instance, of a nested instance root inside it: the uids each
+ * enclosing file gives the entities carrying the nested `instance` entries.
+ *
+ * @param entity - The nested instance root.
+ * @param root - The outer instance root.
+ * @returns `"<uidInTheOuterFile>/…/<uid>"`, or `null` when the entity is not inside `root`.
+ */
+function nestedPathOf(entity: Entity, root: Entity): string | null {
+  const segments: string[] = [];
+  let current: Entity | null = entity;
+  const limit = 64;
+  while (current !== null && segments.length < limit) {
+    const origin: EntityOrigin | null = entityInternals(current).origin;
+    if (origin === null) {
+      return null;
+    }
+    segments.push(origin.sourceUid);
+    if (origin.instanceRoot === root) {
+      return segments.toReversed().join("/");
+    }
+    current = origin.instanceRoot;
+  }
+  return null;
+}
+
+/**
+ * Diffs one entity's nested-prefab components against their baseline records.
+ *
+ * @param entity - The entity; a baseline component it no longer has is written as a `remove`.
+ * @param prefix - The instance path of the nested instance the components' uids are local to.
+ * @param sourceUids - Runtime component uid to the uid that nested file gives it.
+ * @param nested - The diff state.
+ */
+function diffNestedComponents(
+  entity: Entity,
+  prefix: string,
+  sourceUids: ReadonlyMap<string, string>,
+  nested: NestedDiff,
+): void {
+  const { baseline, overrides, references, report } = nested;
+  const head = prefix.split("/")[0] ?? prefix;
+  for (const [uid, sourceUid] of sourceUids) {
+    const before = baseline.get(uid);
+    if (before === undefined) {
+      continue;
+    }
+    nested.covered.add(uid);
+    const component = entity.components.find((candidate) => candidate.uid === uid && !candidate.isDestroyed);
+    if (component === undefined) {
+      overrides.push({ op: "remove", path: `${head}/components/${prefix}/${sourceUid}` });
+      continue;
+    }
+    const registry = component.world.registry;
+    if (registry.describe(component.constructor).typeId === null) {
+      continue;
+    }
+    // The baseline's references carry this copy's own uids, so the comparison is made in them; the
+    // override's value is written the way the scene writes references.
+    const comparable = serializeComponent(component, ownUidEncoder());
+    const written = serializeComponent(component, references, (issue) => {
+      report(issue.code, issue.message);
+    });
+    const schema = registry.describe(component.constructor).schema;
+    diffProps(head, `${prefix}/${sourceUid}`, before, comparable, schema, overrides, identity, written);
+  }
+}
+
+/**
+ * Returns its argument, for a diff whose two sides already share one uid space.
+ *
+ * @param value - The JSON.
+ * @returns `value`.
+ */
+function identity(value: JsonValue): JsonValue {
+  return value;
 }
 
 /**
@@ -803,6 +1030,8 @@ function diffComponents(
  * @param schema - The component's declared fields, so an omitted prop compares against its default.
  * @param overrides - Where patches are appended.
  * @param localize - Rewrites `after`'s references into the instanced file's uids for the comparison.
+ * @param emitted - What the overrides' values are taken from, when it is not `after` (the same
+ * component written with other references).
  */
 function diffProps(
   entityUid: string,
@@ -812,12 +1041,14 @@ function diffProps(
   schema: Schema | null,
   overrides: SceneFileOverride[],
   localize: (value: JsonValue) => JsonValue,
+  emitted: SceneFileComponent = after,
 ): void {
   if ((before.enabled ?? true) !== (after.enabled ?? true)) {
     overrides.push({ path: `${entityUid}/components/${componentUid}/enabled`, value: after.enabled ?? true });
   }
   const beforeProps = before.props ?? {};
   const afterProps = after.props ?? {};
+  const emittedProps = emitted.props ?? {};
   const references = ownUidEncoder();
   for (const name of Object.keys(afterProps)) {
     const next = afterProps[name] ?? null;
@@ -828,7 +1059,10 @@ function diffProps(
     const previous =
       beforeProps[name] ?? (field === undefined ? null : encodeValue(field, field.createDefault(), references));
     if (!sameJson(previous, localize(next))) {
-      overrides.push({ path: `${entityUid}/components/${componentUid}/props/${name}`, value: next });
+      overrides.push({
+        path: `${entityUid}/components/${componentUid}/props/${name}`,
+        value: emittedProps[name] ?? next,
+      });
     }
   }
 }

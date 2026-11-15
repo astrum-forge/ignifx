@@ -345,7 +345,7 @@ export function describeLightmapFileFormat(): SchemaDescription {
         kind: "map",
         default: {},
         description:
-          "Per entity uid, { scale: { x, y }, offset: { x, y } }: the entity's UV2 square in the texture (sampled at uv2 · scale + offset; scale above 0). Missing halves and missing entities take scale 1, offset 0. Only the identity is drawn until the atlas transform lands.",
+          "Per entity uid, { scale: { x, y }, offset: { x, y } }: the entity's UV2 square in the texture (sampled at uv2 · scale + offset; scale above 0). Missing halves and missing entities take scale 1, offset 0. A placement other than the identity needs the renderer's lightmap.uv2 on and a mesh with uvs2; each distinct placement is its own pipeline variant.",
       },
     },
   };

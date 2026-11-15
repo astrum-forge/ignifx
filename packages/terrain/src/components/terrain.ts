@@ -773,9 +773,8 @@ export class Terrain extends Component implements ComponentHooks {
     if (Math.abs(Math.abs(this.#rotation.w) - 1) > ROTATION_EPSILON) {
       this.#hasWarnedAboutRotation = true;
       this.app.log.warn(
-        `${TerrainErrorCode.rotationUnsupported}: {entity} is rotated; Terrain queries honour ` +
-          "translation and scale only.",
-        this.entity.name,
+        `${TerrainErrorCode.rotationUnsupported}: ${JSON.stringify(this.entity.name)} is rotated; Terrain ` +
+          "queries honour translation and scale only.",
       );
     }
   }

@@ -1,0 +1,113 @@
+{
+  "description": "Literal protocol 0.3 messages for the scene host's light-probe bake (HostCapability.bakeLightProbes, additive): bakeLightProbes and its answer, bakeProgress, cancelBake, and the failures with their data. Authored here as the specification; the editor copies it next to its editor-protocol module. A failure's message is free text: only its code and data are the wire. Test: light-probe-bake.test.ts.",
+  "messages": {
+    "bakeLightProbes": {
+      "jsonrpc": "2.0",
+      "id": 40,
+      "method": "bakeLightProbes",
+      "params": {
+        "volume": "01M4ZEB9E0GG0Q6R22YXV3BK01",
+        "counts": [1, 1, 1],
+        "directLight": "exclude",
+        "sky": { "r": 0.2, "g": 0.3, "b": 0.5 },
+        "rays": 64
+      }
+    },
+    "bakeProgress": {
+      "jsonrpc": "2.0",
+      "method": "bakeProgress",
+      "params": {
+        "volume": "01M4ZEB9E0GG0Q6R22YXV3BK01",
+        "done": 1,
+        "total": 1
+      }
+    },
+    "bakeLightProbesResult": {
+      "jsonrpc": "2.0",
+      "id": 40,
+      "result": {
+        "probes": {
+          "format": "ignifx-probes",
+          "formatVersion": 1,
+          "origin": { "x": 0, "y": 1, "z": 0 },
+          "cellSize": { "x": 1, "y": 1, "z": 1 },
+          "counts": { "x": 1, "y": 1, "z": 1 },
+          "coefficients": [0.2, 0.3, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        },
+        "stats": {
+          "probes": 1,
+          "triangles": 36,
+          "skipped": 0,
+          "ms": 12
+        },
+        "skips": [],
+        "sky": "request"
+      }
+    },
+    "cancelBake": {
+      "jsonrpc": "2.0",
+      "id": 41,
+      "method": "cancelBake",
+      "params": {}
+    },
+    "cancelBakeResult": {
+      "jsonrpc": "2.0",
+      "id": 41,
+      "result": { "cancelled": true }
+    },
+    "bakeCancelled": {
+      "jsonrpc": "2.0",
+      "id": 40,
+      "error": {
+        "code": -32600,
+        "message": "The bake was cancelled (cancelBake).",
+        "data": { "reason": "cancelled", "cause": "cancelBake" }
+      }
+    },
+    "bakeCancelledBySceneChange": {
+      "jsonrpc": "2.0",
+      "id": 40,
+      "error": {
+        "code": -32600,
+        "message": "The bake was cancelled (sceneChanged).",
+        "data": { "reason": "cancelled", "cause": "sceneChanged" }
+      }
+    },
+    "bakeBusy": {
+      "jsonrpc": "2.0",
+      "id": 42,
+      "error": {
+        "code": -32600,
+        "message": "A light-probe bake is already running; cancel it or wait.",
+        "data": { "reason": "busy" }
+      }
+    },
+    "bakeUnknownEntity": {
+      "jsonrpc": "2.0",
+      "id": 43,
+      "error": {
+        "code": -32004,
+        "message": "The open scene has no entity 01M4ZEB9E0GG0Q6R22YXV3BKZZ.",
+        "data": { "reason": "unknownEntity" }
+      }
+    },
+    "bakeInvalidGrid": {
+      "jsonrpc": "2.0",
+      "id": 45,
+      "error": {
+        "code": -32602,
+        "message": "A 1025 × 1 × 1 grid is more than a .probes.json holds (X at most 1024, Y × Z at most 4096).",
+        "data": { "reason": "invalidGrid" }
+      }
+    },
+    "bakeNotAVolume": {
+      "jsonrpc": "2.0",
+      "id": 44,
+      "error": {
+        "code": -32602,
+        "message": "Floor has no LightProbeVolume.",
+        "data": { "reason": "notAVolume" }
+      }
+    }
+  }
+}

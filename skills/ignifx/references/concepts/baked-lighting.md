@@ -37,6 +37,17 @@ every frame and is for one probe on a desktop at `"high"`. `cullingMask` limits 
 layers; editor-only meshes (gizmos, grids) are never captured. Diffuse light is untouched: pair a
 probe with a `LightProbeVolume` for that.
 
+**Blending.** Give overlapping box probes a `blendDistance` (metres inside the box over which the
+probe fades out) and, once two or more box probes have captured and one has a `blendDistance` above
+0, every lit PBR material blends them per pixel instead of reflecting one probe: inside a probe's
+box less `blendDistance` it alone counts (the smallest box first where several do), in the bands the
+overlapping probes are weighted, and beyond every box the nearest wins. A material whose nearest
+probe has no box keeps that probe. The blended set copies the cubes, so it is rebuilt after a probe
+recaptures (the last set stays meanwhile) or once a moved or edited probe has rested for about a
+quarter of a second (materials take the nearest probe while it moves). A probe that captures
+`"everyFrame"` turns blending off. At most four probes may overlap at one point; more logs one
+warning and falls back to the nearest probe.
+
 ```ts
 import type { World } from "@ignifx/core";
 import { ReflectionProbe } from "@ignifx/core";
@@ -84,9 +95,15 @@ real-time lights). `rendering.features.lightmaps` is not needed.
 The file (`format: "ignifx-lightmap"`, `formatVersion: 1`; generated table:
 [`../formats/ignifx-lightmap.md`](../formats/ignifx-lightmap.md)) names the `texture` by asset
 address, which the loader loads with it, and may give per-entity-uid `entries` of
-`{ scale: { x, y }, offset: { x, y } }` for an atlas. Entries are validated, but only the identity is
-drawn yet (§8). `createLightmapAsset(app, texture, entries?)` publishes one built in code, such as a
-`TextureAsset.fromPixels` texture.
+`{ scale: { x, y }, offset: { x, y } }` for an atlas: that renderer samples the texture at
+`uv2 · scale + offset`, so many renderers share one texture, each in its own square. The placement
+lives in the same UV space as an entity without an entry, so a V flip the texture asks for applies to
+it too, and there is no rotation (a packer that rotates a chart writes that into the UV2 it bakes). A
+placement other than the identity needs `uv2: true` and a mesh built with `uvs2` (`MeshAsset.fromData`;
+primitives have none); otherwise it logs `IGX-0735` once and samples the whole texture. Each distinct
+placement compiles its own pipeline variant, so a scene with hundreds of placed renderers pays that
+many shader compiles at load. `createLightmapAsset(app, texture, entries?)` publishes one built in
+code, such as a `TextureAsset.fromPixels` texture.
 
 ## 5. Baking light probes
 
@@ -94,32 +111,58 @@ drawn yet (§8). `createLightmapAsset(app, texture, entries?)` publishes one bui
 it works in a Node tool, in an editor, in a test, or in the game while a level loads. It reads the
 world **once**, when it starts:
 
-- **Geometry.** The triangles of every enabled `MeshRenderer` whose mesh was built with
-  `MeshAsset.fromData`. Primitives (`MeshAsset.box`, `ground`, …) and glTF models keep their
-  triangles on the GPU only, so they neither block nor bounce light; `result.skipped` counts them.
-  Give the bake `fromData` stand-ins for geometry that matters.
+- **Geometry.** The triangles of every enabled `MeshRenderer` (a `MeshAsset.fromData` mesh, or a
+  primitive such as `MeshAsset.box` or a `.mesh.json`, rebuilt on the CPU at the size Lite draws it)
+  and every enabled `Model`: a **headless** app (`createApp({ headless: true })`) keeps a model's
+  file and the bake reads it; an app with a device keeps no file, so the bake reads the CPU
+  triangles Lite keeps on the model's drawn meshes instead (a model not drawn yet is skipped). glTF node transforms, indices, triangle strips and fans are read; Draco- and
+  meshopt-compressed primitives, sparse accessors and `.gltf` buffers in separate files are skipped,
+  skinned meshes are read in their bind pose. `result.skips` names each thing left out
+  (`{ entity, uid, component, reason }`) and `result.skipped` counts the renderers and models that
+  gave no triangles at all.
 - **Surfaces.** A hit's colour is its first material's base colour (PBR, darkened by `metallic`) or
-  diffuse colour (Standard); textures are not read.
-- **Lights.** Every enabled `Light`: directional, point and spot (cones ignored) with a shadow ray;
-  hemispheric unshadowed. Rays that miss return `sky` plus the hemispheric lights. One bounce.
-- **`directLight`** (`"exclude"` by default, or `"include"`): whether each probe also stores the light
-  it receives straight from directional, point and spot lights. Those lights keep lighting the scene
-  in real time while a `LightProbeVolume` is on, so a baked direct lobe would count their light
-  twice; `"exclude"` keeps only their bounce, plus the sky and hemispheric lights. Use `"include"`
-  when the baked lights are disabled at run time, or to read a probe's total light with
-  `sampleLightProbes`. Before 0.19.0 the bake always included it, so a re-bake of an older
-  `.probes.json` comes out darker unless you pass `"include"`.
+  diffuse colour (Standard); for a glTF primitive, the material's `baseColorFactor` (darkened by
+  `metallicFactor` unless a texture supplies metalness), or the `Model`'s `materialOverrides` entry
+  for that material's name. Textures are not read.
+- **Lights.** Every enabled `Light` bounces: directional, point and spot (cones ignored) with a
+  shadow ray, hemispheric unshadowed. One bounce.
+- **Direct light, per light: `Light.bakeMode`.** Whether a probe also stores the light it receives
+  straight from a light depends on who draws that light at run time:
+
+  | `bakeMode`             | Drawn at run time | Bake stores its bounce | Bake stores its direct light       |
+  | ---------------------- | ----------------- | ---------------------- | ---------------------------------- |
+  | `"realtime"` (default) | yes               | yes                    | only with `directLight: "include"` |
+  | `"mixed"`              | yes               | yes                    | never                              |
+  | `"baked"`              | no (dimmed to 0)  | yes                    | always                             |
+
+  A hemispheric light's direct light is what a probe sees of its sky and ground colours, so it
+  follows the same rule. Before 0.20.0 the bake always stored it while the light kept drawing,
+  which lit a volume's surfaces about twice by a hemispheric light; set the light to `"baked"` to
+  keep it in the probes only. `lightBakeTerms(bakeMode, directLight)` gives the rule as code.
+
+- **`directLight`** (`"exclude"` by default, or `"include"`) applies to `"realtime"` lights only:
+  `"include"` reads a probe's total light (for `sampleLightProbes`). Before 0.19.0 the bake always
+  included it, so a re-bake of an older `.probes.json` comes out darker unless you pass
+  `"include"` or set the lights to `"baked"`.
+- **Sky.** What a ray that hits nothing returns, in linear radiance: a colour, a gradient
+  `{ kind: "gradient", sky, horizon, ground }`, or nine RGB spherical-harmonic coefficients
+  `{ kind: "sh9", coefficients }` (27 numbers, real SH basis, order `Y00, Y1-1, Y10, Y11, Y2-2,
+Y2-1, Y20, Y21, Y22` over the world axes). Default black. The scene's `Environment` is not read
+  (its harmonics live in the `.env`, which a headless app does not load), so pass a sky that matches
+  it.
 - **Options.** The grid (`origin`, `cellSize`, `counts`, as in the file), `rays` per probe (1–4096,
-  default 128), `maxDistance` (default 100 m), `sky` (linear radiance, default black) and
-  `directLight`; `LightProbeBakeOptions` in [`../api/core.md`](../api/core.md) has their signatures. A bad grid or
-  option is `IGX-0734` before anything is traced.
+  default 128), `maxDistance` (default 100 m), `sky` and `directLight`; `LightProbeBakeOptions` in
+  [`../api/core.md`](../api/core.md) has their signatures. A bad grid or option is `IGX-0734` before
+  anything is traced.
 - **Progress and abort.** It yields to the host about every 8 ms of work, calls
   `onProgress(done, total)` after each probe, and checks `signal` after each probe; an aborted bake
   rejects with the signal's reason.
-- **Result.** `{ data, triangles, skipped }`. Use `data` at once with `createLightProbeAsset`, or
+- **Result.** `{ data, triangles, skipped, skips }`. Use `data` at once with `createLightProbeAsset`, or
   save `JSON.stringify(writeLightProbeFile(data))` as a `.probes.json` under the asset root.
 
-Cost grows with probes × rays × triangles: bake small, static scenes, never per frame.
+Cost grows with probes × rays × triangles (each mesh's world bounding box is tested first, so a ray
+pays only for the meshes it passes through; curved primitives are traced at no more than 16
+segments): bake in a tool or at load, never per frame.
 
 ```ts
 import type { App } from "@ignifx/core";
@@ -137,8 +180,8 @@ export async function bakeLevel(app: App, signal: AbortSignal): Promise<string> 
       app.log.info(`probes ${String(done)}/${String(total)}`);
     },
   });
-  if (baked.skipped > 0) {
-    app.log.warn("renderers without CPU triangles were ignored:", baked.skipped);
+  for (const skip of baked.skips) {
+    app.log.warn(`not traced: ${skip.entity} (${skip.component}): ${skip.reason}`);
   }
   const probes = createLightProbeAsset(app, baked.data);
   app.world.createEntity("Baked probes").addComponent(LightProbeVolume, { probes });
@@ -183,16 +226,16 @@ a power of two.
 
 ## 8. Known gaps
 
-- **Lightmap atlas transform.** Babylon Lite 1.34 samples `uv2` without a scale or offset, so an
-  `entries` placement other than the identity logs `IGX-0735` and samples the whole texture, until
-  spike P2 (GI plan §5) lands. Give each static renderer its own texture, or bake UV2 that already
-  points into the shared texture.
+- **Lightmap atlas limits.** A placement works only with `uv2: true` on a mesh with `uvs2`, and each
+  distinct placement is its own pipeline variant (Babylon Lite 1.34's lightmap has no UV transform,
+  so ignifx rewrites UV2 in a vertex plugin with the placement as constants). For very many placed
+  renderers, bake UV2 that already points into the shared texture and leave `entries` empty.
 - **No lightmap baker in the engine.** It needs a UV2 unwrap and a GPU path tracer; it is planned
   for the editor. Bring textures from an external tool, or build them in code.
-- **No reflection probe blending (B1b).** A material reflects one probe, chosen per material (a
-  material shared by several meshes follows the first); there is no blend across probe borders and
-  no prefiltered (GGX) mip chain, so very rough surfaces look blurrier and blockier than with an
-  `.env`. `ReflectionProbe.capture()` to a file is part of the same follow-up.
-- **The light-probe bake** is first-order, one bounce, flat-coloured, and sees only
-  `MeshAsset.fromData` geometry (§5).
+- **Reflection probes without `blendDistance`** reflect one probe per material (a material shared
+  by several meshes follows the first). There is no prefiltered (GGX) mip chain, so very rough
+  surfaces look blurrier and blockier than with an `.env`, and no `ReflectionProbe.capture()` to a
+  file.
+- **The light-probe bake** is first-order, one bounce and flat-coloured; it reads glTF models only
+  under a headless app, not Draco or meshopt primitives, and not the scene's `Environment` (§5).
 - No Phase 2 cost has been measured on a device yet; the figures above are estimates.

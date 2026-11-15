@@ -20,12 +20,32 @@ export interface SchemaFieldDoc {
    * the description as is; only the members in {@link FIELD_METADATA_KEYS}, and only when present.
    */
   readonly metadata: Readonly<Record<string, unknown>>;
+  /**
+   * What a composite kind holds, described the same way: an `array`'s `item`, a `record`'s
+   * `fields`, a `map`'s `value`, an `optional`'s `inner`. Only the member the kind declares is set.
+   */
+  readonly nested: NestedFieldDocs;
 }
+
+/** The nested descriptions of a composite field, as core's `SchemaFieldDescription` names them. */
+export interface NestedFieldDocs {
+  /** An `array` field's element. */
+  readonly item?: SchemaFieldDoc;
+  /** A `record` field's sub-fields, in declaration order. */
+  readonly fields?: readonly SchemaFieldDoc[];
+  /** A `map` field's entry value. */
+  readonly value?: SchemaFieldDoc;
+  /** An `optional` field's non-`null` value. */
+  readonly inner?: SchemaFieldDoc;
+}
+
+/** How deep nested descriptions are followed, as a guard against a pathological registry. */
+const MAX_NESTING = 8;
 
 /**
  * The scalar members of a core `SchemaFieldDescription` the bundle carries besides `kind`,
- * `default`, and `description`. Nested descriptions (`item`, `fields`, `value`, `inner`) are left
- * out: the bundle documents top-level fields.
+ * `default`, and `description`. Nested descriptions (`item`, `fields`, `value`, `inner`) are carried
+ * separately, in {@link SchemaFieldDoc.nested}.
  */
 export const FIELD_METADATA_KEYS = [
   "min",
@@ -103,7 +123,7 @@ function optionalString(record: Record<string, unknown>, key: string, fallback: 
  * @param errors - Collector the function appends validation problems to.
  * @returns The normalized fields, in declaration order.
  */
-function normalizeFields(typeId: string, value: unknown, errors: string[]): readonly SchemaFieldDoc[] {
+function normalizeFields(typeId: string, value: unknown, errors: string[], depth = 0): readonly SchemaFieldDoc[] {
   const fields = asRecord(value);
   if (fields === null) {
     errors.push(`schema \`${typeId}\` has no \`fields\` object`);
@@ -111,32 +131,74 @@ function normalizeFields(typeId: string, value: unknown, errors: string[]): read
   }
   const normalized: SchemaFieldDoc[] = [];
   for (const [name, raw] of Object.entries(fields)) {
-    const field = asRecord(raw);
-    if (field === null) {
-      errors.push(`schema \`${typeId}\` field \`${name}\` is not an object`);
-      continue;
+    const field = normalizeField(typeId, name, raw, errors, depth);
+    if (field !== null) {
+      normalized.push(field);
     }
-    const kind = optionalString(field, "kind", "");
-    if (kind === "") {
-      errors.push(`schema \`${typeId}\` field \`${name}\` has no \`kind\``);
-      continue;
-    }
-    const hasDefault = Object.hasOwn(field, "default");
-    const metadata: Record<string, unknown> = {};
-    for (const key of FIELD_METADATA_KEYS) {
-      if (field[key] !== undefined) {
-        metadata[key] = field[key];
-      }
-    }
-    normalized.push({
-      name,
-      kind,
-      defaultValue: hasDefault ? JSON.stringify(field["default"] ?? null) : null,
-      description: optionalString(field, "description", ""),
-      metadata,
-    });
   }
   return normalized;
+}
+
+/**
+ * Normalizes one field description, and what its composite kind holds.
+ *
+ * @param typeId - The component type id, used in error messages.
+ * @param name - The field's name; `""` for an array item, map value or optional's inner value.
+ * @param raw - The raw description.
+ * @param errors - Collector the function appends validation problems to.
+ * @param depth - How deep the field is nested.
+ * @returns The normalized field, or `null` when it is malformed.
+ */
+function normalizeField(
+  typeId: string,
+  name: string,
+  raw: unknown,
+  errors: string[],
+  depth: number,
+): SchemaFieldDoc | null {
+  const field = asRecord(raw);
+  if (field === null) {
+    errors.push(`schema \`${typeId}\` field \`${name}\` is not an object`);
+    return null;
+  }
+  const kind = optionalString(field, "kind", "");
+  if (kind === "") {
+    errors.push(`schema \`${typeId}\` field \`${name}\` has no \`kind\``);
+    return null;
+  }
+  const hasDefault = Object.hasOwn(field, "default");
+  const metadata: Record<string, unknown> = {};
+  for (const key of FIELD_METADATA_KEYS) {
+    if (field[key] !== undefined) {
+      metadata[key] = field[key];
+    }
+  }
+  const nested: {
+    item?: SchemaFieldDoc;
+    fields?: readonly SchemaFieldDoc[];
+    value?: SchemaFieldDoc;
+    inner?: SchemaFieldDoc;
+  } = {};
+  if (depth < MAX_NESTING) {
+    for (const key of ["item", "value", "inner"] as const) {
+      const found =
+        field[key] === undefined ? null : normalizeField(typeId, `${name}.${key}`, field[key], errors, depth + 1);
+      if (found !== null) {
+        nested[key] = { ...found, name: "" };
+      }
+    }
+    if (field["fields"] !== undefined) {
+      nested.fields = normalizeFields(typeId, field["fields"], errors, depth + 1);
+    }
+  }
+  return {
+    name,
+    kind,
+    defaultValue: hasDefault ? JSON.stringify(field["default"] ?? null) : null,
+    description: optionalString(field, "description", ""),
+    metadata,
+    nested,
+  };
 }
 
 /**
@@ -147,7 +209,7 @@ function normalizeFields(typeId: string, value: unknown, errors: string[]): read
  * @param errors - Collector the function appends validation problems to.
  * @returns The normalized schemas of that package.
  */
-function normalizeRegistry(directory: string, registry: unknown, errors: string[]): readonly SchemaDoc[] {
+export function normalizeRegistry(directory: string, registry: unknown, errors: string[]): readonly SchemaDoc[] {
   const record = asRecord(registry);
   if (record === null) {
     errors.push(`packages/${directory}: \`schemas\` must be an object keyed by component type id`);

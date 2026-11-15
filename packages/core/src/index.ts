@@ -263,7 +263,13 @@ export {
   type ToneMappingCurve,
 } from "./render/environment.js";
 export { FONT_ASSET_TYPE, FONT_FILE_EXTENSIONS, FontAsset, type FontAssetLiteHandles } from "./render/font-asset.js";
-export { Light, type LightShadowSettings, type LightType, type ShadowTechniqueName } from "./render/light.js";
+export {
+  Light,
+  type LightBakeMode,
+  type LightShadowSettings,
+  type LightType,
+  type ShadowTechniqueName,
+} from "./render/light.js";
 export { createEnvironmentLoader } from "./render/loaders/environment-loader.js";
 export { createFontLoader } from "./render/loaders/font-loader.js";
 export { createMaterialLoader } from "./render/loaders/material-loader.js";
@@ -423,9 +429,14 @@ export {
 } from "./render/light-probe-asset.js";
 export {
   bakeLightProbes,
+  lightBakeTerms,
   type LightProbeBakeDirectLight,
   type LightProbeBakeOptions,
   type LightProbeBakeResult,
+  type LightProbeBakeSkip,
+  type LightProbeBakeSky,
+  type LightProbeBakeSkyGradient,
+  type LightProbeBakeSkyHarmonics,
 } from "./render/light-probe-bake.js";
 export { LightProbeVolume } from "./render/light-probe-volume.js";
 export { createLightProbeLoader } from "./render/loaders/light-probe-loader.js";
@@ -707,5 +718,5 @@ export { TONE_MAPPING_NAMES } from "./lite/gpu/environment.js";
 export { SHADOW_TECHNIQUES } from "./lite/shadow.js";
 export { PROJECTIONS } from "./render/camera.js";
 export { FOG_MODE_NAMES } from "./render/environment.js";
-export { LIGHT_TYPES } from "./render/light.js";
+export { LIGHT_BAKE_MODES, LIGHT_TYPES } from "./render/light.js";
 export { MATERIAL_ALPHA_MODES, type MaterialAlphaMode } from "./lite/material.js";

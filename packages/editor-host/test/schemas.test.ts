@@ -1,6 +1,7 @@
 import { asset, componentRef, describeRegisteredSchemas, f32, Script, str, u32 } from "@ignifx/core";
 import { afterEach, describe, expect, it } from "vitest";
 import { isSchemaSet, PROTOCOL_VERSION, SceneNotification } from "../src/protocol/index.js";
+import { schemaSet } from "../src/scene/schemas.js";
 import { ArmoredHealth, Health, Regen, startLiveHost } from "./support/scene-project.js";
 import type { Received } from "./support/editor.js";
 import type { LiveHost, Wire } from "./support/scene-project.js";
@@ -176,6 +177,13 @@ describe("the host's schema descriptions", () => {
     const titan = entity.addComponent(TitanHealth);
     entity.addComponent(Regen);
     expect(entity.getComponents(Health)).toEqual([titan]);
+  });
+
+  it("leaves a hidden host class out of extends", async () => {
+    const { app } = await started([TitanHealth]);
+    const set = schemaSet(app, new Set(["game/ArmoredHealth"]));
+    expect(set.schemas["game/ArmoredHealth"]).toBeUndefined();
+    expect(set.schemas["game/TitanHealth"]?.extends).toEqual(["game/Health"]);
   });
 
   it("names the extension that registered an engine component", async () => {

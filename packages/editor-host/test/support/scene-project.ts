@@ -295,6 +295,35 @@ export class Wire {
     }
   }
 
+  /**
+   * Posts a request without waiting for its answer; take the answer with {@link Wire.answer}.
+   *
+   * @param request - The request.
+   */
+  send(request: Received): void {
+    this.#peer.post(request);
+  }
+
+  /**
+   * Takes the answer to a request sent with {@link Wire.send}, keeping every other message.
+   *
+   * @param id - The request's id.
+   * @returns The answer.
+   */
+  async answer(id: unknown): Promise<Received> {
+    for (;;) {
+      const index = this.notifications.findIndex((message) => "id" in message && message["id"] === id);
+      if (index >= 0) {
+        const [found] = this.notifications.splice(index, 1);
+        if (found !== undefined) {
+          return found;
+        }
+      }
+      // oxlint-disable-next-line no-await-in-loop -- one message at a time
+      this.notifications.push(await this.#peer.next());
+    }
+  }
+
   /** Closes the editor's port. */
   close(): void {
     this.#peer.close();

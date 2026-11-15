@@ -3,6 +3,8 @@ import {
   ReflectionProbe,
   resolveReflectionProbeRefreshMode,
   resolveReflectionProbeSize,
+  reflectionProbeBlendLayout,
+  REFLECTION_PROBE_GRID_CELLS,
   selectReflectionProbe,
 } from "../../src/render/reflection-probe.js";
 import { createRenderHarness } from "./support/render-harness.js";
@@ -40,6 +42,7 @@ describe("ReflectionProbe", () => {
     expect(probe.size).toBe(128);
     expect(probe.refreshMode).toBe("once");
     expect(probe.boxProjection).toBeNull();
+    expect(probe.blendDistance).toBe(0);
     expect(probe.cullingMask).toEqual([]);
     expect(probe.consumeRefreshRequest()).toBe(false);
     probe.refresh();
@@ -103,5 +106,46 @@ describe("resolveReflectionProbeRefreshMode", () => {
     expect(resolveReflectionProbeRefreshMode("everyFrame", false)).toBe("once");
     expect(resolveReflectionProbeRefreshMode("everyFrame", true)).toBe("everyFrame");
     expect(resolveReflectionProbeRefreshMode("once", false)).toBe("once");
+  });
+});
+
+describe("reflectionProbeBlendLayout", () => {
+  /**
+   * A box probe with a blend distance.
+   *
+   * @param x - World X.
+   * @param box - The full box size.
+   * @param blendDistance - Its blend distance.
+   * @returns The candidate.
+   */
+  const blending = (
+    x: number,
+    box: number | null,
+    blendDistance: number,
+  ): ReflectionProbeCandidate & { blendDistance: number } => ({ ...probeAt(x, box), blendDistance });
+
+  it("blends only two or more box probes, one with a blend distance", () => {
+    expect(reflectionProbeBlendLayout([])).toBeNull();
+    expect(reflectionProbeBlendLayout([blending(0, 4, 1)])).toBeNull();
+    expect(reflectionProbeBlendLayout([blending(0, 4, 0), blending(3, 4, 0)])).toBeNull();
+    expect(reflectionProbeBlendLayout([blending(0, 4, 1), blending(3, null, 1)])).toBeNull();
+    expect(reflectionProbeBlendLayout([blending(0, 4, 1), blending(3, 4, 0)])).not.toBeNull();
+  });
+
+  it("shrinks each inner box by the blend distance and bounds the grid by the boxes", () => {
+    const layout = reflectionProbeBlendLayout([blending(0, 4, 0.5), blending(5, null, 1), blending(3, 4, 3)]);
+    expect(layout?.volumes.map((volume) => volume.index)).toEqual([0, 2]);
+    expect(layout?.volumes[0]?.inner).toEqual([3, 3, 3]);
+    expect(layout?.volumes[0]?.outer).toEqual([4, 4, 4]);
+    expect(layout?.volumes[1]?.inner).toEqual([0, 0, 0]);
+    expect(layout?.volumes[1]?.position).toEqual([3, 0, 0]);
+    expect(layout?.minimum).toEqual([-2, -2, -2]);
+    expect(layout?.maximum).toEqual([5, 2, 2]);
+    expect(layout?.cellSize).toBe(7 / REFLECTION_PROBE_GRID_CELLS);
+  });
+
+  it("puts the smallest box first, so a probe nested in a bigger box is not hidden", () => {
+    const layout = reflectionProbeBlendLayout([blending(0, 10, 1), blending(1, 2, 0.5), blending(2, 10, 0)]);
+    expect(layout?.volumes.map((volume) => volume.index)).toEqual([1, 0, 2]);
   });
 });

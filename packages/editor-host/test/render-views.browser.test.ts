@@ -81,6 +81,10 @@ const fetchFiles: FetchLike = async (input: RequestInfo | URL): Promise<Response
   if (address === "models/Box.glb") {
     return fetch("/tests/fixtures/assets/Box.glb");
   }
+  if (address.startsWith("2d/")) {
+    // The sprite atlas and image fixtures, for the atlas and image thumbnails.
+    return fetch(`/tests/fixtures/assets/${address}`);
+  }
   const body = FILES[address];
   return Promise.resolve(body === undefined ? new Response(null, { status: 404 }) : new Response(body));
 };
@@ -303,6 +307,55 @@ describe("the render views on a WebGPU canvas", () => {
     const unknown = await peer?.request(RenderViewMethod.renderThumbnail, { asset: "sounds/boom.ogg", format: "png" });
     expect(unknown).toHaveProperty("error.code", RpcErrorCode.invalidParams);
     // The stage is a second app on its own device, created and started by the first request.
+  }, 60_000);
+
+  it("renders a material on a sphere, and sprite atlases and images fitted in the square", async () => {
+    await sceneView(SCENE);
+    for (const capability of [
+      HostCapability.thumbnailMaterials,
+      HostCapability.thumbnailAtlases,
+      HostCapability.thumbnailTextures,
+    ]) {
+      expect(capabilities).toContain(capability);
+    }
+    // The unlit red material on a sphere: red in the middle, the clear colour in the corner.
+    const material = await call(RenderViewMethod.renderThumbnail, {
+      asset: "materials/red.material.json",
+      size: 32,
+      format: "png",
+    });
+    expect(material).toMatchObject({ width: 32, height: 32 });
+    const [r, g] = await pixelOf(dataUrlOf(material), 16, 16);
+    expect(r, `material centre ${String([r, g])}`).toBeGreaterThan(200);
+    expect(g).toBeLessThan(60);
+    expect((await pixelOf(dataUrlOf(material), 0, 0))[0]).toBeLessThan(100);
+
+    // The 16x16 checkerboard, one pixel per cell, doubled without smoothing: whole 2x2 cells.
+    const image = await call(RenderViewMethod.renderThumbnail, { asset: "2d/checker.png", size: 32, format: "png" });
+    expect(image).toMatchObject({ width: 32, height: 32 });
+    const cell = await pixelOf(dataUrlOf(image), 0, 0);
+    expect(await pixelOf(dataUrlOf(image), 1, 1)).toEqual(cell);
+    const next = await pixelOf(dataUrlOf(image), 2, 0);
+    expect(Math.abs((cell[0] ?? 0) - (next[0] ?? 0)), `cells ${String(cell)} and ${String(next)}`).toBeGreaterThan(100);
+
+    // An atlas shows its whole image: the same pixels as the image itself.
+    const atlas = await call(RenderViewMethod.renderThumbnail, {
+      asset: { $asset: "2d/hero.atlas.json", type: "spriteatlas" },
+      size: 32,
+      format: "png",
+    });
+    const sheet = await call(RenderViewMethod.renderThumbnail, { asset: "2d/hero.png", size: 32, format: "png" });
+    expect(await pixelsOf(dataUrlOf(atlas))).toEqual(await pixelsOf(dataUrlOf(sheet)));
+    expect(
+      await call(RenderViewMethod.renderThumbnail, { asset: "2d/hero.png", size: 16, format: "jpeg", quality: 0.5 }),
+    ).toMatchObject({ width: 16, height: 16, dataUrl: expect.stringMatching(/^data:image\/jpeg;base64,/u) as unknown });
+
+    // A GPU-compressed texture is not decoded here.
+    const compressed = await peer?.request(RenderViewMethod.renderThumbnail, {
+      asset: "textures/a.ktx2",
+      format: "png",
+    });
+    expect(compressed).toHaveProperty("error.code", RpcErrorCode.invalidParams);
   }, 60_000);
 
   it("builds the thumbnail stage from fresh extensions, leaving the scene view's physics world alone", async () => {

@@ -235,7 +235,7 @@ Whether flipped or rotated tiles import unflipped instead of failing the command
 
 ##### kind
 
-> `readonly` **kind**: `"tiled"` \| `"ldtk"`
+> `readonly` **kind**: [`TilemapSourceKind`](#tilemapsourcekind)
 
 Which editor wrote it.
 
@@ -699,6 +699,15 @@ The scene that gained them.
 > **CliErrorCode** = *typeof* [`CliErrorCode`](#clierrorcode-1)\[keyof *typeof* [`CliErrorCode`](#clierrorcode-1)\]
 
 The union of the error codes this package can throw.
+
+***
+
+### TilemapSourceKind
+
+> **TilemapSourceKind** = `"tiled"` \| `"ldtk"`
+
+Which editor wrote a map source: a Tiled JSON map (`.tmj`) or an LDtk project (`.ldtk`). The same
+names as `ConvertTilemapCommand.kind`.
 
 ## Variables
 
@@ -1283,7 +1292,9 @@ when it lacks frames the map uses. Objects land in the map's `objects` field, wh
 
 Refused with `IGX-1408`: non-orthogonal or infinite Tiled maps, base64 or compressed layer data,
 XML (`.tsx`) or image-collection tilesets, LDtk layers on different grid sizes, and flipped tiles
-unless `--drop-flips` is passed. Output is deterministic: the same input writes the same bytes.
+unless `--drop-flips` is passed, and maps past `DEFAULT_TILEMAP_SOURCE_LIMITS`. Output is
+deterministic: the same input writes the same bytes. This is a file wrapper over the pure
+`convertTilemapSource` of `@ignifx/cli/tilemap`.
 
 #### Throws
 

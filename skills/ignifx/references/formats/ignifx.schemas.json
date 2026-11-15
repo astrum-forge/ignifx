@@ -1,6 +1,6 @@
 {
   "generatedBy": "pnpm docs:schemas",
-  "ignifxVersion": "0.19.0",
+  "ignifxVersion": "0.20.0",
   "schemas": {
     "ignifx/Animator": {
       "title": "Animator",
@@ -55,27 +55,274 @@
         "parameters": {
           "kind": "array",
           "default": "[]",
-          "description": "The parameters the state machine reads."
+          "description": "The parameters the state machine reads.",
+          "item": {
+            "kind": "record",
+            "default": "{\"name\":\"\",\"kind\":\"float\",\"value\":0}",
+            "description": "",
+            "fields": {
+              "name": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The parameter's name; what setFloat and a condition's param use."
+              },
+              "kind": {
+                "kind": "enum",
+                "default": "\"float\"",
+                "description": "float, int, bool, or trigger.",
+                "values": [
+                  "float",
+                  "int",
+                  "bool",
+                  "trigger"
+                ]
+              },
+              "value": {
+                "kind": "f32",
+                "default": "0",
+                "description": "The value it starts at; ignored for a trigger."
+              }
+            }
+          }
         },
         "layers": {
           "kind": "array",
           "default": "[]",
-          "description": "The layers, base first."
+          "description": "The layers, base first.",
+          "item": {
+            "kind": "record",
+            "default": "{\"name\":\"Base\",\"weight\":1,\"mask\":[],\"maskMode\":\"include\",\"additive\":false,\"defaultState\":\"\"}",
+            "description": "",
+            "fields": {
+              "name": {
+                "kind": "str",
+                "default": "\"Base\"",
+                "description": "The layer's name."
+              },
+              "weight": {
+                "kind": "f32",
+                "default": "1",
+                "description": "How much of this layer's pose reaches the result.",
+                "min": 0,
+                "max": 1
+              },
+              "mask": {
+                "kind": "array",
+                "default": "[]",
+                "description": "The bone names the mask lists.",
+                "item": {
+                  "kind": "str",
+                  "default": "\"\"",
+                  "description": ""
+                }
+              },
+              "maskMode": {
+                "kind": "enum",
+                "default": "\"include\"",
+                "description": "Whether mask lists what animates.",
+                "values": [
+                  "include",
+                  "exclude"
+                ]
+              },
+              "additive": {
+                "kind": "bool",
+                "default": "false",
+                "description": "Whether the layer adds to the pose beneath it."
+              },
+              "defaultState": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The state the layer starts in; its first state when empty."
+              }
+            }
+          }
         },
         "states": {
           "kind": "array",
           "default": "[]",
-          "description": "The states."
+          "description": "The states.",
+          "item": {
+            "kind": "record",
+            "default": "{\"name\":\"\",\"layer\":\"\",\"clip\":\"\",\"blendTree\":\"\",\"speed\":1,\"loop\":true,\"events\":[]}",
+            "description": "",
+            "fields": {
+              "name": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The state's name; what play() and a transition's to take."
+              },
+              "layer": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The layer the state belongs to; the base layer when empty."
+              },
+              "clip": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The animation-group name this state plays."
+              },
+              "blendTree": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The 1D blend tree this state plays, instead of a clip."
+              },
+              "speed": {
+                "kind": "f32",
+                "default": "1",
+                "description": "A multiplier on the clip's own rate."
+              },
+              "loop": {
+                "kind": "bool",
+                "default": "true",
+                "description": "Whether the state restarts at its end."
+              },
+              "events": {
+                "kind": "array",
+                "default": "[]",
+                "description": "Events fired as the state plays.",
+                "item": {
+                  "kind": "record",
+                  "default": "{\"time\":0,\"name\":\"\"}",
+                  "description": "",
+                  "fields": {
+                    "time": {
+                      "kind": "f32",
+                      "default": "0",
+                      "description": "Where in the clip the event sits, as a fraction.",
+                      "min": 0,
+                      "max": 1
+                    },
+                    "name": {
+                      "kind": "str",
+                      "default": "\"\"",
+                      "description": "The name emitted on Animator.onEvent."
+                    }
+                  }
+                }
+              }
+            }
+          }
         },
         "transitions": {
           "kind": "array",
           "default": "[]",
-          "description": "The transitions, in priority order."
+          "description": "The transitions, in priority order.",
+          "item": {
+            "kind": "record",
+            "default": "{\"from\":\"\",\"to\":\"\",\"conditions\":[],\"duration\":0.2,\"exitTime\":0,\"interruptible\":false}",
+            "description": "",
+            "fields": {
+              "from": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The state this leaves, or any."
+              },
+              "to": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The state this enters."
+              },
+              "conditions": {
+                "kind": "array",
+                "default": "[]",
+                "description": "Every condition, all of which must pass.",
+                "item": {
+                  "kind": "record",
+                  "default": "{\"param\":\"\",\"op\":\"eq\",\"value\":0}",
+                  "description": "",
+                  "fields": {
+                    "param": {
+                      "kind": "str",
+                      "default": "\"\"",
+                      "description": "The parameter to test."
+                    },
+                    "op": {
+                      "kind": "enum",
+                      "default": "\"eq\"",
+                      "description": "The comparison.",
+                      "values": [
+                        "gt",
+                        "gte",
+                        "lt",
+                        "lte",
+                        "eq",
+                        "neq",
+                        "trigger"
+                      ]
+                    },
+                    "value": {
+                      "kind": "f32",
+                      "default": "0",
+                      "description": "What to compare against; ignored by trigger."
+                    }
+                  }
+                }
+              },
+              "duration": {
+                "kind": "f32",
+                "default": "0.2",
+                "description": "How long the crossfade takes, in seconds.",
+                "min": 0
+              },
+              "exitTime": {
+                "kind": "f32",
+                "default": "0",
+                "description": "The earliest normalized time the source may be left at.",
+                "min": 0,
+                "max": 1
+              },
+              "interruptible": {
+                "kind": "bool",
+                "default": "false",
+                "description": "Whether this may start while another transition runs."
+              }
+            }
+          }
         },
         "blendTrees1D": {
           "kind": "array",
           "default": "[]",
-          "description": "The 1D blend trees."
+          "description": "The 1D blend trees.",
+          "item": {
+            "kind": "record",
+            "default": "{\"name\":\"\",\"param\":\"\",\"children\":[]}",
+            "description": "",
+            "fields": {
+              "name": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The tree's name; what a state's blendTree takes."
+              },
+              "param": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The parameter the tree reads."
+              },
+              "children": {
+                "kind": "array",
+                "default": "[]",
+                "description": "The children, sorted ascending by threshold.",
+                "item": {
+                  "kind": "record",
+                  "default": "{\"clip\":\"\",\"threshold\":0}",
+                  "description": "",
+                  "fields": {
+                    "clip": {
+                      "kind": "str",
+                      "default": "\"\"",
+                      "description": "The animation-group name this child plays."
+                    },
+                    "threshold": {
+                      "kind": "f32",
+                      "default": "0",
+                      "description": "The parameter value at which this child reaches full weight."
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -212,7 +459,30 @@
         "cone": {
           "kind": "record",
           "default": "{\"innerAngle\":360,\"outerAngle\":360,\"outerVolume\":0}",
-          "description": "Directionality of a spatial source; 360/360 is omnidirectional."
+          "description": "Directionality of a spatial source; 360/360 is omnidirectional.",
+          "fields": {
+            "innerAngle": {
+              "kind": "f32",
+              "default": "360",
+              "description": "Full-volume cone angle, in degrees.",
+              "min": 0,
+              "max": 360
+            },
+            "outerAngle": {
+              "kind": "f32",
+              "default": "360",
+              "description": "Outer cone angle, in degrees.",
+              "min": 0,
+              "max": 360
+            },
+            "outerVolume": {
+              "kind": "f32",
+              "default": "0",
+              "description": "Gain outside the outer cone.",
+              "min": 0,
+              "max": 1
+            }
+          }
         },
         "pan": {
           "kind": "f32",
@@ -270,7 +540,33 @@
         "inlineMaterial": {
           "kind": "optional",
           "default": "null",
-          "description": ""
+          "description": "",
+          "inner": {
+            "kind": "record",
+            "default": "{\"friction\":0.6,\"staticFriction\":0.6,\"restitution\":0}",
+            "description": "",
+            "fields": {
+              "friction": {
+                "kind": "f32",
+                "default": "0.6",
+                "description": "",
+                "min": 0
+              },
+              "staticFriction": {
+                "kind": "f32",
+                "default": "0.6",
+                "description": "",
+                "min": 0
+              },
+              "restitution": {
+                "kind": "f32",
+                "default": "0",
+                "description": "",
+                "min": 0,
+                "max": 1
+              }
+            }
+          }
         },
         "layerOverride": {
           "kind": "str",
@@ -309,7 +605,27 @@
         "inlineMaterial": {
           "kind": "optional",
           "default": "null",
-          "description": ""
+          "description": "",
+          "inner": {
+            "kind": "record",
+            "default": "{\"friction\":0.6,\"restitution\":0}",
+            "description": "",
+            "fields": {
+              "friction": {
+                "kind": "f32",
+                "default": "0.6",
+                "description": "",
+                "min": 0
+              },
+              "restitution": {
+                "kind": "f32",
+                "default": "0",
+                "description": "",
+                "min": 0,
+                "max": 1
+              }
+            }
+          }
         },
         "frictionCombine": {
           "kind": "enum",
@@ -393,12 +709,47 @@
         "viewport": {
           "kind": "record",
           "default": "{\"x\":0,\"y\":0,\"width\":1,\"height\":1}",
-          "description": "Normalized viewport; y is measured from the bottom."
+          "description": "Normalized viewport; y is measured from the bottom.",
+          "fields": {
+            "x": {
+              "kind": "f32",
+              "default": "0",
+              "description": "",
+              "min": 0,
+              "max": 1
+            },
+            "y": {
+              "kind": "f32",
+              "default": "0",
+              "description": "",
+              "min": 0,
+              "max": 1
+            },
+            "width": {
+              "kind": "f32",
+              "default": "1",
+              "description": "",
+              "min": 0,
+              "max": 1
+            },
+            "height": {
+              "kind": "f32",
+              "default": "1",
+              "description": "",
+              "min": 0,
+              "max": 1
+            }
+          }
         },
         "clearColor": {
           "kind": "optional",
           "default": "null",
-          "description": "Overrides the scene clear colour while this camera renders."
+          "description": "Overrides the scene clear colour while this camera renders.",
+          "inner": {
+            "kind": "color",
+            "default": "[0,0,0,1]",
+            "description": ""
+          }
         },
         "priority": {
           "kind": "i32",
@@ -432,12 +783,22 @@
         "boundsMin": {
           "kind": "optional",
           "default": "null",
-          "description": "The lower bound of the camera's travel, in metres."
+          "description": "The lower bound of the camera's travel, in metres.",
+          "inner": {
+            "kind": "vec2",
+            "default": "[0,0]",
+            "description": ""
+          }
         },
         "boundsMax": {
           "kind": "optional",
           "default": "null",
-          "description": "The upper bound of the camera's travel, in metres."
+          "description": "The upper bound of the camera's travel, in metres.",
+          "inner": {
+            "kind": "vec2",
+            "default": "[0,0]",
+            "description": ""
+          }
         },
         "follow": {
           "kind": "entityRef",
@@ -492,7 +853,33 @@
         "inlineMaterial": {
           "kind": "optional",
           "default": "null",
-          "description": ""
+          "description": "",
+          "inner": {
+            "kind": "record",
+            "default": "{\"friction\":0.6,\"staticFriction\":0.6,\"restitution\":0}",
+            "description": "",
+            "fields": {
+              "friction": {
+                "kind": "f32",
+                "default": "0.6",
+                "description": "",
+                "min": 0
+              },
+              "staticFriction": {
+                "kind": "f32",
+                "default": "0.6",
+                "description": "",
+                "min": 0
+              },
+              "restitution": {
+                "kind": "f32",
+                "default": "0",
+                "description": "",
+                "min": 0,
+                "max": 1
+              }
+            }
+          }
         },
         "layerOverride": {
           "kind": "str",
@@ -548,7 +935,27 @@
         "inlineMaterial": {
           "kind": "optional",
           "default": "null",
-          "description": ""
+          "description": "",
+          "inner": {
+            "kind": "record",
+            "default": "{\"friction\":0.6,\"restitution\":0}",
+            "description": "",
+            "fields": {
+              "friction": {
+                "kind": "f32",
+                "default": "0.6",
+                "description": "",
+                "min": 0
+              },
+              "restitution": {
+                "kind": "f32",
+                "default": "0",
+                "description": "",
+                "min": 0,
+                "max": 1
+              }
+            }
+          }
         },
         "frictionCombine": {
           "kind": "enum",
@@ -761,7 +1168,27 @@
         "inlineMaterial": {
           "kind": "optional",
           "default": "null",
-          "description": ""
+          "description": "",
+          "inner": {
+            "kind": "record",
+            "default": "{\"friction\":0.6,\"restitution\":0}",
+            "description": "",
+            "fields": {
+              "friction": {
+                "kind": "f32",
+                "default": "0.6",
+                "description": "",
+                "min": 0
+              },
+              "restitution": {
+                "kind": "f32",
+                "default": "0",
+                "description": "",
+                "min": 0,
+                "max": 1
+              }
+            }
+          }
         },
         "frictionCombine": {
           "kind": "enum",
@@ -828,7 +1255,33 @@
         "inlineMaterial": {
           "kind": "optional",
           "default": "null",
-          "description": ""
+          "description": "",
+          "inner": {
+            "kind": "record",
+            "default": "{\"friction\":0.6,\"staticFriction\":0.6,\"restitution\":0}",
+            "description": "",
+            "fields": {
+              "friction": {
+                "kind": "f32",
+                "default": "0.6",
+                "description": "",
+                "min": 0
+              },
+              "staticFriction": {
+                "kind": "f32",
+                "default": "0.6",
+                "description": "",
+                "min": 0
+              },
+              "restitution": {
+                "kind": "f32",
+                "default": "0",
+                "description": "",
+                "min": 0,
+                "max": 1
+              }
+            }
+          }
         },
         "layerOverride": {
           "kind": "str",
@@ -874,7 +1327,27 @@
         "inlineMaterial": {
           "kind": "optional",
           "default": "null",
-          "description": ""
+          "description": "",
+          "inner": {
+            "kind": "record",
+            "default": "{\"friction\":0.6,\"restitution\":0}",
+            "description": "",
+            "fields": {
+              "friction": {
+                "kind": "f32",
+                "default": "0.6",
+                "description": "",
+                "min": 0
+              },
+              "restitution": {
+                "kind": "f32",
+                "default": "0",
+                "description": "",
+                "min": 0,
+                "max": 1
+              }
+            }
+          }
         },
         "frictionCombine": {
           "kind": "enum",
@@ -911,7 +1384,12 @@
         "points": {
           "kind": "array",
           "default": "[]",
-          "description": ""
+          "description": "",
+          "item": {
+            "kind": "vec2",
+            "default": "[0,0]",
+            "description": ""
+          }
         }
       }
     },
@@ -942,22 +1420,102 @@
         "skybox": {
           "kind": "record",
           "default": "{\"enabled\":true,\"size\":20}",
-          "description": "The background, as the installed .environment.json declared it. Read-only in practice."
+          "description": "The background, as the installed .environment.json declared it. Read-only in practice.",
+          "fields": {
+            "enabled": {
+              "kind": "bool",
+              "default": "true",
+              "description": "Whether a skybox is drawn; set it in the .environment.json."
+            },
+            "size": {
+              "kind": "f32",
+              "default": "20",
+              "description": "The skybox cube's size in metres; set it in the .environment.json.",
+              "min": 0.001
+            }
+          }
         },
         "fog": {
           "kind": "record",
           "default": "{\"mode\":\"none\",\"color\":[0.784314,0.784314,0.784314,1],\"density\":0.01,\"start\":10,\"end\":100}",
-          "description": "Distance fog."
+          "description": "Distance fog.",
+          "fields": {
+            "mode": {
+              "kind": "enum",
+              "default": "\"none\"",
+              "description": "Fog falloff, or none.",
+              "values": [
+                "none",
+                "linear",
+                "exp",
+                "exp2"
+              ]
+            },
+            "color": {
+              "kind": "color",
+              "default": "[0.784314,0.784314,0.784314,1]",
+              "description": "The fog's sRGB colour."
+            },
+            "density": {
+              "kind": "f32",
+              "default": "0.01",
+              "description": "Density, for the exponential modes.",
+              "min": 0
+            },
+            "start": {
+              "kind": "f32",
+              "default": "10",
+              "description": "Where linear fog begins, in metres.",
+              "min": 0
+            },
+            "end": {
+              "kind": "f32",
+              "default": "100",
+              "description": "Where linear fog reaches full strength, in metres.",
+              "min": 0
+            }
+          }
         },
         "imageProcessing": {
           "kind": "record",
           "default": "{\"exposure\":1,\"contrast\":1,\"toneMapping\":\"none\"}",
-          "description": "Exposure, contrast, and tone mapping. Recompiles PBR pipelines when it changes."
+          "description": "Exposure, contrast, and tone mapping. Recompiles PBR pipelines when it changes.",
+          "fields": {
+            "exposure": {
+              "kind": "f32",
+              "default": "1",
+              "description": "Exposure multiplier.",
+              "min": 0
+            },
+            "contrast": {
+              "kind": "f32",
+              "default": "1",
+              "description": "Contrast multiplier.",
+              "min": 0
+            },
+            "toneMapping": {
+              "kind": "enum",
+              "default": "\"none\"",
+              "description": "The tone-mapping curve.",
+              "values": [
+                "none",
+                "standard",
+                "aces",
+                "neutral",
+                "agx"
+              ]
+            }
+          }
         },
         "clearColor": {
           "kind": "optional",
           "default": "null",
-          "description": "The sRGB colour the scene is cleared to, through imageProcessing; null leaves the rendering.clearColor setting."
+          "description": "The sRGB colour the scene is cleared to, through imageProcessing; null leaves the rendering.clearColor setting.",
+          "inner": {
+            "kind": "color",
+            "default": "[0,0,0,1]",
+            "description": ""
+          }
         }
       }
     },
@@ -1178,7 +1736,33 @@
         "inlineMaterial": {
           "kind": "optional",
           "default": "null",
-          "description": ""
+          "description": "",
+          "inner": {
+            "kind": "record",
+            "default": "{\"friction\":0.6,\"staticFriction\":0.6,\"restitution\":0}",
+            "description": "",
+            "fields": {
+              "friction": {
+                "kind": "f32",
+                "default": "0.6",
+                "description": "",
+                "min": 0
+              },
+              "staticFriction": {
+                "kind": "f32",
+                "default": "0.6",
+                "description": "",
+                "min": 0
+              },
+              "restitution": {
+                "kind": "f32",
+                "default": "0",
+                "description": "",
+                "min": 0,
+                "max": 1
+              }
+            }
+          }
         },
         "layerOverride": {
           "kind": "str",
@@ -1188,7 +1772,12 @@
         "heights": {
           "kind": "array",
           "default": "[]",
-          "description": ""
+          "description": "",
+          "item": {
+            "kind": "f32",
+            "default": "0",
+            "description": ""
+          }
         },
         "samplesX": {
           "kind": "u32",
@@ -1323,7 +1912,17 @@
         "locales": {
           "kind": "map",
           "default": "{}",
-          "description": "Message tables keyed by BCP 47 tag, then by message key."
+          "description": "Message tables keyed by BCP 47 tag, then by message key.",
+          "value": {
+            "kind": "map",
+            "default": "{}",
+            "description": "",
+            "value": {
+              "kind": "str",
+              "default": "\"\"",
+              "description": ""
+            }
+          }
         }
       }
     },
@@ -1370,7 +1969,13 @@
         "materials": {
           "kind": "array",
           "default": "[]",
-          "description": "Index 0 draws; empty uses the default material."
+          "description": "Index 0 draws; empty uses the default material.",
+          "item": {
+            "kind": "asset",
+            "default": "null",
+            "description": "",
+            "assetType": "material"
+          }
         },
         "capacity": {
           "kind": "u32",
@@ -1406,7 +2011,32 @@
         "lod": {
           "kind": "optional",
           "default": "null",
-          "description": "An optional coarse mesh for far instances; draws only while gpuCulling is on."
+          "description": "An optional coarse mesh for far instances; draws only while gpuCulling is on.",
+          "inner": {
+            "kind": "record",
+            "default": "{\"mesh\":null,\"distance\":40,\"band\":6}",
+            "description": "",
+            "fields": {
+              "mesh": {
+                "kind": "asset",
+                "default": "null",
+                "description": "The coarse mesh drawn beyond the switch distance.",
+                "assetType": "mesh"
+              },
+              "distance": {
+                "kind": "f32",
+                "default": "40",
+                "description": "Camera distance, in metres, at which an instance switches.",
+                "min": 0
+              },
+              "band": {
+                "kind": "f32",
+                "default": "6",
+                "description": "Width of the per-instance dither window centred on the distance.",
+                "min": 0
+              }
+            }
+          }
         }
       }
     },
@@ -1465,17 +2095,109 @@
         "shadows": {
           "kind": "record",
           "default": "{\"enabled\":false,\"technique\":\"pcf\",\"mapSize\":1024,\"bias\":0.00005,\"normalBias\":0,\"darkness\":0,\"cascades\":4,\"maxDistance\":0,\"stabilizeCascades\":false,\"cascadeLambda\":0.5,\"cascadeBlend\":0.1}",
-          "description": "Shadow casting; point and hemispheric lights cannot cast (IGX-0703)."
+          "description": "Shadow casting; point and hemispheric lights cannot cast (IGX-0703).",
+          "fields": {
+            "enabled": {
+              "kind": "bool",
+              "default": "false",
+              "description": "Whether this light casts shadows."
+            },
+            "technique": {
+              "kind": "enum",
+              "default": "\"pcf\"",
+              "description": "Directional lights only; spot lights use PCF.",
+              "values": [
+                "esm",
+                "pcf",
+                "csm"
+              ]
+            },
+            "mapSize": {
+              "kind": "u32",
+              "default": "1024",
+              "description": "Shadow map resolution, in texels per side.",
+              "min": 16
+            },
+            "bias": {
+              "kind": "f32",
+              "default": "0.00005",
+              "description": "Depth bias applied while sampling."
+            },
+            "normalBias": {
+              "kind": "f32",
+              "default": "0",
+              "description": "Offset along the surface normal, PCF only."
+            },
+            "darkness": {
+              "kind": "f32",
+              "default": "0",
+              "description": "How dark a fully shadowed texel is.",
+              "min": 0,
+              "max": 1
+            },
+            "cascades": {
+              "kind": "u32",
+              "default": "4",
+              "description": "Cascade count, CSM only.",
+              "min": 1,
+              "max": 4
+            },
+            "maxDistance": {
+              "kind": "f32",
+              "default": "0",
+              "description": "Shadow distance in metres; 0 takes Lite's default.",
+              "min": 0
+            },
+            "stabilizeCascades": {
+              "kind": "bool",
+              "default": "false",
+              "description": "CSM only: a stable cascade fit, so shadow edges do not shimmer as the camera moves."
+            },
+            "cascadeLambda": {
+              "kind": "f32",
+              "default": "0.5",
+              "description": "CSM only: cascade split spacing, 0 even to 1 logarithmic (more detail near the camera).",
+              "min": 0,
+              "max": 1
+            },
+            "cascadeBlend": {
+              "kind": "f32",
+              "default": "0.1",
+              "description": "CSM only: the fraction of a cascade that fades into the next; 0 shows hard seams.",
+              "min": 0,
+              "max": 1
+            }
+          }
         },
         "includeOnly": {
           "kind": "array",
           "default": "[]",
-          "description": "Light only these entities' renderers."
+          "description": "Light only these entities' renderers.",
+          "item": {
+            "kind": "entityRef",
+            "default": "null",
+            "description": ""
+          }
         },
         "exclude": {
           "kind": "array",
           "default": "[]",
-          "description": "Never light these entities' renderers."
+          "description": "Never light these entities' renderers.",
+          "item": {
+            "kind": "entityRef",
+            "default": "null",
+            "description": ""
+          }
+        },
+        "bakeMode": {
+          "kind": "enum",
+          "default": "\"realtime\"",
+          "description": "Baked lighting: realtime and mixed draw at run time (a probe bake keeps their bounce); baked draws only through the bake.",
+          "values": [
+            "realtime",
+            "mixed",
+            "baked"
+          ]
         }
       }
     },
@@ -1541,7 +2263,7 @@
         "entries": {
           "kind": "map",
           "default": "{}",
-          "description": "Per entity uid, { scale: { x, y }, offset: { x, y } }: the entity's UV2 square in the texture (sampled at uv2 · scale + offset; scale above 0). Missing halves and missing entities take scale 1, offset 0. Only the identity is drawn until the atlas transform lands."
+          "description": "Per entity uid, { scale: { x, y }, offset: { x, y } }: the entity's UV2 square in the texture (sampled at uv2 · scale + offset; scale above 0). Missing halves and missing entities take scale 1, offset 0. A placement other than the identity needs the renderer's lightmap.uv2 on and a mesh with uvs2; each distinct placement is its own pipeline variant."
         }
       }
     },
@@ -1574,7 +2296,26 @@
         "levels": {
           "kind": "array",
           "default": "[]",
-          "description": "The levels, nearest first."
+          "description": "The levels, nearest first.",
+          "item": {
+            "kind": "record",
+            "default": "{\"distance\":10,\"renderer\":null}",
+            "description": "",
+            "fields": {
+              "distance": {
+                "kind": "f32",
+                "default": "10",
+                "description": "Beyond this distance, in metres, the level takes over.",
+                "min": 0
+              },
+              "renderer": {
+                "kind": "componentRef",
+                "default": "null",
+                "description": "The renderer this level draws.",
+                "componentType": "ignifx/MeshRenderer"
+              }
+            }
+          }
         },
         "hysteresis": {
           "kind": "f32",
@@ -1811,7 +2552,33 @@
         "inlineMaterial": {
           "kind": "optional",
           "default": "null",
-          "description": ""
+          "description": "",
+          "inner": {
+            "kind": "record",
+            "default": "{\"friction\":0.6,\"staticFriction\":0.6,\"restitution\":0}",
+            "description": "",
+            "fields": {
+              "friction": {
+                "kind": "f32",
+                "default": "0.6",
+                "description": "",
+                "min": 0
+              },
+              "staticFriction": {
+                "kind": "f32",
+                "default": "0.6",
+                "description": "",
+                "min": 0
+              },
+              "restitution": {
+                "kind": "f32",
+                "default": "0",
+                "description": "",
+                "min": 0,
+                "max": 1
+              }
+            }
+          }
         },
         "layerOverride": {
           "kind": "str",
@@ -1851,7 +2618,13 @@
         "materials": {
           "kind": "array",
           "default": "[]",
-          "description": "One per submesh; empty uses the default material."
+          "description": "One per submesh; empty uses the default material.",
+          "item": {
+            "kind": "asset",
+            "default": "null",
+            "description": "",
+            "assetType": "material"
+          }
         },
         "castShadows": {
           "kind": "bool",
@@ -1876,7 +2649,45 @@
         "lightmap": {
           "kind": "optional",
           "default": "null",
-          "description": "A baked lightmap; drawn only on a static entity with a PBR material."
+          "description": "A baked lightmap; drawn only on a static entity with a PBR material.",
+          "inner": {
+            "kind": "record",
+            "default": "{\"asset\":null,\"mode\":\"add\",\"level\":1,\"gamma\":false,\"uv2\":true}",
+            "description": "",
+            "fields": {
+              "asset": {
+                "kind": "asset",
+                "default": "null",
+                "description": "The baked .lightmap.json to sample.",
+                "assetType": "lightmap"
+              },
+              "mode": {
+                "kind": "enum",
+                "default": "\"add\"",
+                "description": "add adds the baked light to the shading; shadowmap multiplies the shading by it.",
+                "values": [
+                  "add",
+                  "shadowmap"
+                ]
+              },
+              "level": {
+                "kind": "f32",
+                "default": "1",
+                "description": "A multiplier on the lightmap sample.",
+                "min": 0
+              },
+              "gamma": {
+                "kind": "bool",
+                "default": "false",
+                "description": "Decode the sample from sRGB to linear; off for a texture already decoded."
+              },
+              "uv2": {
+                "kind": "bool",
+                "default": "true",
+                "description": "Sample with the mesh's second UV set; off uses the first."
+              }
+            }
+          }
         }
       }
     },
@@ -1895,7 +2706,13 @@
         "materialOverrides": {
           "kind": "map",
           "default": "{}",
-          "description": "Replaces a glTF material, by its name."
+          "description": "Replaces a glTF material, by its name.",
+          "value": {
+            "kind": "asset",
+            "default": "null",
+            "description": "",
+            "assetType": "material"
+          }
         },
         "castShadows": {
           "kind": "bool",
@@ -1923,7 +2740,13 @@
         "playlist": {
           "kind": "array",
           "default": "[]",
-          "description": "The tracks, in the order they are played."
+          "description": "The tracks, in the order they are played.",
+          "item": {
+            "kind": "asset",
+            "default": "null",
+            "description": "",
+            "assetType": "audio"
+          }
         },
         "bus": {
           "kind": "str",
@@ -2251,37 +3074,457 @@
         "main": {
           "kind": "record",
           "default": "{\"capacity\":1000,\"duration\":5,\"looping\":true,\"prewarm\":false,\"startDelay\":0,\"simulationSpace\":\"local\",\"seed\":0,\"playOnAwake\":true,\"timeScale\":1,\"renderOrder\":0}",
-          "description": "Capacity, timing, space, and playback."
+          "description": "Capacity, timing, space, and playback.",
+          "fields": {
+            "capacity": {
+              "kind": "u32",
+              "default": "1000",
+              "description": "How many spawn records the ring holds; older records are overwritten.",
+              "min": 1
+            },
+            "duration": {
+              "kind": "f32",
+              "default": "5",
+              "description": "How long one emission cycle lasts, in seconds.",
+              "min": 0.001
+            },
+            "looping": {
+              "kind": "bool",
+              "default": "true",
+              "description": "Whether the cycle repeats."
+            },
+            "prewarm": {
+              "kind": "bool",
+              "default": "false",
+              "description": "Whether play() fast-forwards one cycle first."
+            },
+            "startDelay": {
+              "kind": "f32",
+              "default": "0",
+              "description": "Seconds after play() before emission starts.",
+              "min": 0
+            },
+            "simulationSpace": {
+              "kind": "enum",
+              "default": "\"local\"",
+              "description": "local follows the entity; world stays put.",
+              "values": [
+                "local",
+                "world"
+              ]
+            },
+            "seed": {
+              "kind": "u32",
+              "default": "0",
+              "description": "The emission seed; 0 picks one at random."
+            },
+            "playOnAwake": {
+              "kind": "bool",
+              "default": "true",
+              "description": "Whether a ParticleSystem starts playing when enabled."
+            },
+            "timeScale": {
+              "kind": "f32",
+              "default": "1",
+              "description": "A multiplier on the system's own clock.",
+              "min": 0
+            },
+            "renderOrder": {
+              "kind": "i32",
+              "default": "0",
+              "description": "Sort key within the transparent phase; lower draws first."
+            }
+          }
         },
         "emission": {
           "kind": "record",
           "default": "{\"rateOverTime\":10,\"rateOverDistance\":0,\"bursts\":[]}",
-          "description": "Rates and bursts."
+          "description": "Rates and bursts.",
+          "fields": {
+            "rateOverTime": {
+              "kind": "f32",
+              "default": "10",
+              "description": "Particles per second.",
+              "min": 0
+            },
+            "rateOverDistance": {
+              "kind": "f32",
+              "default": "0",
+              "description": "Particles per metre the emitter moves.",
+              "min": 0
+            },
+            "bursts": {
+              "kind": "array",
+              "default": "[]",
+              "description": "The bursts, in order.",
+              "item": {
+                "kind": "record",
+                "default": "{\"time\":0,\"count\":10,\"cycles\":1,\"interval\":0.1,\"probability\":1}",
+                "description": "",
+                "fields": {
+                  "time": {
+                    "kind": "f32",
+                    "default": "0",
+                    "description": "Seconds into the cycle.",
+                    "min": 0
+                  },
+                  "count": {
+                    "kind": "custom",
+                    "default": "10",
+                    "description": "How many particles; a range is rolled per firing."
+                  },
+                  "cycles": {
+                    "kind": "u32",
+                    "default": "1",
+                    "description": "Firings per cycle; 0 means until the cycle ends."
+                  },
+                  "interval": {
+                    "kind": "f32",
+                    "default": "0.1",
+                    "description": "Seconds between firings.",
+                    "min": 0
+                  },
+                  "probability": {
+                    "kind": "f32",
+                    "default": "1",
+                    "description": "The chance a firing happens.",
+                    "min": 0,
+                    "max": 1
+                  }
+                }
+              }
+            }
+          }
         },
         "shape": {
           "kind": "record",
           "default": "{\"kind\":\"cone\",\"radius\":0.2,\"thickness\":1,\"arc\":360,\"angle\":25,\"length\":1,\"size\":[1,1,1],\"emitFrom\":\"volume\",\"randomDirection\":0,\"spherizeDirection\":0,\"vertices\":[]}",
-          "description": "Where particles start and which way they go."
+          "description": "Where particles start and which way they go.",
+          "fields": {
+            "kind": {
+              "kind": "enum",
+              "default": "\"cone\"",
+              "description": "Which shape; directional shapes emit along local +Y.",
+              "values": [
+                "point",
+                "sphere",
+                "hemisphere",
+                "cone",
+                "box",
+                "circle",
+                "edge",
+                "mesh"
+              ]
+            },
+            "radius": {
+              "kind": "f32",
+              "default": "0.2",
+              "description": "Sphere, hemisphere, circle, or cone-base radius.",
+              "min": 0
+            },
+            "thickness": {
+              "kind": "f32",
+              "default": "1",
+              "description": "How much of the radius emits: 0 is the surface, 1 the whole.",
+              "min": 0,
+              "max": 1
+            },
+            "arc": {
+              "kind": "f32",
+              "default": "360",
+              "description": "The angular span, in degrees.",
+              "min": 0,
+              "max": 360
+            },
+            "angle": {
+              "kind": "f32",
+              "default": "25",
+              "description": "A cone's half-angle, in degrees.",
+              "min": 0,
+              "max": 90
+            },
+            "length": {
+              "kind": "f32",
+              "default": "1",
+              "description": "A cone's height, or an edge's length.",
+              "min": 0
+            },
+            "size": {
+              "kind": "vec3",
+              "default": "[1,1,1]",
+              "description": "A box's full extents."
+            },
+            "emitFrom": {
+              "kind": "enum",
+              "default": "\"volume\"",
+              "description": "volume, shell, or a cone's base.",
+              "values": [
+                "volume",
+                "shell",
+                "base"
+              ]
+            },
+            "randomDirection": {
+              "kind": "f32",
+              "default": "0",
+              "description": "How much of the start direction is random.",
+              "min": 0,
+              "max": 1
+            },
+            "spherizeDirection": {
+              "kind": "f32",
+              "default": "0",
+              "description": "How much the start direction points away from the centre.",
+              "min": 0,
+              "max": 1
+            },
+            "vertices": {
+              "kind": "array",
+              "default": "[]",
+              "description": "A mesh shape's triangles, nine numbers per triangle.",
+              "item": {
+                "kind": "f32",
+                "default": "0",
+                "description": ""
+              }
+            }
+          }
         },
         "start": {
           "kind": "record",
           "default": "{\"lifetime\":2,\"speed\":2,\"size\":0.2,\"size3D\":[1,1,1],\"rotation\":0,\"color\":[1,1,1,1]}",
-          "description": "What a particle is born with."
+          "description": "What a particle is born with.",
+          "fields": {
+            "lifetime": {
+              "kind": "custom",
+              "default": "2",
+              "description": "Seconds a particle lives."
+            },
+            "speed": {
+              "kind": "custom",
+              "default": "2",
+              "description": "Metres per second along the start direction."
+            },
+            "size": {
+              "kind": "custom",
+              "default": "0.2",
+              "description": "The particle's size, in metres."
+            },
+            "size3D": {
+              "kind": "vec3",
+              "default": "[1,1,1]",
+              "description": "Optional per-axis size multipliers."
+            },
+            "rotation": {
+              "kind": "custom",
+              "default": "0",
+              "description": "The start rotation, in degrees."
+            },
+            "color": {
+              "kind": "custom",
+              "default": "[1,1,1,1]",
+              "description": "The start colour, sRGB; a range picks between two per particle."
+            }
+          }
         },
         "forces": {
           "kind": "record",
           "default": "{\"gravity\":[0,0,0],\"gravityMultiplier\":0,\"drag\":0,\"constantForce\":[0,0,0],\"orbit\":{\"axis\":[0,1,0],\"speed\":90},\"noise\":{\"strength\":0.5,\"frequency\":1,\"scroll\":[0,0,0],\"octaves\":1,\"influenceOverLife\":1}}",
-          "description": "What acts on a particle."
+          "description": "What acts on a particle.",
+          "fields": {
+            "gravity": {
+              "kind": "vec3",
+              "default": "[0,0,0]",
+              "description": "An explicit world gravity; omit to scale the app's."
+            },
+            "gravityMultiplier": {
+              "kind": "f32",
+              "default": "0",
+              "description": "How much of the app's gravity applies."
+            },
+            "drag": {
+              "kind": "f32",
+              "default": "0",
+              "description": "Linear drag; 0 is none.",
+              "min": 0
+            },
+            "constantForce": {
+              "kind": "vec3",
+              "default": "[0,0,0]",
+              "description": "A constant acceleration in simulation space, m/s^2."
+            },
+            "orbit": {
+              "kind": "record",
+              "default": "{\"axis\":[0,1,0],\"speed\":90}",
+              "description": "A rotation about an axis through the emitter.",
+              "fields": {
+                "axis": {
+                  "kind": "vec3",
+                  "default": "[0,1,0]",
+                  "description": "The orbit axis."
+                },
+                "speed": {
+                  "kind": "f32",
+                  "default": "90",
+                  "description": "Degrees per second."
+                }
+              }
+            },
+            "noise": {
+              "kind": "record",
+              "default": "{\"strength\":0.5,\"frequency\":1,\"scroll\":[0,0,0],\"octaves\":1,\"influenceOverLife\":1}",
+              "description": "A positional noise offset.",
+              "fields": {
+                "strength": {
+                  "kind": "f32",
+                  "default": "0.5",
+                  "description": "The largest offset, in metres.",
+                  "min": 0
+                },
+                "frequency": {
+                  "kind": "f32",
+                  "default": "1",
+                  "description": "How quickly the field varies with position.",
+                  "min": 0
+                },
+                "scroll": {
+                  "kind": "vec3",
+                  "default": "[0,0,0]",
+                  "description": "How the field drifts with time."
+                },
+                "octaves": {
+                  "kind": "u32",
+                  "default": "1",
+                  "description": "How many octaves are summed.",
+                  "min": 1,
+                  "max": 2
+                },
+                "influenceOverLife": {
+                  "kind": "custom",
+                  "default": "1",
+                  "description": "A multiplier on strength over the particle's life."
+                }
+              }
+            }
+          }
         },
         "overLifetime": {
           "kind": "record",
           "default": "{\"color\":[1,1,1,1],\"size\":1,\"sizeY\":1,\"sizeZ\":1,\"rotation\":0}",
-          "description": "How a particle changes over its life."
+          "description": "How a particle changes over its life.",
+          "fields": {
+            "color": {
+              "kind": "custom",
+              "default": "[1,1,1,1]",
+              "description": "A gradient multiplied onto the start colour over life."
+            },
+            "size": {
+              "kind": "custom",
+              "default": "1",
+              "description": "A multiplier on the start size over life (X when sizeY or sizeZ is set)."
+            },
+            "sizeY": {
+              "kind": "custom",
+              "default": "1",
+              "description": "A separate Y multiplier over life."
+            },
+            "sizeZ": {
+              "kind": "custom",
+              "default": "1",
+              "description": "A separate Z multiplier over life."
+            },
+            "rotation": {
+              "kind": "custom",
+              "default": "0",
+              "description": "Angular speed in degrees per second."
+            }
+          }
         },
         "renderer": {
           "kind": "record",
           "default": "{\"mode\":\"billboard\",\"mesh\":\"box\",\"texture\":\"\",\"sheet\":{\"tiles\":[1,1],\"frameOverTime\":0},\"blend\":\"premultiplied\",\"lit\":false,\"pivot\":[0,0],\"speedScale\":0,\"lengthScale\":1}",
-          "description": "How a particle is drawn."
+          "description": "How a particle is drawn.",
+          "fields": {
+            "mode": {
+              "kind": "enum",
+              "default": "\"billboard\"",
+              "description": "How particles are oriented.",
+              "values": [
+                "billboard",
+                "stretched",
+                "horizontal",
+                "vertical",
+                "mesh"
+              ]
+            },
+            "mesh": {
+              "kind": "enum",
+              "default": "\"box\"",
+              "description": "The primitive a mesh renderer draws.",
+              "values": [
+                "box",
+                "sphere",
+                "plane",
+                "cylinder",
+                "capsule",
+                "torus"
+              ]
+            },
+            "texture": {
+              "kind": "str",
+              "default": "\"\"",
+              "description": "The texture's asset address, or omitted for a procedural soft disc."
+            },
+            "sheet": {
+              "kind": "record",
+              "default": "{\"tiles\":[1,1],\"frameOverTime\":0}",
+              "description": "The sprite-sheet layout of the texture.",
+              "fields": {
+                "tiles": {
+                  "kind": "vec2",
+                  "default": "[1,1]",
+                  "description": "Columns and rows of the sprite sheet."
+                },
+                "frameOverTime": {
+                  "kind": "custom",
+                  "default": "0",
+                  "description": "A curve over life, the string \"random\", or { fps }."
+                }
+              }
+            },
+            "blend": {
+              "kind": "enum",
+              "default": "\"premultiplied\"",
+              "description": "How particles composite.",
+              "values": [
+                "premultiplied",
+                "additive",
+                "alpha"
+              ]
+            },
+            "lit": {
+              "kind": "bool",
+              "default": "false",
+              "description": "Shade with the main light and the ambient colour."
+            },
+            "pivot": {
+              "kind": "vec2",
+              "default": "[0,0]",
+              "description": "Where the origin sits inside the quad, in size units."
+            },
+            "speedScale": {
+              "kind": "f32",
+              "default": "0",
+              "description": "How much of the speed a stretched particle adds to its length.",
+              "min": 0
+            },
+            "lengthScale": {
+              "kind": "f32",
+              "default": "1",
+              "description": "A multiplier on a stretched particle's length.",
+              "min": 0
+            }
+          }
         }
       }
     },
@@ -2488,7 +3731,27 @@
         "inlineMaterial": {
           "kind": "optional",
           "default": "null",
-          "description": ""
+          "description": "",
+          "inner": {
+            "kind": "record",
+            "default": "{\"friction\":0.6,\"restitution\":0}",
+            "description": "",
+            "fields": {
+              "friction": {
+                "kind": "f32",
+                "default": "0.6",
+                "description": "",
+                "min": 0
+              },
+              "restitution": {
+                "kind": "f32",
+                "default": "0",
+                "description": "",
+                "min": 0,
+                "max": 1
+              }
+            }
+          }
         },
         "frictionCombine": {
           "kind": "enum",
@@ -2525,7 +3788,12 @@
         "points": {
           "kind": "array",
           "default": "[]",
-          "description": ""
+          "description": "",
+          "item": {
+            "kind": "vec2",
+            "default": "[0,0]",
+            "description": ""
+          }
         }
       }
     },
@@ -2538,32 +3806,253 @@
         "bloom": {
           "kind": "record",
           "default": "{\"enabled\":false,\"order\":0,\"weight\":0.15,\"kernel\":64,\"threshold\":0.9,\"exposure\":1,\"scale\":0.5,\"intensity\":0.1,\"radius\":0.7,\"hdrThreshold\":0}",
-          "description": "Bloom. With rendering.hdr on, HDR bloom on the linear scene colour replaces the LDR pass and reads intensity, radius and hdrThreshold; without it, the other fields apply."
+          "description": "Bloom. With rendering.hdr on, HDR bloom on the linear scene colour replaces the LDR pass and reads intensity, radius and hdrThreshold; without it, the other fields apply.",
+          "fields": {
+            "enabled": {
+              "kind": "bool",
+              "default": "false",
+              "description": "Whether the glow pass runs."
+            },
+            "order": {
+              "kind": "i32",
+              "default": "0",
+              "description": "Position in the chain; lower runs first."
+            },
+            "weight": {
+              "kind": "f32",
+              "default": "0.15",
+              "description": "How strongly the glow is mixed back in.",
+              "min": 0
+            },
+            "kernel": {
+              "kind": "u32",
+              "default": "64",
+              "description": "Blur kernel width, in pixels.",
+              "min": 1
+            },
+            "threshold": {
+              "kind": "f32",
+              "default": "0.9",
+              "description": "The luminance above which a pixel glows.",
+              "min": 0
+            },
+            "exposure": {
+              "kind": "f32",
+              "default": "1",
+              "description": "Exposure applied while extracting highlights.",
+              "min": 0
+            },
+            "scale": {
+              "kind": "f32",
+              "default": "0.5",
+              "description": "Fraction of full resolution the blur runs at.",
+              "min": 0.05,
+              "max": 1
+            },
+            "intensity": {
+              "kind": "f32",
+              "default": "0.1",
+              "description": "HDR bloom only: how much glow is mixed into the frame.",
+              "min": 0,
+              "max": 1
+            },
+            "radius": {
+              "kind": "f32",
+              "default": "0.7",
+              "description": "HDR bloom only: how far the glow spreads, from tight (0) to wide (1).",
+              "min": 0,
+              "max": 1
+            },
+            "hdrThreshold": {
+              "kind": "f32",
+              "default": "0",
+              "description": "HDR bloom only: linear luminance below which nothing glows; 0 lets every pixel glow by its energy.",
+              "min": 0
+            }
+          }
         },
         "smaa": {
           "kind": "record",
           "default": "{\"enabled\":false,\"order\":1,\"threshold\":0.05,\"maxSearchSteps\":16,\"diagonalDetection\":false,\"cornerDetection\":false}",
-          "description": "SMAA anti-aliasing. Needs a single-sample source."
+          "description": "SMAA anti-aliasing. Needs a single-sample source.",
+          "fields": {
+            "enabled": {
+              "kind": "bool",
+              "default": "false",
+              "description": "Whether subpixel morphological anti-aliasing runs."
+            },
+            "order": {
+              "kind": "i32",
+              "default": "1",
+              "description": "Position in the chain; lower runs first."
+            },
+            "threshold": {
+              "kind": "f32",
+              "default": "0.05",
+              "description": "The luma difference that counts as an edge.",
+              "min": 0,
+              "max": 1
+            },
+            "maxSearchSteps": {
+              "kind": "u32",
+              "default": "16",
+              "description": "How far the pattern search runs along an edge.",
+              "min": 1
+            },
+            "diagonalDetection": {
+              "kind": "bool",
+              "default": "false",
+              "description": "Detect 45-degree patterns."
+            },
+            "cornerDetection": {
+              "kind": "bool",
+              "default": "false",
+              "description": "Attenuate corner patterns."
+            }
+          }
         },
         "imageProcessing": {
           "kind": "record",
           "default": "{\"enabled\":false,\"order\":2}",
-          "description": "Exposure, contrast, and tone mapping as a pass — the alternative to Environment."
+          "description": "Exposure, contrast, and tone mapping as a pass — the alternative to Environment.",
+          "fields": {
+            "enabled": {
+              "kind": "bool",
+              "default": "false",
+              "description": "Whether a full-screen grading pass runs."
+            },
+            "order": {
+              "kind": "i32",
+              "default": "2",
+              "description": "Position in the chain; lower runs first."
+            }
+          }
         },
         "custom": {
           "kind": "array",
           "default": "[]",
-          "description": "Custom full-screen WGSL effects, ordered among the built-ins by order."
+          "description": "Custom full-screen WGSL effects, ordered among the built-ins by order.",
+          "item": {
+            "kind": "record",
+            "default": "{\"shader\":null,\"enabled\":true,\"order\":10,\"values\":{},\"textures\":{}}",
+            "description": "",
+            "fields": {
+              "shader": {
+                "kind": "asset",
+                "default": "null",
+                "description": "The .post.wgsl whose mainFragment runs full-screen.",
+                "assetType": "shader"
+              },
+              "enabled": {
+                "kind": "bool",
+                "default": "true",
+                "description": "Whether the effect runs."
+              },
+              "order": {
+                "kind": "i32",
+                "default": "10",
+                "description": "Position in the chain; lower runs first."
+              },
+              "values": {
+                "kind": "custom",
+                "default": "{}",
+                "description": "Overrides of the file's declared uniform defaults, by declared name."
+              },
+              "textures": {
+                "kind": "map",
+                "default": "{}",
+                "description": "Textures for the file's declared samplers.",
+                "value": {
+                  "kind": "asset",
+                  "default": "null",
+                  "description": "",
+                  "assetType": "texture"
+                }
+              }
+            }
+          }
         },
         "contactShadows": {
           "kind": "record",
           "default": "{\"enabled\":false,\"intensity\":0.6,\"length\":0.3,\"thickness\":0.35,\"samples\":8}",
-          "description": "Short shadows where objects meet, towards the main directional light. Runs on the scene colour before the chain; needs rendering.features.postProcessing."
+          "description": "Short shadows where objects meet, towards the main directional light. Runs on the scene colour before the chain; needs rendering.features.postProcessing.",
+          "fields": {
+            "enabled": {
+              "kind": "bool",
+              "default": "false",
+              "description": "Whether screen-space contact shadows run."
+            },
+            "intensity": {
+              "kind": "f32",
+              "default": "0.6",
+              "description": "How dark a contact gets.",
+              "min": 0,
+              "max": 4
+            },
+            "length": {
+              "kind": "f32",
+              "default": "0.3",
+              "description": "How far each ray marches towards the light, in world units.",
+              "min": 0.001
+            },
+            "thickness": {
+              "kind": "f32",
+              "default": "0.35",
+              "description": "Assumed thickness behind each depth sample, in world units.",
+              "min": 0.001
+            },
+            "samples": {
+              "kind": "u32",
+              "default": "8",
+              "description": "March steps per pixel.",
+              "min": 1,
+              "max": 64
+            }
+          }
         },
         "ssgi": {
           "kind": "record",
           "default": "{\"enabled\":false,\"intensity\":1,\"radius\":2,\"samples\":8,\"halfResolution\":true,\"environmentDiffuse\":0.5}",
-          "description": "One bounce of the lit scene colour (beta, desktop tier). Runs on the scene colour before the chain; needs rendering.features.postProcessing."
+          "description": "One bounce of the lit scene colour (beta, desktop tier). Runs on the scene colour before the chain; needs rendering.features.postProcessing.",
+          "fields": {
+            "enabled": {
+              "kind": "bool",
+              "default": "false",
+              "description": "Whether screen-space global illumination runs (beta, desktop tier)."
+            },
+            "intensity": {
+              "kind": "f32",
+              "default": "1",
+              "description": "How strongly the bounced light is added.",
+              "min": 0,
+              "max": 4
+            },
+            "radius": {
+              "kind": "f32",
+              "default": "2",
+              "description": "How far each ray marches, in world units.",
+              "min": 0.001
+            },
+            "samples": {
+              "kind": "u32",
+              "default": "8",
+              "description": "March steps per ray.",
+              "min": 1,
+              "max": 64
+            },
+            "halfResolution": {
+              "kind": "bool",
+              "default": "true",
+              "description": "Trace at half resolution. A change rebuilds the pass."
+            },
+            "environmentDiffuse": {
+              "kind": "f32",
+              "default": "0.5",
+              "description": "How much of the environment's diffuse light remains while SSGI runs, so the bounce is not counted twice. Needs rendering.hdr or the materialPlugins feature.",
+              "min": 0,
+              "max": 1
+            }
+          }
         }
       }
     },
@@ -2628,7 +4117,18 @@
         "boxProjection": {
           "kind": "optional",
           "default": "null",
-          "description": "Full size in metres of the box, centred on the probe, that reflections are projected onto; null for none."
+          "description": "Full size in metres of the box, centred on the probe, that reflections are projected onto; null for none.",
+          "inner": {
+            "kind": "vec3",
+            "default": "[10,10,10]",
+            "description": ""
+          }
+        },
+        "blendDistance": {
+          "kind": "f32",
+          "default": "0",
+          "description": "How far inside its box, in metres, the probe fades out where it overlaps another box probe; 0 for no blending. Needs boxProjection.",
+          "min": 0
         },
         "cullingMask": {
           "kind": "layerMask",
@@ -2679,7 +4179,24 @@
         "freezeRotation": {
           "kind": "record",
           "default": "{\"x\":false,\"y\":false,\"z\":false}",
-          "description": ""
+          "description": "",
+          "fields": {
+            "x": {
+              "kind": "bool",
+              "default": "false",
+              "description": ""
+            },
+            "y": {
+              "kind": "bool",
+              "default": "false",
+              "description": ""
+            },
+            "z": {
+              "kind": "bool",
+              "default": "false",
+              "description": ""
+            }
+          }
         },
         "interpolation": {
           "kind": "enum",
@@ -2874,7 +4391,33 @@
         "inlineMaterial": {
           "kind": "optional",
           "default": "null",
-          "description": ""
+          "description": "",
+          "inner": {
+            "kind": "record",
+            "default": "{\"friction\":0.6,\"staticFriction\":0.6,\"restitution\":0}",
+            "description": "",
+            "fields": {
+              "friction": {
+                "kind": "f32",
+                "default": "0.6",
+                "description": "",
+                "min": 0
+              },
+              "staticFriction": {
+                "kind": "f32",
+                "default": "0.6",
+                "description": "",
+                "min": 0
+              },
+              "restitution": {
+                "kind": "f32",
+                "default": "0",
+                "description": "",
+                "min": 0,
+                "max": 1
+              }
+            }
+          }
         },
         "layerOverride": {
           "kind": "str",
@@ -2913,7 +4456,72 @@
         "clips": {
           "kind": "array",
           "default": "[]",
-          "description": "The clips; the first is the default. Each is a record of name (str, what SpriteAnimator.play takes), frames (array of atlas frame names in play order, which need not be adjacent), from/to (str: an INCLUSIVE range over atlas INDICES used when frames is empty — every index between the two endpoints is played, in atlas order, so a range over non-adjacent frames plays everything in between; to before from plays it backwards), fps (f32, default 12), loop (bool, default true) and events (array of { frame: u32 index within the clip, not the atlas; name: str })."
+          "description": "The clips; the first is the default. Each is a record of name (str, what SpriteAnimator.play takes), frames (array of atlas frame names in play order, which need not be adjacent), from/to (str: an INCLUSIVE range over atlas INDICES used when frames is empty — every index between the two endpoints is played, in atlas order, so a range over non-adjacent frames plays everything in between; to before from plays it backwards), fps (f32, default 12), loop (bool, default true) and events (array of { frame: u32 index within the clip, not the atlas; name: str }).",
+          "item": {
+            "kind": "record",
+            "default": "{\"name\":\"\",\"frames\":[],\"from\":\"\",\"to\":\"\",\"fps\":12,\"loop\":true,\"events\":[]}",
+            "description": "",
+            "fields": {
+              "name": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The clip's name; what SpriteAnimator.play takes."
+              },
+              "frames": {
+                "kind": "array",
+                "default": "[]",
+                "description": "Atlas frame names, in play order; they need not be adjacent in the atlas.",
+                "item": {
+                  "kind": "str",
+                  "default": "\"\"",
+                  "description": ""
+                }
+              },
+              "from": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The atlas frame whose INDEX starts the range, when frames is empty. Every atlas index between from and to is played, so the two must bracket a contiguous run."
+              },
+              "to": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The atlas frame whose INDEX ends the range, inclusive; an index below from plays it backwards."
+              },
+              "fps": {
+                "kind": "f32",
+                "default": "12",
+                "description": "Frames per second.",
+                "min": 2.220446049250313e-16
+              },
+              "loop": {
+                "kind": "bool",
+                "default": "true",
+                "description": "Whether the clip restarts at its end."
+              },
+              "events": {
+                "kind": "array",
+                "default": "[]",
+                "description": "Events fired as the clip passes a frame.",
+                "item": {
+                  "kind": "record",
+                  "default": "{\"frame\":0,\"name\":\"\"}",
+                  "description": "",
+                  "fields": {
+                    "frame": {
+                      "kind": "u32",
+                      "default": "0",
+                      "description": "The zero-based index within the clip, not the atlas."
+                    },
+                    "name": {
+                      "kind": "str",
+                      "default": "\"\"",
+                      "description": "The name emitted on SpriteAnimator.onEvent."
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -2985,7 +4593,58 @@
         "frames": {
           "kind": "array",
           "default": "[]",
-          "description": "The frames, in the order they are indexed. Each is a record of name (str, what SpriteRenderer.frameName names), x/y (f32, the top-left corner in image pixels), w/h (f32, the size in image pixels), pivot (vec2 in [0,1] of the frame; [0,0] is top-left) sourceSize (vec2, the untrimmed size when the packer trimmed the frame) and sourceOffset (vec2, the trimmed rectangle's top-left inside that source, in pixels, as spriteSourceSize.x/y; with it the frame draws at w/h, offset to where the untrimmed frame would be, and its pivot is in [0,1] of sourceSize)."
+          "description": "The frames, in the order they are indexed. Each is a record of name (str, what SpriteRenderer.frameName names), x/y (f32, the top-left corner in image pixels), w/h (f32, the size in image pixels), pivot (vec2 in [0,1] of the frame; [0,0] is top-left) sourceSize (vec2, the untrimmed size when the packer trimmed the frame) and sourceOffset (vec2, the trimmed rectangle's top-left inside that source, in pixels, as spriteSourceSize.x/y; with it the frame draws at w/h, offset to where the untrimmed frame would be, and its pivot is in [0,1] of sourceSize).",
+          "item": {
+            "kind": "record",
+            "default": "{\"name\":\"\",\"x\":0,\"y\":0,\"w\":0,\"h\":0,\"pivot\":[0.5,0.5],\"sourceSize\":[0,0],\"sourceOffset\":[0,0]}",
+            "description": "",
+            "fields": {
+              "name": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The frame's name; what SpriteRenderer.frameName names."
+              },
+              "x": {
+                "kind": "f32",
+                "default": "0",
+                "description": "The left edge, in image pixels.",
+                "min": 0
+              },
+              "y": {
+                "kind": "f32",
+                "default": "0",
+                "description": "The top edge, in image pixels.",
+                "min": 0
+              },
+              "w": {
+                "kind": "f32",
+                "default": "0",
+                "description": "The width, in image pixels.",
+                "min": 0
+              },
+              "h": {
+                "kind": "f32",
+                "default": "0",
+                "description": "The height, in image pixels.",
+                "min": 0
+              },
+              "pivot": {
+                "kind": "vec2",
+                "default": "[0.5,0.5]",
+                "description": "Pivot in [0,1] of the frame; [0,0] is top-left."
+              },
+              "sourceSize": {
+                "kind": "vec2",
+                "default": "[0,0]",
+                "description": "The untrimmed size, when the packer trimmed the frame."
+              },
+              "sourceOffset": {
+                "kind": "vec2",
+                "default": "[0,0]",
+                "description": "The trimmed rectangle's top-left inside the untrimmed source, in pixels; needs sourceSize."
+              }
+            }
+          }
         }
       }
     },
@@ -3083,7 +4742,12 @@
         "pivotOverride": {
           "kind": "optional",
           "default": "null",
-          "description": "Overrides the frame's own pivot, in [0,1] of the frame."
+          "description": "Overrides the frame's own pivot, in [0,1] of the frame.",
+          "inner": {
+            "kind": "vec2",
+            "default": "[0,0]",
+            "description": ""
+          }
         },
         "screenSpace": {
           "kind": "bool",
@@ -3151,7 +4815,27 @@
         "size": {
           "kind": "record",
           "default": "{\"width\":512,\"depth\":512,\"height\":80}",
-          "description": "The terrain's extent, in metres."
+          "description": "The terrain's extent, in metres.",
+          "fields": {
+            "width": {
+              "kind": "f32",
+              "default": "512",
+              "description": "Extent along X, in metres.",
+              "min": 0
+            },
+            "depth": {
+              "kind": "f32",
+              "default": "512",
+              "description": "Extent along Z, in metres.",
+              "min": 0
+            },
+            "height": {
+              "kind": "f32",
+              "default": "80",
+              "description": "The height a full-scale sample reaches, in metres.",
+              "min": 0
+            }
+          }
         },
         "resolution": {
           "kind": "u32",
@@ -3162,37 +4846,206 @@
         "heightmap": {
           "kind": "record",
           "default": "{\"source\":\"\"}",
-          "description": "Where the heights come from; omit it for noise."
+          "description": "Where the heights come from; omit it for noise.",
+          "fields": {
+            "source": {
+              "kind": "str",
+              "default": "\"\"",
+              "description": "A .r16 or PNG address, relative to this document."
+            }
+          }
         },
         "noise": {
           "kind": "record",
           "default": "{\"seed\":1,\"octaves\":6,\"frequency\":0.004,\"lacunarity\":2,\"persistence\":0.5,\"ridged\":false,\"terraces\":0}",
-          "description": "The seeded fractal noise used when there is no heightmap."
+          "description": "The seeded fractal noise used when there is no heightmap.",
+          "fields": {
+            "seed": {
+              "kind": "u32",
+              "default": "1",
+              "description": "The seed; the same seed always produces the same field."
+            },
+            "octaves": {
+              "kind": "u32",
+              "default": "6",
+              "description": "How many octaves are summed.",
+              "min": 1,
+              "max": 16
+            },
+            "frequency": {
+              "kind": "f32",
+              "default": "0.004",
+              "description": "The first octave's frequency, in cycles per metre.",
+              "min": 0
+            },
+            "lacunarity": {
+              "kind": "f32",
+              "default": "2",
+              "description": "How much the frequency grows per octave.",
+              "min": 0
+            },
+            "persistence": {
+              "kind": "f32",
+              "default": "0.5",
+              "description": "How much the amplitude shrinks per octave.",
+              "min": 0
+            },
+            "ridged": {
+              "kind": "bool",
+              "default": "false",
+              "description": "Sharp crests rather than rolling hills."
+            },
+            "terraces": {
+              "kind": "u32",
+              "default": "0",
+              "description": "How many flat steps the height is quantised into; 0 leaves it smooth."
+            }
+          }
         },
         "chunks": {
           "kind": "record",
           "default": "{\"size\":64,\"lodLevels\":4,\"lodDistance\":96,\"skirtDepth\":2}",
-          "description": "How the field is cut into chunks."
+          "description": "How the field is cut into chunks.",
+          "fields": {
+            "size": {
+              "kind": "u32",
+              "default": "64",
+              "description": "Quads per chunk side.",
+              "min": 1
+            },
+            "lodLevels": {
+              "kind": "u32",
+              "default": "4",
+              "description": "How many LOD meshes each chunk carries.",
+              "min": 1,
+              "max": 8
+            },
+            "lodDistance": {
+              "kind": "f32",
+              "default": "96",
+              "description": "Metres at which level 1 takes over; each level doubles it.",
+              "min": 0
+            },
+            "skirtDepth": {
+              "kind": "f32",
+              "default": "2",
+              "description": "How far every LOD mesh's edges hang down, in metres.",
+              "min": 0
+            }
+          }
         },
         "layers": {
           "kind": "array",
           "default": "[]",
-          "description": "The layers, 1 to 8, in control-channel order."
+          "description": "The layers, 1 to 8, in control-channel order.",
+          "item": {
+            "kind": "record",
+            "default": "{\"name\":\"\",\"albedo\":\"\",\"normal\":\"\",\"tiling\":8,\"triplanar\":false}",
+            "description": "",
+            "fields": {
+              "name": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The layer's name; what a splat rule and a TerrainScatter refer to."
+              },
+              "albedo": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The albedo texture's address; empty for a flat colour."
+              },
+              "normal": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The tangent-space normal map's address; empty for none."
+              },
+              "tiling": {
+                "kind": "f32",
+                "default": "8",
+                "description": "How many metres one repeat of the textures spans.",
+                "min": 0
+              },
+              "triplanar": {
+                "kind": "bool",
+                "default": "false",
+                "description": "Whether the layer projects along all three axes."
+              }
+            }
+          }
         },
         "splat": {
           "kind": "record",
           "default": "{\"control\":[]}",
-          "description": "Painted splat weights; omit it to generate them from rules."
+          "description": "Painted splat weights; omit it to generate them from rules.",
+          "fields": {
+            "control": {
+              "kind": "array",
+              "default": "[]",
+              "description": "RGBA control map addresses; the second covers layers 5-8.",
+              "item": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": ""
+              }
+            }
+          }
         },
         "splatRules": {
           "kind": "array",
           "default": "[]",
-          "description": "Rules that generate the splat weights."
+          "description": "Rules that generate the splat weights.",
+          "item": {
+            "kind": "record",
+            "default": "{\"layer\":\"\",\"height\":[],\"slope\":[]}",
+            "description": "",
+            "fields": {
+              "layer": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The layer the rule paints."
+              },
+              "height": {
+                "kind": "array",
+                "default": "[]",
+                "description": "The [min, max] height band, in metres.",
+                "item": {
+                  "kind": "f32",
+                  "default": "0",
+                  "description": ""
+                }
+              },
+              "slope": {
+                "kind": "array",
+                "default": "[]",
+                "description": "The [min, max] slope band, in degrees.",
+                "item": {
+                  "kind": "f32",
+                  "default": "0",
+                  "description": ""
+                }
+              }
+            }
+          }
         },
         "material": {
           "kind": "record",
           "default": "{\"roughness\":0.9,\"metallic\":0}",
-          "description": "The PBR factors every layer shares; per-layer roughness is not available."
+          "description": "The PBR factors every layer shares; per-layer roughness is not available.",
+          "fields": {
+            "roughness": {
+              "kind": "f32",
+              "default": "0.9",
+              "description": "Roughness factor for the whole surface.",
+              "min": 0,
+              "max": 1
+            },
+            "metallic": {
+              "kind": "f32",
+              "default": "0",
+              "description": "Metallic factor for the whole surface.",
+              "min": 0,
+              "max": 1
+            }
+          }
         }
       }
     },
@@ -3235,7 +5088,12 @@
         "layers": {
           "kind": "array",
           "default": "[]",
-          "description": "Splat layers to place on; empty places everywhere."
+          "description": "Splat layers to place on; empty places everywhere.",
+          "item": {
+            "kind": "str",
+            "default": "\"\"",
+            "description": ""
+          }
         },
         "layerThreshold": {
           "kind": "f32",
@@ -3565,22 +5423,148 @@
         "tilesets": {
           "kind": "array",
           "default": "[]",
-          "description": "The tilesets, ascending by firstId."
+          "description": "The tilesets, ascending by firstId.",
+          "item": {
+            "kind": "record",
+            "default": "{\"name\":\"\",\"atlas\":\"\",\"firstId\":1}",
+            "description": "",
+            "fields": {
+              "name": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The tileset's name; the frame-name prefix."
+              },
+              "atlas": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The .atlas.json address; empty means collision-only."
+              },
+              "firstId": {
+                "kind": "u32",
+                "default": "1",
+                "description": "The global id of this tileset's first tile.",
+                "min": 1
+              }
+            }
+          }
         },
         "layers": {
           "kind": "array",
           "default": "[]",
-          "description": "The tile layers, back to front."
+          "description": "The tile layers, back to front.",
+          "item": {
+            "kind": "record",
+            "default": "{\"name\":\"\",\"sortingLayer\":\"Default\",\"orderInLayer\":0,\"opacity\":1,\"parallax\":[1,1],\"collision\":false,\"width\":0,\"height\":0,\"tiles\":[]}",
+            "description": "",
+            "fields": {
+              "name": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The layer's name."
+              },
+              "sortingLayer": {
+                "kind": "str",
+                "default": "\"Default\"",
+                "description": "Which sorting layer the tiles draw on."
+              },
+              "orderInLayer": {
+                "kind": "i32",
+                "default": "0",
+                "description": "Sub-order within the sorting layer."
+              },
+              "opacity": {
+                "kind": "f32",
+                "default": "1",
+                "description": "The layer's alpha.",
+                "min": 0,
+                "max": 1
+              },
+              "parallax": {
+                "kind": "vec2",
+                "default": "[1,1]",
+                "description": "Fraction of the camera's motion the layer follows."
+              },
+              "collision": {
+                "kind": "bool",
+                "default": "false",
+                "description": "Whether this layer's tiles contribute colliders."
+              },
+              "width": {
+                "kind": "u32",
+                "default": "0",
+                "description": "The layer's width, in cells."
+              },
+              "height": {
+                "kind": "u32",
+                "default": "0",
+                "description": "The layer's height, in cells."
+              },
+              "tiles": {
+                "kind": "array",
+                "default": "[]",
+                "description": "Tile ids, row-major, top row first; 0 is empty.",
+                "item": {
+                  "kind": "u32",
+                  "default": "0",
+                  "description": ""
+                }
+              }
+            }
+          }
         },
         "objects": {
           "kind": "array",
           "default": "[]",
-          "description": "The objects layer: authoring data that `ignifx import tilemap` moves into a scene."
+          "description": "The objects layer: authoring data that `ignifx import tilemap` moves into a scene.",
+          "item": {
+            "kind": "record",
+            "default": "{\"name\":\"\",\"type\":\"\",\"x\":0,\"y\":0,\"width\":0,\"height\":0}",
+            "description": "",
+            "fields": {
+              "name": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The object's name."
+              },
+              "type": {
+                "kind": "str",
+                "default": "\"\"",
+                "description": "The object's type, which `ignifx import tilemap` writes as the entity's tag."
+              },
+              "x": {
+                "kind": "f32",
+                "default": "0",
+                "description": "The bottom-left corner, in world metres."
+              },
+              "y": {
+                "kind": "f32",
+                "default": "0",
+                "description": "The bottom-left corner, in world metres."
+              },
+              "width": {
+                "kind": "f32",
+                "default": "0",
+                "description": "The width, in world metres.",
+                "min": 0
+              },
+              "height": {
+                "kind": "f32",
+                "default": "0",
+                "description": "The height, in world metres.",
+                "min": 0
+              }
+            }
+          }
         },
         "properties": {
           "kind": "map",
           "default": "{}",
-          "description": "The map's custom properties."
+          "description": "The map's custom properties.",
+          "value": {
+            "kind": "str",
+            "default": "\"\"",
+            "description": ""
+          }
         }
       }
     },
@@ -3609,7 +5593,27 @@
         "inlineMaterial": {
           "kind": "optional",
           "default": "null",
-          "description": ""
+          "description": "",
+          "inner": {
+            "kind": "record",
+            "default": "{\"friction\":0.6,\"restitution\":0}",
+            "description": "",
+            "fields": {
+              "friction": {
+                "kind": "f32",
+                "default": "0.6",
+                "description": "",
+                "min": 0
+              },
+              "restitution": {
+                "kind": "f32",
+                "default": "0",
+                "description": "",
+                "min": 0,
+                "max": 1
+              }
+            }
+          }
         },
         "frictionCombine": {
           "kind": "enum",

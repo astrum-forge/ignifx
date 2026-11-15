@@ -16,6 +16,24 @@ Tile size, layers of tile ids, tilesets with colliders, and an objects layer.
 | `width` | `u32` | `0` | The map's width, in cells. |
 | `height` | `u32` | `0` | The map's height, in cells. |
 | `tilesets` | `array` | `[]` | The tilesets, ascending by firstId. |
+| `tilesets[].name` | `str` | `""` | The tileset's name; the frame-name prefix. |
+| `tilesets[].atlas` | `str` | `""` | The .atlas.json address; empty means collision-only. |
+| `tilesets[].firstId` | `u32` | `1` | The global id of this tileset's first tile. |
 | `layers` | `array` | `[]` | The tile layers, back to front. |
+| `layers[].name` | `str` | `""` | The layer's name. |
+| `layers[].sortingLayer` | `str` | `"Default"` | Which sorting layer the tiles draw on. |
+| `layers[].orderInLayer` | `i32` | `0` | Sub-order within the sorting layer. |
+| `layers[].opacity` | `f32` | `1` | The layer's alpha. |
+| `layers[].parallax` | `vec2` | `[1,1]` | Fraction of the camera's motion the layer follows. |
+| `layers[].collision` | `bool` | `false` | Whether this layer's tiles contribute colliders. |
+| `layers[].width` | `u32` | `0` | The layer's width, in cells. |
+| `layers[].height` | `u32` | `0` | The layer's height, in cells. |
+| `layers[].tiles` | `array` | `[]` | Tile ids, row-major, top row first; 0 is empty. |
 | `objects` | `array` | `[]` | The objects layer: authoring data that `ignifx import tilemap` moves into a scene. |
+| `objects[].name` | `str` | `""` | The object's name. |
+| `objects[].type` | `str` | `""` | The object's type, which `ignifx import tilemap` writes as the entity's tag. |
+| `objects[].x` | `f32` | `0` | The bottom-left corner, in world metres. |
+| `objects[].y` | `f32` | `0` | The bottom-left corner, in world metres. |
+| `objects[].width` | `f32` | `0` | The width, in world metres. |
+| `objects[].height` | `f32` | `0` | The height, in world metres. |
 | `properties` | `map` | `{}` | The map's custom properties. |

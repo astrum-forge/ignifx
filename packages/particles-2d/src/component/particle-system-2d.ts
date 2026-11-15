@@ -347,8 +347,7 @@ export class ParticleSystem2D extends Component implements ComponentHooks {
       if (!this.#hasWarnedNoService) {
         this.#hasWarnedNoService = true;
         this.app.log.warn(
-          `${Particles2DErrorCode.extensionMissing}: {entity} has a ParticleSystem2D, but the particles2D() extension is not registered.`,
-          this.entity.name,
+          `${Particles2DErrorCode.extensionMissing}: ${JSON.stringify(this.entity.name)} has a ParticleSystem2D, but the particles2D() extension is not registered.`,
         );
       }
       return;
@@ -552,9 +551,7 @@ export class ParticleSystem2D extends Component implements ComponentHooks {
       if (!this.#hasWarnedNoAtlas) {
         this.#hasWarnedNoAtlas = true;
         this.app.log.warn(
-          `${Particles2DErrorCode.atlasNotLoaded}: {entity} has a ParticleSystem2D whose atlas is {state}, not loaded; it draws nothing.`,
-          this.entity.name,
-          handle?.state ?? "unset",
+          `${Particles2DErrorCode.atlasNotLoaded}: ${JSON.stringify(this.entity.name)} has a ParticleSystem2D whose atlas is ${handle?.state ?? "unset"}, not loaded; it draws nothing.`,
         );
       }
       return null;
@@ -594,10 +591,7 @@ export class ParticleSystem2D extends Component implements ComponentHooks {
     if (!this.#hasWarnedLayer) {
       this.#hasWarnedLayer = true;
       this.app.log.warn(
-        `${Particles2DErrorCode.unknownSortingLayer}: {entity} draws particles on the undeclared sorting layer {layer}; {fallback} was used.`,
-        this.entity.name,
-        named,
-        FALLBACK_SORTING_LAYER,
+        `${Particles2DErrorCode.unknownSortingLayer}: ${JSON.stringify(this.entity.name)} draws particles on the undeclared sorting layer ${JSON.stringify(named)}; ${JSON.stringify(FALLBACK_SORTING_LAYER)} was used.`,
       );
     }
     return FALLBACK_SORTING_LAYER;
