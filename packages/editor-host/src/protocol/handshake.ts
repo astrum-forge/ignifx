@@ -61,8 +61,9 @@ export type HostKind = (typeof HostKind)[keyof typeof HostKind];
  * The play controls send `"heartbeat"`, `"playControls"`, `"logRelay"` and `"queryRuntime"`, plus
  * `"screenshot"` when the game has a canvas and `"sendInput"` when it has `app.input`. The scene
  * host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"`,
- * `"pick2d"`, `"gameView"`, `"gameViewOnDemand"`, `"gameViewSize"`, `"gameView2d"`, `"thumbnails"`,
- * `"grid"`, `"tilemapCells"`, `"editorLines"` and `"spriteAnimation"` it supports; every
+ * `"pick2d"`, `"pickRect"`, `"gameView"`, `"gameViewOnDemand"`, `"gameViewSize"`, `"gameView2d"`,
+ * `"thumbnails"`, `"thumbnailMaterials"`, `"thumbnailAtlases"`, `"thumbnailTextures"`, `"grid"`,
+ * `"gridOverlay"`, `"tilemapCells"`, `"editorLines"` and `"spriteAnimation"` it supports; every
  * `SceneMethod` not tied to one of them is required of a 0.3 scene host.
  *
  * @public
@@ -90,6 +91,12 @@ export const HostCapability = {
    * `pick` and view clicks in 2D mode resolve through the 3D picker only.
    */
   pick2d: "pick2d",
+  /**
+   * The scene host answers `pickRect`: the document entities whose drawn bounds, projected to the
+   * view, a rectangle of the view covers (a box selection). Additive in 0.3; without it, the scene
+   * host answers `pickRect` with `RpcErrorCode.methodNotFound`.
+   */
+  pickRect: "pickRect",
   /**
    * The host relays the app's reports: `log` lines with the first `Error` each carries, a
    * `hostError` with `AppErrorData` (entity, component, phase, stack) for every `app.onError`
@@ -148,6 +155,26 @@ export const HostCapability = {
    * `RpcErrorCode.methodNotFound`.
    */
   thumbnails: "thumbnails",
+  /**
+   * The scene host's `renderThumbnail` also renders materials (`.material.json`, or a reference
+   * typed `"material"`): the material on a sphere under the thumbnail lighting. Listed only with
+   * `thumbnails`. Additive in 0.3; without it, a material answers `RpcErrorCode.invalidParams`.
+   */
+  thumbnailMaterials: "thumbnailMaterials",
+  /**
+   * The scene host's `renderThumbnail` also renders sprite atlases (`.atlas.json`, or a reference
+   * typed `"spriteatlas"`): the atlas's whole image fitted in the square on a transparent
+   * background. Listed only with `thumbnails`. Additive in 0.3; without it, an atlas answers
+   * `RpcErrorCode.invalidParams`.
+   */
+  thumbnailAtlases: "thumbnailAtlases",
+  /**
+   * The scene host's `renderThumbnail` also renders images the browser decodes (`.png`, `.jpg`,
+   * `.jpeg`, `.webp`, `.gif`, `.avif`, `.bmp`, or a reference typed `"texture"`), fitted in the
+   * square on a transparent background. Listed only with `thumbnails`. Additive in 0.3; without
+   * it, an image answers `RpcErrorCode.invalidParams`.
+   */
+  thumbnailTextures: "thumbnailTextures",
   /**
    * The scene host draws a grid in the view and answers `setGrid`: a ground grid at `y = 0` in 3D
    * view mode and a unit grid (a pixel grid when zoomed in) over the 2D view. From engine ask E31

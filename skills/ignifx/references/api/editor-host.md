@@ -1472,6 +1472,74 @@ Where the ray starts, in metres: the point under the cursor on the camera's near
 
 ***
 
+### PickRectParams
+
+The parameters of `pickRect`: two opposite corners of a rectangle of the view, in either order,
+in the unit `pick` takes.
+
+#### Properties
+
+##### mode?
+
+> `readonly` `optional` **mode?**: [`PickRectMode`](#pickrectmode-1)
+
+How bounds match the rectangle. Defaults to `"intersect"`.
+
+##### unit
+
+> `readonly` **unit**: [`PickUnit`](#pickunit-1)
+
+The unit of the corners, as for `pick`.
+
+##### x0
+
+> `readonly` **x0**: `number`
+
+One corner's x, from the view's left edge, in `unit`.
+
+##### x1
+
+> `readonly` **x1**: `number`
+
+The opposite corner's x, in `unit`.
+
+##### y0
+
+> `readonly` **y0**: `number`
+
+One corner's y, from the view's top edge, in `unit`.
+
+##### y1
+
+> `readonly` **y1**: `number`
+
+The opposite corner's y, in `unit`.
+
+***
+
+### PickRectResult
+
+The answer to `pickRect`.
+
+#### Properties
+
+##### entities
+
+> `readonly` **entities**: readonly `string`[]
+
+The document entities whose drawn bounds (meshes in 3D; sprites and tilemaps in 2D view mode),
+projected to the view, match the rectangle, in document order. A mesh inside an instanced
+scene counts for its instance root, as with `pick`; an entity that draws nothing is never
+listed. At most [PICK\_RECT\_MAX\_ENTITIES](#pick_rect_max_entities).
+
+##### truncated
+
+> `readonly` **truncated**: `boolean`
+
+True when more entities matched than `entities` lists.
+
+***
+
 ### PickResult
 
 The answer to `pick`.
@@ -1891,7 +1959,10 @@ The parameters of `renderThumbnail`.
 
 The asset: its address, or a reference whose `type` is `"model"` or `"scene"` (a prefab). An
 address alone is typed by its extension: `.glb`/`.gltf` for a model, `.prefab.json` or
-`.scene.json` for a prefab.
+`.scene.json` for a prefab. A host that lists `HostCapability.thumbnailMaterials` also takes
+`"material"` (`.material.json`), one with `thumbnailAtlases` `"spriteatlas"` (`.atlas.json`) and
+one with `thumbnailTextures` `"texture"` (`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.avif`,
+`.bmp`). Any other asset answers `RpcErrorCode.invalidParams`.
 
 ##### format
 
@@ -3674,6 +3745,22 @@ The success answer to `openScene`.
 
 ***
 
+### PickRectMode
+
+> **PickRectMode** = *typeof* [`PickRectMode`](#pickrectmode)\[keyof *typeof* [`PickRectMode`](#pickrectmode)\]
+
+The union of the modes in `PickRectMode`.
+
+***
+
+### PickRectResponse
+
+> **PickRectResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`PickRectResult`](#pickrectresult)\>
+
+The success answer to `pickRect`.
+
+***
+
 ### PickResponse
 
 > **PickResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`PickResult`](#pickresult)\>
@@ -3901,7 +3988,7 @@ The union of the names in `SceneOpKind`.
 
 ### SceneRequest
 
-> **SceneRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`openScene`](#openscene), [`OpenSceneParams`](#opensceneparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`closeScene`](#closescene), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`applyOps`](#applyops), [`ApplyOpsParams`](#applyopsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`readBack`](#readback), [`ReadBackParams`](#readbackparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`select`](#select), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGizmo`](#setgizmo), [`SetGizmoParams`](#setgizmoparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`frame`](#frame-1), [`FrameParams`](#frameparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pick`](#pick), [`PickParams`](#pickparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-2), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`getSchemas`](#getschemas), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`describeSettings`](#describesettings), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setViewMode`](#setviewmode), [`SetViewModeParams`](#setviewmodeparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setAnimateMaterials`](#setanimatematerials), [`SetAnimateMaterialsParams`](#setanimatematerialsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`getColliderOutlines`](#getcollideroutlines), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleAnimation`](#sampleanimation), [`SampleAnimationParams`](#sampleanimationparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleSpriteAnimation`](#samplespriteanimation), [`SampleSpriteAnimationParams`](#samplespriteanimationparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGrid`](#setgrid), [`SetGridParams`](#setgridparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setTilemapCells`](#settilemapcells), [`SetTilemapCellsParams`](#settilemapcellsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setEditorLines`](#seteditorlines), [`SetEditorLinesParams`](#seteditorlinesparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`clearEditorLines`](#cleareditorlines), [`ClearEditorLinesParams`](#cleareditorlinesparams)\>
+> **SceneRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`openScene`](#openscene), [`OpenSceneParams`](#opensceneparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`closeScene`](#closescene), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`applyOps`](#applyops), [`ApplyOpsParams`](#applyopsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`readBack`](#readback), [`ReadBackParams`](#readbackparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`select`](#select), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGizmo`](#setgizmo), [`SetGizmoParams`](#setgizmoparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`frame`](#frame-1), [`FrameParams`](#frameparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pick`](#pick), [`PickParams`](#pickparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`pickRect`](#pickrect-1), [`PickRectParams`](#pickrectparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`screenshot`](#screenshot-2), [`ScreenshotParams`](#screenshotparams)\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`getSchemas`](#getschemas), `never`\> \| [`RpcRequest`](#rpcrequest)\<*typeof* [`describeSettings`](#describesettings), `never`\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setViewMode`](#setviewmode), [`SetViewModeParams`](#setviewmodeparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setAnimateMaterials`](#setanimatematerials), [`SetAnimateMaterialsParams`](#setanimatematerialsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`getColliderOutlines`](#getcollideroutlines), [`EntitySelection`](#entityselection)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleAnimation`](#sampleanimation), [`SampleAnimationParams`](#sampleanimationparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`sampleSpriteAnimation`](#samplespriteanimation), [`SampleSpriteAnimationParams`](#samplespriteanimationparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setGrid`](#setgrid), [`SetGridParams`](#setgridparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setTilemapCells`](#settilemapcells), [`SetTilemapCellsParams`](#settilemapcellsparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`setEditorLines`](#seteditorlines), [`SetEditorLinesParams`](#seteditorlinesparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`clearEditorLines`](#cleareditorlines), [`ClearEditorLinesParams`](#cleareditorlinesparams)\>
 
 Editor → scene host: one of the `SceneMethod`s. `closeScene`, `getSchemas` and `describeSettings`
 take no parameters.
@@ -4458,6 +4545,14 @@ notifications, the play view as play notifications. Additive in 0.3.
 The scene host picks sprites in 2D view mode (`app.twoD.pickAt` from `@ignifx/2d`); without it,
 `pick` and view clicks in 2D mode resolve through the 3D picker only.
 
+##### pickRect
+
+> `readonly` **pickRect**: `"pickRect"` = `"pickRect"`
+
+The scene host answers `pickRect`: the document entities whose drawn bounds, projected to the
+view, a rectangle of the view covers (a box selection). Additive in 0.3; without it, the scene
+host answers `pickRect` with `RpcErrorCode.methodNotFound`.
+
 ##### playControls
 
 > `readonly` **playControls**: `"playControls"` = `"playControls"`
@@ -4498,6 +4593,23 @@ The scene host answers `sampleSpriteAnimation`: one frame of a clip on an entity
 (additive in 0.3); without it, the scene host answers `sampleSpriteAnimation` with
 `RpcErrorCode.methodNotFound`.
 
+##### thumbnailAtlases
+
+> `readonly` **thumbnailAtlases**: `"thumbnailAtlases"` = `"thumbnailAtlases"`
+
+The scene host's `renderThumbnail` also renders sprite atlases (`.atlas.json`, or a reference
+typed `"spriteatlas"`): the atlas's whole image fitted in the square on a transparent
+background. Listed only with `thumbnails`. Additive in 0.3; without it, an atlas answers
+`RpcErrorCode.invalidParams`.
+
+##### thumbnailMaterials
+
+> `readonly` **thumbnailMaterials**: `"thumbnailMaterials"` = `"thumbnailMaterials"`
+
+The scene host's `renderThumbnail` also renders materials (`.material.json`, or a reference
+typed `"material"`): the material on a sphere under the thumbnail lighting. Listed only with
+`thumbnails`. Additive in 0.3; without it, a material answers `RpcErrorCode.invalidParams`.
+
 ##### thumbnails
 
 > `readonly` **thumbnails**: `"thumbnails"` = `"thumbnails"`
@@ -4505,6 +4617,15 @@ The scene host answers `sampleSpriteAnimation`: one frame of a clip on an entity
 The scene host answers `renderThumbnail`: a model or prefab asset rendered on its own
 (`RenderViewMethod`). From engine ask E8 (additive in 0.3); without it, the host answers it with
 `RpcErrorCode.methodNotFound`.
+
+##### thumbnailTextures
+
+> `readonly` **thumbnailTextures**: `"thumbnailTextures"` = `"thumbnailTextures"`
+
+The scene host's `renderThumbnail` also renders images the browser decodes (`.png`, `.jpg`,
+`.jpeg`, `.webp`, `.gif`, `.avif`, `.bmp`, or a reference typed `"texture"`), fitted in the
+square on a transparent background. Listed only with `thumbnails`. Additive in 0.3; without
+it, an image answers `RpcErrorCode.invalidParams`.
 
 ##### tilemapCells
 
@@ -4525,8 +4646,9 @@ The scene host accepts `setViewMode` with `"2d"`: a 2D editor camera and planar 
 The play controls send `"heartbeat"`, `"playControls"`, `"logRelay"` and `"queryRuntime"`, plus
 `"screenshot"` when the game has a canvas and `"sendInput"` when it has `app.input`. The scene
 host sends `"heartbeat"` and whichever of `"gizmos"`, `"screenshot"`, `"viewMode2d"`,
-`"pick2d"`, `"gameView"`, `"gameViewOnDemand"`, `"gameViewSize"`, `"gameView2d"`, `"thumbnails"`,
-`"grid"`, `"tilemapCells"`, `"editorLines"` and `"spriteAnimation"` it supports; every
+`"pick2d"`, `"pickRect"`, `"gameView"`, `"gameViewOnDemand"`, `"gameViewSize"`, `"gameView2d"`,
+`"thumbnails"`, `"thumbnailMaterials"`, `"thumbnailAtlases"`, `"thumbnailTextures"`, `"grid"`,
+`"gridOverlay"`, `"tilemapCells"`, `"editorLines"` and `"spriteAnimation"` it supports; every
 `SceneMethod` not tied to one of them is required of a 0.3 scene host.
 
 ***
@@ -4578,6 +4700,36 @@ Host → editor, every [DEFAULT\_HEARTBEAT\_INTERVAL\_MS](#default_heartbeat_int
 > `const` **JSON\_RPC\_VERSION**: `"2.0"` = `"2.0"`
 
 The value of every envelope's `jsonrpc` field.
+
+***
+
+### PICK\_RECT\_MAX\_ENTITIES
+
+> `const` **PICK\_RECT\_MAX\_ENTITIES**: `2000` = `2000`
+
+The most entities a `pickRect` answer lists; past it the answer sets `truncated`.
+
+***
+
+### PickRectMode
+
+> `const` **PickRectMode**: `object`
+
+How `pickRect` matches an entity's projected bounds against the rectangle.
+
+#### Type Declaration
+
+##### contain
+
+> `readonly` **contain**: `"contain"` = `"contain"`
+
+The entity counts only when its projected bounds lie wholly inside the rectangle.
+
+##### intersect
+
+> `readonly` **intersect**: `"intersect"` = `"intersect"`
+
+The entity counts when its projected bounds overlap the rectangle at all.
 
 ***
 
@@ -4842,8 +4994,8 @@ request; one with `HostCapability.gameView2d` renders a `Camera2D` document came
 
 > `readonly` **renderThumbnail**: `"renderThumbnail"` = `"renderThumbnail"`
 
-Renders one model or prefab asset on its own and answers the image: [ThumbnailResult](#thumbnailresult).
-It runs beside the one-at-a-time queue of the other methods, so a thumbnail never holds them
+Renders one model or prefab asset on its own (and, with the matching capabilities, a material,
+a sprite atlas or an image) and answers the image: [ThumbnailResult](#thumbnailresult). It runs beside the one-at-a-time queue of the other methods, so a thumbnail never holds them
 up; thumbnails are answered in the order they were asked for.
 
 ##### setGameView
@@ -5027,6 +5179,13 @@ Opens a scene from the editor's document, replacing any open scene. Answers [Ope
 > `readonly` **pick**: `"pick"` = `"pick"`
 
 Asks which entity is under a point of the view, without selecting it. Answers [PickResult](#pickresult).
+
+##### pickRect
+
+> `readonly` **pickRect**: `"pickRect"` = `"pickRect"`
+
+Asks which entities a rectangle of the view covers, for a box selection, without selecting
+them. Needs `HostCapability.pickRect`. Answers [PickRectResult](#pickrectresult). Additive in 0.3.
 
 ##### readBack
 
@@ -5925,6 +6084,50 @@ The received `params`.
 `value is PickParams`
 
 True for finite `x` and `y` and a known unit.
+
+***
+
+### isPickRectParams()
+
+> **isPickRectParams**(`value`): `value is PickRectParams`
+
+Checks the parameters of `pickRect`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is PickRectParams`
+
+True for four finite corner coordinates, a known unit and, when present, a known mode.
+
+***
+
+### isPickRectResult()
+
+> **isPickRectResult**(`value`): `value is PickRectResult`
+
+Checks the result of `pickRect`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is PickRectResult`
+
+True for at most [PICK\_RECT\_MAX\_ENTITIES](#pick_rect_max_entities) uids and a boolean `truncated`.
 
 ***
 
