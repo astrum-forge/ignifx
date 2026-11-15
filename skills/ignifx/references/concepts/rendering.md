@@ -18,7 +18,7 @@ what they mean.
 | Component               | What it adds                                                                                               | Notes                                                                                                                                                                 |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Camera`                | A view. The **entity's transform is the view**; no follow logic                                            | `projection`, `fov` (degrees), `orthographicSize`, `near`/`far`, `viewport`, `clearColor`, `priority`                                                                 |
-| `Light`                 | `"directional" \| "point" \| "spot" \| "hemispheric"`                                                      | `shadows` is a sub-record; only directional and spot lights can cast (`IGX-0703`)                                                                                     |
+| `Light`                 | `"directional" \| "point" \| "spot" \| "hemispheric"`                                                      | `shadows` is a sub-record; only directional and spot lights can cast (`IGX-0703`); `bakeMode` (`@beta`) `"realtime"`, `"mixed"` or `"baked"` (not drawn)              |
 | `MeshRenderer`          | One clone of a `MeshAsset`, drawn with a `MaterialAsset`                                                   | `allowMultiple`; several renderers per entity are fine; `lightmap` samples a baked `.lightmap.json` on a static entity (`@beta`)                                      |
 | `InstancedMeshRenderer` | One mesh drawn many times from a caller-owned matrix slab                                                  | `setMatrices(slab, count)`, `setColors`, `setCount`, `markDirty(range)`; `capacity`, `gpuCulling` and `lod` are fixed before `app.start()` (`IGX-0717`)               |
 | `Model`                 | One instance of a loaded glTF, cloned under the entity's node                                              | `nodes`, `attachToNode(name, entity)`, `materialOverrides`; `animations`/`skeletons` are `@beta`                                                                      |
@@ -172,13 +172,12 @@ on [`baked-lighting.md`](baked-lighting.md); the bullets below are each componen
 
 - `await bakeLightProbes(world, { origin, cellSize, counts, rays?, maxDistance?, sky?, directLight?,
 signal?, onProgress? })` bakes a grid on the CPU, headless included, yielding to the host about every 8 ms: one bounce, from the world's lights and the triangles of every
-  enabled `MeshRenderer` whose mesh was built with `MeshAsset.fromData`. Primitives and glTF models
-  keep their triangles on the GPU and are skipped (`result.skipped` counts them). `sky` is the
-  linear radiance of rays that hit nothing; hemispheric lights add to it. `directLight` defaults to
-  `"exclude"`: directional, point and spot lights keep lighting the scene in real time, so the probes
-  hold only their bounce (the light they put on surfaces, shadowed, coming back) and the sky, not
-  their direct light, which would count it twice. Pass `"include"` when those lights will be
-  disabled at run time. Save `result.data` with
+  enabled `MeshRenderer` (data or primitives) and of every `Model` a headless app loaded; what it
+  cannot read is listed in `result.skips`. `sky` is a linear colour, a gradient or SH9 harmonics
+  for rays that hit nothing. Every light bounces; a probe also stores a light's direct light only
+  when its `Light.bakeMode` is `"baked"` (such a light no longer draws at run time), or when it is
+  `"realtime"` and `directLight` is `"include"`, so a light that keeps drawing is never counted
+  twice — hemispheric lights included. Save `result.data` with
   `writeLightProbeFile` or use it at once with `createLightProbeAsset`. It costs probes × rays ×
   triangles, so bake small scenes, in a tool or at load, never per frame. A bad grid, `rays` outside
   1–4096 or a non-finite `maxDistance` is `IGX-0734` before any tracing; an aborted `signal` rejects

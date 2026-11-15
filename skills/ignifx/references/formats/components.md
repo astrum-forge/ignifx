@@ -328,6 +328,7 @@ A directional, point, spot, or hemispheric light, with optional shadow casting.
 | `shadows` | `record` | `{"enabled":false,"technique":"pcf","mapSize":1024,"bias":0.00005,"normalBias":0,"darkness":0,"cascades":4,"maxDistance":0,"stabilizeCascades":false,"cascadeLambda":0.5,"cascadeBlend":0.1}` | Shadow casting; point and hemispheric lights cannot cast (IGX-0703). |
 | `includeOnly` | `array` | `[]` | Light only these entities' renderers. |
 | `exclude` | `array` | `[]` | Never light these entities' renderers. |
+| `bakeMode` | `enum` | `"realtime"` | Baked lighting: realtime and mixed draw at run time (a probe bake keeps their bounce); baked draws only through the bake. |
 
 ## LightProbeVolume (`ignifx/LightProbeVolume`)
 

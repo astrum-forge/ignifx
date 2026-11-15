@@ -1476,6 +1476,16 @@
           "kind": "array",
           "default": "[]",
           "description": "Never light these entities' renderers."
+        },
+        "bakeMode": {
+          "kind": "enum",
+          "default": "\"realtime\"",
+          "description": "Baked lighting: realtime and mixed draw at run time (a probe bake keeps their bounce); baked draws only through the bake.",
+          "values": [
+            "realtime",
+            "mixed",
+            "baked"
+          ]
         }
       }
     },

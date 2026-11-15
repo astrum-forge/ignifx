@@ -57,6 +57,23 @@ export const LIGHT_TYPES = ["directional", "point", "spot", "hemispheric"] as co
 export type LightType = (typeof LIGHT_TYPES)[number];
 
 /**
+ * How a light takes part in baked lighting (`docs/architecture/07-rendering.md` §2.15).
+ *
+ * @beta
+ */
+export const LIGHT_BAKE_MODES = ["realtime", "mixed", "baked"] as const;
+
+/**
+ * One of {@link LIGHT_BAKE_MODES}: `"realtime"` lights draw at run time and a light-probe bake stores
+ * only their bounce (their direct light too with `directLight: "include"`); `"mixed"` lights draw at
+ * run time and the bake stores only their bounce; `"baked"` lights do not draw at run time and the
+ * bake stores their direct light and their bounce.
+ *
+ * @beta
+ */
+export type LightBakeMode = (typeof LIGHT_BAKE_MODES)[number];
+
+/**
  * The union of the shadow techniques a directional light can use.
  *
  * @public
@@ -124,6 +141,8 @@ const TRANSLATION_COLUMN = 12;
  *
  * A disabled light, or one on an inactive entity, contributes nothing: its intensity reaches Lite
  * as `0` and its shadow generator is released. Enabling it again restores both on the next frame.
+ * A light whose `bakeMode` is `"baked"` is dimmed the same way: its light reaches the scene only
+ * through a light-probe bake (`bakeLightProbes`).
  *
  * @example
  * ```ts
@@ -166,6 +185,14 @@ export class Light extends Component implements ComponentHooks {
   declare includeOnly: (Entity | null)[];
 
   declare exclude: (Entity | null)[];
+
+  /**
+   * How the light takes part in baked lighting; see {@link LightBakeMode}. Defaults to
+   * `"realtime"`.
+   *
+   * @beta
+   */
+  declare bakeMode: LightBakeMode;
 
   /** Applies the schema defaults, exactly as `Component.define` would. */
   constructor() {
@@ -368,7 +395,8 @@ export class Light extends Component implements ComponentHooks {
   }
 
   /**
-   * The intensity Lite should use: the field, or `0` while the component or its entity is disabled.
+   * The intensity Lite should use: the field, or `0` while the component or its entity is disabled
+   * or the light is `"baked"`.
    *
    * @remarks
    * Dimming keeps the light in the scene. Removing it would change the light count every compiled
@@ -377,7 +405,7 @@ export class Light extends Component implements ComponentHooks {
    * @returns The intensity to apply.
    */
   #effectiveIntensity(): number {
-    return this.isEnabledInHierarchy ? this.intensity : 0;
+    return this.isEnabledInHierarchy && this.bakeMode !== "baked" ? this.intensity : 0;
   }
 
   /**
@@ -414,7 +442,11 @@ export class Light extends Component implements ComponentHooks {
   #applyShadows(renderer: RendererImpl): boolean {
     const light = this.#light;
     const wanted =
-      this.shadows.enabled && this.isEnabledInHierarchy && renderer.features.shadows && !renderer.isHeadless;
+      this.shadows.enabled &&
+      this.isEnabledInHierarchy &&
+      this.bakeMode !== "baked" &&
+      renderer.features.shadows &&
+      !renderer.isHeadless;
     const isStale = wanted && !sameShadowSettings(this.#appliedShadowSettings, this.shadows);
     if (light === null || (wanted === this.#appliedShadows && !isStale)) {
       this.#warnAboutShadows(renderer);
@@ -686,5 +718,9 @@ function lightSchema(): Schema {
     ),
     includeOnly: array(entityRef<Entity>(), [], { tooltip: "Light only these entities' renderers." }),
     exclude: array(entityRef<Entity>(), [], { tooltip: "Never light these entities' renderers." }),
+    bakeMode: enumOf(LIGHT_BAKE_MODES, "realtime", {
+      tooltip:
+        "Baked lighting: realtime and mixed draw at run time (a probe bake keeps their bounce); baked draws only through the bake.",
+    }),
   });
 }
