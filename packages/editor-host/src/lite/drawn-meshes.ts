@@ -31,7 +31,7 @@ function parentNode(node: object): object | null {
 }
 
 /**
- * Lists the visible meshes of the render scene that hang under one of the given nodes, each with
+ * Lists the visible, pickable meshes of the render scene that hang under one of the given nodes, each with
  * the nearest such node's value. A `Model` parents its glTF root with a bare `parent` assignment, so
  * the walk follows `parent` up from each mesh rather than `children` down. Meshes marked with core's
  * `EDITOR_ONLY_METADATA_KEY` (the host's grid and lines) are skipped.
@@ -67,7 +67,8 @@ export function drawnMeshes<T>(handles: AppLiteHandles, owners: ReadonlyMap<obje
   for (const mesh of handles.scene.meshes) {
     const min = mesh.boundMin;
     const max = mesh.boundMax;
-    if (min === undefined || max === undefined || mesh.visible === false) {
+    // `pickable === false` is skipped as Lite's picker skips it, so `pickRect` agrees with `pick`.
+    if (min === undefined || max === undefined || mesh.visible === false || mesh.pickable === false) {
       continue;
     }
     if (mesh.metadata?.[EDITOR_ONLY_METADATA_KEY] === true) {
