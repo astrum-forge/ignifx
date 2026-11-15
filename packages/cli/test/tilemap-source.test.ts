@@ -79,6 +79,21 @@ function tinyMap(
 }
 
 /**
+ * A one-cell LDtk level with an IntGrid layer.
+ *
+ * @param identifier - The level's identifier.
+ * @returns The level.
+ */
+function ldtkLevel(identifier: string): Record<string, unknown> {
+  return {
+    identifier,
+    pxWid: 16,
+    pxHei: 16,
+    layerInstances: [{ __type: "IntGrid", __identifier: "C", __gridSize: 16, __cWid: 1, __cHei: 1, intGridCsv: [1] }],
+  };
+}
+
+/**
  * A reader that finds nothing.
  *
  * @returns `null`.
@@ -237,5 +252,96 @@ describe("convertTilemapSource", () => {
     const total = await failure(convertTilemapSource(tinyMap(), "tiled", read, { limits: { maxTotalCells: 2 } }));
     expect(total.message).toContain("(maxTotalCells)");
     expect(DEFAULT_TILEMAP_SOURCE_LIMITS.maxLayerCells).toBe(2048 * 2048);
+  });
+
+  it("refuses hostile paths before read or exists sees them, unless allowOutsideBase is set", async () => {
+    const images = ["../../../../etc/evil.png", "/abs/evil.png", "a\u0000b.png", "C:\\win\\evil.png", "file:evil.png"];
+    for (const image of images) {
+      const asked: string[] = [];
+      const read: TilemapSourceReader = async (path) => {
+        asked.push(path);
+        return null;
+      };
+      // oxlint-disable-next-line no-await-in-loop -- one case at a time keeps the failure readable.
+      const error = await failure(
+        convertTilemapSource(tinyMap({}, { image }), "tiled", read, {
+          path: "maps/cave.tmj",
+          exists: async (path) => {
+            asked.push(path);
+            return true;
+          },
+        }),
+      );
+      expect(error.code, image).toBe("IGX-1408");
+      expect(asked, image).toEqual([]);
+    }
+    for (const source of ["../../../../etc/passwd.json", "/etc/x.tsj"]) {
+      const { read, asked } = memoryReader(new Map());
+      // oxlint-disable-next-line no-await-in-loop -- see above.
+      const error = await failure(
+        convertTilemapSource(tinyMap({ tilesets: [{ firstgid: 1, source }] }), "tiled", read, {
+          path: "maps/cave.tmj",
+        }),
+      );
+      expect(error.code, source).toBe("IGX-1408");
+      expect(asked, source).toEqual([]);
+    }
+    const allowed = await convertTilemapSource(tinyMap({}, { image: "../tiles/t.png" }), "tiled", nothing, {
+      path: "maps/cave.tmj",
+      allowOutsideBase: true,
+    });
+    expect(allowed.documents.map((document) => document.path)).toEqual([
+      "maps/cave.tilemap.json",
+      "tiles/t.atlas.json",
+    ]);
+    const nul = convertTilemapSource(tinyMap({}, { image: "a\u0000b.png" }), "tiled", nothing, {
+      allowOutsideBase: true,
+    });
+    expect((await failure(nul)).code).toBe("IGX-1408");
+  });
+
+  it("reads a shared external tileset once, and caps the tileset count", async () => {
+    const tileset = JSON.stringify({
+      name: "t",
+      image: "t.png",
+      tilewidth: 16,
+      tileheight: 16,
+      columns: 1,
+      tilecount: 1,
+    });
+    const { read, asked } = memoryReader(new Map([["t.tsj", tileset]]));
+    const shared = Array.from({ length: 50 }, (_, index) => ({ firstgid: 1 + index, source: "t.tsj" }));
+    await convertTilemapSource(tinyMap({ tilesets: shared }), "tiled", read);
+    expect(asked.filter((path) => path === "t.tsj")).toHaveLength(1);
+    const many = Array.from({ length: 300 }, (_, index) => ({ firstgid: 1 + index, source: "t.tsj" }));
+    const error = await failure(convertTilemapSource(tinyMap({ tilesets: many }), "tiled", read));
+    expect(error.message).toContain("(maxTilesets)");
+    const one = tinyMap({ tilesets: [{ firstgid: 1, source: "t.tsj" }] });
+    const total = await failure(
+      convertTilemapSource(one, "tiled", read, { limits: { maxTotalJsonLength: one.length + 10 } }),
+    );
+    expect(total.message).toContain("(maxTotalJsonLength)");
+  });
+
+  it("keeps an undefined limit at its default", async () => {
+    const limits = { maxJsonLength: undefined, maxLayerCells: undefined };
+    const error = await failure(
+      convertTilemapSource(tinyMap({ width: 1e6, height: 1e6 }), "tiled", nothing, { limits }),
+    );
+    expect(error.message).toContain("(maxLayerCells)");
+  });
+
+  it("gives LDtk levels whose cleaned names collide their own files, with a warning", async () => {
+    const project = JSON.stringify({
+      defs: { tilesets: [], layers: [] },
+      levels: [ldtkLevel("Level 1"), ldtkLevel("Level_1"), ldtkLevel("level_1")],
+    });
+    const result = await convertTilemapSource(project, "ldtk", nothing);
+    expect(result.documents.map((document) => document.path)).toEqual([
+      "Level_1.tilemap.json",
+      "Level_1_2.tilemap.json",
+      "level_1_3.tilemap.json",
+    ]);
+    expect(result.warnings.filter((line) => line.includes("would overwrite"))).toHaveLength(2);
   });
 });
