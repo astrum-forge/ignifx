@@ -169,10 +169,10 @@ export const HostCapability = {
    */
   thumbnailAtlases: "thumbnailAtlases",
   /**
-   * The scene host's `renderThumbnail` also renders images the browser decodes (`.png`, `.jpg`,
-   * `.jpeg`, `.webp`, `.gif`, `.avif`, `.bmp`, or a reference typed `"texture"`), fitted in the
-   * square on a transparent background. Listed only with `thumbnails`. Additive in 0.3; without
-   * it, an image answers `RpcErrorCode.invalidParams`.
+   * The scene host's `renderThumbnail` also renders images (`.png`, `.jpg`, `.jpeg`, `.webp`, or
+   * a reference typed `"texture"`), fitted in the square on a transparent background; `.gif`,
+   * `.avif` and `.bmp` answer `RpcErrorCode.invalidParams`. Listed only with `thumbnails`.
+   * Additive in 0.3; without it, an image answers `RpcErrorCode.invalidParams`.
    */
   thumbnailTextures: "thumbnailTextures",
   /**

@@ -11988,6 +11988,11 @@ Each lit PBR material reflects the nearest enabled probe that has captured: a pr
 probe, materials reflect the `Environment` again. A material shared by several meshes follows the
 first of them. Diffuse lighting still comes from the scene environment.
 
+Blending: once two or more box probes have captured and one of them has a `blendDistance` above
+0, every lit PBR material blends them per fragment instead, fading each probe out over the last
+`blendDistance` metres inside its box. Probes without a box take no part then, and a probe that
+captures `"everyFrame"` (or is still capturing) keeps the nearest-probe choice for that frame.
+
 The probe needs a loaded `Environment` (it reuses its lighting tables) and a canvas-backed app;
 until an environment map is loaded it waits, holding no GPU memory and costing no frame time. A
 `rendering.quality` tier caps `size` and allows `"everyFrame"` only at `high` (below, the probe
@@ -12032,6 +12037,15 @@ Applies the schema defaults, exactly as `Component.define` would.
 **`Beta`**
 
 One probe per entity.
+
+##### blendDistance
+
+> **blendDistance**: `number`
+
+**`Beta`**
+
+How far inside its box, in metres, the probe fades out where it overlaps another box probe.
+Defaults to `0`, no blending; see the class remarks. Needs `boxProjection`.
 
 ##### boxProjection
 
@@ -29146,8 +29160,9 @@ Set by [describeRegisteredSchemas](#describeregisteredschemas), or by the caller
 
 > `readonly` `optional` **requires?**: readonly (`string` \| `null`)[]
 
-The components the class lists in `static requires`, as type ids (`null` for a class without a
-`typeId`), in declaration order. `addComponent` adds each one that is missing, so an editor adds
+The components the class lists in `static requires`, as type ids (`null` for a class that
+declares no `typeId` of its own, such as an unregistered subclass that only inherits its
+parent's), in declaration order. `addComponent` adds each one that is missing, so an editor adds
 them itself, and a scene file may list them in any order. A component on the entity whose class
 extends a required class counts as present. Set by [describeRegisteredSchemas](#describeregisteredschemas), or by the
 caller through [SchemaDescriptionMeta](#schemadescriptionmeta); absent when the class requires nothing.
@@ -38331,7 +38346,9 @@ The description of the top-level file fields.
 Describes every component an app has registered, the engine's, its extensions' and the game's,
 the way [describeSchema](#describeschema) describes one, plus what only the registry knows: whether an
 entity may hold more than one (`allowMultiple`), which package registered it (`package`), and
-which components it adds when they are missing (`requires`, its classes' type ids).
+which components it adds when they are missing (`requires`, its classes' type ids; `null` for a
+class that declares no `typeId` of its own, such as an unregistered subclass that only inherits
+its parent's, because naming the parent would describe a different component).
 This is what an external inspector, such as the ignifx editor, is generated from.
 
 #### Parameters

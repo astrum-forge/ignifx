@@ -26,6 +26,9 @@ interface FakeProbe {
 const fakes: FakeProbe[] = [];
 const materials: object[] = [];
 const rebuilds: { resolve: () => void }[] = [];
+/** The blended sets made, and what each was last assigned. */
+const sets: { volumes: number; disposedAfter: PromiseLike<unknown> | undefined | "not disposed" }[] = [];
+const assignments = new Map<object, unknown>();
 
 vi.mock("../../src/lite/gpu/reflection-probe.js", () => ({
   enableReflectionProbes: (): Promise<void> => Promise.resolve(),
@@ -61,7 +64,18 @@ vi.mock("../../src/lite/gpu/reflection-probe.js", () => ({
       visit(material, 0, 0, 0);
     }
   },
-  assignReflectionProbe: (scene: unknown): Promise<void> | undefined => {
+  createLiteProbeSet: (_engine: unknown, _scene: unknown, volumes: readonly unknown[]): object => {
+    const record: (typeof sets)[number] = { volumes: volumes.length, disposedAfter: "not disposed" };
+    sets.push(record);
+    return {
+      set: record,
+      dispose(after?: PromiseLike<unknown>): void {
+        record.disposedAfter = after;
+      },
+    };
+  },
+  assignReflectionProbe: (scene: unknown, material: object, binding: unknown): Promise<void> | undefined => {
+    assignments.set(material, binding);
     if (scene === null) {
       return undefined;
     }
@@ -72,6 +86,8 @@ vi.mock("../../src/lite/gpu/reflection-probe.js", () => ({
 }));
 
 afterEach(() => {
+  sets.length = 0;
+  assignments.clear();
   fakes.length = 0;
   materials.length = 0;
   rebuilds.length = 0;
@@ -87,6 +103,7 @@ afterEach(() => {
 function fakeProbe(
   refreshMode: "once" | "everyFrame" | "onDemand",
   name = "Probe",
+  blendDistance = 0,
 ): { probe: ReflectionProbe; refresh: () => void } {
   let wantsRefresh = false;
   const probe = {
@@ -94,7 +111,8 @@ function fakeProbe(
     size: 64,
     near: 0.1,
     far: 100,
-    boxProjection: null,
+    boxProjection: blendDistance > 0 ? { x: 4, y: 4, z: 4 } : null,
+    blendDistance,
     cullingMask: [],
     isEnabledInHierarchy: true,
     entity: { name, transform: { worldMatrix: new Float32Array(16) } },
@@ -196,6 +214,72 @@ describe("the reflection-probe runtime", () => {
     // It comes back.
     runtime.update(world, [probe], true, null, true);
     expect(fakes).toHaveLength(2);
+    runtime.dispose();
+  });
+
+  it("blends two box probes through one set once both captured, and frees a replaced set", async () => {
+    const runtime = await createReflectionProbeRuntime(engine, scene, () => undefined);
+    const first = fakeProbe("once", "A", 1);
+    const second = fakeProbe("once", "B", 1);
+    const material = {};
+    materials.push(material);
+    for (let frame = 0; frame < 30; frame += 1) {
+      runtime.update(world, [first.probe, second.probe], true, null, true);
+    }
+    expect(sets).toHaveLength(1);
+    expect(sets[0]?.volumes).toBe(2);
+    expect((assignments.get(material) as { set: unknown }).set).toBe(sets[0]);
+    // A refresh recaptures: the old set stays until the capture is done, then a new one replaces it.
+    first.refresh();
+    runtime.update(world, [first.probe, second.probe], true, null, true);
+    expect(sets).toHaveLength(1);
+    for (let frame = 0; frame < 30; frame += 1) {
+      runtime.update(world, [first.probe, second.probe], true, null, true);
+    }
+    expect(sets).toHaveLength(2);
+    expect(sets[0]?.disposedAfter).not.toBe("not disposed");
+    expect((assignments.get(material) as { set: unknown }).set).toBe(sets[1]);
+    // One probe left: no blending, the set goes.
+    runtime.update(world, [second.probe], true, null, true);
+    expect(sets[1]?.disposedAfter).not.toBe("not disposed");
+    runtime.dispose();
+  });
+
+  it("keeps the nearest-probe choice when no probe has a blend distance", async () => {
+    const runtime = await createReflectionProbeRuntime(engine, scene, () => undefined);
+    const first = fakeProbe("once", "A");
+    const second = fakeProbe("once", "B");
+    materials.push({});
+    for (let frame = 0; frame < 30; frame += 1) {
+      runtime.update(world, [first.probe, second.probe], true, null, true);
+    }
+    expect(sets).toHaveLength(0);
+    runtime.dispose();
+  });
+
+  it("does not rebuild the set while a blended probe moves, and builds one once it rests", async () => {
+    const runtime = await createReflectionProbeRuntime(engine, scene, () => undefined);
+    const first = fakeProbe("once", "A", 1);
+    const second = fakeProbe("once", "B", 1);
+    const material = {};
+    materials.push(material);
+    for (let frame = 0; frame < 30; frame += 1) {
+      runtime.update(world, [first.probe, second.probe], true, null, true);
+    }
+    expect(sets).toHaveLength(1);
+    const matrix = first.probe.entity.transform.worldMatrix as unknown as Float32Array;
+    for (let frame = 0; frame < 20; frame += 1) {
+      matrix[12] = frame * 0.1;
+      runtime.update(world, [first.probe, second.probe], true, null, true);
+    }
+    // Moving: the set went and none was built; materials take the nearest probe.
+    expect(sets).toHaveLength(1);
+    expect(sets[0]?.disposedAfter).not.toBe("not disposed");
+    expect(assignments.get(material)).not.toHaveProperty("set");
+    for (let frame = 0; frame < 30; frame += 1) {
+      runtime.update(world, [first.probe, second.probe], true, null, true);
+    }
+    expect(sets).toHaveLength(2);
     runtime.dispose();
   });
 });

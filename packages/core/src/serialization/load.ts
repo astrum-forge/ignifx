@@ -495,6 +495,7 @@ function ownedInstance(
       scene: instance.scene,
       root: instancedRoot(context, instance, source),
       nestedBaseline: instance.nestedBaseline,
+      nestedRootSourceUids: instance.nestedRootSourceUids,
     };
   }
   return null;

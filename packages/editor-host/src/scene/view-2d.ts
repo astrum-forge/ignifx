@@ -400,7 +400,9 @@ export function boundsOf2D(app: App, entities: readonly Entity[]): Box2D | null 
 
 /**
  * Every drawn 2D rectangle of a scene instance, for `pickRect` in 2D view mode: each synced
- * sprite's quad and each loaded tilemap's extent, with the entity that carries it.
+ * sprite's quad and each loaded tilemap's extent, with the entity that carries it. A disabled
+ * component, or one on an inactive entity, draws nothing and is left out, as the 2D click pick
+ * never reaches it.
  *
  * @param app - The app whose registry names the 2D classes.
  * @param scene - The scene instance.
@@ -410,7 +412,7 @@ export function drawnBoxes2D(app: App, scene: SceneInstance): { readonly entity:
   const result: { readonly entity: Entity; readonly box: Box2D }[] = [];
   const sprite = componentTypeOf(app, SPRITE_RENDERER_TYPE);
   for (const component of sprite === null ? [] : app.world.components(sprite)) {
-    if (component.entity.scene !== scene || !isSpriteLike(component)) {
+    if (component.entity.scene !== scene || !component.isEnabledInHierarchy || !isSpriteLike(component)) {
       continue;
     }
     const { min, max } = component.bounds;
@@ -420,7 +422,10 @@ export function drawnBoxes2D(app: App, scene: SceneInstance): { readonly entity:
   }
   const tilemap = componentTypeOf(app, TILEMAP_TYPE);
   for (const component of tilemap === null ? [] : app.world.components(tilemap)) {
-    const box = component.entity.scene === scene && isTilemapLike(component) ? tilemapBox(component) : null;
+    const box =
+      component.entity.scene === scene && component.isEnabledInHierarchy && isTilemapLike(component)
+        ? tilemapBox(component)
+        : null;
     if (box !== null) {
       result.push({ entity: component.entity, box });
     }

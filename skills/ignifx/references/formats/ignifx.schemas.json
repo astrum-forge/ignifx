@@ -4124,6 +4124,12 @@
             "description": ""
           }
         },
+        "blendDistance": {
+          "kind": "f32",
+          "default": "0",
+          "description": "How far inside its box, in metres, the probe fades out where it overlaps another box probe; 0 for no blending. Needs boxProjection.",
+          "min": 0
+        },
         "cullingMask": {
           "kind": "layerMask",
           "default": "[]",

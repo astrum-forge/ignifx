@@ -31,7 +31,11 @@
           "grid",
           "tilemapCells",
           "editorLines",
-          "spriteAnimation"
+          "spriteAnimation",
+          "pickRect",
+          "thumbnailMaterials",
+          "thumbnailAtlases",
+          "thumbnailTextures"
         ],
         "hostKind": "scene"
       }
@@ -981,6 +985,27 @@
           "direction": [0, 0, 1]
         },
         "plane": [3.5, -1.25, 0]
+      }
+    },
+    "pickRect": {
+      "jsonrpc": "2.0",
+      "id": 45,
+      "method": "pickRect",
+      "params": {
+        "x0": 120,
+        "y0": 80.5,
+        "x1": 40,
+        "y1": 300,
+        "unit": "css",
+        "mode": "contain"
+      }
+    },
+    "pickRectResponse": {
+      "jsonrpc": "2.0",
+      "id": 45,
+      "result": {
+        "entities": ["01M4ZEB9E0GG0Q6R22YXV3AVK8"],
+        "truncated": false
       }
     },
     "screenshot": {

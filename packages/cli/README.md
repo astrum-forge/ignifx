@@ -80,3 +80,10 @@ ignifx import tilemap <map.tilemap.json> <scene.scene.json> [--parent <entity na
 
 The Tiled and LDtk form writes one `.tilemap.json` per map or level and an `.atlas.json` beside
 each tileset image that has none; the last form moves a tilemap's objects into a scene (ADR-0030).
+
+The conversion behind the Tiled and LDtk form is also a pure function, for tools that import maps
+themselves: `convertTilemapSource(text, kind, read, options)` from `@ignifx/cli/tilemap` reads the
+files a map references through `read` and returns the documents to write and the warnings, with
+caps (`DEFAULT_TILEMAP_SOURCE_LIMITS`) that refuse a hostile map before it allocates. The subpath
+has no import-time side effects and does not load the scaffolder; its surface is recorded in
+`api/cli-tilemap.api.md`.

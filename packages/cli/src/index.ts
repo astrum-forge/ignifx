@@ -40,6 +40,7 @@ export {
   type ConvertTilemapResult,
 } from "./convert-tilemap.js";
 export { CliError, CliErrorCode } from "./errors.js";
+export type { TilemapSourceKind } from "./tilemap-source/convert.js";
 export {
   encodeHeightmapR16,
   heightmapSamples,

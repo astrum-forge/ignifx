@@ -96,8 +96,9 @@ export interface SchemaDescription {
    */
   readonly builtIn?: boolean;
   /**
-   * The components the class lists in `static requires`, as type ids (`null` for a class without a
-   * `typeId`), in declaration order. `addComponent` adds each one that is missing, so an editor adds
+   * The components the class lists in `static requires`, as type ids (`null` for a class that
+   * declares no `typeId` of its own, such as an unregistered subclass that only inherits its
+   * parent's), in declaration order. `addComponent` adds each one that is missing, so an editor adds
    * them itself, and a scene file may list them in any order. A component on the entity whose class
    * extends a required class counts as present. Set by {@link describeRegisteredSchemas}, or by the
    * caller through {@link SchemaDescriptionMeta}; absent when the class requires nothing.

@@ -68,6 +68,12 @@ export interface EntityInstanceLink {
    * against to write nested overrides. `null` when the scene instances nothing.
    */
   readonly nestedBaseline: ReadonlyMap<string, SceneFileComponent> | null;
+  /**
+   * When the instanced scene's single root itself instances a scene, the components those scenes'
+   * roots merged into the instance root, by runtime uid, to the uid the file declaring each gives
+   * it; the serializer diffs them as nested (instance path `<rootUid>/<uid>`). `null` otherwise.
+   */
+  readonly nestedRootSourceUids: ReadonlyMap<string, string> | null;
 }
 
 /**

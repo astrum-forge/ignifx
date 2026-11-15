@@ -37,6 +37,17 @@ every frame and is for one probe on a desktop at `"high"`. `cullingMask` limits 
 layers; editor-only meshes (gizmos, grids) are never captured. Diffuse light is untouched: pair a
 probe with a `LightProbeVolume` for that.
 
+**Blending.** Give overlapping box probes a `blendDistance` (metres inside the box over which the
+probe fades out) and, once two or more box probes have captured and one has a `blendDistance` above
+0, every lit PBR material blends them per pixel instead of reflecting one probe: inside a probe's
+box less `blendDistance` it alone counts (the smallest box first where several do), in the bands the
+overlapping probes are weighted, and beyond every box the nearest wins. A material whose nearest
+probe has no box keeps that probe. The blended set copies the cubes, so it is rebuilt after a probe
+recaptures (the last set stays meanwhile) or once a moved or edited probe has rested for about a
+quarter of a second (materials take the nearest probe while it moves). A probe that captures
+`"everyFrame"` turns blending off. At most four probes may overlap at one point; more logs one
+warning and falls back to the nearest probe.
+
 ```ts
 import type { World } from "@ignifx/core";
 import { ReflectionProbe } from "@ignifx/core";
@@ -221,10 +232,10 @@ a power of two.
   renderers, bake UV2 that already points into the shared texture and leave `entries` empty.
 - **No lightmap baker in the engine.** It needs a UV2 unwrap and a GPU path tracer; it is planned
   for the editor. Bring textures from an external tool, or build them in code.
-- **No reflection probe blending (B1b).** A material reflects one probe, chosen per material (a
-  material shared by several meshes follows the first); there is no blend across probe borders and
-  no prefiltered (GGX) mip chain, so very rough surfaces look blurrier and blockier than with an
-  `.env`. `ReflectionProbe.capture()` to a file is part of the same follow-up.
+- **Reflection probes without `blendDistance`** reflect one probe per material (a material shared
+  by several meshes follows the first). There is no prefiltered (GGX) mip chain, so very rough
+  surfaces look blurrier and blockier than with an `.env`, and no `ReflectionProbe.capture()` to a
+  file.
 - **The light-probe bake** is first-order, one bounce and flat-coloured; it reads glTF models only
   under a headless app, not Draco or meshopt primitives, and not the scene's `Environment` (§5).
 - No Phase 2 cost has been measured on a device yet; the figures above are estimates.

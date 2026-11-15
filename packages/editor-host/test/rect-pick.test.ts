@@ -1,7 +1,10 @@
+import { EDITOR_ONLY_METADATA_KEY } from "@ignifx/core";
 import { describe, expect, it } from "vitest";
+import { drawnMeshes } from "../src/lite/drawn-meshes.js";
 import { isPickRectParams, isPickRectResult, PICK_RECT_MAX_ENTITIES } from "../src/protocol/index.js";
 import { projectBox, projectBox2D, rectInBackingPixels, rectMatches, unionProjected } from "../src/scene/rect-pick.js";
 import { screenToWorld2D } from "../src/scene/view-2d.js";
+import type { AppLiteHandles } from "@ignifx/core";
 
 /**
  * `pickRect`'s arithmetic without a device: the rectangle's unit rule, the projection of a box's
@@ -134,5 +137,29 @@ describe("a 2D box projected through the 2D editor camera", () => {
     expect(screenToWorld2D(view, screen.minX, screen.maxY)).toEqual({ x: 1, y: -4 });
     expect(screenToWorld2D(view, screen.maxX, screen.minY)).toEqual({ x: 5, y: 0 });
     expect(screen.minY).toBeLessThan(screen.maxY);
+  });
+});
+
+describe("drawnMeshes", () => {
+  it("attributes meshes to their nearest owner and skips hidden, unpickable and editor-only meshes, as pick does", () => {
+    const owner = { name: "entity" };
+    const mesh = (extra: Record<string, unknown>): Record<string, unknown> => ({
+      parent: owner,
+      boundMin: [0, 0, 0],
+      boundMax: [1, 1, 1],
+      worldMatrix: new Float32Array(16),
+      ...extra,
+    });
+    const meshes = [
+      mesh({ id: "drawn" }),
+      mesh({ id: "hidden", visible: false }),
+      mesh({ id: "unpickable", pickable: false }),
+      mesh({ id: "grid", metadata: { [EDITOR_ONLY_METADATA_KEY]: true } }),
+      mesh({ id: "stray", parent: null }),
+    ];
+    const handles = { scene: { meshes } } as unknown as AppLiteHandles;
+    const drawn = drawnMeshes(handles, new Map([[owner, "E"]]));
+    expect(drawn.map((entry) => entry.owner)).toEqual(["E"]);
+    expect(drawn[0]?.world).toBe(meshes[0]?.["worldMatrix"]);
   });
 });

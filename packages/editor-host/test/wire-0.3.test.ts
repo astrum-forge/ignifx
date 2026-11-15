@@ -32,6 +32,8 @@ import {
   isOpenSceneParams,
   isOpenSceneResult,
   isPickParams,
+  isPickRectParams,
+  isPickRectResult,
   isPickResult,
   isPlayStateReport,
   isPlayStats,
@@ -187,6 +189,7 @@ const PARAMS_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   frameAll: isFrameParams,
   pick: isPickParams,
   pickBacking: isPickParams,
+  pickRect: isPickRectParams,
   screenshot: isScreenshotParams,
   screenshotJpeg: isScreenshotParams,
   screenshotGame: isScreenshotParams,
@@ -239,6 +242,7 @@ const RESULT_GUARDS: Readonly<Record<string, (value: unknown) => boolean>> = {
   pickMissRay: isPickResult,
   pickMissRay2d: isPickResult,
   pickHit2d: isPickResult,
+  pickRectResponse: isPickRectResult,
   screenshotResponse: isScreenshotResult,
   screenshotGameResponse: isScreenshotResult,
   queryRuntimeResponse: isQueryRuntimeResult,
@@ -658,7 +662,7 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
       id: wire("setViewMode")["id"],
     });
 
-    // A headless host lists none of `gizmos`, `screenshot`, `gameView`, `thumbnails`, `grid`,
+    // A headless host lists none of `gizmos`, `screenshot`, `gameView`, `thumbnails`, `pickRect`, `grid`,
     // `tilemapCells` and `editorLines`, so it does not have their methods.
     for (const name of [
       "setGizmo",
@@ -668,6 +672,7 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
       "setGameView",
       "gameViewFrame",
       "renderThumbnail",
+      "pickRect",
       "setGrid",
       "setTilemapCells",
       "setEditorLines",

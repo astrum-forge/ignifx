@@ -2191,8 +2191,8 @@ The asset: its address, or a reference whose `type` is `"model"` or `"scene"` (a
 address alone is typed by its extension: `.glb`/`.gltf` for a model, `.prefab.json` or
 `.scene.json` for a prefab. A host that lists `HostCapability.thumbnailMaterials` also takes
 `"material"` (`.material.json`), one with `thumbnailAtlases` `"spriteatlas"` (`.atlas.json`) and
-one with `thumbnailTextures` `"texture"` (`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.avif`,
-`.bmp`). Any other asset answers `RpcErrorCode.invalidParams`.
+one with `thumbnailTextures` `"texture"` (`.png`, `.jpg`, `.jpeg`, `.webp`). Any other asset,
+`.gif`, `.avif` and `.bmp` included, answers `RpcErrorCode.invalidParams`.
 
 ##### format
 
@@ -5074,10 +5074,10 @@ The scene host answers `renderThumbnail`: a model or prefab asset rendered on it
 
 > `readonly` **thumbnailTextures**: `"thumbnailTextures"` = `"thumbnailTextures"`
 
-The scene host's `renderThumbnail` also renders images the browser decodes (`.png`, `.jpg`,
-`.jpeg`, `.webp`, `.gif`, `.avif`, `.bmp`, or a reference typed `"texture"`), fitted in the
-square on a transparent background. Listed only with `thumbnails`. Additive in 0.3; without
-it, an image answers `RpcErrorCode.invalidParams`.
+The scene host's `renderThumbnail` also renders images (`.png`, `.jpg`, `.jpeg`, `.webp`, or
+a reference typed `"texture"`), fitted in the square on a transparent background; `.gif`,
+`.avif` and `.bmp` answer `RpcErrorCode.invalidParams`. Listed only with `thumbnails`.
+Additive in 0.3; without it, an image answers `RpcErrorCode.invalidParams`.
 
 ##### tilemapCells
 

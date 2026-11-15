@@ -447,11 +447,9 @@ export class InstancedMeshRenderer extends Component implements ComponentHooks {
     }
     this.#hasWarnedAboutLateSetting = true;
     this.app.log.warn(
-      `${CoreErrorCode.instancingSettingTooLate}: {entity} changed {field} on an InstancedMeshRenderer after ` +
-        `the scene was registered; ` +
-        "the value in use was kept. Set capacity, gpuCulling and lod.mesh before app.start().",
-      this.entity.name,
-      field,
+      `${CoreErrorCode.instancingSettingTooLate}: ${JSON.stringify(this.entity.name)} changed ${field} on an ` +
+        "InstancedMeshRenderer after the scene was registered; the value in use was kept. Set capacity, " +
+        "gpuCulling and lod.mesh before app.start().",
     );
   }
 
@@ -467,9 +465,8 @@ export class InstancedMeshRenderer extends Component implements ComponentHooks {
     }
     this.#hasWarnedAboutLodWithoutCulling = true;
     this.app.log.warn(
-      `${CoreErrorCode.instancingLodWithoutCulling}: {entity} declares an InstancedMeshRenderer lod with ` +
-        "gpuCulling off; the LOD mesh never draws. Turn gpuCulling on.",
-      this.entity.name,
+      `${CoreErrorCode.instancingLodWithoutCulling}: ${JSON.stringify(this.entity.name)} declares an ` +
+        "InstancedMeshRenderer lod with gpuCulling off; the LOD mesh never draws. Turn gpuCulling on.",
     );
   }
 
