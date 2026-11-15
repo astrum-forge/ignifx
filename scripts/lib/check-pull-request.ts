@@ -5,11 +5,49 @@
  */
 import path from "node:path";
 import { failed, passed, skipped, summarize } from "./check-result.ts";
-import { exists } from "./fs-tree.ts";
 import { runCommand } from "./run.ts";
 import type { CheckResult, HarnessContext } from "./check-result.ts";
 
 const API_REPORT = /^packages\/([^/]+)\/api\/.+\.api\.md$/u;
+const API_REFERENCES = "skills/ignifx/references/api";
+
+/**
+ * Maps an API report to the API reference generated from the same entry point.
+ *
+ * Each entry point has an API Extractor config that writes `<entry>.api.md` (`apiReport.reportFileName`)
+ * and a TypeDoc config that writes `<entry>.md` (`entryFileName`), so a subpath entry pairs with its
+ * own page: `packages/electron/api/electron-main.api.md` with `references/api/electron-main.md`, not
+ * with `electron.md`. `scripts/test/check-pull-request.test.ts` holds every package's configs to it.
+ *
+ * @param report - Repository-relative path of a changed file.
+ * @returns The repository-relative reference path, or `null` when `report` is not an API report.
+ */
+export function apiReferenceFor(report: string): string | null {
+  if (!API_REPORT.test(report)) {
+    return null;
+  }
+  return `${API_REFERENCES}/${path.posix.basename(report, ".api.md")}.md`;
+}
+
+/**
+ * Lists the API reports in a diff whose own generated reference is not in the same diff.
+ *
+ * An added, changed or deleted report needs its reference added, regenerated or deleted with it.
+ *
+ * @param changed - Repository-relative paths that differ from the base.
+ * @returns One line per stale reference, sorted by report path.
+ */
+export function staleApiReferences(changed: readonly string[]): string[] {
+  const changedSet = new Set(changed);
+  const stale: string[] = [];
+  for (const report of [...changed].toSorted((left, right) => left.localeCompare(right))) {
+    const reference = apiReferenceFor(report);
+    if (reference !== null && !changedSet.has(reference)) {
+      stale.push(`${reference} was not regenerated although ${report} changed`);
+    }
+  }
+  return stale;
+}
 
 /**
  * Lists the repository-relative paths that differ from a base ref.
@@ -67,7 +105,8 @@ export function checkApiReportGate(context: HarnessContext): CheckResult {
 }
 
 /**
- * Runs the `freshness` check: a package whose API report changed must ship a regenerated API reference.
+ * Runs the `freshness` check: each changed API report must ship the API reference regenerated from
+ * the same entry point.
  *
  * @param context - The tree being inspected.
  * @returns The check result.
@@ -83,29 +122,16 @@ export function checkFreshness(context: HarnessContext): CheckResult {
   }
   // "The package's last public change" (16 §4) is the API report changing, not any `src/` edit: a
   // refactor that leaves the public surface identical regenerates to the very same reference, so
-  // keying on `src/` reported it stale for nothing (found in Phase 11).
-  const touched = new Set<string>();
-  for (const file of changed) {
-    const match = API_REPORT.exec(file);
-    if (match !== null && match[1] !== undefined) {
-      touched.add(match[1]);
-    }
-  }
-  const stale: string[] = [];
-  for (const directory of [...touched].toSorted((left, right) => left.localeCompare(right))) {
-    const reference = `skills/ignifx/references/api/${directory}.md`;
-    if (!exists(path.join(context.repositoryRoot, reference))) {
-      continue;
-    }
-    if (!changed.includes(reference)) {
-      stale.push(`${reference} was not regenerated although packages/${directory}/api/ changed`);
-    }
-  }
+  // keying on `src/` reported it stale for nothing (found in Phase 11). The pairing is per entry
+  // point, not per package: keying on the package folder demanded `electron.md` for a change to
+  // `electron-main.api.md` and let a stale `electron-main.md` through when `electron.md` changed.
+  const reports = changed.filter((file) => API_REPORT.test(file)).length;
+  const stale = staleApiReferences(changed);
   if (stale.length > 0) {
     return failed("freshness", `${String(stale.length)} stale API references`, [
       ...summarize(stale, 20),
       "fix: run `pnpm docs:api`",
     ]);
   }
-  return passed("freshness", `${String(touched.size)} API reports changed against ${base}, references current`);
+  return passed("freshness", `${String(reports)} API reports changed against ${base}, references current`);
 }
