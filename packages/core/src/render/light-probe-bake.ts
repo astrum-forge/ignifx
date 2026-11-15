@@ -1,9 +1,8 @@
 import { CoreErrorCode } from "../errors/error-codes.js";
 import { IgnifxError } from "../errors/ignifx-error.js";
-import { readMeshBakeSurface } from "../lite/gpu/mesh.js";
-import { readWorldMatrix } from "../lite/node.js";
 import { Color } from "../math/color.js";
 import { createPerformanceClock } from "../time/clock.js";
+import { traceLiveModel } from "./gpu/light-probe-bake-model.js";
 import { readLightProbeGrid } from "./light-probe-asset.js";
 import { readGltfTriangles } from "./light-probe-bake-gltf.js";
 import { primitiveTriangles } from "./light-probe-bake-primitives.js";
@@ -18,7 +17,6 @@ import type { MeshPrimitiveDefinition } from "./mesh-asset.js";
 import type { ModelAsset } from "./model-asset.js";
 import type { AssetHandle } from "../assets/types.js";
 import type { Entity } from "../entity/entity.js";
-import type { LiteMesh } from "../lite/gpu/mesh.js";
 import type { ColorLike, Vec3Like } from "../math/types.js";
 import type { World } from "../world/world.js";
 
@@ -700,20 +698,10 @@ function collectTriangles(
     if (!model.isEnabledInHierarchy) {
       continue;
     }
-    const meshes = liveModelMeshes(model);
-    if (meshes !== null) {
-      // Under an app with a device the file's bytes are not kept: read the instance's own meshes.
-      const reasons: string[] = [];
-      const traced = addLiveModel(builder, model, meshes, reasons, signal);
-      for (const reason of reasons) {
-        skip(model.entity, Model.typeId, reason);
-      }
-      if (traced === 0) {
-        skipped += 1;
-        if (reasons.length === 0) {
-          skip(model.entity, Model.typeId, "the model's instance draws no triangles");
-        }
-      }
+    // Under an app with a device the file's bytes are not kept: read the instance's own meshes.
+    const live = traceLiveModel(model, builder, materialAlbedo, skip, signal);
+    if (live !== null) {
+      skipped += live;
       continue;
     }
     const gltf = readModel(model.model, gltfCache);
@@ -740,60 +728,6 @@ function collectTriangles(
     }
   }
   return { scene: builder.build(), skipped, skips };
-}
-
-/**
- * The meshes of a model's live instance, when the bake should read them: the asset kept no file
- * bytes (an app with a device) and the instance exists.
- *
- * @param model - The model.
- * @returns The meshes, or `null` to read the file instead (or to report why there is nothing).
- */
-function liveModelMeshes(model: Model): readonly LiteMesh[] | null {
-  const handle = model.model;
-  if (handle === null || handle.state !== "loaded" || handle.value.sourceBytes !== null) {
-    return null;
-  }
-  return model.instanceMeshes;
-}
-
-/**
- * Adds the triangles of a model's live instance, each mesh at its own world matrix (the glTF node
- * hierarchy under the entity), coloured by its material or the model's override for that material.
- *
- * @param builder - The scene being built.
- * @param model - The model.
- * @param meshes - Its instance's meshes.
- * @param reasons - Receives why a mesh was left out.
- * @param signal - Stops the collection between meshes.
- * @returns How many triangles were added.
- */
-function addLiveModel(
-  builder: SceneBuilder,
-  model: Model,
-  meshes: readonly LiteMesh[],
-  reasons: string[],
-  signal: AbortSignal | undefined,
-): number {
-  const matrix = Array.from({ length: 16 }, () => 0);
-  let traced = 0;
-  for (const mesh of meshes) {
-    signal?.throwIfAborted();
-    const surface = readMeshBakeSurface(mesh);
-    if (surface === null) {
-      reasons.push(`mesh "${mesh.name}" keeps no CPU triangles`);
-      continue;
-    }
-    const override = surface.materialName === null ? undefined : model.materialOverrides[surface.materialName];
-    const rgb =
-      override === undefined || override === null
-        ? surface.albedo === null
-          ? [0.5, 0.5, 0.5]
-          : [...surface.albedo]
-        : materialAlbedo(override);
-    traced += builder.add(surface.positions, surface.indices, readWorldMatrix(mesh, matrix), rgb);
-  }
-  return traced;
 }
 
 /**

@@ -227,6 +227,236 @@ Its asset type, as the manifest records it: `"scene"` for a scene or a prefab.
 
 ***
 
+### BakeColor
+
+A linear colour, each channel finite (`a` is ignored).
+
+#### Properties
+
+##### a?
+
+> `readonly` `optional` **a?**: `number`
+
+##### b
+
+> `readonly` **b**: `number`
+
+##### g
+
+> `readonly` **g**: `number`
+
+##### r
+
+> `readonly` **r**: `number`
+
+***
+
+### BakeFailureData
+
+The `data` of a failed `bakeLightProbes`.
+
+#### Properties
+
+##### cause?
+
+> `readonly` `optional` **cause?**: [`BakeCancelCause`](#bakecancelcause-1)
+
+What cancelled it, for `cancelled`.
+
+##### reason
+
+> `readonly` **reason**: [`BakeFailureReason`](#bakefailurereason-1)
+
+Why.
+
+***
+
+### BakeLightProbesParams
+
+The parameters of `bakeLightProbes`.
+
+#### Properties
+
+##### counts?
+
+> `readonly` `optional` **counts?**: readonly \[`number`, `number`, `number`\]
+
+The probes along X, Y and Z, each a whole number from 1, spread over the box (one probe on an
+axis sits at the centre). Not with `spacing`.
+
+##### directLight?
+
+> `readonly` `optional` **directLight?**: `"include"` \| `"exclude"`
+
+Whether the probes also store the direct light of `"realtime"` lights (core's
+`LightProbeBakeOptions.directLight`). Defaults to `"exclude"`.
+
+##### maxDistance?
+
+> `readonly` `optional` **maxDistance?**: `number`
+
+How far a ray looks for a surface, in metres; above 0. Defaults to 100.
+
+##### rays?
+
+> `readonly` `optional` **rays?**: `number`
+
+Rays per probe, 1 to [BAKE\_MAX\_RAYS](#bake_max_rays). Defaults to 128.
+
+##### sky?
+
+> `readonly` `optional` **sky?**: [`BakeSky`](#bakesky) \| `null`
+
+What rays that hit nothing return. Absent: the scene's `Environment` diffuse harmonics, rotated
+as the environment is, when the host has them (a host with a GPU, an installed `.env`); black
+otherwise. `null`: black.
+
+##### spacing?
+
+> `readonly` `optional` **spacing?**: `number`
+
+The largest distance between neighbouring probes, in metres, from [BAKE\_SPACING\_MIN](#bake_spacing_min) to
+[BAKE\_SPACING\_MAX](#bake_spacing_max); each axis of size above 0 gets at least two probes, on its faces.
+Defaults to [BAKE\_DEFAULT\_SPACING](#bake_default_spacing) when `counts` is absent too. Not with `counts`.
+
+##### volume
+
+> `readonly` **volume**: `string`
+
+The uid of the entity whose `LightProbeVolume` is baked. Its world position is the box's
+centre and its world scale the box's size in metres; the grid is axis-aligned (a rotation is
+ignored). An axis with a size of 0 gets one probe, at the centre.
+
+***
+
+### BakeLightProbesResult
+
+The answer to `bakeLightProbes`.
+
+#### Properties
+
+##### probes
+
+> `readonly` **probes**: [`JsonObject`](#jsonobject)
+
+The `.probes.json` document (`writeLightProbeFile`), for the editor to write.
+
+##### skips
+
+> `readonly` **skips**: readonly [`BakeSkip`](#bakeskip)[]
+
+What the bake left out, and why; at most [BAKE\_MAX\_SKIPS](#bake_max_skips).
+
+##### sky
+
+> `readonly` **sky**: [`BakeSkySource`](#bakeskysource)
+
+Where the sky came from.
+
+##### stats
+
+> `readonly` **stats**: `object`
+
+What was baked.
+
+###### ms
+
+> `readonly` **ms**: `number`
+
+Wall-clock milliseconds, from the start of the bake to its end.
+
+###### probes
+
+> `readonly` **probes**: `number`
+
+Probes in the grid.
+
+###### skipped
+
+> `readonly` **skipped**: `number`
+
+Enabled mesh renderers and models that gave no triangles at all.
+
+###### triangles
+
+> `readonly` **triangles**: `number`
+
+Triangles the rays were traced against.
+
+***
+
+### BakeProgressParams
+
+The parameters of `bakeProgress`.
+
+#### Properties
+
+##### done
+
+> `readonly` **done**: `number`
+
+Probes baked so far.
+
+##### total
+
+> `readonly` **total**: `number`
+
+Probes in the grid.
+
+##### volume
+
+> `readonly` **volume**: `string`
+
+The volume being baked.
+
+***
+
+### BakeSkip
+
+Something the bake could not trace, and why (core's `LightProbeBakeSkip`).
+
+#### Properties
+
+##### component
+
+> `readonly` **component**: `string`
+
+The component's type id: `ignifx/MeshRenderer` or `ignifx/Model`.
+
+##### entity
+
+> `readonly` **entity**: `string`
+
+The entity's name.
+
+##### reason
+
+> `readonly` **reason**: `string`
+
+Why, in one line.
+
+##### uid
+
+> `readonly` **uid**: `string`
+
+The entity's uid.
+
+***
+
+### CancelBakeResult
+
+The answer to `cancelBake`.
+
+#### Properties
+
+##### cancelled
+
+> `readonly` **cancelled**: `boolean`
+
+Whether a bake was running (it now fails as `cancelled`).
+
+***
+
 ### ClearEditorLinesParams
 
 The parameters of `clearEditorLines`.
@@ -3569,6 +3799,64 @@ The success answer to `applyOps`.
 
 ***
 
+### BakeCancelCause
+
+> **BakeCancelCause** = *typeof* [`BakeCancelCause`](#bakecancelcause)\[keyof *typeof* [`BakeCancelCause`](#bakecancelcause)\]
+
+The union of the names in `BakeCancelCause`.
+
+***
+
+### BakeFailureReason
+
+> **BakeFailureReason** = *typeof* [`BakeFailureReason`](#bakefailurereason)\[keyof *typeof* [`BakeFailureReason`](#bakefailurereason)\]
+
+The union of the names in `BakeFailureReason`.
+
+***
+
+### BakeLightProbesResponse
+
+> **BakeLightProbesResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`BakeLightProbesResult`](#bakelightprobesresult)\>
+
+The success answer to `bakeLightProbes`.
+
+***
+
+### BakeProgressNotification
+
+> **BakeProgressNotification** = [`RpcNotificationWithParams`](#rpcnotificationwithparams)\<*typeof* [`bakeProgress`](#bakeprogress), [`BakeProgressParams`](#bakeprogressparams)\>
+
+Scene host → editor: `bakeProgress`.
+
+***
+
+### BakeSky
+
+> **BakeSky** = [`BakeColor`](#bakecolor) \| \{ `ground`: [`BakeColor`](#bakecolor); `horizon`: [`BakeColor`](#bakecolor); `kind`: `"gradient"`; `sky`: [`BakeColor`](#bakecolor); \} \| \{ `coefficients`: readonly `number`[]; `kind`: `"sh9"`; \}
+
+What rays that hit nothing return, in linear radiance, as core's `LightProbeBakeSky` takes it: a
+colour, a gradient, or nine spherical-harmonic RGB triples (27 numbers in the order
+`Y00, Y1-1, Y10, Y11, Y2-2, Y2-1, Y20, Y21, Y22`, on the world axes, Y up).
+
+***
+
+### BakeSkySource
+
+> **BakeSkySource** = `"request"` \| `"environment"` \| `"none"`
+
+Where a bake's sky came from: the request, the scene's environment, or nowhere (black).
+
+***
+
+### CancelBakeResponse
+
+> **CancelBakeResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`CancelBakeResult`](#cancelbakeresult)\>
+
+The success answer to `cancelBake`.
+
+***
+
 ### ColliderOutlinesResponse
 
 > **ColliderOutlinesResponse** = [`RpcSuccessResponse`](#rpcsuccessresponse)\<[`ColliderOutlineSet`](#collideroutlineset)\>
@@ -3717,6 +4005,30 @@ A path into a JSON object: object keys as strings, array indices as whole number
 > **JsonValue** = `string` \| `number` \| `boolean` \| `null` \| [`JsonArray`](#jsonarray) \| [`JsonObject`](#jsonobject)
 
 Any JSON value. The engine's `JsonValue`.
+
+***
+
+### LightProbeBakeMethod
+
+> **LightProbeBakeMethod** = *typeof* [`LightProbeBakeMethod`](#lightprobebakemethod)\[keyof *typeof* [`LightProbeBakeMethod`](#lightprobebakemethod)\]
+
+The union of the names in `LightProbeBakeMethod`.
+
+***
+
+### LightProbeBakeNotification
+
+> **LightProbeBakeNotification** = *typeof* [`LightProbeBakeNotification`](#lightprobebakenotification)\[keyof *typeof* [`LightProbeBakeNotification`](#lightprobebakenotification)\]
+
+The union of the names in `LightProbeBakeNotification`.
+
+***
+
+### LightProbeBakeRequest
+
+> **LightProbeBakeRequest** = [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`bakeLightProbes`](#bakelightprobes-1), [`BakeLightProbesParams`](#bakelightprobesparams)\> \| [`RpcRequestWithParams`](#rpcrequestwithparams)\<*typeof* [`cancelBake`](#cancelbake-1), `Readonly`\<`Record`\<`string`, `never`\>\>\>
+
+Editor → scene host: one of the `LightProbeBakeMethod`s.
 
 ***
 
@@ -4170,6 +4482,136 @@ disagrees with the document the op was checked against. The last two are the hos
 
 ***
 
+### BAKE\_DEFAULT\_SPACING
+
+> `const` **BAKE\_DEFAULT\_SPACING**: `2` = `2`
+
+The distance between probes when a request gives neither `counts` nor `spacing`, in metres.
+
+***
+
+### BAKE\_MAX\_COUNT\_X
+
+> `const` **BAKE\_MAX\_COUNT\_X**: `1024` = `1024`
+
+The most probes along X (the `.probes.json` format's limit).
+
+***
+
+### BAKE\_MAX\_COUNT\_YZ
+
+> `const` **BAKE\_MAX\_COUNT\_YZ**: `4096` = `4096`
+
+The most probes in one Y × Z slice (the `.probes.json` format's limit).
+
+***
+
+### BAKE\_MAX\_PROBES
+
+> `const` **BAKE\_MAX\_PROBES**: `65536` = `65_536`
+
+The most probes one bake traces.
+
+***
+
+### BAKE\_MAX\_RAYS
+
+> `const` **BAKE\_MAX\_RAYS**: `4096` = `4096`
+
+The most rays per probe (`bakeLightProbes`' own limit).
+
+***
+
+### BAKE\_MAX\_SKIPS
+
+> `const` **BAKE\_MAX\_SKIPS**: `256` = `256`
+
+The most skips an answer lists; the count in `stats.skipped` is never cut.
+
+***
+
+### BAKE\_PROGRESS\_INTERVAL\_MS
+
+> `const` **BAKE\_PROGRESS\_INTERVAL\_MS**: `100` = `100`
+
+The shortest time between two `bakeProgress` notifications, in milliseconds (ten a second).
+
+***
+
+### BAKE\_SPACING\_MAX
+
+> `const` **BAKE\_SPACING\_MAX**: `1000` = `1000`
+
+The largest `spacing` a request may give, in metres.
+
+***
+
+### BAKE\_SPACING\_MIN
+
+> `const` **BAKE\_SPACING\_MIN**: `0.05` = `0.05`
+
+The smallest `spacing` a request may give, in metres.
+
+***
+
+### BakeCancelCause
+
+> `const` **BakeCancelCause**: `object`
+
+What stopped a cancelled bake: `cancelBake`, or a change to the open document (`openScene`,
+`closeScene`, `applyOps`, `setTilemapCells`, an asset reload that rebuilt instances, or a hot
+reload's new defaults), since a bake must not mix the old world with the new.
+
+#### Type Declaration
+
+##### cancelBake
+
+> `readonly` **cancelBake**: `"cancelBake"` = `"cancelBake"`
+
+##### sceneChanged
+
+> `readonly` **sceneChanged**: `"sceneChanged"` = `"sceneChanged"`
+
+***
+
+### BakeFailureReason
+
+> `const` **BakeFailureReason**: `object`
+
+Why `bakeLightProbes` failed, in its error's `data.reason`, with the error code each comes with:
+
+- `unknownEntity` (`RpcErrorCode.unknownEntity`): `volume` names no entity of the open scene;
+- `notAVolume` (`RpcErrorCode.invalidParams`): the entity has no `LightProbeVolume`;
+- `invalidGrid` (`RpcErrorCode.invalidParams`): the grid is more than a `.probes.json` holds or
+  more than [BAKE\_MAX\_PROBES](#bake_max_probes), or the volume's transform is not finite;
+- `busy` (`RpcErrorCode.invalidRequest`): a bake is running; cancel it or wait;
+- `cancelled` (`RpcErrorCode.invalidRequest`): `cancelBake`, or a change to the document, stopped
+  it (`data.cause`).
+
+#### Type Declaration
+
+##### busy
+
+> `readonly` **busy**: `"busy"` = `"busy"`
+
+##### cancelled
+
+> `readonly` **cancelled**: `"cancelled"` = `"cancelled"`
+
+##### invalidGrid
+
+> `readonly` **invalidGrid**: `"invalidGrid"` = `"invalidGrid"`
+
+##### notAVolume
+
+> `readonly` **notAVolume**: `"notAVolume"` = `"notAVolume"`
+
+##### unknownEntity
+
+> `readonly` **unknownEntity**: `"unknownEntity"` = `"unknownEntity"`
+
+***
+
 ### COLLIDER\_OUTLINES\_MAX\_ENTITIES
 
 > `const` **COLLIDER\_OUTLINES\_MAX\_ENTITIES**: `256` = `256`
@@ -4447,6 +4889,16 @@ The optional features a host lists in its `ready` result.
 
 #### Type Declaration
 
+##### bakeLightProbes
+
+> `readonly` **bakeLightProbes**: `"bakeLightProbes"` = `"bakeLightProbes"`
+
+The scene host answers `bakeLightProbes` and `cancelBake` and sends `bakeProgress`
+(`LightProbeBakeMethod`): it bakes a `LightProbeVolume` from its live edit-mode world (prefab
+instances, models, lights, the environment's sky) and answers the `.probes.json` document for
+the editor to write. Additive in 0.3; without it, the host answers both with
+`RpcErrorCode.methodNotFound`.
+
 ##### editorLines
 
 > `readonly` **editorLines**: `"editorLines"` = `"editorLines"`
@@ -4700,6 +5152,55 @@ Host → editor, every [DEFAULT\_HEARTBEAT\_INTERVAL\_MS](#default_heartbeat_int
 > `const` **JSON\_RPC\_VERSION**: `"2.0"` = `"2.0"`
 
 The value of every envelope's `jsonrpc` field.
+
+***
+
+### LightProbeBakeMethod
+
+> `const` **LightProbeBakeMethod**: `object`
+
+Editor → scene host: the light-probe bake methods, answered after `ready`.
+
+#### Type Declaration
+
+##### bakeLightProbes
+
+> `readonly` **bakeLightProbes**: `"bakeLightProbes"` = `"bakeLightProbes"`
+
+Bakes one `LightProbeVolume` and answers [BakeLightProbesResult](#bakelightprobesresult) when it is done. Fails
+with `RpcErrorCode.noScene` while no scene is open, and otherwise with the code and the
+[BakeFailureData](#bakefailuredata) that `BakeFailureReason` lists.
+
+##### cancelBake
+
+> `readonly` **cancelBake**: `"cancelBake"` = `"cancelBake"`
+
+Cancels the running bake, if any; answers [CancelBakeResult](#cancelbakeresult). The bake then fails as `cancelled`.
+
+#### Remarks
+
+A host lists `HostCapability.bakeLightProbes` when it answers them; one that does not answers
+`RpcErrorCode.methodNotFound`. Both run beside the one-at-a-time queue of the other methods:
+the bake starts in that queue (so it sees every change sent before it), then traces in slices
+while the queue goes on, so the view keeps answering `applyOps`, `pick` and the rest.
+
+***
+
+### LightProbeBakeNotification
+
+> `const` **LightProbeBakeNotification**: `object`
+
+Scene host → editor: the light-probe bake notifications.
+
+#### Type Declaration
+
+##### bakeProgress
+
+> `readonly` **bakeProgress**: `"bakeProgress"` = `"bakeProgress"`
+
+How far the running bake is: [BakeProgressParams](#bakeprogressparams). At most one per
+[BAKE\_PROGRESS\_INTERVAL\_MS](#bake_progress_interval_ms); the first comes once the first probe is baked. The answer to
+`bakeLightProbes` follows the last one.
 
 ***
 
@@ -5628,6 +6129,140 @@ The received `params`.
 `value is AssetReloadedParams`
 
 True for `{ address, type, entities }` with a non-empty address and type.
+
+***
+
+### isBakeFailureData()
+
+> **isBakeFailureData**(`value`): `value is BakeFailureData`
+
+Checks the `data` of a failed `bakeLightProbes`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received error `data`.
+
+#### Returns
+
+`value is BakeFailureData`
+
+True for a known reason and, when present, a known cause.
+
+***
+
+### isBakeLightProbesParams()
+
+> **isBakeLightProbesParams**(`value`): `value is BakeLightProbesParams`
+
+Checks the parameters of `bakeLightProbes`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is BakeLightProbesParams`
+
+True for a volume uid and, when given, counts or a spacing (not both), a direct-light
+rule, a sky or `null`, rays and a ray length in range.
+
+***
+
+### isBakeLightProbesResult()
+
+> **isBakeLightProbesResult**(`value`): `value is BakeLightProbesResult`
+
+Checks the result of `bakeLightProbes`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is BakeLightProbesResult`
+
+True for a `.probes.json` document, whole-number stats, at most [BAKE\_MAX\_SKIPS](#bake_max_skips)
+skips and a sky source.
+
+***
+
+### isBakeProgressParams()
+
+> **isBakeProgressParams**(`value`): `value is BakeProgressParams`
+
+Checks the parameters of `bakeProgress`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `params`.
+
+#### Returns
+
+`value is BakeProgressParams`
+
+True for a volume uid and `0 ≤ done ≤ total`, whole numbers.
+
+***
+
+### isBakeSky()
+
+> **isBakeSky**(`value`): `value is BakeSky`
+
+Checks a sky.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The value to test.
+
+#### Returns
+
+`value is BakeSky`
+
+True for a colour, a gradient of three colours, or 27 finite harmonics.
+
+***
+
+### isCancelBakeResult()
+
+> **isCancelBakeResult**(`value`): `value is CancelBakeResult`
+
+Checks the result of `cancelBake`.
+
+#### Parameters
+
+##### value
+
+`unknown`
+
+The received `result`.
+
+#### Returns
+
+`value is CancelBakeResult`
+
+True for `{ cancelled: boolean }`.
 
 ***
 
