@@ -243,6 +243,28 @@ ignifx import tilemap assets/maps/cave.tmj --pixels-per-unit 16
 ignifx import tilemap assets/maps/world.ldtk assets/levels --pixels-per-unit 16
 ```
 
+A tool that imports maps itself, such as an editor, calls the same conversion without the file
+system: `convertTilemapSource` from `@ignifx/cli/tilemap` takes the map's text, its kind (`"tmj"` or
+`"ldtk"`) and an async `read(path)` for the files the map references (`null` when absent), and
+returns the documents to write (`{ path, kind, json, text }`) and the warnings. Paths are POSIX
+paths relative to one base folder; `options.path` is the map's. It refuses a map past
+`DEFAULT_TILEMAP_SOURCE_LIMITS` (map and layer cells, layers, tiles per tileset, levels, JSON
+length) with `IGX-1408` before allocating for it; `options.limits` changes the caps.
+
+```ts ignore-check
+import { convertTilemapSource } from "@ignifx/cli/tilemap";
+import { readFile } from "node:fs/promises";
+
+const text = await readFile("assets/maps/cave.tmj", "utf8");
+const { documents, warnings } = await convertTilemapSource(
+  text,
+  "tmj",
+  async (path) => readFile(path, "utf8").catch(() => null),
+  { path: "assets/maps/cave.tmj", pixelsPerUnit: 16 },
+);
+// Each document's path is relative to the base folder, here the working directory.
+```
+
 ### A map built in code
 
 `createTilemapAsset(app, input, { address })` publishes a map generated at run time, in the same

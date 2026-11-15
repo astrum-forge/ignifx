@@ -1,12 +1,9 @@
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
-import { basename, dirname, extname, join, relative, resolve, sep } from "node:path";
+import { dirname, extname, relative, resolve, sep } from "node:path";
 import { parseArgs as parseNodeArgs } from "node:util";
 import { CliError, CliErrorCode } from "./errors.js";
-import { canonical, compactJson, isRecord } from "./json-text.js";
-import { convertLdtkProject } from "./tilemap-source/ldtk.js";
-import { convertTiledMap } from "./tilemap-source/tiled.js";
+import { convertTilemapSource } from "./tilemap-source/convert.js";
 import type { ImportIo } from "./import-heightmap.js";
-import type { ConvertContext, ConvertedMap, JsonObject } from "./tilemap-source/model.js";
 
 /**
  * `ignifx import tilemap <map.tmj | project.ldtk>`: converts a Tiled map or every level of an LDtk
@@ -29,9 +26,6 @@ const DEFAULT_PIXELS_PER_UNIT = 100;
 
 /** The suffix the engine's tilemap loader selects on. */
 const TILEMAP_SUFFIX = ".tilemap.json";
-
-/** The suffix the engine's atlas loader selects on. */
-const ATLAS_SUFFIX = ".atlas.json";
 
 /**
  * A parsed `ignifx import tilemap` invocation for a Tiled or LDtk file.
@@ -164,7 +158,9 @@ export function parseConvertTilemapArgs(argv: readonly string[]): ConvertTilemap
  *
  * Refused with `IGX-1408`: non-orthogonal or infinite Tiled maps, base64 or compressed layer data,
  * XML (`.tsx`) or image-collection tilesets, LDtk layers on different grid sizes, and flipped tiles
- * unless `--drop-flips` is passed. Output is deterministic: the same input writes the same bytes.
+ * unless `--drop-flips` is passed, and maps past `DEFAULT_TILEMAP_SOURCE_LIMITS`. Output is
+ * deterministic: the same input writes the same bytes. This is a file wrapper over the pure
+ * `convertTilemapSource` of `@ignifx/cli/tilemap`.
  *
  * @param argv - The arguments after `import tilemap`.
  * @param io - The injected output sinks.
@@ -183,198 +179,68 @@ export function parseConvertTilemapArgs(argv: readonly string[]): ConvertTilemap
 export async function runConvertTilemap(argv: readonly string[], io: ImportIo): Promise<ConvertTilemapResult> {
   const command = parseConvertTilemapArgs(argv);
   const source = resolve(command.source);
-  const warnings: string[] = [];
-  const context: ConvertContext = {
-    pixelsPerUnit: command.pixelsPerUnit,
-    dropFlips: command.dropFlips,
-    warn: (line: string): void => {
-      warnings.push(line);
+  const output = command.output === null ? null : resolve(command.output);
+  // Paths are relative to the deepest folder holding both the map and its output.
+  const folder = commonFolder(
+    dirname(source),
+    output === null ? dirname(source) : command.kind === "tiled" ? dirname(output) : output,
+  );
+  const text = await readText(source);
+  if (text === null) {
+    throw new CliError(CliErrorCode.fileNotAccessible, `Could not read "${source}".`);
+  }
+  const converted = await convertTilemapSource(
+    text,
+    command.kind === "tiled" ? "tmj" : "ldtk",
+    async (path) => readText(resolve(folder, path)),
+    {
+      path: toPosix(relative(folder, source)),
+      ...(output === null ? {} : { output: toPosix(relative(folder, output)) || "." }),
+      pixelsPerUnit: command.pixelsPerUnit,
+      dropFlips: command.dropFlips,
+      exists: async (path) => exists(resolve(folder, path)),
     },
-    readJson,
-  };
-  const parsed = await readJson(source);
-  const maps =
-    command.kind === "tiled"
-      ? [await convertTiledMap(source, parsed, context)]
-      : await convertLdtkProject(source, parsed, context);
-  const atlases = new Map<string, ReadonlySet<string> | null>();
-  const writtenAtlases: string[] = [];
+  );
   const tilemaps: string[] = [];
-  for (const map of maps) {
-    const target = outputPath(command, source, map);
-    // oxlint-disable-next-line no-await-in-loop -- maps share atlases; the first to need one writes it, in a stable order.
-    const document = await tilemapDocument(map, target, command.pixelsPerUnit, atlases, writtenAtlases, warnings);
-    // oxlint-disable-next-line no-await-in-loop -- see above.
-    await writeText(target, compactJson(document));
-    tilemaps.push(target);
+  const atlases: string[] = [];
+  for (const document of converted.documents) {
+    const target = resolve(folder, document.path);
+    // oxlint-disable-next-line no-await-in-loop -- written in order, so a failure leaves a predictable prefix.
+    await writeText(target, document.text);
+    (document.kind === "tilemap" ? tilemaps : atlases).push(target);
   }
-  for (const line of tilemaps.map((path) => `Wrote ${shown(path)}`)) {
-    io.stdout(line);
-  }
-  for (const path of writtenAtlases) {
+  for (const path of [...tilemaps, ...atlases]) {
     io.stdout(`Wrote ${shown(path)}`);
   }
-  for (const line of warnings) {
+  for (const line of converted.warnings) {
     io.stderr(`warning: ${line}`);
   }
-  return { source: command.source, tilemaps, atlases: writtenAtlases, warnings };
+  return { source: command.source, tilemaps, atlases, warnings: converted.warnings };
 }
 
 /**
- * Where one converted map is written.
+ * The deepest folder holding two folders.
  *
- * @param command - The command.
- * @param source - The source's absolute path.
- * @param map - The map.
- * @returns The absolute `.tilemap.json` path.
+ * @param a - One absolute folder.
+ * @param b - The other.
+ * @returns Their common ancestor.
  */
-function outputPath(command: ConvertTilemapCommand, source: string, map: ConvertedMap): string {
-  if (command.kind === "tiled") {
-    return command.output === null ? join(dirname(source), `${map.name}${TILEMAP_SUFFIX}`) : resolve(command.output);
+function commonFolder(a: string, b: string): string {
+  let folder = a;
+  while (relative(folder, b).startsWith("..") && dirname(folder) !== folder) {
+    folder = dirname(folder);
   }
-  const folder = command.output === null ? dirname(source) : resolve(command.output);
-  // A level identifier comes from the file; keep it a plain file name so it cannot leave `folder`.
-  return join(folder, `${map.name.replaceAll(/[^\w-]/gu, "_")}${TILEMAP_SUFFIX}`);
+  return folder;
 }
 
 /**
- * Builds the `.tilemap.json` document for one map, writing each missing atlas on the way.
+ * A native relative path in POSIX form.
  *
- * @param map - The converted map.
- * @param target - Where the document goes.
- * @param pixelsPerUnit - The pixels one metre spans.
- * @param atlases - Atlas path to the frame names it holds (`null` when unreadable); shared across maps.
- * @param written - The atlases this run wrote; appended to.
- * @param warnings - The warning list; appended to.
- * @returns The document.
+ * @param path - The path.
+ * @returns The path with `/` separators.
  */
-async function tilemapDocument(
-  map: ConvertedMap,
-  target: string,
-  pixelsPerUnit: number,
-  atlases: Map<string, ReadonlySet<string> | null>,
-  written: string[],
-  warnings: string[],
-): Promise<JsonObject> {
-  const tilesets: JsonObject[] = [];
-  for (const tileset of map.tilesets) {
-    let atlas = "";
-    if (tileset.image !== null) {
-      const atlasPath = atlasPathFor(tileset.image);
-      let frames = atlases.get(atlasPath);
-      if (frames === undefined) {
-        // oxlint-disable-next-line no-await-in-loop -- two tilesets may share an image; the first writes its atlas.
-        frames = await ensureAtlas(atlasPath, tileset.image, tileset.frames, written, warnings);
-        atlases.set(atlasPath, frames);
-      }
-      const missing = frames === null ? [] : tileset.frames.filter((frame) => !frames.has(frame.name));
-      if (missing.length > 0) {
-        warnings.push(
-          `${shown(atlasPath)} already exists and lacks ${String(missing.length)} frame(s) tileset "${tileset.name}" uses, such as "${missing[0]?.name ?? ""}"; delete it to regenerate it.`,
-        );
-      }
-      atlas = relative(dirname(target), atlasPath).split(sep).join("/");
-    }
-    tilesets.push({ name: tileset.name, atlas, firstId: tileset.firstId, tiles: tileset.tiles });
-  }
-  return {
-    format: "ignifx.tilemap",
-    formatVersion: 1,
-    tileWidth: map.tileWidth,
-    tileHeight: map.tileHeight,
-    cellSize: canonical(map.tileWidth / pixelsPerUnit),
-    width: map.width,
-    height: map.height,
-    tilesets,
-    layers: map.layers.map(packLayer),
-    ...(map.objects.length === 0 ? {} : { objects: map.objects }),
-    ...(Object.keys(map.properties).length === 0 ? {} : { properties: map.properties }),
-  };
-}
-
-/**
- * The `.atlas.json` path for a tileset image: the image's path with its extension swapped.
- *
- * @param image - The image's absolute path.
- * @returns The atlas path.
- */
-function atlasPathFor(image: string): string {
-  const extension = extname(image);
-  return `${extension === "" ? image : image.slice(0, -extension.length)}${ATLAS_SUFFIX}`;
-}
-
-/**
- * Writes an atlas for a tileset image when none exists, or reads the frame names of the one there.
- *
- * @param atlasPath - The atlas path.
- * @param image - The image's absolute path.
- * @param frames - The frames to cut when writing.
- * @param written - The atlases this run wrote; appended to.
- * @param warnings - The warning list; appended to.
- * @returns The frame names the atlas holds, or `null` when an existing atlas cannot be read.
- */
-async function ensureAtlas(
-  atlasPath: string,
-  image: string,
-  frames: ConvertedMap["tilesets"][number]["frames"],
-  written: string[],
-  warnings: string[],
-): Promise<ReadonlySet<string> | null> {
-  if (await exists(atlasPath)) {
-    try {
-      const existing: unknown = JSON.parse(await readFile(atlasPath, "utf8"));
-      const list = isRecord(existing) && Array.isArray(existing["frames"]) ? existing["frames"] : [];
-      return new Set(list.filter(isRecord).map((frame) => String(frame["name"])));
-    } catch {
-      warnings.push(`${shown(atlasPath)} exists but is not JSON; it was left alone.`);
-      return null;
-    }
-  }
-  if (frames.length === 0) {
-    warnings.push(`The tileset image ${shown(image)} yields no tiles, so no atlas was written for it.`);
-    return new Set();
-  }
-  if (!(await exists(image))) {
-    warnings.push(`The tileset image ${shown(image)} does not exist yet; its atlas names it anyway.`);
-  }
-  await writeText(
-    atlasPath,
-    compactJson({
-      format: "ignifx.spriteatlas",
-      formatVersion: 1,
-      image: basename(image),
-      sampling: "nearest",
-      premultipliedAlpha: false,
-      frames,
-    }),
-  );
-  written.push(atlasPath);
-  return new Set(frames.map((frame) => frame.name));
-}
-
-/**
- * Stores a layer's tiles run-length encoded when that is shorter than the dense list.
- *
- * @param layer - The layer, with dense `tiles`.
- * @returns The layer as written.
- */
-function packLayer(layer: JsonObject): JsonObject {
-  const tiles = layer["tiles"];
-  if (!Array.isArray(tiles)) {
-    return layer;
-  }
-  const rle: number[] = [];
-  let index = 0;
-  while (index < tiles.length) {
-    const value: unknown = tiles[index];
-    let count = 1;
-    while (index + count < tiles.length && tiles[index + count] === value) {
-      count += 1;
-    }
-    rle.push(count, typeof value === "number" ? value : 0);
-    index += count;
-  }
-  return rle.length < tiles.length ? { ...layer, tiles: { rle } } : layer;
+function toPosix(path: string): string {
+  return path.split(sep).join("/");
 }
 
 /**
@@ -404,38 +270,45 @@ async function exists(path: string): Promise<boolean> {
 }
 
 /**
- * Reads and parses a JSON file.
+ * Reads a UTF-8 text file.
  *
  * @param path - The file.
- * @returns The parsed value.
- * @throws A {@link CliError} with code `IGX-1405` when it cannot be read, or `IGX-1407` when it is
- * not JSON.
+ * @returns The text, or `null` when there is no such file.
+ * @throws A {@link CliError} with code `IGX-1405` when it exists but cannot be read.
  */
-async function readJson(path: string): Promise<unknown> {
-  let text: string;
+async function readText(path: string): Promise<string | null> {
   try {
-    text = await readFile(path, "utf8");
+    return await readFile(path, "utf8");
   } catch (error) {
+    if (isMissing(error)) {
+      return null;
+    }
     throw new CliError(CliErrorCode.fileNotAccessible, `Could not read "${path}".`, { cause: error });
-  }
-  try {
-    return JSON.parse(text);
-  } catch (error) {
-    throw new CliError(CliErrorCode.invalidDocument, `"${path}" is not JSON.`, { cause: error });
   }
 }
 
 /**
- * Writes a JSON text file with a final newline, creating its folder.
+ * Whether a file-system error says the file is not there.
+ *
+ * @param error - The error.
+ * @returns `true` for `ENOENT` and `ENOTDIR`.
+ */
+function isMissing(error: unknown): boolean {
+  const code: unknown = typeof error === "object" && error !== null ? Reflect.get(error, "code") : undefined;
+  return code === "ENOENT" || code === "ENOTDIR";
+}
+
+/**
+ * Writes a text file, creating its folder.
  *
  * @param path - The file.
- * @param text - Its text, without the final newline.
+ * @param text - Its text.
  * @throws A {@link CliError} with code `IGX-1405` when it cannot be written.
  */
 async function writeText(path: string, text: string): Promise<void> {
   try {
     await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, `${text}\n`, "utf8");
+    await writeFile(path, text, "utf8");
   } catch (error) {
     throw new CliError(CliErrorCode.fileNotAccessible, `Could not write "${path}".`, { cause: error });
   }

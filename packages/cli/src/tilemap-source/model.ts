@@ -1,3 +1,4 @@
+import { posix } from "node:path";
 import { CliError, CliErrorCode } from "../errors.js";
 import { isRecord } from "../json-text.js";
 
@@ -41,7 +42,7 @@ export interface AtlasFrame {
 export interface ConvertedTileset {
   /** The tileset name; also the frame-name prefix. */
   readonly name: string;
-  /** The absolute path of the source image, or `null` for a collision-only tileset. */
+  /** The source image's POSIX path relative to the map's folder, or `null` for a collision-only tileset. */
   readonly image: string | null;
   /** The global id of tile `0`. */
   readonly firstId: number;
@@ -78,6 +79,43 @@ export interface ConvertedMap {
 }
 
 /**
+ * The caps a conversion enforces so a hostile or broken map cannot exhaust memory: every count a
+ * source file states that the converter would allocate for is checked before it allocates.
+ *
+ * @public
+ */
+export interface TilemapSourceLimits {
+  /** The longest JSON text read, the map's own included, in UTF-16 code units. */
+  readonly maxJsonLength: number;
+  /** The most cells one map or layer may span (`width × height`). */
+  readonly maxLayerCells: number;
+  /** The most layer cells and tileset tiles all converted maps may hold together. */
+  readonly maxTotalCells: number;
+  /** The most tile layers one map may have. */
+  readonly maxLayers: number;
+  /** The most tiles one tileset may declare. */
+  readonly maxTilesetTiles: number;
+  /** The most levels an LDtk project may convert. */
+  readonly maxLevels: number;
+}
+
+/**
+ * The limits a conversion applies unless told otherwise: 64 Mi characters of JSON, 4 Mi cells per
+ * map or layer (2048 × 2048), 16 Mi cells in all, 256 tile layers per map, 65 536 tiles per
+ * tileset and 1 024 LDtk levels.
+ *
+ * @public
+ */
+export const DEFAULT_TILEMAP_SOURCE_LIMITS: TilemapSourceLimits = Object.freeze({
+  maxJsonLength: 64 * 1024 * 1024,
+  maxLayerCells: 2048 * 2048,
+  maxTotalCells: 16 * 1024 * 1024,
+  maxLayers: 256,
+  maxTilesetTiles: 65_536,
+  maxLevels: 1024,
+});
+
+/**
  * What a converter needs from the command.
  *
  * @internal
@@ -89,8 +127,129 @@ export interface ConvertContext {
   readonly dropFlips: boolean;
   /** Reports something the conversion lost or skipped. */
   readonly warn: (line: string) => void;
-  /** Reads and parses a JSON file another file references, such as a `.tsj` or an `.ldtkl`. */
+  /**
+   * Reads and parses a JSON file another file references, such as a `.tsj` or an `.ldtkl`, by its
+   * POSIX path relative to the map's folder.
+   */
   readonly readJson: (path: string) => Promise<unknown>;
+  /** The caps, and the cells counted so far against `maxTotalCells`. */
+  readonly budget: CellBudget;
+}
+
+/**
+ * Counts the cells a conversion allocates against its limits.
+ *
+ * @internal
+ */
+export class CellBudget {
+  /** The limits. */
+  readonly limits: TilemapSourceLimits;
+  #total = 0;
+
+  /**
+   * Starts a count at zero.
+   *
+   * @param limits - The limits.
+   */
+  constructor(limits: TilemapSourceLimits) {
+    this.limits = limits;
+  }
+
+  /**
+   * Checks a grid one map or layer spans, and counts a layer's cells against the total.
+   *
+   * @param path - The source file, for the message.
+   * @param what - The map or layer, for the message.
+   * @param columns - Its width in cells.
+   * @param rows - Its height in cells.
+   * @param allocate - `true` for a layer whose cells are allocated, counted against the total.
+   * @throws A {@link CliError} with code `IGX-1408` past a limit.
+   */
+  cells(path: string, what: string, columns: number, rows: number, allocate: boolean): void {
+    const count = Math.max(0, columns) * Math.max(0, rows);
+    if (!Number.isFinite(count) || count > this.limits.maxLayerCells) {
+      overLimit(path, `${what} spans ${String(count)} cells`, this.limits.maxLayerCells, "maxLayerCells");
+    }
+    if (allocate) {
+      this.#total += count;
+      if (this.#total > this.limits.maxTotalCells) {
+        overLimit(
+          path,
+          `has ${String(this.#total)} tile cells and tiles in all`,
+          this.limits.maxTotalCells,
+          "maxTotalCells",
+        );
+      }
+    }
+  }
+
+  /**
+   * Checks the tiles one tileset declares, and counts them against the total: each becomes an
+   * entry of the document and a frame of its atlas.
+   *
+   * @param path - The source file, for the message.
+   * @param what - The tileset, for the message.
+   * @param count - Its tile count.
+   * @throws A {@link CliError} with code `IGX-1408` past a limit.
+   */
+  tiles(path: string, what: string, count: number): void {
+    this.count(path, `the tile count of ${what}`, count, "maxTilesetTiles");
+    this.#total += Math.max(0, count);
+    if (this.#total > this.limits.maxTotalCells) {
+      overLimit(
+        path,
+        `has ${String(this.#total)} tile cells and tiles in all`,
+        this.limits.maxTotalCells,
+        "maxTotalCells",
+      );
+    }
+  }
+
+  /**
+   * Checks a count against one of the limits.
+   *
+   * @param path - The source file, for the message.
+   * @param what - What is counted, for the message.
+   * @param count - The count.
+   * @param limit - Which limit applies.
+   * @throws A {@link CliError} with code `IGX-1408` past it.
+   */
+  count(path: string, what: string, count: number, limit: "maxLayers" | "maxTilesetTiles" | "maxLevels"): void {
+    if (!Number.isFinite(count) || count > this.limits[limit]) {
+      overLimit(path, `${what}: ${String(count)}`, this.limits[limit], limit);
+    }
+  }
+}
+
+/**
+ * Throws the error for a source file past an import limit.
+ *
+ * @param path - The source file.
+ * @param what - What is over the limit.
+ * @param limit - The limit's value.
+ * @param name - The limit's name in {@link TilemapSourceLimits}.
+ * @throws A {@link CliError} with code `IGX-1408`.
+ */
+function overLimit(path: string, what: string, limit: number, name: string): never {
+  throw new CliError(
+    CliErrorCode.unsupportedTilemapSource,
+    `"${path}" ${what}, over the import limit of ${String(limit)} (${name}). Split the map, or raise limits.${name} if the file is trusted.`,
+  );
+}
+
+/**
+ * Resolves a path a source file references against the folder of the file holding it, both POSIX
+ * paths relative to the map's folder.
+ *
+ * @param folder - The referencing file's folder.
+ * @param reference - The path as the file wrote it.
+ * @returns The normalised path; an absolute reference stays absolute.
+ *
+ * @internal
+ */
+export function resolveReference(folder: string, reference: string): string {
+  const normal = reference.replaceAll("\\", "/");
+  return posix.isAbsolute(normal) ? posix.normalize(normal) : posix.normalize(posix.join(folder, normal));
 }
 
 /**

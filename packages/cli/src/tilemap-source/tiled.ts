@@ -1,4 +1,4 @@
-import { basename, dirname, extname, resolve } from "node:path";
+import { posix } from "node:path";
 import { canonical, isRecord } from "../json-text.js";
 import {
   gridFrames,
@@ -7,6 +7,7 @@ import {
   readNumber,
   readString,
   records,
+  resolveReference,
   uniqueName,
   unsupported,
 } from "./model.js";
@@ -32,7 +33,8 @@ const TILED_HINT =
 /**
  * Converts a parsed `.tmj` file.
  *
- * @param path - The file's absolute path; images and `.tsj` tilesets resolve against its folder.
+ * @param path - The file's POSIX path relative to the map's folder (its name); images and `.tsj`
+ * tilesets resolve against its folder.
  * @param tmj - The parsed file.
  * @param context - Pixels per unit, the flip policy, the warning sink and the JSON reader.
  * @returns The map.
@@ -55,10 +57,10 @@ export async function convertTiledMap(path: string, tmj: unknown, context: Conve
   const tileHeight = readNumber(tmj, "tileheight", tileWidth);
   const width = readNumber(tmj, "width", 0);
   const height = readNumber(tmj, "height", 0);
+  context.budget.cells(path, "the map", width, height, false);
+  const rawTilesets = records(readArray(tmj, "tilesets"));
   const tilesets = (
-    await Promise.all(
-      records(readArray(tmj, "tilesets")).map(async (raw) => readTileset(path, raw, tileWidth, tileHeight, context)),
-    )
+    await Promise.all(rawTilesets.map(async (raw) => readTileset(path, raw, tileWidth, tileHeight, context)))
   ).toSorted((a, b) => a.firstId - b.firstId);
   const state: LayerState = {
     path,
@@ -72,7 +74,7 @@ export async function convertTiledMap(path: string, tmj: unknown, context: Conve
   };
   readLayers(readArray(tmj, "layers"), "", state);
   return {
-    name: basename(path, extname(path)),
+    name: posix.basename(path, posix.extname(path)),
     tileWidth,
     tileHeight,
     width,
@@ -127,18 +129,19 @@ async function readTileset(
   const firstId = readNumber(entry, "firstgid", 1);
   const source = entry["source"];
   let raw = entry;
-  let folder = dirname(path);
+  let folder = posix.dirname(path);
   if (typeof source === "string") {
-    if (extname(source).toLowerCase() !== ".tsj" && extname(source).toLowerCase() !== ".json") {
+    const extension = posix.extname(source).toLowerCase();
+    if (extension !== ".tsj" && extension !== ".json") {
       return unsupported(path, `uses the tileset "${source}", which is not a JSON (.tsj) tileset`, TILED_HINT);
     }
-    const tsjPath = resolve(folder, source);
+    const tsjPath = resolveReference(folder, source);
     const loaded = await context.readJson(tsjPath);
     if (!isRecord(loaded)) {
       return unsupported(tsjPath, "is not a Tiled tileset", TILED_HINT);
     }
     raw = loaded;
-    folder = dirname(tsjPath);
+    folder = posix.dirname(tsjPath);
   }
   const name = readString(raw, "name", `tileset${String(firstId)}`);
   const image = readString(raw, "image", "");
@@ -150,6 +153,7 @@ async function readTileset(
     );
   }
   const count = readNumber(raw, "tilecount", 0);
+  context.budget.tiles(path, `tileset "${name}"`, count);
   const cell = { w: readNumber(raw, "tilewidth", tileWidth), h: readNumber(raw, "tileheight", tileHeight) };
   const overrides = new Map<number, JsonObject>();
   for (const tile of records(readArray(raw, "tiles"))) {
@@ -161,7 +165,7 @@ async function readTileset(
   }
   return {
     name,
-    image: resolve(folder, image),
+    image: resolveReference(folder, image),
     firstId,
     tiles,
     frames: gridFrames(
@@ -268,6 +272,7 @@ function readLayers(layers: readonly unknown[], prefix: string, state: LayerStat
     if (type === "group") {
       readLayers(readArray(raw, "layers"), `${name}/`, state);
     } else if (type === "tilelayer") {
+      state.context.budget.count(state.path, "the number of tile layers", state.layers.length + 1, "maxLayers");
       state.layers.push(readTileLayer(raw, uniqueName(name, state.names), state));
     } else if (type === "objectgroup") {
       readObjectLayer(raw, state);
@@ -297,6 +302,10 @@ function readTileLayer(raw: JsonObject, name: string, state: LayerState): JsonOb
   if (!Array.isArray(data)) {
     return unsupported(state.path, `has no tile data in layer "${name}"`, TILED_HINT);
   }
+  const layerWidth = readNumber(raw, "width", state.width);
+  const layerHeight = readNumber(raw, "height", state.height);
+  state.context.budget.cells(state.path, `layer "${name}"`, layerWidth, layerHeight, false);
+  state.context.budget.cells(state.path, `layer "${name}"`, data.length, 1, true);
   if (readNumber(raw, "offsetx", 0) !== 0 || readNumber(raw, "offsety", 0) !== 0) {
     state.context.warn(`Layer "${name}" has a pixel offset, which a tilemap layer does not keep.`);
   }
@@ -331,8 +340,8 @@ function readTileLayer(raw: JsonObject, name: string, state: LayerState): JsonOb
     opacity: readNumber(raw, "opacity", 1),
     parallax: { x: readNumber(raw, "parallaxx", 1), y: readNumber(raw, "parallaxy", 1) },
     collision: properties["collision"] === true,
-    width: readNumber(raw, "width", state.width),
-    height: readNumber(raw, "height", state.height),
+    width: layerWidth,
+    height: layerHeight,
     tiles,
   };
 }

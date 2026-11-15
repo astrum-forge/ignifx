@@ -1,4 +1,4 @@
-import { dirname, resolve } from "node:path";
+import { posix } from "node:path";
 import { canonical, isRecord } from "../json-text.js";
 import {
   gridFrames,
@@ -7,6 +7,7 @@ import {
   readNumber,
   readString,
   records,
+  resolveReference,
   uniqueName,
   unsupported,
 } from "./model.js";
@@ -40,7 +41,8 @@ const LDTK_HINT = "Save it from LDtk 1.5 or later, or import the level in code w
 /**
  * Converts a parsed `.ldtk` project.
  *
- * @param path - The file's absolute path; images and external levels resolve against its folder.
+ * @param path - The file's POSIX path relative to the map's folder (its name); images and external
+ * levels resolve against its folder.
  * @param ldtk - The parsed project.
  * @param context - Pixels per unit, the flip policy, the warning sink and the JSON reader.
  * @returns One map per level, in the project's order.
@@ -57,7 +59,7 @@ export async function convertLdtkProject(
     return unsupported(path, "is not an LDtk project", LDTK_HINT);
   }
   const defs = ldtk["defs"];
-  const folder = dirname(path);
+  const folder = posix.dirname(path);
   const levels = [
     ...records(readArray(ldtk, "levels")),
     ...records(readArray(ldtk, "worlds")).flatMap((world) => records(readArray(world, "levels"))),
@@ -65,6 +67,7 @@ export async function convertLdtkProject(
   if (levels.length === 0) {
     return unsupported(path, "has no levels", LDTK_HINT);
   }
+  context.budget.count(path, "the number of levels", levels.length, "maxLevels");
   const tilesets: ConvertedTileset[] = [];
   const tilesetsByUid = new Map<number, ConvertedTileset>();
   let nextFirstId = 1;
@@ -74,7 +77,7 @@ export async function convertLdtkProject(
       // LDtk's embedded icon atlas has no image file; a layer that uses it is refused below.
       continue;
     }
-    const tileset = readTileset(raw, resolve(folder, relPath), nextFirstId);
+    const tileset = readTileset(raw, resolveReference(folder, relPath), nextFirstId, path, context);
     nextFirstId += tileset.tiles.length;
     tilesets.push(tileset);
     tilesetsByUid.set(readNumber(raw, "uid", -1), tileset);
@@ -116,7 +119,7 @@ async function loadLevel(level: JsonObject, folder: string, context: ConvertCont
   if (Array.isArray(level["layerInstances"]) || external === "") {
     return level;
   }
-  const loaded = await context.readJson(resolve(folder, external));
+  const loaded = await context.readJson(resolveReference(folder, external));
   return isRecord(loaded) ? loaded : level;
 }
 
@@ -124,11 +127,19 @@ async function loadLevel(level: JsonObject, folder: string, context: ConvertCont
  * Reads one tileset definition.
  *
  * @param raw - The definition.
- * @param image - The image's absolute path.
+ * @param image - The image's path relative to the map's folder.
  * @param firstId - The global id of its tile `0`.
+ * @param path - The project file, for messages.
+ * @param context - The converter context, for the limits.
  * @returns The tileset.
  */
-function readTileset(raw: JsonObject, image: string, firstId: number): ConvertedTileset {
+function readTileset(
+  raw: JsonObject,
+  image: string,
+  firstId: number,
+  path: string,
+  context: ConvertContext,
+): ConvertedTileset {
   const name = readString(raw, "identifier", `tileset${String(firstId)}`);
   const grid = Math.max(1, readNumber(raw, "tileGridSize", LDTK_DEFAULT_GRID));
   const spacing = readNumber(raw, "spacing", 0);
@@ -150,6 +161,7 @@ function readTileset(raw: JsonObject, image: string, firstId: number): Converted
     }
   }
   const count = Math.max(0, columns * rows);
+  context.budget.tiles(path, `tileset "${name}"`, count);
   const tiles: JsonObject[] = [];
   for (let localId = 0; localId < count; localId += 1) {
     const frame = `${name}_${String(localId)}`;
@@ -200,6 +212,8 @@ function convertLevel(level: JsonObject, project: Project): ConvertedMap {
   const levelHeightPx = readNumber(level, "pxHei", 0);
   const width = Math.max(1, Math.round(readNumber(level, "pxWid", 0) / grid));
   const height = Math.max(1, Math.round(levelHeightPx / grid));
+  const budget = project.context.budget;
+  budget.cells(project.path, where, width, height, false);
   let maxIntGrid = 0;
   for (const instance of instances) {
     if (readString(instance, "__type", "") === "IntGrid") {
@@ -207,6 +221,9 @@ function convertLevel(level: JsonObject, project: Project): ConvertedMap {
         maxIntGrid = typeof value === "number" && value > maxIntGrid ? value : maxIntGrid;
       }
     }
+  }
+  if (maxIntGrid > 0) {
+    budget.tiles(project.path, `the IntGrid values of ${where}`, maxIntGrid);
   }
   const intGrid = maxIntGrid > 0 ? intGridTileset(maxIntGrid, project.nextFirstId) : null;
   const layers: JsonObject[] = [];
@@ -232,17 +249,20 @@ function convertLevel(level: JsonObject, project: Project): ConvertedMap {
     }
     const columns = Math.max(0, readNumber(instance, "__cWid", 0));
     const rows = Math.max(0, readNumber(instance, "__cHei", 0));
-    const layer = (layerName: string, collision: boolean, tiles: readonly number[]): JsonObject => ({
-      name: uniqueName(layerName, names),
-      sortingLayer: "Default",
-      orderInLayer: layers.length,
-      opacity: readNumber(instance, "__opacity", 1),
-      parallax: readParallax(project.layerDefs, readNumber(instance, "layerDefUid", -1)),
-      collision,
-      width: columns,
-      height: rows,
-      tiles,
-    });
+    const layer = (layerName: string, collision: boolean, tiles: readonly number[]): JsonObject => {
+      budget.count(project.path, `the number of tile layers in ${where}`, layers.length + 1, "maxLayers");
+      return {
+        name: uniqueName(layerName, names),
+        sortingLayer: "Default",
+        orderInLayer: layers.length,
+        opacity: readNumber(instance, "__opacity", 1),
+        parallax: readParallax(project.layerDefs, readNumber(instance, "layerDefUid", -1)),
+        collision,
+        width: columns,
+        height: rows,
+        tiles,
+      };
+    };
     const art = type === "Tiles" ? readArray(instance, "gridTiles") : readArray(instance, "autoLayerTiles");
     if (
       art.length === 0 &&
@@ -252,12 +272,14 @@ function convertLevel(level: JsonObject, project: Project): ConvertedMap {
       project.context.warn(`Skipped the empty layer "${name}" in ${where}: it has no tiles and no tileset.`);
     } else if (art.length > 0 || type !== "IntGrid") {
       const tileset = layerTileset(instance, project, `layer "${name}" in ${where}`);
+      budget.cells(project.path, `layer "${name}" in ${where}`, columns, rows, true);
       const tiles = placeTiles(records(art), instance, tileset.firstId, project, `layer "${name}" in ${where}`);
       const artName = type === "IntGrid" ? `${name}${AUTO_TILES_SUFFIX}` : name;
       layers.push(layer(artName, false, tiles));
     }
     if (type === "IntGrid" && intGrid !== null) {
       const csv = readArray(instance, "intGridCsv");
+      budget.cells(project.path, `layer "${name}" in ${where}`, columns, rows, true);
       const tiles = Array.from({ length: columns * rows }, (_, index): number => {
         const value = csv[index];
         return typeof value === "number" && value > 0 ? intGrid.firstId + value - 1 : 0;
