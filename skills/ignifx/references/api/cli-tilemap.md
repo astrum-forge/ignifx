@@ -244,6 +244,16 @@ Options of [convertTilemapSource](#converttilemapsource).
 
 #### Properties
 
+##### allowOutsideBase?
+
+> `readonly` `optional` **allowOutsideBase?**: `boolean`
+
+Lets the map's references, and so the generated atlases, reach outside the base folder: absolute
+paths and paths above it. Off by default, when such a reference is refused with `IGX-1408` before
+`read` or `exists` sees it, so every [TilemapSourceDocument.path](#path-1) stays inside the base
+folder. `ignifx import tilemap` sets it, because a map on disk may use tilesets in any folder.
+A path holding NUL is refused either way.
+
 ##### dropFlips?
 
 > `readonly` `optional` **dropFlips?**: `boolean`
@@ -271,7 +281,8 @@ images are not checked.
 
 > `readonly` `optional` **limits?**: `Partial`\<[`TilemapSourceLimits`](#tilemapsourcelimits)\>
 
-Caps over [DEFAULT\_TILEMAP\_SOURCE\_LIMITS](#default_tilemap_source_limits); a hostile map past one fails with `IGX-1408`.
+Caps over [DEFAULT\_TILEMAP\_SOURCE\_LIMITS](#default_tilemap_source_limits); a hostile map past one fails with `IGX-1408`. A
+member that is absent or `undefined` keeps its default.
 
 ##### output?
 
@@ -320,7 +331,9 @@ A `.tilemap.json` per Tiled map or LDtk level, or an `.atlas.json` generated for
 
 > `readonly` **path**: `string`
 
-Where it goes: a POSIX path relative to the base folder.
+Where it goes: a normalised POSIX path relative to the base folder, never above it, absolute,
+or holding `:`, `\` or NUL, unless {@link ConvertTilemapSourceOptions.allowOutsideBase} is set
+(then an atlas beside a tileset image may be absolute or start with `..`).
 
 ##### text
 
@@ -361,6 +374,12 @@ The most tile layers one map may have.
 
 The most levels an LDtk project may convert.
 
+##### maxTilesets
+
+> `readonly` **maxTilesets**: `number`
+
+The most tilesets one map or project may declare.
+
 ##### maxTilesetTiles
 
 > `readonly` **maxTilesetTiles**: `number`
@@ -372,6 +391,12 @@ The most tiles one tileset may declare.
 > `readonly` **maxTotalCells**: `number`
 
 The most layer cells and tileset tiles all converted maps may hold together.
+
+##### maxTotalJsonLength
+
+> `readonly` **maxTotalJsonLength**: `number`
+
+The most JSON text all files read may hold together, the map's own included.
 
 ## Type Aliases
 
@@ -385,9 +410,10 @@ The union of the error codes this package can throw.
 
 ### TilemapSourceKind
 
-> **TilemapSourceKind** = `"tmj"` \| `"ldtk"`
+> **TilemapSourceKind** = `"tiled"` \| `"ldtk"`
 
-Which editor wrote a map source: a Tiled JSON map (`.tmj`) or an LDtk project (`.ldtk`).
+Which editor wrote a map source: a Tiled JSON map (`.tmj`) or an LDtk project (`.ldtk`). The same
+names as `ConvertTilemapCommand.kind`.
 
 ***
 
@@ -416,9 +442,11 @@ The text, or `null` when there is no such file.
 
 The path is a normalised POSIX path relative to the base folder of the conversion (see
 [ConvertTilemapSourceOptions.path](#path)), resolved from what the map (or the tileset holding
-it) wrote; it may start with `..` or be absolute when the source file says so. The caller decides
-what is reachable: confine it to a project root and answer `null` outside it. `null` means the file does not exist: a required file then fails the conversion with
-`IGX-1405`, and an atlas is generated.
+it) wrote. Unless [ConvertTilemapSourceOptions.allowOutsideBase](#allowoutsidebase) is set, it is checked
+before the call: never absolute, never above the base folder, and free of `:`, `\` and NUL; a
+reference that is not is refused with `IGX-1408` instead. Each path is read at most once. `null`
+means the file does not exist: a required file then fails the conversion with `IGX-1405`, and an
+atlas is generated.
 
 ## Variables
 
@@ -485,9 +513,9 @@ A Tiled or LDtk file uses a feature `ignifx import tilemap` cannot convert, such
 
 > `const` **DEFAULT\_TILEMAP\_SOURCE\_LIMITS**: [`TilemapSourceLimits`](#tilemapsourcelimits)
 
-The limits a conversion applies unless told otherwise: 64 Mi characters of JSON, 4 Mi cells per
-map or layer (2048 × 2048), 16 Mi cells in all, 256 tile layers per map, 65 536 tiles per
-tileset and 1 024 LDtk levels.
+The limits a conversion applies unless told otherwise: 64 Mi characters per JSON file and 256 Mi
+in all, 4 Mi cells per map or layer (2048 × 2048), 16 Mi cells and tiles in all, 256 tile layers
+per map, 256 tilesets, 65 536 tiles per tileset and 1 024 LDtk levels.
 
 ## Functions
 
@@ -554,7 +582,7 @@ file is not JSON, or `IGX-1408` for a feature the tilemap format cannot hold or 
 #### Example
 
 ```ts
-const { documents } = await convertTilemapSource(text, "tmj", async (path) => files.get(path) ?? null, {
+const { documents } = await convertTilemapSource(text, "tiled", async (path) => files.get(path) ?? null, {
   path: "assets/maps/cave.tmj",
   pixelsPerUnit: 16,
 });

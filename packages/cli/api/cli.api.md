@@ -33,7 +33,8 @@ export const CONVERT_TILEMAP_USAGE: string;
 // @public
 export interface ConvertTilemapCommand {
     readonly dropFlips: boolean;
-    readonly kind: "tiled" | "ldtk";
+    // Warning: (ae-forgotten-export) The symbol "TilemapSourceKind" needs to be exported by the entry point index.d.ts
+    readonly kind: TilemapSourceKind;
     readonly output: string | null;
     readonly pixelsPerUnit: number;
     readonly source: string;

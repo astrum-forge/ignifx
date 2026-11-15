@@ -36,6 +36,7 @@ export function convertTilemapSource(text: string, kind: TilemapSourceKind, read
 
 // @public
 export interface ConvertTilemapSourceOptions {
+    readonly allowOutsideBase?: boolean;
     readonly dropFlips?: boolean;
     readonly exists?: (path: string) => Promise<boolean>;
     readonly limits?: Partial<TilemapSourceLimits>;
@@ -56,7 +57,7 @@ export interface TilemapSourceDocument {
 }
 
 // @public
-export type TilemapSourceKind = "tmj" | "ldtk";
+export type TilemapSourceKind = "tiled" | "ldtk";
 
 // @public
 export interface TilemapSourceLimits {
@@ -64,8 +65,10 @@ export interface TilemapSourceLimits {
     readonly maxLayerCells: number;
     readonly maxLayers: number;
     readonly maxLevels: number;
+    readonly maxTilesets: number;
     readonly maxTilesetTiles: number;
     readonly maxTotalCells: number;
+    readonly maxTotalJsonLength: number;
 }
 
 // @public

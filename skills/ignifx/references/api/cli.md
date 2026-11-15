@@ -235,7 +235,7 @@ Whether flipped or rotated tiles import unflipped instead of failing the command
 
 ##### kind
 
-> `readonly` **kind**: `"ldtk"` \| `"tiled"`
+> `readonly` **kind**: `TilemapSourceKind`
 
 Which editor wrote it.
 
