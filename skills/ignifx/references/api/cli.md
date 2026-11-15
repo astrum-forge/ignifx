@@ -235,7 +235,7 @@ Whether flipped or rotated tiles import unflipped instead of failing the command
 
 ##### kind
 
-> `readonly` **kind**: `TilemapSourceKind`
+> `readonly` **kind**: [`TilemapSourceKind`](#tilemapsourcekind)
 
 Which editor wrote it.
 
@@ -699,6 +699,15 @@ The scene that gained them.
 > **CliErrorCode** = *typeof* [`CliErrorCode`](#clierrorcode-1)\[keyof *typeof* [`CliErrorCode`](#clierrorcode-1)\]
 
 The union of the error codes this package can throw.
+
+***
+
+### TilemapSourceKind
+
+> **TilemapSourceKind** = `"tiled"` \| `"ldtk"`
+
+Which editor wrote a map source: a Tiled JSON map (`.tmj`) or an LDtk project (`.ldtk`). The same
+names as `ConvertTilemapCommand.kind`.
 
 ## Variables
 
