@@ -143,4 +143,9 @@ describe("reflectionProbeBlendLayout", () => {
     expect(layout?.maximum).toEqual([5, 2, 2]);
     expect(layout?.cellSize).toBe(7 / REFLECTION_PROBE_GRID_CELLS);
   });
+
+  it("puts the smallest box first, so a probe nested in a bigger box is not hidden", () => {
+    const layout = reflectionProbeBlendLayout([blending(0, 10, 1), blending(1, 2, 0.5), blending(2, 10, 0)]);
+    expect(layout?.volumes.map((volume) => volume.index)).toEqual([1, 0, 2]);
+  });
 });

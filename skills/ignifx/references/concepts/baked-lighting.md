@@ -40,11 +40,13 @@ probe with a `LightProbeVolume` for that.
 **Blending.** Give overlapping box probes a `blendDistance` (metres inside the box over which the
 probe fades out) and, once two or more box probes have captured and one has a `blendDistance` above
 0, every lit PBR material blends them per pixel instead of reflecting one probe: inside a probe's
-box less `blendDistance` it alone counts, in the bands the overlapping probes are weighted, and
-beyond every box the nearest wins. Probes without a box take no part. The blended set copies the
-cubes, so it is rebuilt after a probe moves or recaptures; while a probe is capturing the last set
-stays, and a probe that captures `"everyFrame"` turns blending off (nearest probe again). At most
-four probes may overlap at one point; more logs a warning and falls back to the nearest probe.
+box less `blendDistance` it alone counts (the smallest box first where several do), in the bands the
+overlapping probes are weighted, and beyond every box the nearest wins. A material whose nearest
+probe has no box keeps that probe. The blended set copies the cubes, so it is rebuilt after a probe
+recaptures (the last set stays meanwhile) or once a moved or edited probe has rested for about a
+quarter of a second (materials take the nearest probe while it moves). A probe that captures
+`"everyFrame"` turns blending off. At most four probes may overlap at one point; more logs one
+warning and falls back to the nearest probe.
 
 ```ts
 import type { World } from "@ignifx/core";

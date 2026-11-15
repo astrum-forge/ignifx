@@ -58,8 +58,9 @@ import type {
  *   probe's cube into one cube array when it is created (`lib/material/pbr/enable-pbr-local-cubemap.js`,
  *   `createProbeTexture`) and blends up to four candidates per voxel per fragment. It has no dispose:
  *   its buffers and texture are destroyed only when the scene is (`scene._disposables`), so a set
- *   replaced earlier is freed through its `_texture`, `_uniformBuffer` and `_gridBuffer` fields, read
- *   from the pinned source ({@link createLiteProbeSet}). A fragment inside a probe's inner box takes
+ *   replaced earlier is freed through its `_texture`, `_uniformBuffer` and `_gridBuffer` fields and
+ *   its closure is taken off `scene._disposables`, all read from the pinned source
+ *   ({@link releaseLiteProbeSet}). A fragment inside a probe's inner box takes
  *   that probe alone; between inner and outer boxes the candidates are weighted; outside every outer
  *   box the nearest probe by its normalised distance wins (`local-cubemap-fragment.js`).
  */
@@ -516,11 +517,66 @@ export interface LiteProbeSet {
   dispose(after?: PromiseLike<unknown>): void;
 }
 
-/** The GPU resources Lite's set holds, as `lib/material/pbr/enable-pbr-local-cubemap.js` names them. */
-interface ProbeSetResources {
-  readonly _texture?: GPUTexture | null;
-  readonly _uniformBuffer?: GPUBuffer | null;
-  readonly _gridBuffer?: GPUBuffer | null;
+/** The three GPU resources of a Lite probe set, by the field names `enable-pbr-local-cubemap.js` uses. */
+const PROBE_SET_RESOURCE_FIELDS = ["_texture", "_uniformBuffer", "_gridBuffer"] as const;
+
+/**
+ * Frees what a Lite probe set holds: its three GPU resources, and the cleanup closure Lite pushed
+ * onto `scene._disposables`, which would otherwise keep the whole set (its 64 KiB uniform data and
+ * its grid) alive until the scene is disposed.
+ *
+ * @remarks
+ * Every field is checked before use: a Lite upgrade that renames one degrades to `warn` (a leak
+ * that is logged) and never throws. Destroying twice is harmless.
+ *
+ * @param set - The set, as Lite returned it.
+ * @param disposables - The scene's `_disposables` list, or anything else when it is not one.
+ * @param cleanup - The closure Lite pushed for this set, or `undefined` when it was not found.
+ * @param warn - Receives one message per missing field or list.
+ *
+ * @internal
+ */
+export function releaseLiteProbeSet(
+  set: unknown,
+  disposables: unknown,
+  cleanup: unknown,
+  warn: (message: string) => void,
+): void {
+  // Boundary narrowing of Lite's undeclared fields (coding standards §5.2).
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  const record = typeof set === "object" && set !== null ? (set as Record<string, unknown>) : {};
+  for (const field of PROBE_SET_RESOURCE_FIELDS) {
+    const resource = record[field];
+    const destroy =
+      typeof resource === "object" && resource !== null ? (resource as { destroy?: unknown }).destroy : undefined;
+    if (typeof destroy === "function") {
+      Reflect.apply(destroy, resource, []);
+    } else {
+      warn(`a Babylon Lite probe set has no ${field} to destroy, so its GPU memory stays until the scene goes`);
+    }
+  }
+  if (!Array.isArray(disposables) || cleanup === undefined) {
+    warn("the Babylon Lite probe set's scene cleanup could not be found, so its CPU data stays until the scene goes");
+    return;
+  }
+  const index = disposables.indexOf(cleanup);
+  if (index >= 0) {
+    disposables.splice(index, 1);
+  }
+}
+
+/**
+ * The scene's `_disposables` list, which Lite's set pushes its cleanup onto.
+ *
+ * @param scene - The scene.
+ * @returns The list, or `undefined` when the scene has none (a Lite change).
+ */
+function disposablesOf(scene: SceneContext): unknown[] | undefined {
+  // Lite's scene type does not declare it; read from `lib/scene/scene-core.js` and
+  // `enable-pbr-local-cubemap.js` (`scene._disposables.push`).
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion, no-underscore-dangle
+  const list = (scene as unknown as { _disposables?: unknown })._disposables;
+  return Array.isArray(list) ? list : undefined;
 }
 
 /**
@@ -532,6 +588,7 @@ interface ProbeSetResources {
  * @param minimum - The voxel grid's minimum corner.
  * @param maximum - The voxel grid's maximum corner.
  * @param cellSize - The voxel edge.
+ * @param warn - Where a disposal that cannot free everything reports it.
  * @returns The set.
  * @throws When Lite refuses it: more than four probes in a voxel, more probes than the uniform block
  * holds, or cubes of different formats.
@@ -545,6 +602,7 @@ export function createLiteProbeSet(
   minimum: readonly [number, number, number],
   maximum: readonly [number, number, number],
   cellSize: number,
+  warn: (message: string) => void,
 ): LiteProbeSet {
   const probes: PbrLocalEnvironmentProbe[] = volumes.map((volume) => ({
     shape: "box",
@@ -556,7 +614,11 @@ export function createLiteProbeSet(
     influenceInnerSize: volume.inner,
     influenceOuterSize: volume.outer,
   }));
+  const disposables = disposablesOf(scene);
+  const before = disposables?.length ?? 0;
   const set = createPbrLocalEnvironmentProbeSet(scene, { probes, voxelGrid: { minimum, maximum, cellSize } });
+  // Lite pushes exactly one cleanup closure as the set's last step.
+  const cleanup = disposables !== undefined && disposables.length === before + 1 ? disposables[before] : undefined;
   let isDisposed = false;
   return {
     set,
@@ -565,23 +627,14 @@ export function createLiteProbeSet(
         return;
       }
       isDisposed = true;
-      // Lite's set type declares only `probes`; the fields are read from the pinned source (see the
-      // module notes). Destroying twice is harmless, which the scene's own disposal later does.
-      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-      const resources = set as unknown as ProbeSetResources;
-      const destroy = (): void => {
-        // oxlint-disable-next-line no-underscore-dangle
-        resources._texture?.destroy();
-        // oxlint-disable-next-line no-underscore-dangle
-        resources._uniformBuffer?.destroy();
-        // oxlint-disable-next-line no-underscore-dangle
-        resources._gridBuffer?.destroy();
+      const release = (): void => {
+        releaseLiteProbeSet(set, disposables, cleanup, warn);
       };
       const device = deviceOf(engine);
       Promise.resolve(after)
         .catch(() => undefined)
         .then(async () => device?.queue.onSubmittedWorkDone())
-        .then(destroy, destroy);
+        .then(release, release);
     },
   };
 }

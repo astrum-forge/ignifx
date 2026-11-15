@@ -223,7 +223,7 @@ describe("the reflection-probe runtime", () => {
     const second = fakeProbe("once", "B", 1);
     const material = {};
     materials.push(material);
-    for (let frame = 0; frame < 12; frame += 1) {
+    for (let frame = 0; frame < 30; frame += 1) {
       runtime.update(world, [first.probe, second.probe], true, null, true);
     }
     expect(sets).toHaveLength(1);
@@ -233,7 +233,7 @@ describe("the reflection-probe runtime", () => {
     first.refresh();
     runtime.update(world, [first.probe, second.probe], true, null, true);
     expect(sets).toHaveLength(1);
-    for (let frame = 0; frame < 10; frame += 1) {
+    for (let frame = 0; frame < 30; frame += 1) {
       runtime.update(world, [first.probe, second.probe], true, null, true);
     }
     expect(sets).toHaveLength(2);
@@ -250,10 +250,36 @@ describe("the reflection-probe runtime", () => {
     const first = fakeProbe("once", "A");
     const second = fakeProbe("once", "B");
     materials.push({});
-    for (let frame = 0; frame < 12; frame += 1) {
+    for (let frame = 0; frame < 30; frame += 1) {
       runtime.update(world, [first.probe, second.probe], true, null, true);
     }
     expect(sets).toHaveLength(0);
+    runtime.dispose();
+  });
+
+  it("does not rebuild the set while a blended probe moves, and builds one once it rests", async () => {
+    const runtime = await createReflectionProbeRuntime(engine, scene, () => undefined);
+    const first = fakeProbe("once", "A", 1);
+    const second = fakeProbe("once", "B", 1);
+    const material = {};
+    materials.push(material);
+    for (let frame = 0; frame < 30; frame += 1) {
+      runtime.update(world, [first.probe, second.probe], true, null, true);
+    }
+    expect(sets).toHaveLength(1);
+    const matrix = first.probe.entity.transform.worldMatrix as unknown as Float32Array;
+    for (let frame = 0; frame < 20; frame += 1) {
+      matrix[12] = frame * 0.1;
+      runtime.update(world, [first.probe, second.probe], true, null, true);
+    }
+    // Moving: the set went and none was built; materials take the nearest probe.
+    expect(sets).toHaveLength(1);
+    expect(sets[0]?.disposedAfter).not.toBe("not disposed");
+    expect(assignments.get(material)).not.toHaveProperty("set");
+    for (let frame = 0; frame < 30; frame += 1) {
+      runtime.update(world, [first.probe, second.probe], true, null, true);
+    }
+    expect(sets).toHaveLength(2);
     runtime.dispose();
   });
 });

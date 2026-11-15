@@ -272,7 +272,7 @@ export interface ReflectionProbeBlendVolume {
  * @internal
  */
 export interface ReflectionProbeBlendLayout {
-  /** The box probes, in candidate order. */
+  /** The box probes, smallest box first, then in candidate order. */
   readonly volumes: readonly ReflectionProbeBlendVolume[];
   /** The grid's world-space minimum corner: the union of the boxes. */
   readonly minimum: readonly [number, number, number];
@@ -342,6 +342,11 @@ export function reflectionProbeBlendLayout(
   if (volumes.length < 2 || !blends) {
     return null;
   }
+  // Lite takes the first candidate whose inner box holds a fragment, so the smallest box goes first,
+  // as in selectReflectionProbe; ties keep candidate order.
+  volumes.sort(
+    (a, b) => a.outer[0] * a.outer[1] * a.outer[2] - b.outer[0] * b.outer[1] * b.outer[2] || a.index - b.index,
+  );
   const longest = Math.max(maximum[0] - minimum[0], maximum[1] - minimum[1], maximum[2] - minimum[2]);
   return { volumes, minimum, maximum, cellSize: longest / REFLECTION_PROBE_GRID_CELLS };
 }
