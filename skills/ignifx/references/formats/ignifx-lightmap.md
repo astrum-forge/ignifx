@@ -11,4 +11,4 @@ A baked lightmap texture that static MeshRenderers sample through their second U
 | `format` | `str` | `"ignifx-lightmap"` | Always "ignifx-lightmap". |
 | `formatVersion` | `u32` | `1` | The file format version; 1 before ignifx 1.0. |
 | `texture` | `str` | `""` | The lightmap texture's asset address (a .png, .ktx2 or other texture); required. |
-| `entries` | `map` | `{}` | Per entity uid, { scale: { x, y }, offset: { x, y } }: the entity's UV2 square in the texture (sampled at uv2 · scale + offset; scale above 0). Missing halves and missing entities take scale 1, offset 0. Only the identity is drawn until the atlas transform lands. |
+| `entries` | `map` | `{}` | Per entity uid, { scale: { x, y }, offset: { x, y } }: the entity's UV2 square in the texture (sampled at uv2 · scale + offset; scale above 0). Missing halves and missing entities take scale 1, offset 0. A placement other than the identity needs the renderer's lightmap.uv2 on and a mesh with uvs2; each distinct placement is its own pipeline variant. |

@@ -84,9 +84,15 @@ real-time lights). `rendering.features.lightmaps` is not needed.
 The file (`format: "ignifx-lightmap"`, `formatVersion: 1`; generated table:
 [`../formats/ignifx-lightmap.md`](../formats/ignifx-lightmap.md)) names the `texture` by asset
 address, which the loader loads with it, and may give per-entity-uid `entries` of
-`{ scale: { x, y }, offset: { x, y } }` for an atlas. Entries are validated, but only the identity is
-drawn yet (§8). `createLightmapAsset(app, texture, entries?)` publishes one built in code, such as a
-`TextureAsset.fromPixels` texture.
+`{ scale: { x, y }, offset: { x, y } }` for an atlas: that renderer samples the texture at
+`uv2 · scale + offset`, so many renderers share one texture, each in its own square. The placement
+lives in the same UV space as an entity without an entry, so a V flip the texture asks for applies to
+it too, and there is no rotation (a packer that rotates a chart writes that into the UV2 it bakes). A
+placement other than the identity needs `uv2: true` and a mesh built with `uvs2` (`MeshAsset.fromData`;
+primitives have none); otherwise it logs `IGX-0735` once and samples the whole texture. Each distinct
+placement compiles its own pipeline variant, so a scene with hundreds of placed renderers pays that
+many shader compiles at load. `createLightmapAsset(app, texture, entries?)` publishes one built in
+code, such as a `TextureAsset.fromPixels` texture.
 
 ## 5. Baking light probes
 
@@ -209,10 +215,10 @@ a power of two.
 
 ## 8. Known gaps
 
-- **Lightmap atlas transform.** Babylon Lite 1.34 samples `uv2` without a scale or offset, so an
-  `entries` placement other than the identity logs `IGX-0735` and samples the whole texture, until
-  spike P2 (GI plan §5) lands. Give each static renderer its own texture, or bake UV2 that already
-  points into the shared texture.
+- **Lightmap atlas limits.** A placement works only with `uv2: true` on a mesh with `uvs2`, and each
+  distinct placement is its own pipeline variant (Babylon Lite 1.34's lightmap has no UV transform,
+  so ignifx rewrites UV2 in a vertex plugin with the placement as constants). For very many placed
+  renderers, bake UV2 that already points into the shared texture and leave `entries` empty.
 - **No lightmap baker in the engine.** It needs a UV2 unwrap and a GPU path tracer; it is planned
   for the editor. Bring textures from an external tool, or build them in code.
 - **No reflection probe blending (B1b).** A material reflects one probe, chosen per material (a

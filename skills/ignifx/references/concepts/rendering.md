@@ -208,9 +208,9 @@ signal?, onProgress? })` bakes a grid on the CPU, headless included, yielding to
   copy of its material, so later edits of the shared `MaterialAsset` do not reach it, and it shows
   the lightmap one frame after the copy is made. A `.lightmap.json` (`format: "ignifx-lightmap"`)
   names the `texture` by asset address and may give per-entity-uid `entries` of
-  `{ scale: { x, y }, offset: { x, y } }` for an atlas; they are validated, but only the identity is
-  drawn until the atlas transform lands (anything else logs `IGX-0735` and samples the whole
-  texture). `createLightmapAsset(app, texture)` publishes one built in code. The GPU code loads only
+  `{ scale: { x, y }, offset: { x, y } }` for an atlas: the renderer samples it at
+  `uv2 · scale + offset`, which needs `uv2: true` and a mesh with `uvs2` (otherwise `IGX-0735` and
+  the whole texture), one pipeline variant per distinct placement. `createLightmapAsset(app, texture)` publishes one built in code. The GPU code loads only
   once a renderer samples a lightmap; `rendering.features.lightmaps` is not needed. ignifx bakes no
   lightmaps yet: the editor's baker will write them.
 

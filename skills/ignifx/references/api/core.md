@@ -6086,10 +6086,12 @@ A loaded lightmap: a texture and where each entity's UV2 square sits in it.
 
 #### Remarks
 
-A `MeshRenderer` names it in its `lightmap` record. Only placements equal to
-[IDENTITY\_LIGHTMAP\_PLACEMENT](#identity_lightmap_placement) are honoured for now: Babylon Lite 1.34's lightmap fragment
-samples `uv2` without a transform, so a renderer with another placement logs `IGX-0735` once and
-samples the whole texture until the atlas transform lands (GI plan §5, spike P2).
+A `MeshRenderer` names it in its `lightmap` record. Many renderers can share one atlas
+texture: each samples it at `uv2 · scale + offset`, with its entity's entry as the placement, in
+the same UV space as an entity without one (so a V flip the texture asks for applies to the
+placed coordinate too). A placement other than [IDENTITY\_LIGHTMAP\_PLACEMENT](#identity_lightmap_placement) needs the
+renderer's `lightmap.uv2` on and a mesh with `uvs2`; otherwise it logs `IGX-0735` once and
+samples the whole texture. Each distinct placement compiles its own pipeline variant.
 
 #### Example
 
@@ -24879,7 +24881,8 @@ The texture's asset address, resolved like any other address against the asset r
 ### LightmapPlacement
 
 Where one renderer's UV2 square sits in a lightmap atlas: the lightmap is sampled at
-`uv2 · scale + offset`.
+`uv2 · scale + offset`, component-wise. No rotation: an atlas packer that rotates a chart writes
+the rotation into the UV2 it bakes.
 
 #### Properties
 
