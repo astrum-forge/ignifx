@@ -2308,8 +2308,6 @@ export class MaterialAsset {
     constructor(definition: MaterialDefinition, material: LitePbrMaterial | LiteStandardMaterial, textures: readonly AssetHandle<TextureAsset>[], shader?: ShaderMaterialState | null);
     static assetType: string;
     clone(app: App): AssetHandle<MaterialAsset>;
-    // @internal
-    copyFactorsTo(target: MaterialAsset): void;
     readonly definition: MaterialDefinition;
     // @internal
     get displacement(): number;
@@ -2319,8 +2317,6 @@ export class MaterialAsset {
     get kind(): MaterialKind;
     get lite(): MaterialAssetLiteHandles;
     get name(): string;
-    // @internal
-    get revision(): number;
     setAlpha(alpha: number): void;
     setBaseColor(color: ColorLike): void;
     setDefine(name: string, value: boolean | number): void;

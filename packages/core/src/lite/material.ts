@@ -365,23 +365,39 @@ export function setPbrMetallicRoughness(material: PbrMaterialProps, metallic: nu
 }
 
 /**
- * Copies the factors `MaterialAsset`'s setters write (base colour, metallic, roughness, alpha) from
- * one PBR material to another, such as a renderer's lightmapped copy of a shared material.
+ * Makes one PBR material's base colour, metallic, roughness and alpha factors (what
+ * `MaterialAsset`'s setters write) equal another's, such as a renderer's lightmapped copy of a
+ * shared material. Writes, and marks the copy dirty, only when something differs.
  *
  * @param from - The material to read.
  * @param to - The material to change.
+ * @returns `true` when `to` changed.
  *
  * @internal
  */
-export function copyPbrFactors(from: PbrMaterialProps, to: PbrMaterialProps): void {
-  const color = from.baseColorFactor;
-  if (color !== undefined) {
-    setPbrBaseColor(to, color[0], color[1], color[2], color[3]);
+export function syncPbrFactors(from: PbrMaterialProps, to: PbrMaterialProps): boolean {
+  const color = from.baseColorFactor ?? [1, 1, 1, 1];
+  const current = to.baseColorFactor ?? [1, 1, 1, 1];
+  const metallic = from.metallicFactor ?? 1;
+  const roughness = from.roughnessFactor ?? 1;
+  const alpha = from.alpha ?? 1;
+  if (
+    color[0] === current[0] &&
+    color[1] === current[1] &&
+    color[2] === current[2] &&
+    color[3] === current[3] &&
+    metallic === (to.metallicFactor ?? 1) &&
+    roughness === (to.roughnessFactor ?? 1) &&
+    alpha === (to.alpha ?? 1)
+  ) {
+    return false;
   }
-  to.metallicFactor = from.metallicFactor ?? 1;
-  to.roughnessFactor = from.roughnessFactor ?? 1;
-  to.alpha = from.alpha ?? 1;
+  setPbrBaseColor(to, color[0], color[1], color[2], color[3]);
+  to.metallicFactor = metallic;
+  to.roughnessFactor = roughness;
+  to.alpha = alpha;
   markMaterialDirty(to);
+  return true;
 }
 
 /**

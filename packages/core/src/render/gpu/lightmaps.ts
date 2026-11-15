@@ -1,5 +1,5 @@
 import { applyLightmap, enableLightmaps, setLightmapLevel } from "../../lite/gpu/lightmap.js";
-import { rebuildMaterialPipelines } from "../../lite/material.js";
+import { rebuildMaterialPipelines, syncPbrFactors } from "../../lite/material.js";
 import type { App } from "../../app/types.js";
 import type { AssetHandle } from "../../assets/types.js";
 import type { LiteLightmapOptions } from "../../lite/gpu/lightmap.js";
@@ -20,8 +20,8 @@ import type { MeshRendererLightmap } from "../mesh-renderer.js";
  * material, the lightmap, its texture or a compiled option (`mode`, `gamma`, `uv2`) changes; a
  * `level` change only rewrites the clone's uniform block. Edits made to the shared material through
  * its factor setters (`setBaseColor`, `setMetallicRoughness`, `setAlpha`) are copied onto the clone
- * the next frame it is asked for (`MaterialAsset.revision`); a reloaded material is a new asset, so
- * it gets a new clone.
+ * the next frame it is asked for (a comparison of seven numbers per frame); a reloaded material is a
+ * new asset, so it gets a new clone.
  *
  * ## Two frames, because of how Lite plumbs `uv2`
  *
@@ -45,8 +45,6 @@ interface Entry {
   readonly texture: LiteTexture2D;
   readonly key: string;
   readonly clone: AssetHandle<MaterialAsset>;
-  /** The base's `revision` whose factors the clone carries. */
-  revision: number;
   /** The options the next flush applies; `level` follows the record every frame. */
   options: LiteLightmapOptions;
   /** Whether the lightmap is set on the clone yet. */
@@ -141,11 +139,8 @@ export async function createLightmapRuntime(app: App, scene: LiteScene): Promise
         current.texture === texture &&
         current.key === key
       ) {
-        if (current.revision !== base.revision) {
-          current.revision = base.revision;
-          base.copyFactorsTo(current.clone.value);
-        }
         const material = current.clone.value.lite.material;
+        syncPbrFactors(base.lite.material, material);
         current.options = options;
         if (current.isApplied) {
           setLightmapLevel(material, settings.level);
@@ -155,18 +150,8 @@ export async function createLightmapRuntime(app: App, scene: LiteScene): Promise
       release(owner);
       const clone = base.clone(app);
       // The clone replays the declaration, so it takes the edits made to the base since it loaded.
-      base.copyFactorsTo(clone.value);
-      const entry: Entry = {
-        base,
-        lightmap,
-        texture,
-        key,
-        clone,
-        revision: base.revision,
-        options,
-        isApplied: false,
-        isReleased: false,
-      };
+      syncPbrFactors(base.lite.material, clone.value.lite.material);
+      const entry: Entry = { base, lightmap, texture, key, clone, options, isApplied: false, isReleased: false };
       entries.set(owner, entry);
       fresh.push(entry);
       return clone.value.lite.material;
