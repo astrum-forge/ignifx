@@ -175,10 +175,12 @@ describe("MeshRenderer.lightmap", () => {
       const y = SIZE >> 1;
       const at = async (fraction: number): Promise<number> =>
         pixelLuminance(await running.pixelAt(Math.round(SIZE * fraction), y));
-      // Two points on each quad, at different UV2 u; whichever side the camera puts each quad on,
-      // a quad's two points agree only if it samples one half of the atlas.
-      const one = [await at(0.22), await at(0.34)];
-      const other = [await at(0.66), await at(0.78)];
+      // Two points on each quad (the 60° camera sees x in ±1.73 at this distance, so these land at
+      // |x| ≈ 0.3 and 0.7, well inside both quads), at different UV2 u. Whichever side the camera
+      // puts each quad on, a quad's two points agree only if it samples one half of the atlas:
+      // without the placement the lit quad would read dark at one of them.
+      const one = [await at(0.3), await at(0.4)];
+      const other = [await at(0.6), await at(0.7)];
       const message = JSON.stringify({ one, other, lightmapped: running.renderer.lightmapHost?.count });
       expect(running.renderer.lightmapHost?.count, message).toBe(2);
       expect(gpu.errors.slice(0, 1)).toEqual([]);
