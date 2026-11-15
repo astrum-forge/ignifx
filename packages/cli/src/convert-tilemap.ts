@@ -4,6 +4,7 @@ import { parseArgs as parseNodeArgs } from "node:util";
 import { CliError, CliErrorCode } from "./errors.js";
 import { convertTilemapSource } from "./tilemap-source/convert.js";
 import type { ImportIo } from "./import-heightmap.js";
+import type { TilemapSourceKind } from "./tilemap-source/convert.js";
 
 /**
  * `ignifx import tilemap <map.tmj | project.ldtk>`: converts a Tiled map or every level of an LDtk
@@ -36,7 +37,7 @@ export interface ConvertTilemapCommand {
   /** The `.tmj` or `.ldtk` file, exactly as the user typed it. */
   readonly source: string;
   /** Which editor wrote it. */
-  readonly kind: "tiled" | "ldtk";
+  readonly kind: TilemapSourceKind;
   /**
    * Where to write: the `.tilemap.json` for a Tiled map, the folder for an LDtk project's levels.
    * `null` writes beside the source.
@@ -189,18 +190,15 @@ export async function runConvertTilemap(argv: readonly string[], io: ImportIo): 
   if (text === null) {
     throw new CliError(CliErrorCode.fileNotAccessible, `Could not read "${source}".`);
   }
-  const converted = await convertTilemapSource(
-    text,
-    command.kind === "tiled" ? "tmj" : "ldtk",
-    async (path) => readText(resolve(folder, path)),
-    {
-      path: toPosix(relative(folder, source)),
-      ...(output === null ? {} : { output: toPosix(relative(folder, output)) || "." }),
-      pixelsPerUnit: command.pixelsPerUnit,
-      dropFlips: command.dropFlips,
-      exists: async (path) => exists(resolve(folder, path)),
-    },
-  );
+  const converted = await convertTilemapSource(text, command.kind, async (path) => readText(resolve(folder, path)), {
+    path: toPosix(relative(folder, source)),
+    ...(output === null ? {} : { output: toPosix(relative(folder, output)) || "." }),
+    pixelsPerUnit: command.pixelsPerUnit,
+    dropFlips: command.dropFlips,
+    // A map on disk may use tilesets in any folder, and its atlases go beside them.
+    allowOutsideBase: true,
+    exists: async (path) => exists(resolve(folder, path)),
+  });
   const tilemaps: string[] = [];
   const atlases: string[] = [];
   for (const document of converted.documents) {

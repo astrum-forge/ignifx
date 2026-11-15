@@ -2,6 +2,7 @@ import { posix } from "node:path";
 import { canonical, isRecord } from "../json-text.js";
 import {
   gridFrames,
+  mapLimited,
   propertyRecord,
   readArray,
   readNumber,
@@ -34,6 +35,9 @@ const INTGRID_COLLIDERS: Readonly<Record<number, JsonObject>> = {
 
 /** The fallback grid size LDtk itself uses. */
 const LDTK_DEFAULT_GRID = 16;
+
+/** How many external levels are read at once. */
+const READ_CONCURRENCY = 4;
 
 /** The hint every refusal of an LDtk file ends with. */
 const LDTK_HINT = "Save it from LDtk 1.5 or later, or import the level in code with importLdtkLevel from @ignifx/2d.";
@@ -71,7 +75,9 @@ export async function convertLdtkProject(
   const tilesets: ConvertedTileset[] = [];
   const tilesetsByUid = new Map<number, ConvertedTileset>();
   let nextFirstId = 1;
-  for (const raw of records(readArray(defs, "tilesets"))) {
+  const rawTilesets = records(readArray(defs, "tilesets"));
+  context.budget.count(path, "the number of tilesets", rawTilesets.length, "maxTilesets");
+  for (const raw of rawTilesets) {
     const relPath = readString(raw, "relPath", "");
     if (relPath === "") {
       // LDtk's embedded icon atlas has no image file; a layer that uses it is refused below.
@@ -91,7 +97,7 @@ export async function convertLdtkProject(
     nextFirstId,
     defaultGrid: readNumber(ldtk, "defaultGridSize", LDTK_DEFAULT_GRID),
   };
-  const loaded = await Promise.all(levels.map(async (level) => loadLevel(level, folder, context)));
+  const loaded = await mapLimited(levels, READ_CONCURRENCY, async (level) => loadLevel(level, folder, context));
   return loaded.map((level) => convertLevel(level, project));
 }
 

@@ -13,11 +13,12 @@ import type { ConvertContext, ConvertedMap, JsonObject, TilemapSourceLimits } fr
  */
 
 /**
- * Which editor wrote a map source: a Tiled JSON map (`.tmj`) or an LDtk project (`.ldtk`).
+ * Which editor wrote a map source: a Tiled JSON map (`.tmj`) or an LDtk project (`.ldtk`). The same
+ * names as `ConvertTilemapCommand.kind`.
  *
  * @public
  */
-export type TilemapSourceKind = "tmj" | "ldtk";
+export type TilemapSourceKind = "tiled" | "ldtk";
 
 /**
  * Reads a file a map source references (an external `.tsj` tileset, an `.ldtkl` level, or an
@@ -26,9 +27,11 @@ export type TilemapSourceKind = "tmj" | "ldtk";
  * @remarks
  * The path is a normalised POSIX path relative to the base folder of the conversion (see
  * {@link ConvertTilemapSourceOptions.path}), resolved from what the map (or the tileset holding
- * it) wrote; it may start with `..` or be absolute when the source file says so. The caller decides
- * what is reachable: confine it to a project root and answer `null` outside it. `null` means the file does not exist: a required file then fails the conversion with
- * `IGX-1405`, and an atlas is generated.
+ * it) wrote. Unless {@link ConvertTilemapSourceOptions.allowOutsideBase} is set, it is checked
+ * before the call: never absolute, never above the base folder, and free of `:`, `\` and NUL; a
+ * reference that is not is refused with `IGX-1408` instead. Each path is read at most once. `null`
+ * means the file does not exist: a required file then fails the conversion with `IGX-1405`, and an
+ * atlas is generated.
  *
  * @param path - The file, relative to the base folder.
  * @returns The text, or `null` when there is no such file.
@@ -56,11 +59,22 @@ export interface ConvertTilemapSourceOptions {
    * default the map's folder). It may not climb above the base folder.
    */
   readonly output?: string;
+  /**
+   * Lets the map's references, and so the generated atlases, reach outside the base folder: absolute
+   * paths and paths above it. Off by default, when such a reference is refused with `IGX-1408` before
+   * `read` or `exists` sees it, so every {@link TilemapSourceDocument.path} stays inside the base
+   * folder. `ignifx import tilemap` sets it, because a map on disk may use tilesets in any folder.
+   * A path holding NUL is refused either way.
+   */
+  readonly allowOutsideBase?: boolean;
   /** The pixels one world metre spans; sets `cellSize` and the objects' metres. Defaults to `100`. */
   readonly pixelsPerUnit?: number;
   /** Whether flipped or rotated tiles import unflipped (with a warning) instead of failing. */
   readonly dropFlips?: boolean;
-  /** Caps over {@link DEFAULT_TILEMAP_SOURCE_LIMITS}; a hostile map past one fails with `IGX-1408`. */
+  /**
+   * Caps over {@link DEFAULT_TILEMAP_SOURCE_LIMITS}; a hostile map past one fails with `IGX-1408`. A
+   * member that is absent or `undefined` keeps its default.
+   */
   readonly limits?: Partial<TilemapSourceLimits>;
   /**
    * Whether a file exists, for the warning about a tileset image that is not there yet. Without it,
@@ -75,7 +89,11 @@ export interface ConvertTilemapSourceOptions {
  * @public
  */
 export interface TilemapSourceDocument {
-  /** Where it goes: a POSIX path relative to the base folder. */
+  /**
+   * Where it goes: a normalised POSIX path relative to the base folder, never above it, absolute,
+   * or holding `:`, `\` or NUL, unless {@link ConvertTilemapSourceOptions.allowOutsideBase} is set
+   * (then an atlas beside a tileset image may be absolute or start with `..`).
+   */
   readonly path: string;
   /** A `.tilemap.json` per Tiled map or LDtk level, or an `.atlas.json` generated for a tileset image. */
   readonly kind: "tilemap" | "atlas";
@@ -138,7 +156,7 @@ const ATLAS_SUFFIX = ".atlas.json";
  *
  * @example
  * ```ts
- * const { documents } = await convertTilemapSource(text, "tmj", async (path) => files.get(path) ?? null, {
+ * const { documents } = await convertTilemapSource(text, "tiled", async (path) => files.get(path) ?? null, {
  *   path: "assets/maps/cave.tmj",
  *   pixelsPerUnit: 16,
  * });
@@ -152,7 +170,9 @@ export async function convertTilemapSource(
   read: TilemapSourceReader,
   options?: ConvertTilemapSourceOptions,
 ): Promise<ConvertedTilemapSource> {
-  const fileName = posix.normalize(options?.path ?? (kind === "tmj" ? "map.tmj" : "project.ldtk"));
+  const allowOutside = options?.allowOutsideBase === true;
+  const fileName = posix.normalize(options?.path ?? (kind === "tiled" ? "map.tmj" : "project.ldtk"));
+  confine(fileName, fileName, "the map", allowOutside);
   const pixelsPerUnit = options?.pixelsPerUnit ?? DEFAULT_PIXELS_PER_UNIT;
   if (!Number.isFinite(pixelsPerUnit) || pixelsPerUnit <= 0) {
     throw new CliError(
@@ -160,14 +180,23 @@ export async function convertTilemapSource(
       `pixelsPerUnit must be a positive number, not ${String(pixelsPerUnit)}.`,
     );
   }
-  const limits: TilemapSourceLimits = { ...DEFAULT_TILEMAP_SOURCE_LIMITS, ...options?.limits };
+  const limits = mergeLimits(options?.limits);
   const warnings: string[] = [];
+  const total = { length: 0 };
+  const cache = new Map<string, Promise<unknown>>();
   const readJson = async (path: string): Promise<unknown> => {
-    const found = await read(path);
-    if (found === null) {
-      throw new CliError(CliErrorCode.fileNotAccessible, `Could not read "${path}".`);
+    confine(path, fileName, "a referenced file", allowOutside);
+    let pending = cache.get(path);
+    if (pending === undefined) {
+      pending = read(path).then((found) => {
+        if (found === null) {
+          throw new CliError(CliErrorCode.fileNotAccessible, `Could not read ${JSON.stringify(path)}.`);
+        }
+        return parseJson(path, found, limits, total);
+      });
+      cache.set(path, pending);
     }
-    return parseJson(path, found, limits);
+    return pending;
   };
   const context: ConvertContext = {
     pixelsPerUnit,
@@ -178,15 +207,27 @@ export async function convertTilemapSource(
     readJson,
     budget: new CellBudget(limits),
   };
-  const parsed = parseJson(fileName, text, limits);
+  const parsed = parseJson(fileName, text, limits, total);
   const maps =
-    kind === "tmj"
+    kind === "tiled"
       ? [await convertTiledMap(fileName, parsed, context)]
       : await convertLdtkProject(fileName, parsed, context);
-  const atlas: AtlasState = { frames: new Map(), written: [], warnings, read, exists: options?.exists, limits };
+  const atlas: AtlasState = {
+    frames: new Map(),
+    written: [],
+    warnings,
+    read,
+    exists: options?.exists,
+    limits,
+    total,
+    fileName,
+    allowOutside,
+  };
   const documents: TilemapSourceDocument[] = [];
+  const taken = new Set<string>();
   for (const map of maps) {
-    const target = outputPath(kind, fileName, options?.output, map);
+    const target = uniqueTarget(outputPath(kind, fileName, options?.output, map), taken, map.name, warnings);
+    confine(target, fileName, "the output", false);
     // oxlint-disable-next-line no-await-in-loop -- maps share atlases; the first to need one makes it, in a stable order.
     const json = await tilemapDocument(map, target, pixelsPerUnit, atlas);
     documents.push(documentOf(target, "tilemap", json));
@@ -208,6 +249,74 @@ interface AtlasState {
   readonly exists: ((path: string) => Promise<boolean>) | undefined;
   /** The limits, for the JSON length of an existing atlas. */
   readonly limits: TilemapSourceLimits;
+  /** The JSON characters read so far. */
+  readonly total: { length: number };
+  /** The map's path, for messages. */
+  readonly fileName: string;
+  /** Whether references may leave the base folder. */
+  readonly allowOutside: boolean;
+}
+
+/**
+ * The limits with the caller's caps over the defaults; an `undefined` member keeps its default.
+ *
+ * @param caps - The caller's caps.
+ * @returns The limits.
+ */
+function mergeLimits(caps: Partial<TilemapSourceLimits> | undefined): TilemapSourceLimits {
+  const merged: Record<keyof TilemapSourceLimits, number> = { ...DEFAULT_TILEMAP_SOURCE_LIMITS };
+  for (const key of Object.keys(merged) as (keyof TilemapSourceLimits)[]) {
+    const value = caps?.[key];
+    if (value !== undefined) {
+      merged[key] = value;
+    }
+  }
+  return merged;
+}
+
+/**
+ * Refuses a path a conversion may not touch: one holding NUL, and unless references may leave the
+ * base folder, one that is absolute, climbs above the base folder, or holds `:` (a drive letter or
+ * URL scheme) or `\`.
+ *
+ * @param path - The normalised path.
+ * @param fileName - The map, for the message.
+ * @param what - What the path is, for the message.
+ * @param allowOutside - Whether paths outside the base folder are allowed.
+ * @throws A `CliError` with code `IGX-1408` for a refused path.
+ */
+function confine(path: string, fileName: string, what: string, allowOutside: boolean): void {
+  const outside =
+    !allowOutside && (posix.isAbsolute(path) || path.includes(":") || path.includes("\\") || leadingUps(path) > 0);
+  if (path.includes("\0") || outside) {
+    throw new CliError(
+      CliErrorCode.unsupportedTilemapSource,
+      `${JSON.stringify(fileName)} names ${JSON.stringify(path)} as ${what}, which is outside the base folder the conversion may reach (absolute, above it, or holding ":", "\\" or NUL). Move the file under the base folder, or pass allowOutsideBase for a trusted map.`,
+    );
+  }
+}
+
+/**
+ * Keeps two maps from writing one file: a later map whose path is taken (ignoring case, as some
+ * file systems do) gets `_2`, `_3`, … before the suffix, with a warning.
+ *
+ * @param target - The path the map would get.
+ * @param taken - The paths given so far, lower-cased; the returned one is added.
+ * @param name - The map's name, for the warning.
+ * @param warnings - The warning list.
+ * @returns The unique path.
+ */
+function uniqueTarget(target: string, taken: Set<string>, name: string, warnings: string[]): string {
+  let candidate = target;
+  const stem = target.slice(0, -TILEMAP_SUFFIX.length);
+  for (let suffix = 2; taken.has(candidate.toLowerCase()); suffix += 1) {
+    candidate = `${stem}_${String(suffix)}${TILEMAP_SUFFIX}`;
+  }
+  if (candidate !== target) {
+    warnings.push(`Level ${JSON.stringify(name)} would overwrite ${target}, so it was written to ${candidate}.`);
+  }
+  taken.add(candidate.toLowerCase());
+  return candidate;
 }
 
 /**
@@ -216,10 +325,18 @@ interface AtlasState {
  * @param path - The file, for messages.
  * @param text - Its text.
  * @param limits - The limits.
+ * @param total - The characters read so far; this file's are added.
  * @returns The value.
  * @throws A `CliError` with code `IGX-1408` past `maxJsonLength`, or `IGX-1407` when it is not JSON.
  */
-function parseJson(path: string, text: string, limits: TilemapSourceLimits): unknown {
+function parseJson(path: string, text: string, limits: TilemapSourceLimits, total: { length: number }): unknown {
+  total.length += text.length;
+  if (total.length > limits.maxTotalJsonLength) {
+    throw new CliError(
+      CliErrorCode.unsupportedTilemapSource,
+      `${JSON.stringify(path)} brings the JSON read to ${String(total.length)} characters, over the import limit of ${String(limits.maxTotalJsonLength)} (maxTotalJsonLength). Split the map, or raise limits.maxTotalJsonLength if the file is trusted.`,
+    );
+  }
   if (text.length > limits.maxJsonLength) {
     throw new CliError(
       CliErrorCode.unsupportedTilemapSource,
@@ -257,7 +374,7 @@ function documentOf(path: string, kind: TilemapSourceDocument["kind"], json: Jso
 function outputPath(kind: TilemapSourceKind, fileName: string, output: string | undefined, map: ConvertedMap): string {
   const folder = posix.dirname(fileName);
   const target =
-    kind === "tmj"
+    kind === "tiled"
       ? posix.normalize(output ?? posix.join(folder, `${map.name}${TILEMAP_SUFFIX}`))
       : // A level identifier comes from the file; keep it a plain file name so it cannot leave the folder.
         posix.join(output ?? folder, `${map.name.replaceAll(/[^\w-]/gu, "_")}${TILEMAP_SUFFIX}`);
@@ -290,6 +407,9 @@ async function tilemapDocument(
     let address = "";
     if (tileset.image !== null) {
       const atlasPath = atlasPathFor(tileset.image);
+      const owner = `tileset ${JSON.stringify(tileset.name)}`;
+      confine(tileset.image, atlas.fileName, `the image of ${owner}`, atlas.allowOutside);
+      confine(atlasPath, atlas.fileName, `the atlas of ${owner}`, atlas.allowOutside);
       let frames = atlas.frames.get(atlasPath);
       if (frames === undefined) {
         // oxlint-disable-next-line no-await-in-loop -- two tilesets may share an image; the first makes its atlas.
@@ -329,6 +449,10 @@ async function tilemapDocument(
  * @returns The relative POSIX path.
  */
 function relativePath(from: string, to: string): string {
+  if (posix.isAbsolute(to)) {
+    // Only with `allowOutsideBase`: an absolute reference has no path from the base folder.
+    return to;
+  }
   // Anchor both under a virtual root deep enough that no `..` reaches its top, so the answer does
   // not depend on the process's working directory.
   const depth = Math.max(leadingUps(from), leadingUps(to)) + 1;
@@ -380,8 +504,12 @@ async function ensureAtlas(
   const existing = await atlas.read(atlasPath);
   if (existing !== null) {
     let parsed: unknown;
+    atlas.total.length += existing.length;
     try {
-      parsed = existing.length > atlas.limits.maxJsonLength ? null : JSON.parse(existing);
+      parsed =
+        existing.length > atlas.limits.maxJsonLength || atlas.total.length > atlas.limits.maxTotalJsonLength
+          ? null
+          : JSON.parse(existing);
     } catch {
       parsed = null;
     }

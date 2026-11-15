@@ -109,7 +109,7 @@ describe("convertTilemapSource", () => {
     const files = await filesUnder(join(IMPORT, "tiled"));
     const expected = await filesUnder(join(IMPORT, "expected", "tiled"));
     const { read, asked } = memoryReader(files);
-    const result = await convertTilemapSource(files.get("level.tmj") ?? "", "tmj", read, { path: "level.tmj" });
+    const result = await convertTilemapSource(files.get("level.tmj") ?? "", "tiled", read, { path: "level.tmj" });
     expect(result.documents.map(({ path, kind }) => ({ path, kind }))).toEqual([
       { path: "level.tilemap.json", kind: "tilemap" },
       { path: "tilesets/terrain.atlas.json", kind: "atlas" },
@@ -128,7 +128,7 @@ describe("convertTilemapSource", () => {
     const tiled = await filesUnder(join(IMPORT, "tiled"));
     const files = new Map([...tiled].map(([path, text]) => [`assets/maps/${path}`, text]));
     const { read, asked } = memoryReader(files);
-    const result = await convertTilemapSource(files.get("assets/maps/level.tmj") ?? "", "tmj", read, {
+    const result = await convertTilemapSource(files.get("assets/maps/level.tmj") ?? "", "tiled", read, {
       path: "assets/maps/level.tmj",
       output: "assets/levels/level.tilemap.json",
       exists: async () => false,
@@ -160,12 +160,14 @@ describe("convertTilemapSource", () => {
 
   it("keeps an existing atlas, and fails with IGX-1405 when a referenced tileset is missing", async () => {
     const atlas = JSON.stringify({ format: "ignifx.spriteatlas", frames: [{ name: "t_0" }] });
-    const kept = await convertTilemapSource(tinyMap(), "tmj", async (path) => (path === "t.atlas.json" ? atlas : null));
+    const kept = await convertTilemapSource(tinyMap(), "tiled", async (path) =>
+      path === "t.atlas.json" ? atlas : null,
+    );
     expect(kept.documents.map((document) => document.kind)).toEqual(["tilemap"]);
     expect(kept.documents[0]?.path).toBe("map.tilemap.json");
 
     const missing = await failure(
-      convertTilemapSource(tinyMap({ tilesets: [{ firstgid: 1, source: "gone.tsj" }] }), "tmj", async () => null),
+      convertTilemapSource(tinyMap({ tilesets: [{ firstgid: 1, source: "gone.tsj" }] }), "tiled", async () => null),
     );
     expect(missing.code).toBe("IGX-1405");
     expect(missing.message).toContain('"gone.tsj"');
@@ -173,21 +175,21 @@ describe("convertTilemapSource", () => {
 
   it("refuses an output above the base folder, and a non-positive scale, with IGX-1403", async () => {
     const read = nothing;
-    expect((await failure(convertTilemapSource(tinyMap(), "tmj", read, { output: "../out.tilemap.json" }))).code).toBe(
-      "IGX-1403",
-    );
-    expect((await failure(convertTilemapSource(tinyMap(), "tmj", read, { pixelsPerUnit: 0 }))).code).toBe("IGX-1403");
+    expect(
+      (await failure(convertTilemapSource(tinyMap(), "tiled", read, { output: "../out.tilemap.json" }))).code,
+    ).toBe("IGX-1403");
+    expect((await failure(convertTilemapSource(tinyMap(), "tiled", read, { pixelsPerUnit: 0 }))).code).toBe("IGX-1403");
   });
 
   it("caps what a hostile map could make it allocate, with IGX-1408 naming the limit", async () => {
     const read = nothing;
-    const cases: readonly (readonly [string, string, "tmj" | "ldtk"])[] = [
-      [tinyMap({ width: 1e6, height: 1e6 }), "maxLayerCells", "tmj"],
-      [tinyMap({}, { tilecount: 1e9 }), "maxTilesetTiles", "tmj"],
+    const cases: readonly (readonly [string, string, "tiled" | "ldtk"])[] = [
+      [tinyMap({ width: 1e6, height: 1e6 }), "maxLayerCells", "tiled"],
+      [tinyMap({}, { tilecount: 1e9 }), "maxTilesetTiles", "tiled"],
       [
         tinyMap({ layers: [{ type: "tilelayer", name: "L", width: 1e5, height: 1e5, data: [] }] }),
         "maxLayerCells",
-        "tmj",
+        "tiled",
       ],
       [
         JSON.stringify({
@@ -228,11 +230,11 @@ describe("convertTilemapSource", () => {
       expect(error.code, limit).toBe("IGX-1408");
       expect(error.message, limit).toContain(`(${limit})`);
     }
-    const long = await failure(convertTilemapSource(tinyMap(), "tmj", read, { limits: { maxJsonLength: 10 } }));
+    const long = await failure(convertTilemapSource(tinyMap(), "tiled", read, { limits: { maxJsonLength: 10 } }));
     expect(long.message).toContain("(maxJsonLength)");
-    const layers = await failure(convertTilemapSource(tinyMap(), "tmj", read, { limits: { maxLayers: 0 } }));
+    const layers = await failure(convertTilemapSource(tinyMap(), "tiled", read, { limits: { maxLayers: 0 } }));
     expect(layers.message).toContain("(maxLayers)");
-    const total = await failure(convertTilemapSource(tinyMap(), "tmj", read, { limits: { maxTotalCells: 2 } }));
+    const total = await failure(convertTilemapSource(tinyMap(), "tiled", read, { limits: { maxTotalCells: 2 } }));
     expect(total.message).toContain("(maxTotalCells)");
     expect(DEFAULT_TILEMAP_SOURCE_LIMITS.maxLayerCells).toBe(2048 * 2048);
   });

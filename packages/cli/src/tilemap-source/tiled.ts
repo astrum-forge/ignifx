@@ -2,6 +2,7 @@ import { posix } from "node:path";
 import { canonical, isRecord } from "../json-text.js";
 import {
   gridFrames,
+  mapLimited,
   propertyRecord,
   readArray,
   readNumber,
@@ -25,6 +26,9 @@ const FLIP_BITS = 0xf0000000;
 
 /** The bits of a Tiled global tile id that are the id. */
 const GID_BITS = 0x0fffffff;
+
+/** How many external tilesets are read at once. */
+const READ_CONCURRENCY = 4;
 
 /** The hint every refusal of a Tiled file ends with. */
 const TILED_HINT =
@@ -59,8 +63,11 @@ export async function convertTiledMap(path: string, tmj: unknown, context: Conve
   const height = readNumber(tmj, "height", 0);
   context.budget.cells(path, "the map", width, height, false);
   const rawTilesets = records(readArray(tmj, "tilesets"));
+  context.budget.count(path, "the number of tilesets", rawTilesets.length, "maxTilesets");
   const tilesets = (
-    await Promise.all(rawTilesets.map(async (raw) => readTileset(path, raw, tileWidth, tileHeight, context)))
+    await mapLimited(rawTilesets, READ_CONCURRENCY, async (raw) =>
+      readTileset(path, raw, tileWidth, tileHeight, context),
+    )
   ).toSorted((a, b) => a.firstId - b.firstId);
   const state: LayerState = {
     path,

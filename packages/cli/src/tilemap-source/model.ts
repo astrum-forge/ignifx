@@ -87,6 +87,8 @@ export interface ConvertedMap {
 export interface TilemapSourceLimits {
   /** The longest JSON text read, the map's own included, in UTF-16 code units. */
   readonly maxJsonLength: number;
+  /** The most JSON text all files read may hold together, the map's own included. */
+  readonly maxTotalJsonLength: number;
   /** The most cells one map or layer may span (`width × height`). */
   readonly maxLayerCells: number;
   /** The most layer cells and tileset tiles all converted maps may hold together. */
@@ -95,23 +97,27 @@ export interface TilemapSourceLimits {
   readonly maxLayers: number;
   /** The most tiles one tileset may declare. */
   readonly maxTilesetTiles: number;
+  /** The most tilesets one map or project may declare. */
+  readonly maxTilesets: number;
   /** The most levels an LDtk project may convert. */
   readonly maxLevels: number;
 }
 
 /**
- * The limits a conversion applies unless told otherwise: 64 Mi characters of JSON, 4 Mi cells per
- * map or layer (2048 × 2048), 16 Mi cells in all, 256 tile layers per map, 65 536 tiles per
- * tileset and 1 024 LDtk levels.
+ * The limits a conversion applies unless told otherwise: 64 Mi characters per JSON file and 256 Mi
+ * in all, 4 Mi cells per map or layer (2048 × 2048), 16 Mi cells and tiles in all, 256 tile layers
+ * per map, 256 tilesets, 65 536 tiles per tileset and 1 024 LDtk levels.
  *
  * @public
  */
 export const DEFAULT_TILEMAP_SOURCE_LIMITS: TilemapSourceLimits = Object.freeze({
   maxJsonLength: 64 * 1024 * 1024,
+  maxTotalJsonLength: 256 * 1024 * 1024,
   maxLayerCells: 2048 * 2048,
   maxTotalCells: 16 * 1024 * 1024,
   maxLayers: 256,
   maxTilesetTiles: 65_536,
+  maxTilesets: 256,
   maxLevels: 1024,
 });
 
@@ -129,7 +135,7 @@ export interface ConvertContext {
   readonly warn: (line: string) => void;
   /**
    * Reads and parses a JSON file another file references, such as a `.tsj` or an `.ldtkl`, by its
-   * POSIX path relative to the map's folder.
+   * POSIX path relative to the base folder. Each path is read once; the path is confined first.
    */
   readonly readJson: (path: string) => Promise<unknown>;
   /** The caps, and the cells counted so far against `maxTotalCells`. */
@@ -214,7 +220,12 @@ export class CellBudget {
    * @param limit - Which limit applies.
    * @throws A {@link CliError} with code `IGX-1408` past it.
    */
-  count(path: string, what: string, count: number, limit: "maxLayers" | "maxTilesetTiles" | "maxLevels"): void {
+  count(
+    path: string,
+    what: string,
+    count: number,
+    limit: "maxLayers" | "maxTilesetTiles" | "maxTilesets" | "maxLevels",
+  ): void {
     if (!Number.isFinite(count) || count > this.limits[limit]) {
       overLimit(path, `${what}: ${String(count)}`, this.limits[limit], limit);
     }
@@ -400,4 +411,29 @@ export function uniqueName(name: string, taken: Set<string>): string {
   }
   taken.add(candidate);
   return candidate;
+}
+
+/**
+ * Maps items through an async function, at most `limit` at a time, keeping their order.
+ *
+ * @param items - The items.
+ * @param limit - The most calls in flight.
+ * @param map - The function.
+ * @returns The results, in item order.
+ *
+ * @internal
+ */
+export async function mapLimited<T, R>(items: readonly T[], limit: number, map: (item: T) => Promise<R>): Promise<R[]> {
+  const results: R[] = Array.from({ length: items.length });
+  let next = 0;
+  const worker = async (): Promise<void> => {
+    while (next < items.length) {
+      const index = next;
+      next += 1;
+      // oxlint-disable-next-line no-await-in-loop -- the point is a bounded number in flight.
+      results[index] = await map(items[index] as T);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
 }

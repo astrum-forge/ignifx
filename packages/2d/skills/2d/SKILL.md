@@ -244,7 +244,7 @@ ignifx import tilemap assets/maps/world.ldtk assets/levels --pixels-per-unit 16
 ```
 
 A tool that imports maps itself, such as an editor, calls the same conversion without the file
-system: `convertTilemapSource` from `@ignifx/cli/tilemap` takes the map's text, its kind (`"tmj"` or
+system: `convertTilemapSource` from `@ignifx/cli/tilemap` takes the map's text, its kind (`"tiled"` or
 `"ldtk"`) and an async `read(path)` for the files the map references (`null` when absent), and
 returns the documents to write (`{ path, kind, json, text }`) and the warnings. Paths are POSIX
 paths relative to one base folder; `options.path` is the map's. It refuses a map past
@@ -258,7 +258,7 @@ import { readFile } from "node:fs/promises";
 const text = await readFile("assets/maps/cave.tmj", "utf8");
 const { documents, warnings } = await convertTilemapSource(
   text,
-  "tmj",
+  "tiled",
   async (path) => readFile(path, "utf8").catch(() => null),
   { path: "assets/maps/cave.tmj", pixelsPerUnit: 16 },
 );
