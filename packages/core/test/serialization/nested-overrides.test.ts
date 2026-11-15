@@ -1,13 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { expandScene } from "../../src/serialization/expand.js";
 import { enumerateInstanceTargets, resolveInstancePath } from "../../src/serialization/instance-targets.js";
 import { parseOverridePath } from "../../src/serialization/overrides.js";
 import { applyOverridesToAsset, revertOverrides } from "../../src/serialization/prefab-overrides.js";
+import { instantiateScene } from "../../src/serialization/load.js";
 import { createSceneAsset } from "../../src/serialization/scene-asset.js";
-import { buildFile, entityRecord, fakeHandle } from "./fixtures.js";
+import { serializeScene } from "../../src/serialization/serialize.js";
+import { Everything, Tagger, buildFile, createSerializationWorld, entityRecord, fakeHandle } from "./fixtures.js";
 import type { ExpandedScene } from "../../src/serialization/expand.js";
 import type { SceneAsset } from "../../src/serialization/scene-asset.js";
 import type { SceneFile, SceneFileOverride } from "../../src/serialization/scene-file.js";
+import type { TestWorld } from "../support/create-test-world.js";
 
 /**
  * Overrides of a nested prefab's components from an outer instance: an instance path in the
@@ -344,5 +347,156 @@ describe("resolveInstancePath and enumerateInstanceTargets", () => {
     });
     const scene = buildFile({ entities: [entityRecord({ uid: "L", instance: { scene: { $asset: "loop" } } })] });
     expect(enumerateInstanceTargets(scene, () => loop).map((target) => target.path)).toEqual(["L/K"]);
+  });
+});
+
+/** Pair: single root Q, children N1 and N2, each instancing the enemy. */
+function pairFile(enemyHash: string): SceneFile {
+  return buildFile({
+    entities: [
+      entityRecord({ uid: "Q", name: "Pair" }),
+      entityRecord({ uid: "N1", name: "Left", parent: "Q", instance: { scene: { $asset: ENEMY }, hash: enemyHash } }),
+      entityRecord({ uid: "N2", name: "Right", parent: "Q", instance: { scene: { $asset: ENEMY }, hash: enemyHash } }),
+    ],
+  });
+}
+
+describe("a nested prefab placed twice in one prefab", () => {
+  const PAIR = "prefabs/pair.prefab.json";
+
+  it("overrides each copy on its own, at expansion and when applied", async () => {
+    const enemy = await createSceneAsset(ENEMY, enemyFile());
+    const pair = await createSceneAsset(PAIR, pairFile(enemy.hash), [fakeHandle(ENEMY, enemy)]);
+    const { expanded, reports } = await expandLevel(pair, [
+      { path: "N1/components/N1/AI/props/speed", value: 5 },
+      { path: "N2/components/N2/T/props/note", value: "right" },
+    ]);
+    expect(reports).toEqual([]);
+    expect(propsOf(expanded, "Left", "test/Everything")).toMatchObject({ props: { speed: 5 } });
+    expect(propsOf(expanded, "Right", "test/Everything")).toMatchObject({ props: { speed: 1 } });
+    const weapons = expanded.entities.filter((entity) => entity.data.name === "Weapon");
+    expect(weapons.map((weapon) => weapon.data.components[0]?.props)).toEqual([{ note: "a" }, { note: "right" }]);
+
+    const readScene = (address: string): SceneFile | null => (address === ENEMY ? enemyFile() : null);
+    const result = await applyOverridesToAsset(
+      {
+        scene: { $asset: PAIR },
+        overrides: [
+          { path: "N1/components/N1/AI/props/speed", value: 5 },
+          { path: "N2/components/N2/AI/props/speed", value: 6 },
+        ],
+      },
+      pair.file,
+      { readScene },
+    );
+    expect(result.skipped).toEqual([]);
+    expect(result.asset.entities[1]?.instance?.overrides).toEqual([{ path: "R/components/AI/props/speed", value: 5 }]);
+    expect(result.asset.entities[2]?.instance?.overrides).toEqual([{ path: "R/components/AI/props/speed", value: 6 }]);
+  });
+});
+
+describe("serializeScene with nested prefab overrides", () => {
+  let worlds: TestWorld[] = [];
+
+  afterEach(() => {
+    for (const harness of worlds) {
+      harness.dispose();
+    }
+    worlds = [];
+  });
+
+  /** Loads a level instancing `prefab` with `overrides` and writes it back. */
+  async function loadLevel(
+    prefab: SceneAsset,
+    overrides: readonly SceneFileOverride[],
+  ): Promise<{ readonly harness: TestWorld; readonly level: SceneAsset }> {
+    const level = await createSceneAsset(
+      "levels/level.scene.json",
+      buildFile({
+        name: "Level",
+        entities: [
+          entityRecord({
+            uid: "L",
+            name: "Placed",
+            instance: { scene: { $asset: prefab.address }, hash: prefab.hash, overrides },
+          }),
+        ],
+      }),
+      [fakeHandle(prefab.address, prefab)],
+    );
+    const harness = createSerializationWorld();
+    worlds.push(harness);
+    expect(instantiateScene(harness.world, level).issues).toEqual([]);
+    return { harness, level };
+  }
+
+  it("writes the nested overrides it loaded, and only those", async () => {
+    const enemy = await createSceneAsset(ENEMY, enemyFile());
+    const squad = await createSceneAsset(
+      SQUAD,
+      squadFile(enemy.hash, [{ path: "R/components/AI/props/speed", value: 2 }]),
+      [fakeHandle(ENEMY, enemy)],
+    );
+    const overrides: SceneFileOverride[] = [
+      { path: "N/components/N/AI/props/speed", value: 4 },
+      { path: "N/components/N/T/enabled", value: false },
+      { path: "N/components/N/T/props/note", value: "outer" },
+    ];
+    const { harness, level } = await loadLevel(squad, overrides);
+    const written = serializeScene(harness.world.activeScene, { engineVersion: null, name: "Level" });
+    expect(written.entities[0]?.instance?.overrides).toEqual(overrides);
+    const reloaded = await createSceneAsset(level.address, written, level.dependencies);
+    const again = createSerializationWorld();
+    worlds.push(again);
+    instantiateScene(again.world, reloaded);
+    const twice = serializeScene(again.world.activeScene, { engineVersion: null, name: "Level" });
+    expect(JSON.stringify(twice)).toBe(JSON.stringify(written));
+  });
+
+  it("writes nothing for a nested component left as the prefab made it, and picks up run-time edits", async () => {
+    const enemy = await createSceneAsset(ENEMY, enemyFile());
+    const squad = await createSceneAsset(
+      SQUAD,
+      squadFile(enemy.hash, [{ path: "R/components/AI/props/speed", value: 2 }]),
+      [fakeHandle(ENEMY, enemy)],
+    );
+    const { harness } = await loadLevel(squad, []);
+    expect(serializeScene(harness.world.activeScene, { engineVersion: null }).entities[0]?.instance?.overrides).toBe(
+      undefined,
+    );
+    const grunt = harness.world.activeScene.roots[0]?.children.find((child) => child.name === "Grunt");
+    const ai = grunt?.getComponent(Everything);
+    if (ai !== undefined && ai !== null) {
+      ai.speed = 7;
+    }
+    const tagger = grunt?.children[0]?.getComponent(Tagger);
+    if (tagger !== undefined && tagger !== null) {
+      tagger.note = "edited";
+    }
+    expect(serializeScene(harness.world.activeScene, { engineVersion: null }).entities[0]?.instance?.overrides).toEqual(
+      [
+        { path: "N/components/N/AI/props/speed", value: 7 },
+        { path: "N/components/N/T/props/note", value: "edited" },
+      ],
+    );
+  });
+
+  it("writes a nested component the level removed", async () => {
+    const { squad } = await assets();
+    const overrides: SceneFileOverride[] = [{ op: "remove", path: "N/components/N/T" }];
+    const { harness } = await loadLevel(squad, overrides);
+    const written = serializeScene(harness.world.activeScene, { engineVersion: null });
+    expect(written.entities[0]?.instance?.overrides).toEqual(overrides);
+  });
+
+  it("writes deeper nesting one segment per instance", async () => {
+    const { platoon } = await assets();
+    const overrides: SceneFileOverride[] = [
+      { path: "S/components/S/QAI/props/speed", value: 8 },
+      { path: "S/components/S/N/AI/props/speed", value: 9 },
+    ];
+    const { harness } = await loadLevel(platoon, overrides);
+    const written = serializeScene(harness.world.activeScene, { engineVersion: null });
+    expect(written.entities[0]?.instance?.overrides).toEqual(overrides);
   });
 });

@@ -5,6 +5,7 @@ import type { EntityHandle } from "../handles/handle.js";
 import type { LiteSceneNode } from "../lite/node.js";
 import type { SceneInstance } from "../scene/scene-instance.js";
 import type { SceneAsset } from "../serialization/scene-asset.js";
+import type { SceneFileComponent } from "../serialization/scene-file.js";
 import type { Signal } from "../signal/signal.js";
 import type { TagSet } from "../tags/tag-set.js";
 import type { Transform } from "../transform/transform.js";
@@ -61,6 +62,12 @@ export interface EntityInstanceLink {
    * holding the scene's roots (`06-serialization-and-scene-format.md` §2).
    */
   readonly root: InstancedRoot | null;
+  /**
+   * The records of the components the instanced scene's own nested prefabs produced, by runtime
+   * uid, as the instanced scene alone makes them: what the serializer diffs those components
+   * against to write nested overrides. `null` when the scene instances nothing.
+   */
+  readonly nestedBaseline: ReadonlyMap<string, SceneFileComponent> | null;
 }
 
 /**

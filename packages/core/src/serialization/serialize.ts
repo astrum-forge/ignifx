@@ -528,11 +528,12 @@ function writeInstance(
  * Diffs every direct member of an instance against the record the instanced file holds for it.
  *
  * @remarks
- * Only entities the instanced file itself declares are diffed. Content that came from a scene the
- * instanced scene itself instanced is not diffed: an override can address a nested prefab's
- * component by instance path, but the diff would need the nested file with the outer prefab's own
- * overrides applied, so deep edits inside a nested prefab are not written back; `flatten: true` is
- * the escape hatch.
+ * Entities the instanced file itself declares are diffed field by field. Components that came
+ * from a scene the instanced scene itself instanced are diffed against the records the expansion
+ * kept for them (`EntityInstanceLink.nestedBaseline`: the nested file with the outer prefab's own
+ * overrides applied), and a changed prop or `enabled` flag, or a removed component, is written as
+ * an override whose component segment is an instance path. Nested entities' own fields, and
+ * components added to a nested entity, are not written back; `flatten: true` is the escape hatch.
  *
  * An instance root that stands for its scene's single root is diffed against that root's record
  * too, but only for the components the scene put on it: its name, transform, and other entity
@@ -581,7 +582,136 @@ function computeOverrides(
     }
     diffEntity(entity, record, overrides, references, report, localize);
   }
+  if (link.nestedBaseline !== null) {
+    diffNestedMembers(root, root, link.nestedBaseline, overrides, references, report);
+  }
   return overrides;
+}
+
+/**
+ * Diffs the components an instance's nested prefabs produced against their baseline records, below
+ * one entity of the instance.
+ *
+ * @param entity - Where to walk from.
+ * @param root - The instance root.
+ * @param baseline - Runtime component uid to the record the instanced scene alone gives it.
+ * @param overrides - Where patches are appended.
+ * @param references - How references resolve, for the written values.
+ * @param report - Receives problems.
+ */
+function diffNestedMembers(
+  entity: Entity,
+  root: Entity,
+  baseline: ReadonlyMap<string, SceneFileComponent>,
+  overrides: SceneFileOverride[],
+  references: ReferenceEncoder,
+  report: (code: string, message: string) => void,
+): void {
+  const children = entity.children;
+  for (let index = 0; index < children.length; index += 1) {
+    const child = children[index];
+    if (child === undefined || child.isDestroyed || !belongsToInstance(child, root)) {
+      continue;
+    }
+    const origin = entityInternals(child).origin;
+    const inside = origin?.instanceRoot ?? null;
+    if (origin !== null && inside !== null && inside !== root) {
+      const prefix = nestedPathOf(inside, root);
+      if (prefix !== null) {
+        diffNestedComponents(child, prefix, origin.componentSourceUids, baseline, overrides, references, report);
+      }
+    }
+    const merged = origin?.instanced?.root ?? null;
+    if (merged !== null) {
+      const prefix = nestedPathOf(child, root);
+      if (prefix !== null) {
+        diffNestedComponents(child, prefix, merged.componentSourceUids, baseline, overrides, references, report);
+      }
+    }
+    diffNestedMembers(child, root, baseline, overrides, references, report);
+  }
+}
+
+/**
+ * The instance path, from an outer instance, of a nested instance root inside it: the uids each
+ * enclosing file gives the entities carrying the nested `instance` entries.
+ *
+ * @param entity - The nested instance root.
+ * @param root - The outer instance root.
+ * @returns `"<uidInTheOuterFile>/…/<uid>"`, or `null` when the entity is not inside `root`.
+ */
+function nestedPathOf(entity: Entity, root: Entity): string | null {
+  const segments: string[] = [];
+  let current: Entity | null = entity;
+  const limit = 64;
+  while (current !== null && segments.length < limit) {
+    const origin = entityInternals(current).origin;
+    if (origin === null) {
+      return null;
+    }
+    segments.push(origin.sourceUid);
+    if (origin.instanceRoot === root) {
+      return segments.toReversed().join("/");
+    }
+    current = origin.instanceRoot;
+  }
+  return null;
+}
+
+/**
+ * Diffs one entity's nested-prefab components against their baseline records.
+ *
+ * @param entity - The entity; a baseline component it no longer has is written as a `remove`.
+ * @param prefix - The instance path of the nested instance the components' uids are local to.
+ * @param sourceUids - Runtime component uid to the uid that nested file gives it.
+ * @param baseline - Runtime component uid to the baseline record.
+ * @param overrides - Where patches are appended.
+ * @param references - How references resolve, for the written values.
+ * @param report - Receives problems.
+ */
+function diffNestedComponents(
+  entity: Entity,
+  prefix: string,
+  sourceUids: ReadonlyMap<string, string>,
+  baseline: ReadonlyMap<string, SceneFileComponent>,
+  overrides: SceneFileOverride[],
+  references: ReferenceEncoder,
+  report: (code: string, message: string) => void,
+): void {
+  const head = prefix.split("/")[0] ?? prefix;
+  for (const [uid, sourceUid] of sourceUids) {
+    const before = baseline.get(uid);
+    if (before === undefined) {
+      continue;
+    }
+    const component = entity.components.find((candidate) => candidate.uid === uid && !candidate.isDestroyed);
+    if (component === undefined) {
+      overrides.push({ op: "remove", path: `${head}/components/${prefix}/${sourceUid}` });
+      continue;
+    }
+    const registry = component.world.registry;
+    if (registry.describe(component.constructor).typeId === null) {
+      continue;
+    }
+    // The baseline's references carry this copy's own uids, so the comparison is made in them; the
+    // override's value is written the way the scene writes references.
+    const comparable = serializeComponent(component, ownUidEncoder());
+    const written = serializeComponent(component, references, (issue) => {
+      report(issue.code, issue.message);
+    });
+    const schema = registry.describe(component.constructor).schema;
+    diffProps(head, `${prefix}/${sourceUid}`, before, comparable, schema, overrides, identity, written);
+  }
+}
+
+/**
+ * Returns its argument, for a diff whose two sides already share one uid space.
+ *
+ * @param value - The JSON.
+ * @returns `value`.
+ */
+function identity(value: JsonValue): JsonValue {
+  return value;
 }
 
 /**
@@ -803,6 +933,8 @@ function diffComponents(
  * @param schema - The component's declared fields, so an omitted prop compares against its default.
  * @param overrides - Where patches are appended.
  * @param localize - Rewrites `after`'s references into the instanced file's uids for the comparison.
+ * @param emitted - What the overrides' values are taken from, when it is not `after` (the same
+ * component written with other references).
  */
 function diffProps(
   entityUid: string,
@@ -812,12 +944,14 @@ function diffProps(
   schema: Schema | null,
   overrides: SceneFileOverride[],
   localize: (value: JsonValue) => JsonValue,
+  emitted: SceneFileComponent = after,
 ): void {
   if ((before.enabled ?? true) !== (after.enabled ?? true)) {
     overrides.push({ path: `${entityUid}/components/${componentUid}/enabled`, value: after.enabled ?? true });
   }
   const beforeProps = before.props ?? {};
   const afterProps = after.props ?? {};
+  const emittedProps = emitted.props ?? {};
   const references = ownUidEncoder();
   for (const name of Object.keys(afterProps)) {
     const next = afterProps[name] ?? null;
@@ -828,7 +962,10 @@ function diffProps(
     const previous =
       beforeProps[name] ?? (field === undefined ? null : encodeValue(field, field.createDefault(), references));
     if (!sameJson(previous, localize(next))) {
-      overrides.push({ path: `${entityUid}/components/${componentUid}/props/${name}`, value: next });
+      overrides.push({
+        path: `${entityUid}/components/${componentUid}/props/${name}`,
+        value: emittedProps[name] ?? next,
+      });
     }
   }
 }
