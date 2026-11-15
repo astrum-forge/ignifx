@@ -736,12 +736,12 @@ function readModel(
   const bytes = asset.sourceBytes;
   let result: GltfBakeGeometry | string;
   if (bytes === null) {
-    result = "its glTF is result only when a headless app loaded it (createApp({ headless: true }))";
+    result = "its glTF is read only when a headless app loaded it (createApp({ headless: true }))";
   } else {
     try {
       result = readGltfTriangles(bytes);
     } catch (error) {
-      result = `its glTF could not be result: ${error instanceof Error ? error.message : String(error)}`;
+      result = `its glTF could not be read: ${error instanceof Error ? error.message : String(error)}`;
     }
   }
   gltfCache.set(asset, result);

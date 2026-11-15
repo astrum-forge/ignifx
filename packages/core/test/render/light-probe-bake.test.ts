@@ -274,6 +274,50 @@ describe("bakeLightProbes", () => {
     expect(gltf.data.coefficients[1]).toBeCloseTo(0, 6);
   });
 
+  it("names models and meshes it cannot read, and honours a model's material overrides", async () => {
+    harness = await createRenderHarness();
+    const h = harness;
+    addSun(h);
+    const register = (bytes: ArrayBuffer | null, name: string) =>
+      h.app.assets.register(createModelAsset(name, null, null, bytes), { type: MODEL_ASSET_TYPE });
+    const broken = register(new TextEncoder().encode("not json").buffer, "broken.glb");
+    const empty = register(glbOf([]), "empty.glb");
+    const draco = register(glbOf([{ positions: [0, 0, 0, 1, 0, 0, 0, 1, 0], draco: true }]), "draco.glb");
+    const half = 500;
+    const floor = register(
+      glbOf([
+        { positions: [-half, 0, -half, half, 0, -half, half, 0, half], baseColor: [1, 0, 0, 1], name: "Paint" },
+        { positions: [-half, 0, -half, half, 0, half, -half, 0, half], baseColor: [1, 0, 0, 1], name: "Paint" },
+      ]),
+      "floor.glb",
+    );
+    const green = createMaterialAsset(h.app, standardMaterialDefinition({ diffuse: { r: 0, g: 1, b: 0, a: 1 } }), []);
+    h.world.createEntity("Broken").addComponent(Model, { model: broken });
+    h.world.createEntity("Empty").addComponent(Model, { model: empty });
+    h.world.createEntity("Draco").addComponent(Model, { model: draco });
+    h.world.createEntity("Unset").addComponent(Model);
+    h.world.createEntity("No mesh").addComponent(MeshRenderer);
+    const ground = h.world.createEntity("Floor");
+    ground.transform.localPosition.set(0, -0.5, 0);
+    ground.addComponent(Model, { model: floor, materialOverrides: { Paint: green } });
+    h.world.createEntity("Floor twin", { position: { x: 0, y: -0.6, z: 0 } }).addComponent(Model, { model: floor });
+    h.frame();
+    const baked = await bakeLightProbes(h.world, { ...ONE_PROBE, rays: 64, maxDistance: 1e6 });
+    expect(baked.triangles).toBe(4);
+    expect(baked.skipped).toBe(5);
+    const reasons = baked.skips.map((skip) => `${skip.entity}: ${skip.reason}`);
+    expect(reasons).toEqual([
+      "No mesh: its mesh is not loaded",
+      expect.stringContaining("Broken: its glTF could not be read"),
+      "Empty: the model's default scene draws no triangles",
+      "Draco: mesh 0 primitive 0: Draco-compressed (KHR_draco_mesh_compression)",
+      "Unset: its model is not loaded",
+    ]);
+    // The override paints the nearer floor green: the probe sees green, not red.
+    expect(baked.data.coefficients[1]).toBeGreaterThan(0.1);
+    expect(baked.data.coefficients[0]).toBeCloseTo(0, 6);
+  });
+
   it.each([
     ["fractional counts", { counts: { x: 1.5, y: 1, z: 1 } }],
     ["too many probes along X", { counts: { x: 2000, y: 1, z: 1 } }],
@@ -285,6 +329,17 @@ describe("bakeLightProbes", () => {
     ["an unknown directLight", { directLight: "both" as "include" }],
     ["a non-finite sky", { sky: { r: Number.NaN, g: 0, b: 0, a: 1 } }],
     ["an unknown sky kind", { sky: { kind: "cube" } as never }],
+    [
+      "a gradient with a NaN",
+      {
+        sky: {
+          kind: "gradient",
+          sky: { r: 1, g: 1, b: 1, a: 1 },
+          horizon: { r: 1, g: Number.NaN, b: 1, a: 1 },
+          ground: { r: 0, g: 0, b: 0, a: 1 },
+        },
+      } as const,
+    ],
   ])("refuses %s with IGX-0734 before tracing", async (_name, patch) => {
     harness = await createRenderHarness();
     const failure: unknown = await bakeLightProbes(harness.world, { ...ONE_PROBE, ...patch }).catch(
