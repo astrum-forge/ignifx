@@ -47,6 +47,11 @@ const MAX_SIZE = 1024;
  * probe, materials reflect the `Environment` again. A material shared by several meshes follows the
  * first of them. Diffuse lighting still comes from the scene environment.
  *
+ * Blending: once two or more box probes have captured and one of them has a `blendDistance` above
+ * 0, every lit PBR material blends them per fragment instead, fading each probe out over the last
+ * `blendDistance` metres inside its box. Probes without a box take no part then, and a probe that
+ * captures `"everyFrame"` (or is still capturing) keeps the nearest-probe choice for that frame.
+ *
  * The probe needs a loaded `Environment` (it reuses its lighting tables) and a canvas-backed app;
  * until an environment map is loaded it waits, holding no GPU memory and costing no frame time. A
  * `rendering.quality` tier caps `size` and allows `"everyFrame"` only at `high` (below, the probe
@@ -88,6 +93,12 @@ export class ReflectionProbe extends Component {
    * or `null` (default) for no box: reflections then look infinitely far away.
    */
   declare boxProjection: Vec3Like | null;
+
+  /**
+   * How far inside its box, in metres, the probe fades out where it overlaps another box probe.
+   * Defaults to `0`, no blending; see the class remarks. Needs `boxProjection`.
+   */
+  declare blendDistance: number;
 
   /** The layer names the probe captures; empty (default) captures every layer. */
   declare cullingMask: readonly string[];
@@ -230,6 +241,112 @@ export function selectReflectionProbe(
 }
 
 /**
+ * A probe as {@link reflectionProbeBlendLayout} sees it.
+ *
+ * @internal
+ */
+export interface ReflectionProbeBlendCandidate extends ReflectionProbeCandidate {
+  /** Its `blendDistance`. */
+  readonly blendDistance: number;
+}
+
+/**
+ * One probe of a blended set: its box, and the inner box where it alone counts.
+ *
+ * @internal
+ */
+export interface ReflectionProbeBlendVolume {
+  /** The index of the candidate it came from. */
+  readonly index: number;
+  /** The probe's world position, the centre of both boxes. */
+  readonly position: readonly [number, number, number];
+  /** The full size of the projection box, where the probe reaches zero weight. */
+  readonly outer: readonly [number, number, number];
+  /** The full size of the box where it has full weight: `outer` less `2 · blendDistance`, at least 0. */
+  readonly inner: readonly [number, number, number];
+}
+
+/**
+ * The blended probe set for a frame's candidates, and the voxel grid that indexes it.
+ *
+ * @internal
+ */
+export interface ReflectionProbeBlendLayout {
+  /** The box probes, in candidate order. */
+  readonly volumes: readonly ReflectionProbeBlendVolume[];
+  /** The grid's world-space minimum corner: the union of the boxes. */
+  readonly minimum: readonly [number, number, number];
+  /** The grid's world-space maximum corner. */
+  readonly maximum: readonly [number, number, number];
+  /** The voxel edge: the longest side over {@link REFLECTION_PROBE_GRID_CELLS}. */
+  readonly cellSize: number;
+}
+
+/**
+ * The voxel count along the longest side of a blended set's grid.
+ *
+ * @internal
+ */
+export const REFLECTION_PROBE_GRID_CELLS = 32;
+
+/**
+ * Whether a frame's probes blend, and how.
+ *
+ * @remarks
+ * They blend when at least two have a `boxProjection` box and at least one of those has a
+ * `blendDistance` above 0. Probes without a box are left out of the set.
+ *
+ * @param candidates - The enabled probes that have captured.
+ * @returns The layout, or `null` when the nearest-probe choice applies.
+ *
+ * @internal
+ */
+export function reflectionProbeBlendLayout(
+  candidates: readonly ReflectionProbeBlendCandidate[],
+): ReflectionProbeBlendLayout | null {
+  const volumes: ReflectionProbeBlendVolume[] = [];
+  let blends = false;
+  const minimum: [number, number, number] = [
+    Number.POSITIVE_INFINITY,
+    Number.POSITIVE_INFINITY,
+    Number.POSITIVE_INFINITY,
+  ];
+  const maximum: [number, number, number] = [
+    Number.NEGATIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+  ];
+  for (let index = 0; index < candidates.length; index += 1) {
+    const candidate = candidates[index];
+    const box = candidate?.box ?? null;
+    if (candidate === undefined || box === null || !(box.x > 0 && box.y > 0 && box.z > 0)) {
+      continue;
+    }
+    const blend = Number.isFinite(candidate.blendDistance) ? Math.max(0, candidate.blendDistance) : 0;
+    blends ||= blend > 0;
+    const position: [number, number, number] = [candidate.x, candidate.y, candidate.z];
+    const outer: [number, number, number] = [box.x, box.y, box.z];
+    volumes.push({
+      index,
+      position,
+      outer,
+      inner: [Math.max(0, box.x - 2 * blend), Math.max(0, box.y - 2 * blend), Math.max(0, box.z - 2 * blend)],
+    });
+    for (let axis = 0; axis < 3; axis += 1) {
+      const centre = position[axis] ?? 0;
+      const half = (outer[axis] ?? 0) / 2;
+      minimum[axis] = Math.min(minimum[axis] ?? 0, centre - half);
+      maximum[axis] = Math.max(maximum[axis] ?? 0, centre + half);
+    }
+  }
+  if (volumes.length < 2 || !blends) {
+    return null;
+  }
+  const longest = Math.max(maximum[0] - minimum[0], maximum[1] - minimum[1], maximum[2] - minimum[2]);
+  return { volumes, minimum, maximum, cellSize: longest / REFLECTION_PROBE_GRID_CELLS };
+}
+
+/**
  * Builds the component's declared fields.
  *
  * @returns The schema. Built inside a function: module scope holds declarations and immutable
@@ -250,6 +367,11 @@ function reflectionProbeSchema(): Schema {
     boxProjection: optional(vec3({ x: 10, y: 10, z: 10 }), {
       tooltip:
         "Full size in metres of the box, centred on the probe, that reflections are projected onto; null for none.",
+    }),
+    blendDistance: f32(0, {
+      min: 0,
+      tooltip:
+        "How far inside its box, in metres, the probe fades out where it overlaps another box probe; 0 for no blending. Needs boxProjection.",
     }),
     cullingMask: layerMask([], { tooltip: "The layers the probe captures; empty captures every layer." }),
     near: f32(0.1, { min: 0.001, tooltip: "Near clip distance of the capture, in metres." }),

@@ -659,6 +659,7 @@ Captures the scene around it into a cube map that nearby PBR materials reflect.
 | `size` | `u32` | `128` | Cube face size in pixels, rounded down to a power of two. Larger is sharper and slower to capture. Quality tiers cap it (low 64, medium 128, high 256). |
 | `refreshMode` | `enum` | `"once"` | once: capture when ready and on refresh(); onDemand: only on refresh(); everyFrame: every frame (costly; one probe; the low and medium quality tiers treat it as once). |
 | `boxProjection` | `optional` | `null` | Full size in metres of the box, centred on the probe, that reflections are projected onto; null for none. |
+| `blendDistance` | `f32` | `0` | How far inside its box, in metres, the probe fades out where it overlaps another box probe; 0 for no blending. Needs boxProjection. |
 | `cullingMask` | `layerMask` | `[]` | The layers the probe captures; empty captures every layer. |
 | `near` | `f32` | `0.1` | Near clip distance of the capture, in metres. |
 | `far` | `f32` | `1000` | Far clip distance of the capture, in metres. |

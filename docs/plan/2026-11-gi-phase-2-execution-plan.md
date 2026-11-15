@@ -72,7 +72,7 @@ All six steps are done (2026-11-09). The user guide is `skills/ignifx/references
 | Step                             | State | PR                                                                                                            |
 | -------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------- |
 | **B1** Reflection probes         | Done  | #151                                                                                                          |
-| **B1b** Probe blending           | Open  | (see Remaining)                                                                                               |
+| **B1b** Probe blending           | Done  | blending 2026-11-15 (GGX prefilter and `capture()` to a file open, see Remaining)                             |
 | **B2** Light probes              | Done  | #156                                                                                                          |
 | **B3** Lightmaps                 | Done  | #164; atlas placement (spike P2) 2026-11-15                                                                   |
 | **B4** Headless bake             | Done  | #160 (yield every ~8 ms in #163, `directLight` in #168; primitives, glTF, `bakeMode`, `sky` forms 2026-11-15) |
@@ -81,7 +81,7 @@ All six steps are done (2026-11-09). The user guide is `skills/ignifx/references
 
 **Remaining**
 
-- **B1b, reflection-probe blending:** one `createPbrLocalEnvironmentProbeSet` for overlapping probes, a GGX prefilter instead of box mips, `ReflectionProbe.blendDistance` and `capture()` to a file.
+- **B1b, reflection-probe blending: blending done (2026-11-15).** `ReflectionProbe.blendDistance` and one `createPbrLocalEnvironmentProbeSet` for every lit material (`07-rendering.md` §2.15). What remains: a GGX prefilter instead of box mips; `capture()` to a file; an `everyFrame` probe turns blending off (the set copies cubes at creation); the set's GPU resources are freed through fields Lite does not declare (an upstream ask: a dispose for probe sets); the blend browser test has run only in CI.
 - **Spike P2, the lightmap atlas transform: done (2026-11-15).** A `CUSTOM_VERTEX_MAIN_END` plugin rewrites the `uv2` varying to `uv2·scale + offset` with the placement as WGSL constants (`07-rendering.md` §2.15 says why not a uniform). What remains: a placement with `uv2: false`, or on a mesh without `uvs2`, still logs `IGX-0735` and samples the whole texture (a per-renderer UV2 copy would cover both); each distinct placement is its own pipeline variant, so a large atlas compiles many shaders (a uniform needs Lite's vertex-data plugin bridge to keep the `AI` injection, an upstream ask); the two-renderer browser test has run only in CI.
 - **The lightmap baker:** UV2 unwrap (`xatlas` as WebAssembly, an ADR under §9.3) and a GPU path tracer, in the editor's baker (feasibility §8.4); the engine bakes light probes only.
 - **Goldens:** one visual golden per B1–B3 scene is not recorded yet (coordinator bulk run), and no Phase 2 cost has been measured with `pnpm test:gpu-budget` on a scene that captures.

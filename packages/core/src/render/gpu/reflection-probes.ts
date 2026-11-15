@@ -1,28 +1,42 @@
 import { toEntityHandle } from "../../handles/handle.js";
 import {
   assignReflectionProbe,
+  createLiteProbeSet,
   createLiteReflectionProbe,
   enableReflectionProbes,
   forEachReflectiveMesh,
 } from "../../lite/gpu/reflection-probe.js";
 import {
+  reflectionProbeBlendLayout,
   resolveReflectionProbeRefreshMode,
   resolveReflectionProbeSize,
   selectReflectionProbe,
 } from "../reflection-probe.js";
 import { EDITOR_ONLY_METADATA_KEY } from "../render-texture.js";
-import type { LiteProbeBinding, LiteReflectionProbe } from "../../lite/gpu/reflection-probe.js";
+import type { LiteProbeBinding, LiteProbeSet, LiteReflectionProbe } from "../../lite/gpu/reflection-probe.js";
 import type { NodeTag } from "../../lite/node.js";
 import type { LiteEngine, LiteScene } from "../../lite/scene.js";
 import type { Vec3Like } from "../../math/types.js";
 import type { World } from "../../world/world.js";
-import type { ReflectionProbe, ReflectionProbeCandidate } from "../reflection-probe.js";
+import type {
+  ReflectionProbe,
+  ReflectionProbeBlendCandidate,
+  ReflectionProbeBlendLayout,
+} from "../reflection-probe.js";
 import type { RenderingQualityPreset } from "../rendering-settings.js";
 
 /**
  * The render layer's half of reflection probes (`docs/plan/2026-11-gi-phase-2-execution-plan.md`,
  * step B1): which probe captures when, and which probe each PBR material reflects. Loaded with
  * `../../lite/gpu/reflection-probe.ts` as one chunk, only once a world has a `ReflectionProbe`.
+ *
+ * Blending (B1b): when `reflectionProbeBlendLayout` says the frame's probes blend and every box probe
+ * has finished capturing (none `everyFrame`), one Lite probe set built from their cubes goes on every
+ * lit PBR material. The set copies the cubes, so it is rebuilt when a probe moves, recaptures,
+ * resizes its box or changes `blendDistance`, and the replaced set is freed once the material
+ * rebuilds that dropped it settled. While a box probe is still capturing, the last set stays (or,
+ * before the first, the nearest-probe choice applies). A set Lite refuses (more than four probes
+ * overlapping in a voxel, too many probes) logs once and the nearest-probe choice applies.
  */
 
 /**
@@ -40,15 +54,30 @@ interface ProbeState {
   framesToCapture: number;
   /** The binding materials use, rebuilt when the probe moves or its box changes. */
   binding: LiteProbeBinding | null;
+  /** How many captures it ran, so a blended set made before a recapture is rebuilt. */
+  generation: number;
 }
 
 /** A material `forEachReflectiveMesh` hands out. */
 type ReflectiveMaterial = Parameters<typeof assignReflectionProbe>[1];
 
 /** A candidate with the binding it stands for. */
-interface BoundCandidate extends ReflectionProbeCandidate {
+interface BoundCandidate extends ReflectionProbeBlendCandidate {
   /** The binding. */
   readonly binding: LiteProbeBinding;
+  /** Its capture count. */
+  readonly generation: number;
+  /** Whether it has capture frames left, so a set made of it now would go stale. */
+  readonly isCapturing: boolean;
+  /** Whether it captures every frame, so any set made of it goes stale at once. */
+  readonly isEveryFrame: boolean;
+}
+
+/** A blended set and what it was built from, compared to decide a rebuild. */
+interface BlendState {
+  readonly lite: LiteProbeSet;
+  /** Per volume: binding, generation and blend distance, flattened. */
+  readonly key: readonly unknown[];
 }
 
 /**
@@ -105,7 +134,13 @@ export async function createReflectionProbeRuntime(
 ): Promise<ReflectionProbeRuntime> {
   await enableReflectionProbes();
   const states = new Map<ReflectionProbe, ProbeState>();
-  const assigned = new Map<ReflectiveMaterial, LiteProbeBinding | null>();
+  const assigned = new Map<ReflectiveMaterial, LiteProbeBinding | LiteProbeSet | null>();
+  /** The blended set on every lit material, or `null` for the nearest-probe choice. */
+  let blend: BlendState | null = null;
+  /** The key of a set Lite refused, so it is not tried again every frame. */
+  let refusedKey: readonly unknown[] | null = null;
+  /** Sets replaced this frame, freed with the retired cubes. */
+  const retiringSets: LiteProbeSet[] = [];
   const seen = new Set<object>();
   const candidates: BoundCandidate[] = [];
   /** The cubes released this frame, freed once the materials that reflected them are rebuilt. */
@@ -124,7 +159,7 @@ export async function createReflectionProbeRuntime(
   /** Between a device loss and Lite's recovery, nothing on the GPU may be touched. */
   let isDeviceLost = false;
 
-  const assign = (material: ReflectiveMaterial, binding: LiteProbeBinding | null): void => {
+  const assign = (material: ReflectiveMaterial, binding: LiteProbeBinding | LiteProbeSet | null): void => {
     const pending = assignReflectionProbe(scene, material, binding);
     if (pending !== undefined) {
       rebuilds.add(pending);
@@ -152,7 +187,11 @@ export async function createReflectionProbeRuntime(
   const retire = (): void => {
     if (retiring.length > 0) {
       for (const [material, binding] of assigned) {
-        if (binding !== null && retiring.some((entry) => entry.environment === binding.environment)) {
+        if (
+          binding !== null &&
+          !("set" in binding) &&
+          retiring.some((entry) => entry.environment === binding.environment)
+        ) {
           assigned.set(material, null);
           assign(material, null);
         }
@@ -162,6 +201,89 @@ export async function createReflectionProbeRuntime(
         entry.lite.dispose(settled);
       }
       retiring.length = 0;
+    }
+    if (retiringSets.length > 0) {
+      // A material still on a retired set was reassigned this frame or is gone from the scene.
+      for (const [material, binding] of assigned) {
+        if (binding !== null && "set" in binding && retiringSets.includes(binding)) {
+          assigned.set(material, null);
+          assign(material, null);
+        }
+      }
+      const settled = Promise.allSettled(rebuilds);
+      for (const set of retiringSets) {
+        set.dispose(settled);
+      }
+      retiringSets.length = 0;
+    }
+  };
+
+  /** Stops blending; the set goes once the materials that used it were rebuilt. */
+  const dropBlend = (): void => {
+    if (blend !== null) {
+      retiringSets.push(blend.lite);
+      blend = null;
+    }
+  };
+
+  /**
+   * Builds, keeps or drops the blended set for this frame's candidates.
+   *
+   * @param layout - The blend layout, or `null` when the probes do not blend.
+   */
+  const updateBlend = (layout: ReflectionProbeBlendLayout | null): void => {
+    if (layout === null) {
+      dropBlend();
+      refusedKey = null;
+      return;
+    }
+    let isCapturing = false;
+    let hasEveryFrame = false;
+    for (const volume of layout.volumes) {
+      const candidate = candidates[volume.index];
+      isCapturing ||= candidate?.isCapturing === true;
+      hasEveryFrame ||= candidate?.isEveryFrame === true;
+    }
+    if (hasEveryFrame) {
+      // A probe capturing every frame would leave any set stale at once.
+      dropBlend();
+      return;
+    }
+    if (isCapturing) {
+      return;
+    }
+    const key: unknown[] = [];
+    const volumes = layout.volumes.map((volume) => {
+      const candidate = candidates[volume.index];
+      if (candidate !== undefined) {
+        key.push(candidate.binding, candidate.generation, candidate.blendDistance);
+      }
+      return {
+        environment: candidate?.binding.environment ?? null,
+        position: volume.position,
+        outer: volume.outer,
+        inner: volume.inner,
+      };
+    });
+    if (sameKey(blend?.key ?? null, key) || sameKey(refusedKey, key)) {
+      return;
+    }
+    const ready = volumes.filter(
+      (volume): volume is typeof volume & { environment: NonNullable<typeof volume.environment> } =>
+        volume.environment !== null,
+    );
+    try {
+      const created = createLiteProbeSet(engine, scene, ready, layout.minimum, layout.maximum, layout.cellSize);
+      dropBlend();
+      blend = { lite: created, key };
+      refusedKey = null;
+    } catch (error) {
+      dropBlend();
+      refusedKey = key;
+      warn(
+        `The reflection probes cannot blend (${error instanceof Error ? error.message : String(error)}), ` +
+          "so each material reflects its nearest probe. Lite blends at most four overlapping probes.",
+      );
     }
   };
 
@@ -181,13 +303,13 @@ export async function createReflectionProbeRuntime(
       return;
     }
     seen.clear();
+    const blended = blend?.lite ?? null;
     forEachReflectiveMesh(scene, (material, x, y, z) => {
       if (seen.has(material)) {
         return;
       }
       seen.add(material);
-      const index = selectReflectionProbe(x, y, z, candidates);
-      const binding = candidates[index]?.binding ?? null;
+      const binding = blended ?? candidates[selectReflectionProbe(x, y, z, candidates)]?.binding ?? null;
       const current = assigned.get(material);
       if (current === binding || (current === undefined && binding === null)) {
         return;
@@ -215,6 +337,7 @@ export async function createReflectionProbeRuntime(
         for (const [probe, state] of states) {
           release(probe, state);
         }
+        dropBlend();
         clearMaterials();
         retire();
         return;
@@ -257,6 +380,7 @@ export async function createReflectionProbeRuntime(
             ),
             framesToCapture: CAPTURE_FRAMES,
             binding: null,
+            generation: 0,
           };
           states.set(probe, state);
         }
@@ -268,11 +392,10 @@ export async function createReflectionProbeRuntime(
         if (wantsRefresh) {
           state.framesToCapture = CAPTURE_FRAMES;
         }
-        if (
-          (state.framesToCapture > 0 || mode === "everyFrame") &&
-          state.lite.capture(x, y, z, probe.near, probe.far)
-        ) {
+        const isCapturing = state.framesToCapture > 0 || mode === "everyFrame";
+        if (isCapturing && state.lite.capture(x, y, z, probe.near, probe.far)) {
           state.framesToCapture = Math.max(0, state.framesToCapture - 1);
+          state.generation += 1;
         }
         const environment = state.lite.environment;
         if (environment === null) {
@@ -281,13 +404,32 @@ export async function createReflectionProbeRuntime(
         const box = probe.boxProjection;
         const binding = bindingFor(state.binding, environment, x, y, z, box);
         state.binding = binding;
-        candidates.push({ x, y, z, box, binding });
+        candidates.push({
+          x,
+          y,
+          z,
+          box,
+          binding,
+          blendDistance: probe.blendDistance,
+          generation: state.generation,
+          isCapturing: state.framesToCapture > 0,
+          isEveryFrame: mode === "everyFrame",
+        });
       }
+      updateBlend(mayBlend(candidates) ? reflectionProbeBlendLayout(candidates) : null);
       assignMaterials();
       retire();
     },
     handleDeviceLost(): void {
       isDeviceLost = true;
+      // The set's copies belong to the lost device; Lite would otherwise recopy from dead cubes.
+      blend?.lite.dispose();
+      blend = null;
+      refusedKey = null;
+      for (const set of retiringSets) {
+        set.dispose();
+      }
+      retiringSets.length = 0;
       // Lite's recovery rebuilds every material against the new device, so only the bindings are
       // cleared here; the cubes belong to the lost device and go at once.
       for (const [material, binding] of assigned) {
@@ -317,15 +459,50 @@ export async function createReflectionProbeRuntime(
       for (const [probe, state] of states) {
         release(probe, state);
       }
+      dropBlend();
       clearMaterials();
       const settled = Promise.allSettled(rebuilds);
       for (const entry of retiring) {
         entry.lite.dispose(settled);
       }
       retiring.length = 0;
+      for (const set of retiringSets) {
+        set.dispose(settled);
+      }
+      retiringSets.length = 0;
       rebuilds.clear();
     },
   };
+}
+
+/**
+ * Whether a frame's probes can blend at all, checked without allocating: two box probes, one with a
+ * `blendDistance`.
+ *
+ * @param candidates - The frame's candidates.
+ * @returns `true` when {@link reflectionProbeBlendLayout} is worth calling.
+ */
+function mayBlend(candidates: readonly BoundCandidate[]): boolean {
+  let boxes = 0;
+  let blends = false;
+  for (const candidate of candidates) {
+    if (candidate.box !== null) {
+      boxes += 1;
+      blends ||= candidate.blendDistance > 0;
+    }
+  }
+  return boxes >= 2 && blends;
+}
+
+/**
+ * Whether two set keys are equal, element by element.
+ *
+ * @param a - A key, or `null`.
+ * @param b - Another key.
+ * @returns `true` when both have the same elements.
+ */
+function sameKey(a: readonly unknown[] | null, b: readonly unknown[]): boolean {
+  return a !== null && a.length === b.length && a.every((value, index) => value === b[index]);
 }
 
 /**
