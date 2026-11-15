@@ -4,7 +4,9 @@
  * The narrower `wasm-unsafe-eval` permission supports physics; `wasm: false` removes it.
  */
 
+import { ElectronErrorCode } from "../error-codes.js";
 import { IGNIFX_ORIGIN } from "../host-contract.js";
+import { mainError } from "./main-error.js";
 
 /**
  * The protocols a game window may load a subresource from, beyond its own origin.
@@ -51,6 +53,68 @@ export interface CspOptions {
    * @defaultValue `[]` — a desktop build reaches nothing but itself.
    */
   readonly connectSources?: readonly string[];
+  /**
+   * Origins the window may embed in an `<iframe>`, written into `frame-src` in place of `'none'`.
+   *
+   * @remarks
+   * Each entry must be one `scheme://host` source with an optional `:port` or `:*`, and nothing else:
+   * no path, no `*` host, no bare scheme such as `https:`, no keyword such as `'self'`. {@link cspFor}
+   * throws `IGX-1466` for anything else, because a typo here would widen the policy silently. Pair
+   * it with `lockNavigation`'s `frameOrigins`, which pins the exact origins per navigation; the
+   * header cannot follow a port that changes after the document loaded.
+   *
+   * @defaultValue `[]` — `frame-src 'none'`, the window frames nothing.
+   */
+  readonly frameSources?: readonly string[];
+}
+
+/**
+ * Reports whether a string is a source {@link CspOptions.frameSources} accepts: `scheme://host`
+ * with an optional `:port` or `:*`.
+ *
+ * @remarks
+ * The host is a DNS name or IPv4 address (letters, digits, `-` and `.`), optionally led by one
+ * `*.` label, or a bracketed IPv6 address. Anything that would read as more than one source —
+ * whitespace, `;`, `,` — or that names no host at all is refused.
+ *
+ * @param source - The candidate source.
+ * @returns `true` when it may go into `frame-src`.
+ *
+ * @example
+ * ```ts
+ * isFrameSource("http://127.0.0.1:*"); // true
+ * isFrameSource("https:");             // false — a whole scheme
+ * isFrameSource("*");                  // false
+ * ```
+ *
+ * @public
+ */
+export function isFrameSource(source: string): boolean {
+  return /^[a-z][a-z0-9+.-]*:\/\/(?:(?:\*\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)*|\[[0-9a-f:.]+\])(?::(?:\d{1,5}|\*))?$/iu.test(
+    source,
+  );
+}
+
+/**
+ * Validates {@link CspOptions.frameSources}.
+ *
+ * @param sources - The sources to check.
+ * @returns The sources, or `["'none'"]` when there are none.
+ * @throws An `ElectronMainError` with code `IGX-1466` for an entry {@link isFrameSource} refuses.
+ */
+function frameSourcesOf(sources: readonly string[] | undefined): readonly string[] {
+  if (sources === undefined || sources.length === 0) {
+    return ["'none'"];
+  }
+  for (const source of sources) {
+    if (!isFrameSource(source)) {
+      throw mainError(ElectronErrorCode.invalidWindowOptions, `"${source}" is not a frame source.`, {
+        context: { option: "frameSources", source },
+        hint: "Write one origin per entry, as scheme://host with an optional :port or :*.",
+      });
+    }
+  }
+  return sources;
 }
 
 /**
@@ -103,8 +167,9 @@ function websocketOriginOf(origin: string): string | null {
  * Pure: it reads nothing from Electron and nothing from the file system, which is what lets the
  * security checklist assert the exact policy without launching a browser.
  *
- * @param options - The mode, the dev server, and the two widening switches.
+ * @param options - The mode, the dev server, and the widening switches.
  * @returns The header value, directives separated by `"; "`, with no trailing semicolon.
+ * @throws An `ElectronMainError` with code `IGX-1466` when a `frameSources` entry is not one origin.
  *
  * @example
  * ```ts
@@ -120,6 +185,7 @@ export function cspFor(options: CspOptions = {}): string {
   const dev: readonly string[] = devOrigin === null ? [] : [devOrigin];
   const socket = devOrigin === null ? null : websocketOriginOf(devOrigin);
 
+  const frameSources = frameSourcesOf(options.frameSources);
   const self = "'self'";
   const assets = CSP_ASSET_SCHEMES;
   const script: string[] = [self, ...dev];
@@ -153,7 +219,8 @@ export function cspFor(options: CspOptions = {}): string {
     "form-action": ["'none'"],
     // Header-only, and the reason this policy is a header rather than a `<meta>` tag.
     "frame-ancestors": ["'none'"],
-    "frame-src": ["'none'"],
+    // `'none'` unless the caller named the origins it frames (validated above).
+    "frame-src": frameSources,
     "manifest-src": [self],
   };
 

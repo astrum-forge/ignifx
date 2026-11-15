@@ -24,9 +24,12 @@
  *
  * @remarks
  * Returns `null` — never a guess — for anything with no tuple origin: a URL that does not parse, an
- * opaque-origin URL such as `data:`, `blob:`, `javascript:` or `file:`, and a scheme-relative
- * reference. A `null` result is a refusal at every call site, so a new URL form is denied rather
- * than quietly admitted.
+ * opaque-origin URL such as `data:`, `javascript:` or `file:`, and a scheme-relative reference. A
+ * `blob:` URL is not opaque: the WHATWG parser gives it the origin of the document that created it,
+ * so `blob:https://a.example/<uuid>` returns `"https://a.example"`. A `blob:` URL created under a
+ * non-special scheme (`blob:ignifx://app/<uuid>`) parses with an empty host and returns `null`. A
+ * `null` result is a refusal at every call site, so a new URL form is denied rather than quietly
+ * admitted.
  *
  * @param url - The URL to read.
  * @returns The origin, or `null` when the URL has no tuple origin.

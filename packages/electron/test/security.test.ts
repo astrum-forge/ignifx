@@ -2,7 +2,7 @@
 // oxlint-disable-next-line import/no-unassigned-import -- see above.
 import "./support/electron-mock.js";
 import { describe, expect, it } from "vitest";
-import { CSP_DIRECTIVE_ORDER, cspFor, defaultCsp } from "../src/main/csp.js";
+import { CSP_DIRECTIVE_ORDER, cspFor, defaultCsp, isFrameSource } from "../src/main/csp.js";
 import { allowedSenderOrigins, isAllowedExternalUrl, isTrustedSender } from "../src/main/ipc.js";
 import { originOfUrl } from "../src/main/origin.js";
 import { protocolPathFor } from "../src/main/protocol.js";
@@ -261,6 +261,46 @@ describe("the ignifx:// protocol's path handling", () => {
 });
 
 describe("cspFor's remaining switches", () => {
+  it("adds frame sources to frame-src only, keeping 'none' when there are none", () => {
+    const policy = cspFor({ frameSources: ["http://127.0.0.1:*", "http://localhost:*"] });
+
+    expect(policy).toContain("frame-src http://127.0.0.1:* http://localhost:*;");
+    expect(policy).toContain("frame-ancestors 'none'");
+    expect(policy).toContain("child-src 'none'");
+    expect(policy.replace("frame-src http://127.0.0.1:* http://localhost:*", "frame-src 'none'")).toBe(defaultCsp());
+    expect(cspFor({ frameSources: [] })).toBe(defaultCsp());
+  });
+
+  it("refuses a frame source that is not exactly one origin, with IGX-1466", () => {
+    for (const bad of [
+      "*",
+      "https:",
+      "'self'",
+      "'unsafe-inline'",
+      "data:",
+      "https://a.example/path",
+      "https://a.example https://b.example",
+      "https://a.example; script-src *",
+      "https://a.example,https://b.example",
+      "http://*",
+      "http://:8080",
+      "",
+    ]) {
+      expect(isFrameSource(bad), bad).toBe(false);
+      expect(() => cspFor({ frameSources: [bad] }), bad).toThrow("IGX-1466");
+    }
+    for (const good of [
+      "http://127.0.0.1:*",
+      "https://example.com",
+      "http://localhost:5173",
+      "https://*.example.com",
+      "http://[::1]:5173",
+      "ignifx-editor://app",
+    ]) {
+      expect(isFrameSource(good), good).toBe(true);
+    }
+  });
+
   it("adds a game's own backend origins to connect-src and nothing else", () => {
     const policy = cspFor({ connectSources: ["https://api.example.com"] });
 

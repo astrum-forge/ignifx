@@ -1,6 +1,6 @@
 # ADR-0028 · Edit mode: an app that shows a scene without playing it
 
-**Status:** Proposed · **Date:** 2026-10-15 · **Deciders:** Astrum Forge Studios
+**Status:** Accepted (2026-10-27, ratified by the owner) · **Date:** 2026-10-15 · **Deciders:** Astrum Forge Studios
 
 ## Context
 

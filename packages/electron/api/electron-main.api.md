@@ -46,11 +46,24 @@ export const CSP_DIRECTIVE_ORDER: readonly string[];
 export function cspFor(options?: CspOptions): string;
 
 // @public
+export type CspHeaderScope = string | ((url: string) => boolean);
+
+// @public
+export function cspHeadersFor(details: CspResponseDetails, csp: string, scope?: CspHeaderScope): Record<string, string[]> | null;
+
+// @public
 export interface CspOptions {
     readonly connectSources?: readonly string[];
     readonly devServerOrigin?: string | null;
+    readonly frameSources?: readonly string[];
     readonly mode?: "production" | "development";
     readonly wasm?: boolean;
+}
+
+// @public
+export interface CspResponseDetails {
+    readonly responseHeaders?: Readonly<Record<string, readonly string[]>>;
+    readonly url: string;
 }
 
 // @public
@@ -70,6 +83,42 @@ export const DEFAULT_WINDOW_SIZE: Readonly<{
 
 // @public
 export function defaultCsp(): string;
+
+// @public
+export const ELECTRON_ERROR_MESSAGES: Readonly<Record<string, string>>;
+
+// @public
+export const ElectronErrorCode: {
+    readonly hostVersionMismatch: "IGX-1460";
+    readonly hostContractIncomplete: "IGX-1461";
+    readonly hostUnavailable: "IGX-1462";
+    readonly hostCallFailed: "IGX-1463";
+    readonly externalUrlRefused: "IGX-1464";
+    readonly protocolPathEscaped: "IGX-1465";
+    readonly invalidWindowOptions: "IGX-1466";
+    readonly hostSenderRefused: "IGX-1467";
+};
+
+// @public
+export type ElectronErrorCode = (typeof ElectronErrorCode)[keyof typeof ElectronErrorCode];
+
+// @public
+export class ElectronMainError extends Error {
+    constructor(code: ElectronErrorCode, message: string, options?: ElectronMainErrorOptions);
+    readonly code: ElectronErrorCode;
+    readonly context: ElectronMainErrorContext;
+    readonly hint: string | null;
+}
+
+// @public
+export type ElectronMainErrorContext = Readonly<Record<string, string | number | boolean | null>>;
+
+// @public
+export interface ElectronMainErrorOptions {
+    readonly cause?: unknown;
+    readonly context?: ElectronMainErrorContext;
+    readonly hint?: string;
+}
 
 // @public
 export function encodeStorageFileName(key: string): string;
@@ -108,12 +157,16 @@ export const FORWARDED_WINDOW_EVENTS: readonly HostWindowEvent[];
 export function forwardWindowEvents(window: BrowserWindow): void;
 
 // @public
+export type FrameOrigins = readonly string[] | (() => readonly string[]);
+
+// @public
 export interface GameWindowOptions {
     readonly backgroundColor?: string;
     readonly csp?: string | CspOptions | null;
     readonly entry: string;
     readonly externalProtocols?: readonly string[];
     readonly frame?: boolean;
+    readonly frameOrigins?: FrameOrigins;
     readonly fullscreen?: boolean;
     readonly height?: number;
     readonly icon?: string;
@@ -221,7 +274,7 @@ export const IGNIFX_SCHEME_PRIVILEGES: Readonly<{
 }>;
 
 // @public
-export function installCspHeader(session: Session, csp: string): void;
+export function installCspHeader(session: Session, csp: string, scope?: CspHeaderScope): void;
 
 // @public
 export function installHostHandlers(options: HostHandlerOptions): () => void;
@@ -233,7 +286,13 @@ export function isAllowedExternalUrl(url: string, protocols: readonly string[]):
 export function isDevServerEntry(entry: string): boolean;
 
 // @public
+export function isFrameSource(source: string): boolean;
+
+// @public
 export function isMissingFileError(error: unknown): boolean;
+
+// @public
+export function isNavigationAllowed(url: string, isMainFrame: boolean, appOrigin: string, frameOrigins: readonly string[]): boolean;
 
 // @public
 export function isQuotaError(error: unknown): boolean;
@@ -251,10 +310,15 @@ export const LINUX_FEATURES_SWITCH: Readonly<{
 }>;
 
 // @public
-export function lockNavigation(contents: WebContents, allowedOrigin: string): void;
+export function lockNavigation(contents: WebContents, allowedOrigin: string, options?: NavigationLockOptions): void;
 
 // @public
 export function mimeTypeFor(pathOrExtension: string): string;
+
+// @public
+export interface NavigationLockOptions {
+    readonly frameOrigins?: FrameOrigins;
+}
 
 // @public
 export function openDialogOptionsFor(options?: HostOpenDialogOptions): OpenDialogOptions;

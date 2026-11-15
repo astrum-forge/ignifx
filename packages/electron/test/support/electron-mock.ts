@@ -110,7 +110,7 @@ export class FakeSession {
   /** The listener `installCspHeader` registered, or `null`. */
   headersListener:
     | ((
-        details: { responseHeaders?: Record<string, string[]> },
+        details: { url: string; responseHeaders?: Record<string, string[]> },
         callback: (response: { responseHeaders?: Record<string, string[]> }) => void,
       ) => void)
     | null = null;
@@ -166,12 +166,16 @@ export class FakeSession {
    * Replays one response through the header filter.
    *
    * @param responseHeaders - The headers the response carried.
-   * @returns The headers the filter produced.
+   * @param url - The response's URL; defaults to the packaged entry.
+   * @returns The headers the filter produced, or `null` when it left the response unchanged.
    */
-  filterHeaders(responseHeaders: Record<string, string[]>): Record<string, string[]> {
-    let produced: Record<string, string[]> = {};
-    this.headersListener?.({ responseHeaders }, (response) => {
-      produced = response.responseHeaders ?? {};
+  filterHeaders(
+    responseHeaders: Record<string, string[]>,
+    url = "ignifx://app/index.html",
+  ): Record<string, string[]> | null {
+    let produced: Record<string, string[]> | null = null;
+    this.headersListener?.({ url, responseHeaders }, (response) => {
+      produced = response.responseHeaders ?? null;
     });
     return produced;
   }
@@ -228,7 +232,10 @@ export class FakeBrowserWindow {
    * The navigation listeners `lockNavigation` installed, keyed by event name. `will-navigate`,
    * `will-redirect` and `will-frame-navigate` all receive the same `details` object shape.
    */
-  readonly navigationListeners = new Map<string, ((details: { url: string; preventDefault: () => void }) => void)[]>();
+  readonly navigationListeners = new Map<
+    string,
+    ((details: { url: string; isMainFrame: boolean; preventDefault: () => void }) => void)[]
+  >();
 
   /** Whether a `will-attach-webview` listener refused the attachment. */
   webviewAttachmentPrevented = false;
@@ -246,10 +253,14 @@ export class FakeBrowserWindow {
     setWindowOpenHandler: (handler: () => { readonly action: string }): void => {
       this.windowOpenHandler = handler;
     },
-    on: (event: string, listener: (details: { url: string; preventDefault: () => void }) => void): void => {
+    on: (
+      event: string,
+      listener: (details: { url: string; isMainFrame: boolean; preventDefault: () => void }) => void,
+    ): void => {
       if (event === "will-attach-webview") {
         listener({
           url: "",
+          isMainFrame: false,
           preventDefault: (): void => {
             this.webviewAttachmentPrevented = true;
           },
@@ -302,13 +313,15 @@ export class FakeBrowserWindow {
    *
    * @param url - The URL being navigated to.
    * @param event - Which navigation event to replay; defaults to `"will-navigate"`.
+   * @param isMainFrame - Whether the window's top frame navigates; defaults to `true`.
    * @returns `true` when no listener called `preventDefault`.
    */
-  wouldAllowNavigation(url: string, event = "will-navigate"): boolean {
+  wouldAllowNavigation(url: string, event = "will-navigate", isMainFrame = true): boolean {
     let prevented = false;
     for (const listener of this.navigationListeners.get(event) ?? []) {
       listener({
         url,
+        isMainFrame,
         preventDefault: (): void => {
           prevented = true;
         },

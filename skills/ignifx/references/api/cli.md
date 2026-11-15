@@ -855,8 +855,9 @@ for one (`docs/architecture/14-platform-electron.md` §3).
 
 A browser-only project should not carry them, and not only for tidiness: `electron` and
 `electron-builder` are large binary downloads that a browser game never runs, and an
-`electron.vite.config.ts` in a project with no `desktop/` directory is a config that names files
-that are not there.
+`electron.vite.config.ts` or `tsconfig.desktop.json` in a project with no `desktop/` directory is
+a config that names files that are not there. The `package.json` scripts that name a removed
+entry lose that step (the `typecheck` script's `tsc -p tsconfig.desktop.json`).
 
 ***
 
