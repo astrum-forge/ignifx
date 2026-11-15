@@ -645,7 +645,7 @@ function nestedPathOf(entity: Entity, root: Entity): string | null {
   let current: Entity | null = entity;
   const limit = 64;
   while (current !== null && segments.length < limit) {
-    const origin = entityInternals(current).origin;
+    const origin: EntityOrigin | null = entityInternals(current).origin;
     if (origin === null) {
       return null;
     }

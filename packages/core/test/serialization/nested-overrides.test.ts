@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { expandScene } from "../../src/serialization/expand.js";
 import { enumerateInstanceTargets, resolveInstancePath } from "../../src/serialization/instance-targets.js";
+import { instantiateScene } from "../../src/serialization/load.js";
 import { parseOverridePath } from "../../src/serialization/overrides.js";
 import { applyOverridesToAsset, revertOverrides } from "../../src/serialization/prefab-overrides.js";
-import { instantiateScene } from "../../src/serialization/load.js";
 import { createSceneAsset } from "../../src/serialization/scene-asset.js";
 import { serializeScene } from "../../src/serialization/serialize.js";
 import { Everything, Tagger, buildFile, createSerializationWorld, entityRecord, fakeHandle } from "./fixtures.js";
