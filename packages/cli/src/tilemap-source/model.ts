@@ -430,8 +430,11 @@ export async function mapLimited<T, R>(items: readonly T[], limit: number, map: 
     while (next < items.length) {
       const index = next;
       next += 1;
-      // oxlint-disable-next-line no-await-in-loop -- the point is a bounded number in flight.
-      results[index] = await map(items[index] as T);
+      const item = items[index];
+      if (item !== undefined) {
+        // oxlint-disable-next-line no-await-in-loop -- the point is a bounded number in flight.
+        results[index] = await map(item);
+      }
     }
   };
   await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));

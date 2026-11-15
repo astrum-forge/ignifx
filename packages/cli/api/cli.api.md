@@ -33,7 +33,6 @@ export const CONVERT_TILEMAP_USAGE: string;
 // @public
 export interface ConvertTilemapCommand {
     readonly dropFlips: boolean;
-    // Warning: (ae-forgotten-export) The symbol "TilemapSourceKind" needs to be exported by the entry point index.d.ts
     readonly kind: TilemapSourceKind;
     readonly output: string | null;
     readonly pixelsPerUnit: number;
@@ -196,6 +195,9 @@ export function runImportTilemap(argv: readonly string[], io: ImportIo): Promise
 
 // @public
 export const TEMPLATE_ROOT_CANDIDATES: readonly string[];
+
+// @public
+export type TilemapSourceKind = "tiled" | "ldtk";
 
 // @public
 export const USAGE = "Usage: create-ignifx <target-dir> [--template <name>] [--overwrite] [--desktop]";

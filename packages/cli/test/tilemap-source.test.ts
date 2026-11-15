@@ -3,7 +3,7 @@ import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { CliError, convertTilemapSource, DEFAULT_TILEMAP_SOURCE_LIMITS } from "../src/tilemap.js";
-import type { TilemapSourceReader } from "../src/tilemap.js";
+import type { TilemapSourceLimits, TilemapSourceReader } from "../src/tilemap.js";
 
 /**
  * `@ignifx/cli/tilemap`: the pure converter behind `ignifx import tilemap`. It reads through the
@@ -324,7 +324,10 @@ describe("convertTilemapSource", () => {
   });
 
   it("keeps an undefined limit at its default", async () => {
-    const limits = { maxJsonLength: undefined, maxLayerCells: undefined };
+    // What a JavaScript caller can pass; TypeScript's exact optional types would refuse it.
+    const limits: Partial<TilemapSourceLimits> = {};
+    Reflect.set(limits, "maxLayerCells", undefined);
+    expect(Object.hasOwn(limits, "maxLayerCells")).toBe(true);
     const error = await failure(
       convertTilemapSource(tinyMap({ width: 1e6, height: 1e6 }), "tiled", nothing, { limits }),
     );

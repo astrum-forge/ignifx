@@ -264,14 +264,17 @@ interface AtlasState {
  * @returns The limits.
  */
 function mergeLimits(caps: Partial<TilemapSourceLimits> | undefined): TilemapSourceLimits {
-  const merged: Record<keyof TilemapSourceLimits, number> = { ...DEFAULT_TILEMAP_SOURCE_LIMITS };
-  for (const key of Object.keys(merged) as (keyof TilemapSourceLimits)[]) {
-    const value = caps?.[key];
-    if (value !== undefined) {
-      merged[key] = value;
-    }
-  }
-  return merged;
+  const pick = (key: keyof TilemapSourceLimits): number => caps?.[key] ?? DEFAULT_TILEMAP_SOURCE_LIMITS[key];
+  return {
+    maxJsonLength: pick("maxJsonLength"),
+    maxTotalJsonLength: pick("maxTotalJsonLength"),
+    maxLayerCells: pick("maxLayerCells"),
+    maxTotalCells: pick("maxTotalCells"),
+    maxLayers: pick("maxLayers"),
+    maxTilesets: pick("maxTilesets"),
+    maxTilesetTiles: pick("maxTilesetTiles"),
+    maxLevels: pick("maxLevels"),
+  };
 }
 
 /**
@@ -326,6 +329,7 @@ function uniqueTarget(target: string, taken: Set<string>, name: string, warnings
  * @param text - Its text.
  * @param limits - The limits.
  * @param total - The characters read so far; this file's are added.
+ * @param total.length - The count.
  * @returns The value.
  * @throws A `CliError` with code `IGX-1408` past `maxJsonLength`, or `IGX-1407` when it is not JSON.
  */
