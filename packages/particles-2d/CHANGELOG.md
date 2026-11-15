@@ -1,5 +1,13 @@
 # @ignifx/particles-2d
 
+## 0.21.0
+
+### Patch Changes
+
+- @ignifx/2d@0.21.0
+  - @ignifx/core@0.21.0
+  - @ignifx/particles@0.21.0
+
 ## 0.20.0
 
 ### Patch Changes
