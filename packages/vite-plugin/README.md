@@ -5,10 +5,10 @@ JSON file formats and the WGSL shaders, injects the project settings (`ignifx.se
 `ignifx.config.ts`), copies the static files
 extensions need, and carries asset changes to the running game over HMR.
 
-The package depends on nothing from the engine (`docs/architecture/00-overview.md` §2). It produces
-the files `@ignifx/core` consumes at runtime.
+The package imports nothing from the engine. It produces the files `@ignifx/core` consumes at
+runtime.
 
-> Status: pre-1.0. Breaking changes ship in minor releases (`CONSTITUTION.md` §4.2).
+> Status: pre-1.0. Breaking changes ship in minor releases.
 
 ## Install
 
@@ -30,7 +30,7 @@ export default defineConfig({
 });
 ```
 
-There is no default export: the plugin is the named factory `ignifx` (coding standards §4).
+There is no default export: the plugin is the named factory `ignifx`.
 
 ## What it does
 
@@ -79,7 +79,7 @@ ignifx({
 ## The manifest
 
 `assets.manifest.json` carries the `format`/`formatVersion` header every ignifx file format shares
-(`docs/architecture/06-serialization-and-scene-format.md` §6) and one entry per asset, sorted by
+and one entry per asset, sorted by
 address so that two builds of the same tree produce the same bytes:
 
 ```json
@@ -106,8 +106,17 @@ address so that two builds of the same tree produce the same bytes:
 - **url** — root-relative in development, content-hashed in a build. The hash goes _before_ the
   extension, and a two-segment JSON extension stays intact: `level1.scene.json` becomes
   `level1.<hash>.scene.json`, so the loader still recognises the format.
-- **type** — derived from the extension (`texture`, `model`, `scene`, `material`, `shader`,
-  `environment`, `font`, `audio`, `json`, `text`, `binary`); an unknown extension is `binary`.
+- **type** — derived from the file name; an unknown extension is `binary`. A two-segment JSON
+  extension is checked first: `.scene.json` and `.prefab.json` are `scene`, `.material.json`
+  `material`, `.mesh.json` `mesh`, `.probes.json` `lightprobes`, `.lightmap.json` `lightmap`,
+  `.input.json` `inputactions`, `.audio.json` `audiobuses`, `.physicsmaterial.json`
+  `physicsmaterial`, `.i18n.json` `i18n`, `.animator.json` `animator`, `.atlas.json` `spriteatlas`,
+  `.spriteanim.json` `spriteanimation`, `.tilemap.json` `tilemap`, `.particles.json` `particles`,
+  `.terrain.json` `terrain`. Then the last extension: `texture` (`.png`, `.jpg`, `.jpeg`, `.webp`,
+  `.ktx2`, `.basis`), `model` (`.glb`, `.gltf`), `environment` (`.env`, `.hdr`, `.dds`), `font`
+  (`.ttf`, `.otf`), `audio` (`.mp3`, `.ogg`, `.wav`), `shader` (`.wgsl`), `heightmap` (`.r16`),
+  `json`, `text` (`.txt`, `.md`, `.csv`) and `binary` (`.bin`, `.wasm`). The tables are exported as
+  `ASSET_TYPE_BY_SUFFIX` and `ASSET_TYPE_BY_EXTENSION`.
 - **groups** and **meta** — from the `.meta.json` sidecar; `meta` is omitted when there is none.
 
 ### Sidecars
@@ -137,7 +146,7 @@ Sidecars are never listed as assets of their own. Dot-prefixed files and directo
 
 ```ts
 import { manifest } from "virtual:ignifx/manifest";
-import { scripts } from "virtual:ignifx/scripts";
+import { acceptHotReload, scripts } from "virtual:ignifx/scripts";
 ```
 
 - **`virtual:ignifx/manifest`** exports `manifest`, the same object the generated JSON holds, so a
@@ -145,22 +154,21 @@ import { scripts } from "virtual:ignifx/scripts";
 - **`virtual:ignifx/scripts`** exports `scripts`, every class exported by the `scripts` glob that
   declares a `static typeId`. The list is sorted by module path, so registration order is the same on
   every machine, and the modules are imported through `import.meta.glob(..., { eager: true })`, which
-  puts each script file in Vite's HMR graph. The hot-reload _policies_ (patch vs. recreate) are
-  `@ignifx/devtools`' (`docs/architecture/15-devtools-and-diagnostics.md` §5); this package ships the
-  channel.
+  puts each script file in Vite's HMR graph. Pass the list to `app.registerComponents(scripts)`.
+  The module also exports `acceptHotReload(app)`, which subscribes the app to script hot reload in
+  development — a changed script module's registry is handed to `app.hotReload.apply(...)` — and
+  returns a function that unsubscribes; in a production build it does nothing. The hot-reload
+  _policies_ (patch vs. recreate) are `@ignifx/devtools`'; this package ships the channel.
 
-Add the declarations to your project so TypeScript knows the modules:
+The package ships the declarations for both modules and for `import.meta.env.IGNIFX_CONFIG`.
+Reference them once per project instead of writing your own:
 
 ```ts
 // src/vite-env.d.ts
-declare module "virtual:ignifx/manifest" {
-  import type { AssetManifest } from "@ignifx/vite-plugin";
-  export const manifest: AssetManifest;
-}
-declare module "virtual:ignifx/scripts" {
-  export const scripts: readonly (abstract new (...args: never[]) => unknown)[];
-}
+/// <reference types="@ignifx/vite-plugin/client" />
 ```
+
+The types of `virtual:ignifx/scripts` come from `@ignifx/core`, so the project needs it installed.
 
 ## Project config
 
@@ -171,9 +179,8 @@ Project settings come in two forms at the Vite root, and either, both, or neithe
 - **Code:** `ignifx.config.ts` (or `.mts`, `.js`, `.mjs`), loaded with Vite's own config loader. It
   must export a plain, JSON-serializable object by default.
 
-The plugin merges them and injects the result as `import.meta.env.IGNIFX_CONFIG`
-(`docs/architecture/04-extensions.md` §5). **Precedence: the config file wins, a whole section at a
-time.** A section only one form defines comes from that form; a section both define comes entirely
+The plugin merges them and injects the result as `import.meta.env.IGNIFX_CONFIG`. **Precedence: the
+config file wins, a whole section at a time.** A section only one form defines comes from that form; a section both define comes entirely
 from `ignifx.config.ts`, and the plugin warns that the JSON section has no effect (unless the two
 are equal, as when the config file spreads the JSON).
 
@@ -210,9 +217,9 @@ snapshot of one app's extensions and `createApp` reports an unregistered section
 ## Validation
 
 Every JSON file under the asset root whose name has a two-segment JSON extension — `.scene.json`,
-`.prefab.json`, `.material.json`, `.atlas.json`, `.input.json`, and the rest of the table in
-`docs/architecture/06-serialization-and-scene-format.md` §6 — must carry a `format` string and a
-positive integer `formatVersion`. Plain `.json` files are game data and are checked only if they
+`.prefab.json`, `.material.json`, `.atlas.json`, `.input.json`, and the rest of the two-segment
+extensions listed under [The manifest](#the-manifest) — must carry a `format` string and a positive
+integer `formatVersion`. Plain `.json` files are game data and are checked only if they
 declare a header of their own.
 
 When `schemas` is supplied, documents are also validated against the matching JSON Schema. The
@@ -221,7 +228,7 @@ validator implements the subset the generated schemas use — `type`, `required`
 `oneOf`, `anyOf`, and `$ref` to `#/$defs/*` — and reports anything outside it as `IGX-0653` rather
 than ignoring it. Annotations (`title`, `description`, `default`, `readOnly`, …) and `x-` extension
 keywords, such as the `x-ignifx-step` and `x-ignifx-group` core writes for the inspector, are
-skipped. There is no runtime dependency (coding standards §13).
+skipped. The validator adds no runtime dependency.
 
 Problems are reported with a JSON pointer:
 
@@ -279,8 +286,7 @@ import.meta.hot?.on("ignifx:asset-changed", ({ address, kind, url }) => {
 });
 ```
 
-`@ignifx/core`'s assets service subscribes to this and fires `AssetHandle.onReplaced`
-(`docs/architecture/05-assets-and-loading.md` §7). Editing `ignifx.config.ts` or
+`@ignifx/core`'s assets service subscribes to this and fires `AssetHandle.onReplaced`. Editing `ignifx.config.ts` or
 `ignifx.settings.json` restarts the dev server instead: the settings are injected as a `define`,
 which only a restart recomputes, and they are frozen at app construction anyway. The plugin loads
 and validates the edited settings first: if they fail (malformed JSON, a config file that throws, a
@@ -355,14 +361,14 @@ never pointed at `cdn.babylonjs.com` or the page root for a left-out decoder:
 ignifx({ decoders: { draco: false } }); // no Draco-compressed models in this game
 ```
 
-A `.basis` texture is the exception: Lite 1.34 always fetches its transcoder from the CDN, so in a
+A `.basis` texture is the exception: Babylon Lite always fetches its transcoder from the CDN, so in a
 project that uses this plugin a `.basis` load fails with `IGX-0509` before anything is fetched. Use
 `.ktx2`.
 
 ## Error codes
 
 The plugin runs before an `App` exists, so it throws its own `VitePluginError` with a code from the
-ranges `docs/architecture/15-devtools-and-diagnostics.md` §1 reserves. The codes are allocated from
+ranges the engine reserves for assets (`IGX-05xx`) and serialization (`IGX-06xx`). The codes are allocated from
 the top of each range so that the runtime codes `@ignifx/core` allocates from the bottom cannot
 collide with them.
 
