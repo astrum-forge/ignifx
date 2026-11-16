@@ -1,8 +1,29 @@
 # 03 · Scripting and Components
 
-**Status:** Design standard (pre-1.0) · **Package:** `@ignifx/core` · **Related:** `01-lifecycle-and-time.md`, `02-scene-graph.md`, `06-serialization-and-scene-format.md`, ADR-0004
+**Status:** Design standard; describes the engine as built (pre-1.0) · **Package:** `@ignifx/core` · **Related:** `01-lifecycle-and-time.md`, `02-scene-graph.md`, `06-serialization-and-scene-format.md`, ADR-0004
 
 The scripting model is the part of ignifx users touch most. It follows Unity's component/`MonoBehaviour` shape, with three deliberate differences: fields are declared through a schema instead of reflection or decorators, execution order is explicit, and frame-sequenced logic uses synchronous coroutines rather than `async` functions.
+
+**Source map** (paths under `packages/core/src/`)
+
+| Where                                                               | What                                                                                            |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `component/component.ts`, `component/component-type.ts`             | `Component`, `ComponentHooks`, `ComponentStatics`, `Component.define`                           |
+| `component/component-registry.ts`, `component/reference-tracker.ts` | Type ids and per-class statics (§4); tracked references                                         |
+| `script/script.ts`, `lifecycle/callbacks.ts`                        | `Script`, `ScriptCallbacks`; the one guarded call site for callbacks (§10)                      |
+| `schema/`                                                           | Field kinds, defaults, validation, encoding, `describeSchema`, `toJsonSchema` (§3)              |
+| `transform/transform-schema.ts`                                     | `transformSchema()`                                                                             |
+| `coroutine/coroutine-host.ts`, `script/wait.ts`                     | Coroutines (§5)                                                                                 |
+| `scheduler/scheduler.ts`, `extension/`                              | Phases and system registration (§6); services and app properties (§7)                           |
+| `tools/eslint-plugin-ignifx/src/rules/` (repository root)           | `no-async-lifecycle`, `no-entity-find-in-src`, `schema-field-shadowing`, `signal-connect-owner` |
+
+Invariants:
+
+- Callbacks and statics are never declared on `Component` or `Script`; they live on interfaces so a game never writes `override` (§2).
+- Fields come from a schema; no decorators, no reflection (§3, ADR-0004).
+- `typeId` is explicit and never derived from a class name (§4).
+- Only the scheduler calls script callbacks, through one call site that applies the pause and edit-mode gates (§6, §10).
+- Lifecycle callbacks are synchronous; frame-sequenced logic is a coroutine (§5, §8).
 
 ---
 
@@ -120,7 +141,7 @@ export class Mover extends Script.define({
   mode: enumOf(["walk", "run"] as const, "walk"),
   target: entityRef(), // Entity | null, resolved by uid at load
   follow: componentRef(Camera), // Camera | null
-  clip: asset(AudioClip), // AssetRef<AudioClip>; loaded with the scene (see 05-assets-and-loading.md)
+  clip: asset(AudioClip), // AssetHandle<AudioClip> | null; loaded with the scene (see 05-assets-and-loading.md)
   waypoints: array(vec3()),
   stats: record({ hp: i32(10), armor: f32(0) }),
 }) {
@@ -138,7 +159,7 @@ export class Mover extends Script.define({
 - The transform is described the same way though `Transform` declares no schema (its `position` and `rotation` getters are world-space, the file's values are local). `transformSchema()` holds the scene file's `transform` block as fields: `position` (`vec3`, step 0.01), `rotation` (`quat`, step 0.5 degrees) and `scale` (`vec3`, default one, step 0.01). `describeSchemas()` and `describeRegisteredSchemas` describe `ignifx/Transform` with it, `allowMultiple: false`, `package: "@ignifx/core"` and `builtIn: true`, the only entry to set `builtIn`: every entity has exactly one, a scene file stores it as the entity's `transform` block and never in `components`, so an inspector shows it with the components but never adds or removes it, and edits it whole (the editor protocol's `setTransform`), not with `setProp`.
 - Non-serialized runtime state is declared as ordinary class fields; the linter warns when a class field is named like a schema field.
 - `entityRef`/`componentRef` fields are `null` until the scene that contains both ends is fully constructed; they are guaranteed resolved before `awake`. They are tracked: the engine nulls them when the target is destroyed (`02-scene-graph.md` §4). A file reference can only point inside the same scene file (or an instanced sub-scene of it); cross-scene links are runtime patterns (`02-scene-graph.md` §10).
-- Changing a schema is a **file-format change** for that component; before 1.0 files are simply invalid and must be re-authored, after 1.0 the component provides a `migrate(fromVersion, data)` hook (`06-serialization-and-scene-format.md` §7).
+- Changing a schema is a **file-format change** for that component; files written with the old schema are invalid and must be re-authored; there is no migration hook (`06-serialization-and-scene-format.md` §7).
 
 ## 4. Registration and type ids
 
@@ -155,7 +176,7 @@ class Spawner extends Script {
   *spawnLoop() {
     while (true) {
       const enemy = this.world.instantiate(this.enemyPrefab.value, { position: this.transform.position });
-      const asset = yield this.app.assets.load(this.nextWave); // promise → resumes on first Update after settle
+      const wave = yield this.app.assets.load(this.nextWave).promise; // promise → resumes on first Update after settle
       yield waitSeconds(2);
       yield waitUntil(() => enemy.isDestroyed);
       yield; // next frame
