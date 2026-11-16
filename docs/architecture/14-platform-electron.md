@@ -127,7 +127,7 @@ IPC stays top-frame only: `installHostHandlers` refuses a sub-frame sender with 
 ## 4. Browser
 
 - Capability page: each template ships its fallback **inside its own `index.html`** — a `#unsupported` block revealed by `document.body.dataset.webgpu = "unavailable"` — rather than as a separate `webgpu-unsupported.html` file. It is shown when `createApp` rejects with `IgnifxError` code `IGX-0701` (WebGPU unavailable), and also when startup fails for any other reason, so a broken build is never a blank window. There is no shared `templates/_shared/` directory and no exported markup helper: the panel is three elements and a stylesheet rule, and every template already styles its own.
-- Headers: `SharedArrayBuffer` is not required by the MVP (no threaded physics), so no COOP/COEP headers are needed; if a future extension needs them the Vite plugin adds dev-server headers and documents hosting requirements.
+- Headers: `SharedArrayBuffer` is not required (no threaded physics), so no COOP/COEP headers are needed; if a future extension needs them the Vite plugin adds dev-server headers and documents hosting requirements.
 - Mobile: supported where WebGPU is (Chrome Android on qualifying GPUs, Safari 26+); touch input and `VirtualJoystick` cover controls; `resolutionScale` and `maxDevicePixelRatio` handle performance.
 
 ## 5. Headless (Node)
