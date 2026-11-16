@@ -2,7 +2,7 @@
 
 Stateless GPU particles: the `ParticleSystem` component, `.particles.json` definitions and
 presets, `app.particles`, and the CPU evaluator `@ignifx/particles-2d` shares
-(`docs/plan/2026-09-terrain-particles-shaders.md` §4). Nothing here imports `@babylonjs/lite`.
+(ADR-0025). Nothing here imports `@babylonjs/lite`.
 
 ## Classes
 

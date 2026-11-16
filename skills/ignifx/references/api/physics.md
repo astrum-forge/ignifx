@@ -6767,7 +6767,7 @@ const app = await createApp({ headless: true, extensions: [physics()] });
 
 > `const` **PHYSICS\_DIAGNOSTICS\_COUNTERS**: readonly `string`[]
 
-The counters `09-physics.md` §9 and the plan's diagnostics deliverable name.
+The counters `09-physics.md` §9 names.
 
 ***
 

@@ -1159,8 +1159,8 @@ The permissions a game window is allowed to ask Chromium for.
 
 #### Remarks
 
-Pointer lock and full screen are the two a game genuinely needs; measured on Electron 44.2.0
-(S9.1), `document.body.requestPointerLock` is present in a sandboxed `ignifx://` window and
+Pointer lock and full screen are the two a game genuinely needs; measured on Electron 44.2.0,
+`document.body.requestPointerLock` is present in a sandboxed `ignifx://` window and
 `navigator.getGamepads()` returns its four slots without any permission at all. Everything else —
 the camera, the microphone, geolocation, USB, HID, serial, notifications — is denied, because a
 game that has not asked for them has no business being able to prompt for them.
@@ -2559,7 +2559,7 @@ Two layers of defence, because one of them is a property of the URL parser rathe
 code and could in principle change:
 
 1. The `standard` privilege makes Chromium normalise `..` segments away before the request is
-   dispatched — measured on Electron 44.2.0 (S9.1), `fetch("ignifx://app/../outside.txt")`
+   dispatched — measured on Electron 44.2.0, `fetch("ignifx://app/../outside.txt")`
    reached the handler as `ignifx://app/outside.txt` and 404ed rather than escaping.
 2. This function resolves the path anyway and refuses anything that does not land inside `root`,
    which is what catches an encoded separator, a request that never went through Chromium, and

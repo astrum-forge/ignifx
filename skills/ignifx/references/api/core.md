@@ -4450,8 +4450,8 @@ A promise that settles once the transaction commits.
 
 ### InstancedMeshRenderer
 
-Draws one mesh many times from a caller-owned matrix slab, in a single draw call (the plan's
-§3.5).
+Draws one mesh many times from a caller-owned matrix slab, in a single draw call
+(`docs/architecture/07-rendering.md` §2.9).
 
 #### Example
 
@@ -6191,7 +6191,7 @@ The grid.
 **`Beta`**
 
 Lights PBR materials with a baked light-probe grid instead of the scene environment's diffuse
-light (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B2).
+light (`docs/architecture/07-rendering.md` §2.15).
 
 #### Remarks
 
@@ -7942,7 +7942,7 @@ The shader asset, or `null` for a PBR or Standard material. A hot reload of the
 > **get** **surfaces**(): readonly [`SurfaceShaderBinding`](#surfaceshaderbinding)[]
 
 The surface shaders layered onto this material, in the order they were attached
-(`docs/plan/2026-09-terrain-particles-shaders.md` §3.2).
+(ADR-0024).
 
 ###### Returns
 
@@ -9084,7 +9084,7 @@ What the component does, in one line, for an inspector.
 
 **`Beta`**
 
-A baked lightmap, or `null` (default) for none (GI Phase 2, step B3).
+A baked lightmap, or `null` (default) for none.
 
 ###### Remarks
 
@@ -13121,7 +13121,7 @@ The handle [Script.startCoroutine](#startcoroutine) returned.
 ### ShaderAsset
 
 A loaded `.wgsl` file: its source and what its pragmas declare
-(`docs/plan/2026-09-terrain-particles-shaders.md` §3.1).
+(ADR-0024).
 
 #### Remarks
 
@@ -13369,7 +13369,7 @@ was constructed without an `onHandlerError` reporter.
 ### StorageBufferAsset
 
 A read-only GPU buffer a custom shader indexes
-(`docs/plan/2026-09-terrain-particles-shaders.md` §2.2).
+(`docs/architecture/07-rendering.md` §2.9).
 
 #### Remarks
 
@@ -21088,8 +21088,8 @@ see `SceneAssetToken`. Nothing reads it at runtime.
 
 ### AutoExposureSettings
 
-Auto exposure under `rendering.hdr` (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G14):
-a compute pass meters the HDR scene and eases the exposure towards middle grey.
+Auto exposure under `rendering.hdr` (`docs/architecture/07-rendering.md` §2.7): a compute pass
+meters the HDR scene and eases the exposure towards middle grey.
 
 #### Remarks
 
@@ -21196,7 +21196,7 @@ Two bloom passes share the record. Without `rendering.hdr` it is Lite's LDR bloo
 chain after tone mapping, and `order`, `weight`, `kernel`, `threshold`, `exposure` and `scale`
 apply. With `rendering.hdr` the HDR bloom **replaces** it: a downsample/upsample chain on the
 linear scene colour, always before the output pass whatever `order` says, tuned by `intensity`,
-`radius` and `hdrThreshold` (GI plan step G12).
+`radius` and `hdrThreshold`.
 
 #### Properties
 
@@ -22068,8 +22068,8 @@ The console to write to. Defaults to the host `console`.
 
 ### ContactShadowsEffectSettings
 
-The `contactShadows` record a `PostProcessStack` declares (GI plan step G10,
-`docs/architecture/07-rendering.md` §2.7): Lite's screen-space contact shadows towards the main
+The `contactShadows` record a `PostProcessStack` declares
+(`docs/architecture/07-rendering.md` §2.7): Lite's screen-space contact shadows towards the main
 directional light, fed from the shared scene-input depth.
 
 #### Properties
@@ -26469,7 +26469,7 @@ ambient occlusion, and the parent-LOD height a terrain morph reads all ride here
 
 **`Beta`**
 
-The `lightmap` record of a [MeshRenderer](#meshrenderer) (GI Phase 2, step B3).
+The `lightmap` record of a [MeshRenderer](#meshrenderer).
 
 #### Remarks
 
@@ -27025,8 +27025,7 @@ Roughness factor, 0 to 1.
 > `readonly` **surfaces**: readonly [`SurfaceShaderReference`](#surfaceshaderreference)[]
 
 The `.surface.wgsl` files layered onto this material, in the order they are applied
-(`docs/plan/2026-09-terrain-particles-shaders.md` §3.2). It needs
-`rendering.features.materialPlugins`.
+(ADR-0024). It needs `rendering.features.materialPlugins`.
 
 ##### textures
 
@@ -30080,7 +30079,7 @@ The value; a boolean compiles to `bool`, a number to `f32`.
 ### ShaderMaterialDefinition
 
 The properties a `"shader"` material declares: which shader, and what to set on it
-(`docs/plan/2026-09-terrain-particles-shaders.md` §3.1).
+(ADR-0024).
 
 #### Properties
 
@@ -30533,9 +30532,9 @@ Ring count; higher is smoother. Lite defaults to 32.
 
 **`Beta`**
 
-The `ssgi` record a `PostProcessStack` declares (GI plan step G11,
-`docs/architecture/07-rendering.md` §2.7): Lite's `@beta` screen-space global illumination, one
-bounce of the lit scene colour. Desktop tier.
+The `ssgi` record a `PostProcessStack` declares (`docs/architecture/07-rendering.md` §2.7):
+Lite's `@beta` screen-space global illumination, one bounce of the lit scene colour. Desktop
+tier.
 
 #### Properties
 
@@ -34877,8 +34876,8 @@ The placement every entity without an entry gets: the whole texture.
 > `const` **IGNIFX\_UNIFORM\_NAMES**: readonly \[`"time"`, `"unscaledTime"`, `"deltaTime"`, `"mainLightDirection"`, `"mainLightColor"`, `"ambientColor"`\]
 
 The uniforms **ignifx** fills in every frame, read in WGSL as `shaderUniforms.<name>`
-(`docs/plan/2026-09-terrain-particles-shaders.md` §3.1). Babylon Lite has no clock and no light
-bindings for a shader material, so these are the engine's own addition.
+(ADR-0024). Babylon Lite has no clock and no light bindings for a shader material, so these are
+the engine's own addition.
 
 ***
 
@@ -35188,7 +35187,7 @@ How many `texture`/`sampler` pairs one material's plugins may declare together.
 
 #### Remarks
 
-Measured on a device on 2026-09-08 (spike S0.2): a fully textured PBR material — base colour,
+Measured on a device on 2026-09-08: a fully textured PBR material — base colour,
 normal, ORM, emissive — with image-based lighting and one PCF shadow light already binds seven
 textures and seven samplers of the sixteen per stage that every WebGPU implementation guarantees,
 SwiftShader included, and Lite requests no higher `requiredLimits`. Nine is what is left, and it
@@ -37079,8 +37078,8 @@ The backend.
 #### Remarks
 
 Node only: the factory loads `node:fs/promises` and rejects on a host that has none. It is what
-`createApp({ storage: { directory } })` calls, and it is exported so that tooling — `ignifx bake`,
-a future authoritative server — can build one without an app.
+`createApp({ storage: { directory } })` calls, and it is exported so that tooling can build one
+without an app.
 
 #### Throws
 
@@ -37219,9 +37218,8 @@ IgnifxError with code `IGX-0709` when a placement is malformed.
 
 **`Beta`**
 
-Builds the loader for `.lightmap.json` lightmaps (GI Phase 2, step B3). The texture the file names
-loads as a dependency, so it is released with the lightmap; a texture that fails to load fails
-the lightmap.
+Builds the loader for `.lightmap.json` lightmaps. The texture the file names loads as a
+dependency, so it is released with the lightmap; a texture that fails to load fails the lightmap.
 
 #### Returns
 
@@ -37271,8 +37269,8 @@ IgnifxError with code `IGX-0709` when the grid is malformed.
 
 **`Beta`**
 
-Builds the loader for `.probes.json` light-probe grids (GI Phase 2, step B2). It needs no device,
-so a grid loads in Node too.
+Builds the loader for `.probes.json` light-probe grids. It needs no device, so a grid loads in
+Node too.
 
 #### Returns
 
@@ -38284,7 +38282,7 @@ The description of the top-level file fields.
 
 **`Beta`**
 
-Describes the `.lightmap.json` lightmap format (GI Phase 2, step B3).
+Describes the `.lightmap.json` lightmap format.
 
 #### Returns
 
@@ -38300,7 +38298,7 @@ The description of the top-level file fields.
 
 **`Beta`**
 
-Describes the `.probes.json` light-probe grid format (GI Phase 2, step B2).
+Describes the `.probes.json` light-probe grid format.
 
 #### Returns
 
