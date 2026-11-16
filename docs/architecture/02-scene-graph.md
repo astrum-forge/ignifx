@@ -1,6 +1,28 @@
 # 02 · Scene Graph: World, Scenes, Entities, Transforms
 
-**Status:** Design standard (pre-1.0) · **Package:** `@ignifx/core` · **Related:** `01-lifecycle-and-time.md`, `03-scripting-and-components.md`, `06-serialization-and-scene-format.md`, ADR-0005
+**Status:** Design standard; describes the engine as built (pre-1.0) · **Package:** `@ignifx/core` · **Related:** `01-lifecycle-and-time.md`, `03-scripting-and-components.md`, `06-serialization-and-scene-format.md`, ADR-0005
+
+**Source map** (paths under `packages/core/src/`)
+
+- `world/world.ts`: `World`: entity registry, scenes, load, instantiate, world signals.
+- `scene/scene-instance.ts`: `SceneInstance`.
+- `entity/entity.ts`, `entity/entity-path.ts`: `Entity`, `find(path)`.
+- `transform/transform.ts`, `lite/node.ts`: `Transform` and the Lite node it wraps; the `metadata.ignifx` bridge.
+- `signal/signal.ts`: `Signal`.
+- `layers/`, `tags/tag-set.ts`: `LayerTable`, `LayerMask`, `TagSet`.
+- `ids/ulid.ts`, `handles/`: uids and run-time handles.
+- `serialization/prefab-overrides.ts`, `prefab.ts`: `applyOverridesToAsset`, `revertOverrides`; the `@ignifx/core/prefab` entry.
+
+The interface listings below are the members a reader needs to follow the design; the full, generated list is `packages/core/api/core.api.md`.
+
+Invariants:
+
+- Every entity has exactly one `Transform`, and it is a view over the Lite node: no second copy of position, rotation or scale exists (§1, §5).
+- Pure transform nodes are not added to the Lite scene; deactivation hides the subtree, only destroy removes from the scene (§5.1).
+- Files store layers by name and references by uid, never by index or path (§7, §10).
+- Tracked reference fields are nulled in the destroy flush before the holder's `onDestroy` (§4).
+- File references never cross scene files; an instance path is the only way into a prefab instance (§10).
+- `isStatic` cannot change after `awake` outside edit mode (§4).
 
 ---
 
@@ -24,18 +46,22 @@ interface World {
   readonly scenes: readonly SceneInstance[];
   activeScene: SceneInstance; // default owner for entities created in code
 
-  createEntity(
-    name?: string,
-    options?: { parent?: Entity; scene?: SceneInstance; position?: Vec3Like; rotation?: QuatLike },
-  ): Entity;
+  createEntity(name?: string, options?: CreateEntityOptions): Entity; // parent, scene, position, rotation, active, uid
+  createScene(name: string, options?: CreateSceneOptions): SceneInstance; // an empty scene instance made in code
   getEntity(uid: string): Entity | null;
   getEntityByHandle(handle: EntityHandle): Entity | null;
   findByName(name: string): Entity | null; // first match, depth-first; prototyping only
   findAllByName(name: string): Entity[];
   findByTag(tag: string): readonly Entity[]; // indexed, O(1) to obtain, live read-only view
   components<T extends Component>(type: ComponentType<T>): readonly T[]; // live per-type registry used by systems
+  getComponentByHandle(handle: ComponentHandle): Component | null;
+  readonly registry: ComponentRegistry; // component types by id (03 §4)
+  readonly layers: LayerTable; // §7
+  readonly mainCamera: Camera | null; // 07 §2.1
+  raycastRender(ray: Ray, options?: RenderPickOptions): RenderPick | null; // 07 §3
 
   loadScene(scene: AssetRef<SceneAsset> | string, options?: LoadSceneOptions): Promise<SceneInstance>;
+  loadSceneFile(file: SceneFile, options: LoadSceneFileOptions): Promise<SceneInstance>; // a parsed file, for tools
   unloadScene(instance: SceneInstance): Promise<void>;
   instantiate(scene: SceneAsset, options?: InstantiateOptions): Entity; // scene asset already loaded
   instantiateAsync(scene: AssetRef<SceneAsset> | string, options?: InstantiateOptions): Promise<Entity>;
@@ -54,6 +80,7 @@ interface LoadSceneOptions {
   signal?: AbortSignal;
   onProgress?: (p: LoadProgress) => void;
   setActive?: boolean;
+  strictInstanceHashes?: boolean; // 06 §2
 }
 interface InstantiateOptions {
   parent?: Entity | null;
@@ -62,6 +89,7 @@ interface InstantiateOptions {
   position?: Vec3Like;
   rotation?: QuatLike;
   worldSpace?: boolean;
+  strictInstanceHashes?: boolean;
 }
 ```
 
@@ -103,7 +131,7 @@ interface Entity {
   layer: number; // 0..31; see §7
   readonly tags: TagSet; // add(tag) / has(tag) / delete(tag) / values()
   readonly isDestroyed: boolean;
-  readonly isStatic: boolean; // hint: transform will not change after awake (batching, physics static)
+  isStatic: boolean; // hint: transform will not change after awake (batching, physics static); see the rules below
 
   // hierarchy
   setParent(parent: Entity | null, options?: { worldPositionStays?: boolean }): void; // default true
@@ -139,7 +167,7 @@ Rules:
 
 - `getComponent` matches by class identity **and** inheritance (`getComponent(Script)` returns the first script). Cost is linear in the entity's component count; cache results in `awake`.
 - `find(path)` is deliberately fragile (the Godot `get_node` lesson). Serialized references (`06-serialization-and-scene-format.md`) and `requireComponent` are the supported way to link objects; `find` is allowed only in tests, examples, and tools; the linter flags it anywhere else.
-- `isStatic` is set in files (or before `awake`) and cannot change afterwards. It lets the 2D batcher, physics, and navmesh treat the entity as immovable.
+- `isStatic` is set in files (or before `awake`) and cannot change afterwards: the setter throws once the entity has awoken, except in edit mode. It lets the 2D batcher, physics, and navmesh treat the entity as immovable.
 - `name` is not unique and never used for lookup by the engine.
 - **Tracked references.** Fields declared with `entityRef`/`componentRef` are tracked: when the target is destroyed, the engine sets the field to `null` in the same destroy flush, before any `onDestroy` of the holder. Plain class fields holding entities or components are not tracked; check `isDestroyed` before use.
 
@@ -196,12 +224,12 @@ interface Transform extends Component {
 
 - A scene file (`06-serialization-and-scene-format.md`) describes a tree of entities. There is one file format for levels and prefabs (ADR-0005); the `.prefab.json` suffix is a convention for scenes meant to be instantiated many times.
 - An entity in a scene file may be an **instance** of another scene asset: `{"instance": {"scene": "prefabs/enemy.prefab.json", "overrides": [...]}}`. On load a single-root scene's root merges into that entity, as `world.instantiate` answers with that root; a scene with several roots is created under it. Then overrides (property patches addressed by the _instanced_ file's entity/component uids) are applied. Nested instances are allowed to any depth; cycles are rejected (`IGX-0302`).
-- At runtime, `Entity.prefab` (`{ asset, instanceRoot }`) identifies entities that came from an instance, so tooling can show the link. The engine itself does not maintain a live link back to the prefab after load. Tooling applies and reverts overrides on the files with `applyOverridesToAsset(instance, prefabFile)` and `revertOverrides(instance, { paths })`, pure functions over `SceneFile` that the editor and the CLI share; apply never edits a nested prefab, and leaves a single-root instance root's own fields and transform on the instance, since they are its placement. Components added on such a root are not overrides; the caller passes them as `rootComponents` to apply them too. Both functions are also exported from `@ignifx/core/prefab`, which loads no renderer.
+- At runtime, `Entity.prefab` (`{ address, asset, instanceRoot }`) identifies entities that came from an instance, so tooling can show the link. The engine itself does not maintain a live link back to the prefab after load. Tooling applies and reverts overrides on the files with `applyOverridesToAsset(instance, prefabFile)` and `revertOverrides(instance, { paths })`, pure functions over `SceneFile` that the editor and the CLI share; apply never edits a nested prefab, and leaves a single-root instance root's own fields and transform on the instance, since they are its placement. Components added on such a root are not overrides; the caller passes them as `rootComponents` to apply them too. Both functions are also exported from `@ignifx/core/prefab`, which loads no renderer.
 - `persistent` scene instances model Unity's `DontDestroyOnLoad`; moving a single entity between scenes uses `moveEntityToScene`.
 
 ## 7. Layers and tags
 
-- **Layers** are 32 slots. Names live in project settings (`ignifx.config.ts` → `layers: ["Default", "Ground", "Player", ...]`); slots 0–7 are reserved for engine defaults (`Default`, `TransparentFX`, `IgnoreRaycast`, `Water`, `UI`, and three reserved). Layers drive physics collision matrices and raycast masks now, and camera culling masks after 1.0. `world.layers.mask("Player", "Enemy")` builds a bitmask from names (the form scripts use); `LayerMask.of(...slots)` takes slot numbers and `LayerMask.fromNames(table, names)` is the standalone equivalent. Files store layers by **name**, never by index, so reordering the list is safe; an unknown name loads as `Default` with diagnostic `IGX-0303`, and a planned `ignifx rename-layer <old> <new>` will rewrite files (not implemented yet; see `06-serialization-and-scene-format.md` §7).
+- **Layers** are 32 slots. Names live in project settings (`ignifx.config.ts` → `layers: ["Default", "Ground", "Player", ...]`); slots 0–7 are reserved for engine defaults (`Default`, `TransparentFX`, `IgnoreRaycast`, `Water`, `UI`, and three reserved). Layers drive physics collision matrices and raycast masks; cameras have no culling mask. `world.layers.mask("Player", "Enemy")` builds a bitmask from names (the form scripts use); `LayerMask.of(...slots)` takes slot numbers and `LayerMask.fromNames(table, names)` is the standalone equivalent. Files store layers by **name**, never by index, so reordering the list is safe; an unknown name loads as `Default` with diagnostic `IGX-0303`. No tool rewrites files when a layer is renamed (`06-serialization-and-scene-format.md` §7).
 - **Tags** are free-form strings on a set; the world indexes them for `findByTag`. Tags are for grouping and lookup, never for behaviour dispatch.
 - 2D **sorting layers** are a separate ordered list in project settings (`11-2d-toolkit.md`).
 
@@ -224,7 +252,7 @@ class Signal<T = void> {
 - `entity.onComponentAdded` / `entity.onComponentRemoved` emit when the entity's component set changes: `onComponentAdded` synchronously at the end of `addComponent`, after `onAttach`; `onComponentRemoved` in the destroy flush, once the component has left `entity.components`. Both are created on first access; extensions use them to react to scripts being attached (`09-physics.md` §2.1).
 - `owner` auto-disconnects the handler when the owner is destroyed. Scripts should always pass `owner: this`; the linter flags `connect` calls inside scripts without an owner.
 - Convention: **call down, signal up**. A parent calls methods on children it owns; a child emits signals that parents subscribe to. There is no `sendMessage`/broadcast-by-name facility (Unity lesson).
-- Engine-wide events live on `app.events` as typed signals (`app.events.onSceneLoaded`, etc.); extensions add their own via module augmentation. Phase 1 ships the world-level signals only (`world.onEntityCreated`, `onEntityDestroyed`, `onSceneLoaded`, `onSceneUnloaded`); `app.events` arrives with the asset and scene loading of Phase 2.
+- Engine-wide events live on `app.events` as typed signals: `onSceneLoaded`, `onSceneUnloaded`, and the device signals `onDeviceLost`, `onDeviceRecovered` and `onDeviceRecoveryFailed` (`07-rendering.md` §4). The world carries its own `onEntityCreated`, `onEntityDestroyed`, `onSceneLoaded` and `onSceneUnloaded`.
 
 ## 9. Queries for systems
 
@@ -235,4 +263,4 @@ class Signal<T = void> {
 
 - `entity.uid` is generated with ULID on creation and preserved by files. A scene's own entities adopt their file uids when those are free in the world (a fresh ULID on collision); every entity produced by an `instance` entry gets a fresh runtime uid while the _file-local_ uids stay valid for override addressing; the mapping is stored on the `SceneInstance`.
 - Every Lite node created by ignifx gets `metadata.ignifx = { entity: EntityHandle, component?: ComponentHandle }` so Lite picking results and physics bodies map back to entities.
-- File references (`$entity`, `$component`) never cross scene files. A scene reaches into one of its prefab instances with an instance path, `"<instanceRootUid>/<uidInThePrefab>"`, which names the object in the prefab file and resolves to this instance's copy. Runtime links between scene instances (a persistent HUD scene reading the gameplay scene's player) use `world.findByTag`, `world.getEntity(uid)` for persistent scenes with known uids, or, preferably, a script in a persistent scene that registers itself in `app.services` (documented as the `cross-scene-links` recipe).
+- File references (`$entity`, `$component`) never cross scene files. A scene reaches into one of its prefab instances with an instance path, `"<instanceRootUid>/<uidInThePrefab>"`, which names the object in the prefab file and resolves to this instance's copy. Runtime links between scene instances (a persistent HUD scene reading the gameplay scene's player) use `world.findByTag`, `world.getEntity(uid)` for persistent scenes with known uids, or, preferably, a script in a persistent scene that registers itself in `app.services`.
