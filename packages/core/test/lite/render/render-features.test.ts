@@ -15,10 +15,11 @@ import { createHeadlessScene, disposeSceneOnly } from "../../../src/lite/scene.j
 import type { RenderingFeatures } from "../../../src/lite/render-features.js";
 
 /**
- * Spike S2.3, headless half. Every Lite feature opt-in except device-loss recovery turns out to be
- * device-free — each one only installs a hook or a lazily imported shader fragment — so the whole
- * ordering can be exercised on the null engine. What cannot be checked here is that a **late** call
- * has no effect: Lite reports nothing either way, which is why ignifx polices it with `IGX-0704`.
+ * The feature opt-ins, headless half. Every Lite feature opt-in except device-loss recovery turns
+ * out to be device-free — each one only installs a hook or a lazily imported shader fragment — so
+ * the whole ordering can be exercised on the null engine. What cannot be checked here is that a
+ * **late** call has no effect: Lite reports nothing either way, which is why ignifx polices it with
+ * `IGX-0704`.
  */
 
 /** Every feature that needs no device: post-processing and device-loss recovery both do. */
@@ -36,7 +37,7 @@ const ALL_DEVICE_FREE_FEATURES: RenderingFeatures = {
 
 describe("the declared feature set", () => {
   it("names the eight blocks of docs/architecture/07-rendering.md §1.1, plus postProcessing", () => {
-    // `postProcessing` is not in §1.1's original list: it was added after the Phase 2 visual suite
+    // `postProcessing` is not in §1.1's original list: it was added after the visual suite
     // showed that a chain cannot sample the swapchain, which makes the render path a start-time
     // decision (ADR-0002, "Corrections after the visual suite").
     expect([...RENDERING_FEATURE_NAMES]).toEqual([

@@ -444,7 +444,7 @@ export class PhysicsRuntime {
   /**
    * Restores the authoritative pose of every interpolated body and controller, undoing the display
    * pose the `Update` system wrote at the top of the previous frame's `Update`
-   * (`09-physics.md` §1, spike S4.3).
+   * (`09-physics.md` §1).
    */
   restorePoses(): void {
     for (let index = 0; index < this.#records.length; index += 1) {

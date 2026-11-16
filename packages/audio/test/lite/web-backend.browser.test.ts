@@ -11,8 +11,7 @@ import type { AudioBackendContext } from "../../src/backend/types.js";
 import type { App, AssetHandle } from "@ignifx/core";
 
 /**
- * The Web Audio backend against a real browser audio graph (`docs/plan/engineering-plan.md` Phase 5
- * exit criteria).
+ * The Web Audio backend against a real browser audio graph.
  *
  * ## Why an `OfflineAudioContext`
  *

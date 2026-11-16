@@ -10,7 +10,7 @@ import type { ThreeDAppHarness } from "../support/harness.js";
 import type { Entity } from "@ignifx/core";
 
 /**
- * Navigation, headless (`docs/architecture/12-3d-toolkit.md` §5, and the Phase 7 exit criteria).
+ * Navigation, headless (`docs/architecture/12-3d-toolkit.md` §5).
  *
  * Every test here runs in plain Node with no GPU and no canvas: `createNavigationPluginAsync`
  * resolves against the WebAssembly Babylon Lite inlines as a `data:` URL, so nothing has to be

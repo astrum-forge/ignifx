@@ -7,7 +7,7 @@ import type { InterpolationMode } from "../../src/components/rigidbody.js";
 import type { ScriptCallbacks } from "@ignifx/core";
 
 /**
- * **Spike S4.3 — interpolation never leaks into Havok.**
+ * **Interpolation never leaks into Havok.**
  *
  * `Systems(Update, -900)` writes `lerp(prev, cur, alpha)` into the entity's node at the top of
  * `Update`, and `Systems(FixedUpdate, -100)` puts the authoritative pose back before anything reads
@@ -48,7 +48,7 @@ class DriveX extends Script implements ScriptCallbacks {
   }
 }
 
-describe("S4.3 · interpolation", () => {
+describe("interpolation", () => {
   it("gives a dynamic body the same simulation with and without a display pose", async () => {
     const interpolated = await run("interpolate");
     const plain = await run("none");

@@ -169,7 +169,7 @@ describe("playback", () => {
     rig.step();
     harness?.app.pause();
     // Not a whole number of clip periods: 5 s at 2 fps over a 10-frame clip landed back on frame 0
-    // and hid the fact that the animation was advancing under the pause (found in Phase 7).
+    // and hid the fact that the animation was advancing under the pause.
     rig.advance(0.75);
     expect(rig.sprite.frame).toBe(0);
     rig.advance(5);

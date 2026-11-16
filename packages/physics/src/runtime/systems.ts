@@ -43,7 +43,7 @@ export const PHYSICS_INTERPOLATE_ORDER = -900;
 
 /**
  * Undoes the display pose the interpolation system wrote at the top of the previous `Update`, so
- * `fixedUpdate` and Havok both see the authoritative pose (spike S4.3).
+ * `fixedUpdate` and Havok both see the authoritative pose.
  *
  * @internal
  */

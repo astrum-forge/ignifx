@@ -22,7 +22,7 @@ import type {
  * the swapchain texture, and a post-process pass cannot read it: `createSurface` configures the
  * canvas context with no `usage` (`lib/engine/surface.js` 30), so the swapchain texture is
  * `RENDER_ATTACHMENT` only. Binding it as a sampled texture fails WebGPU validation, the whole
- * frame's command buffer is rejected, and the page presents black. That is exactly what the Phase 2
+ * frame's command buffer is rejected, and the page presents black. That is exactly what the
  * visual suite measured, and it is why this module exists.
  *
  * Lite offers no way to retarget the default task after the fact — `RenderTaskConfig.rt` is read

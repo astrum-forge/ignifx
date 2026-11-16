@@ -1,7 +1,8 @@
 /**
- * Independent 4x4 column-major matrix arithmetic for the S1.1 spike. Written with plain `+`/`*` so
- * the expected values a test asserts never come from Babylon Lite's own math — if Lite changed its
- * layout or its quaternion convention, these helpers would disagree and the test would fail.
+ * Independent 4x4 column-major matrix arithmetic for the transform-node tests. Written with plain
+ * `+`/`*` so the expected values a test asserts never come from Babylon Lite's own math — if Lite
+ * changed its layout or its quaternion convention, these helpers would disagree and the test would
+ * fail.
  *
  * Column-major means element `i` is row `i % 4` of column `floor(i / 4)`, and the translation lives
  * in elements 12, 13, 14 — the layout Lite documents for `Mat4` and the one WGSL's `mat4x4<f32>`

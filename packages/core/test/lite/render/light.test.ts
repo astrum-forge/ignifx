@@ -25,7 +25,7 @@ import { degToRad } from "../../../src/math/math-utils.js";
  * The light adapter, headless. Every Lite light is plain data with a lazily composed world matrix,
  * so all of this runs on the null engine; only shadow generators need a device.
  *
- * The claim under test throughout is the one the Phase 2 visual suite forced: an ignifx light is
+ * The claim under test throughout is the one the visual suite forced: an ignifx light is
  * **never parented** in Lite, and `syncLightWorldPose` is the single place its world pose is
  * written — so the world direction and position Lite derives for shading and for the shadow
  * frustum are exactly the ones written.

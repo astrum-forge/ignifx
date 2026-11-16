@@ -4,9 +4,8 @@ import { expect, test } from "playwright/test";
 import type { Page } from "playwright/test";
 
 /**
- * The four Phase 2 exit-criterion scenes (`docs/plan/engineering-plan.md`, Phase 2): a hello cube,
- * a PBR model with image-based lighting and shadows, an orthographic camera, and a post-process
- * stack — each against a committed golden.
+ * Four scenes: a hello cube, a PBR model with image-based lighting and shadows, an orthographic
+ * camera, and a post-process stack — each against a committed golden.
  *
  * ## The defects the first rounds of goldens recorded are fixed
  *
@@ -66,7 +65,7 @@ async function openScene(page: Page, url: string): Promise<void> {
   expect(status, "the browser did not give the example a WebGPU device").toBe("ready");
 }
 
-test.describe("Phase 2 golden scenes", () => {
+test.describe("golden scenes", () => {
   test("hello cube", async ({ page }) => {
     await openScene(page, `${HELLO_CUBE}/?static=1`);
     await expect(page).toHaveScreenshot("hello-cube.png", { maxDiffPixelRatio: 0.02 });

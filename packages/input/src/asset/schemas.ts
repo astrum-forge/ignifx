@@ -6,7 +6,7 @@ import type { JsonSchemaObject, SchemaDescription } from "@ignifx/core";
  * (`docs/architecture/16-docs-harness-and-skill.md` §3, `scripts/README.md`). The generated page
  * takes its name from the format id, so the field table lands on
  * `skills/ignifx/references/formats/ignifx.inputactions.md`, with the hand-written prose page
- * `inputactions.md` beside it — the same split Phase 2 settled for the scene and material formats.
+ * `inputactions.md` beside it — the same split the scene and material formats use.
  */
 
 /**

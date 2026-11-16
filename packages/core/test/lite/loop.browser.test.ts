@@ -9,11 +9,11 @@ import { createWebGpuEngine, disposeWebGpuEngine } from "../../src/lite/render.j
 import { createRenderScene, disposeSceneOnly, type LiteEngine } from "../../src/lite/scene.js";
 
 /**
- * Spike S1.2, browser half: the real requestAnimationFrame loop. `startEngine` needs a WebGPU
- * device, so this is the one part of the loop adapter that cannot be checked headlessly.
+ * The single-callback loop, browser half: the real requestAnimationFrame loop. `startEngine` needs
+ * a WebGPU device, so this is the one part of the loop adapter that cannot be checked headlessly.
  */
 
-describe("S1.2 · the Lite render loop", () => {
+describe("the Lite render loop", () => {
   it("registers the scene, runs frames, and stops", async () => {
     const canvas = document.createElement("canvas");
     canvas.width = 64;

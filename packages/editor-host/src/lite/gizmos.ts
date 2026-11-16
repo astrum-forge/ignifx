@@ -5,8 +5,7 @@
  * This is the only module of the editor host that imports Lite (`CONSTITUTION.md` §3.4). The rest
  * of the host reaches it through {@link createEditorView}, which takes and returns ignifx objects
  * and plain data. Every Lite claim here was read from the pinned `@babylonjs/lite` 1.34
- * `index.d.ts`; the behaviours are the ones spike S0.2 measured (editor repository,
- * `docs/research/spikes/s0.2-gizmos-and-cameras.md`).
+ * `index.d.ts`, and the behaviours were measured on a device.
  */
 
 import {
@@ -147,11 +146,11 @@ const MIN_OUTLINE_SIDE = 1e-3;
  * The gizmos and the outline live in core's render overlay (`app.renderer.openOverlay()`, ADR-0031),
  * whose Lite scenes have the shape Lite's gizmo constructors take as a utility layer. Core draws it
  * over the finished frame at every MSAA setting; Lite's own utility layer blacks out the scene or
- * draws nothing in an ignifx app (S0.2 §3.2).
+ * draws nothing in an ignifx app.
  *
  * A detached Lite gizmo keeps drawing at its last pose, so a hidden sub-gizmo is collapsed to zero
- * scale; Lite restores the scale when it is attached again (S0.2 §3.3). The outline is a line box,
- * because Lite's bounding-box gizmo drags whatever is pressed inside it (S0.2 §7).
+ * scale; Lite restores the scale when it is attached again. The outline is a line box,
+ * because Lite's bounding-box gizmo drags whatever is pressed inside it.
  *
  * @param handles - The app's Lite engine and render scene (`app.lite`).
  * @param overlay - An open render overlay of the same app, which the view now owns.
@@ -338,7 +337,7 @@ function parentNode(node: object): object | null {
  *
  * @remarks
  * Walking `node.children` is not enough: a `Model` parents its cloned glTF root with a bare
- * `parent` assignment, which leaves the entity node's `children` empty (S0.2 §6.1). So the scene's
+ * `parent` assignment, which leaves the entity node's `children` empty. So the scene's
  * meshes are scanned and kept when their parent chain reaches the node, as Lite's own bounding-box
  * gizmo does.
  *

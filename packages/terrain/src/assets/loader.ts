@@ -17,7 +17,7 @@ import type { AssetLoader, LoaderContext } from "@ignifx/core";
  * heightmaps they name (`docs/architecture/05-assets-and-loading.md` §5).
  *
  * Every image a terrain needs is fetched as **bytes** and decoded by this package, because no
- * browser image API returns a 16-bit PNG losslessly (spike S0.3) and a layer image has to reach a
+ * browser image API returns a 16-bit PNG losslessly and a layer image has to reach a
  * texture array rather than a `texture_2d`.
  */
 

@@ -148,8 +148,8 @@ export type PickAccept = (tag: NodeTag | null, mesh: Mesh) => boolean;
  * A `MeshRenderer` tags the mesh it clones, but a `Model` tags only the cloned glTF root, and the
  * meshes Lite draws are that root's descendants (`render/gpu/model-instance.ts`). Walking up to the
  * nearest tag resolves both, and any other renderable that parents several Lite nodes under one
- * tagged node, to the entity and component that created them (editor spike S0.2 §6.1). The walk
- * stops at the first tag, so an entity parented under a model's bone still owns its own meshes.
+ * tagged node, to the entity and component that created them. The walk stops at the first tag, so
+ * an entity parented under a model's bone still owns its own meshes.
  *
  * @param node - The picked node, usually a mesh.
  * @returns The nearest tag, or `null` when no node on the way to the root carries one.

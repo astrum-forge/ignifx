@@ -51,7 +51,7 @@ export interface ElectronOptions {
  * delivers exactly the right value through core's own code. `onApplicationPause`, by contrast, is
  * dispatched with `globalThis.document.hidden`, which a synthetic event cannot influence.
  *
- * Measured on Electron 44.2.0 / macOS arm64 (S9.1): minimising, restoring, and blurring the window
+ * Measured on Electron 44.2.0 / macOS arm64: minimising, restoring, and blurring the window
  * fired `minimize`, `blur`, `restore`, and `focus` on the `BrowserWindow` in the main process and
  * delivered **nothing at all** to the page — no `visibilitychange`, no window `focus` or `blur`,
  * and `document.hidden` stayed `false` and `document.hasFocus()` stayed `true` throughout. So there

@@ -9,7 +9,7 @@ import { PhysicsErrorCode, physicsError } from "../errors.js";
  * `fetch` refuses `file:` URLs. Emscripten's `wasmBinary` option is the supported escape and is what
  * this module always uses: the bytes are obtained first (from the caller, from `fetch`, or from
  * `node:fs`) and handed to the factory. `app.isHeadless` therefore only changes *where the bytes
- * come from*, exactly as the Phase 4 brief requires.
+ * come from*.
  *
  * The `@babylonjs/havok` import lives here because this file is under `src/lite/`, the only place
  * `ignifx/no-lite-outside-adapter` and dependency-cruiser allow a native backend.
@@ -157,7 +157,7 @@ const HAVOK_PACKAGE_WASM = "@babylonjs/havok/lib/esm/HavokPhysics.wasm";
 /**
  * Reads the binary straight out of the installed `@babylonjs/havok` package, which is what makes a
  * headless Node app work with no configuration at all: `app.isHeadless` only changes *where the
- * bytes come from* (Phase 4 brief), and under Node the answer is the package itself.
+ * bytes come from*, and under Node the answer is the package itself.
  *
  * @returns The bytes, or `null` when `import.meta.resolve` is unavailable or the package cannot be
  * resolved.

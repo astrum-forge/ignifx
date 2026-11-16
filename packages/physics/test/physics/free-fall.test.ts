@@ -4,9 +4,9 @@ import { Rigidbody } from "../../src/components/rigidbody.js";
 import { createPhysicsApp, FIXED_STEP } from "../support/harness.js";
 
 /**
- * Exit criterion 1 of Phase 4: Lite's own headless free-fall example, reproduced *through* ignifx —
- * the same box, the same gravity, but stepped by the fixed loop on the simulation scene instead of
- * by Lite's per-frame callback (`docs/architecture/09-physics.md` §1, spike S4.1).
+ * Lite's own headless free-fall example, reproduced *through* ignifx — the same box, the same
+ * gravity, but stepped by the fixed loop on the simulation scene instead of by Lite's per-frame
+ * callback (`docs/architecture/09-physics.md` §1).
  */
 
 /** Standard gravity, matching the `physics.gravity` default. */

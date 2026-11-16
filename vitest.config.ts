@@ -10,7 +10,7 @@ import { defineConfig } from "vitest/config";
  * (2026-09-05): `--enable-unsafe-webgpu` alone is enough to get `navigator.gpu` **and** an adapter;
  * `--use-webgpu-adapter=swiftshader` pins the software adapter so results do not depend on the
  * host GPU, which is what coding standards §10 requires of CI. Adding `--enable-features=Vulkan`
- * and `--use-angle=vulkan` — the combination the plan named for Linux — makes `requestAdapter()`
+ * and `--use-angle=vulkan` — a combination often suggested for Linux — makes `requestAdapter()`
  * return `null` on macOS. On Linux (measured 2026-09-06, Playwright's `v1.63.0-noble` image and
  * GitHub's ubuntu runner) the two base flags give an adapter and a device, but the first present
  * to a canvas destroys the device; `--enable-features=Vulkan --use-vulkan=swiftshader
@@ -20,8 +20,8 @@ import { defineConfig } from "vitest/config";
  * WebGPU also needs a secure context: an adapter is only handed out on `http://127.0.0.1`/https
  * pages, never on `about:blank`.
  *
- * `channel: "chromium"` is **required**, not a preference (measured 2026-09-05, Phase 2 spike
- * S2.1). Playwright's default headless browser is the old `chrome-headless-shell`, which has no
+ * `channel: "chromium"` is **required**, not a preference (measured 2026-09-05).
+ * Playwright's default headless browser is the old `chrome-headless-shell`, which has no
  * compositor: a WebGPU canvas renders for two or three presented frames and then the device is lost
  * with `A valid external Instance reference no longer exists`. It happens with raw WebGPU as well
  * as through Babylon Lite, and on the default adapter as well as on SwiftShader, so it is the
@@ -103,7 +103,7 @@ export default defineConfig({
       include: ["packages/*/src/**/*.ts", "tools/*/src/**/*.ts"],
       // GPU-only files cannot be reached from Node. They are covered by the `browser` project
       // (`*.browser.test.ts`); measuring them in the unit run would report a number no unit test
-      // can move. `src/lite/gpu/**` is the adapter's device-only half (Phase 2, R1) and
+      // can move. `src/lite/gpu/**` is the adapter's device-only half and
       // `src/render/gpu/**` is the render layer's, under the same rule: a module lives there when
       // every line of it needs `engine._device`.
       exclude: [

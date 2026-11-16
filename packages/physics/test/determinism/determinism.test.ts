@@ -6,11 +6,10 @@ import type { PhysicsAppHarness } from "../support/harness.js";
 import type { Entity } from "@ignifx/core";
 
 /**
- * Physics determinism (`docs/architecture/09-physics.md` §8, exit criterion of Phase 4): the same
- * scene, the same number of fixed steps, the same poses — across two apps in one process, across
- * interleaved runs, and against a **committed** hash, which is what makes consecutive process runs
- * comparable at all (each `vitest run` is a fresh process, so the committed constant is the
- * cross-run assertion).
+ * Physics determinism (`docs/architecture/09-physics.md` §8): the same scene, the same number of
+ * fixed steps, the same poses — across two apps in one process, across interleaved runs, and
+ * against a **committed** hash, which is what makes consecutive process runs comparable at all
+ * (each `vitest run` is a fresh process, so the committed constant is the cross-run assertion).
  */
 
 /** One prepared determinism run. */

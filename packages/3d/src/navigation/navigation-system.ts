@@ -12,7 +12,7 @@ import type { System, SystemContext, World } from "@ignifx/core";
  * The crowd runs on the **fixed** step, after physics, because Lite's own documentation makes
  * determinism the reason the crowd is manual in the first place (`index.d.ts` 2718-2721). Two runs
  * of the same seed, the same geometry, and the same fixed step therefore produce the same agent
- * positions — which is what the Phase 7 exit criteria ask for and what a replay needs.
+ * positions, which is what a replay needs.
  *
  * Transforms are written **after** `updateNavCrowd`, in the same step, so a `fixedUpdate` script
  * reading `agent.velocity` and the transform sees one consistent frame.

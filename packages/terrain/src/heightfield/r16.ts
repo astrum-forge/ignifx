@@ -4,7 +4,7 @@ import { TerrainErrorCode, terrainError } from "../errors.js";
  * The `.r16` codec (ADR-0026): little-endian `uint16`, row-major, `resolution * resolution`
  * samples, `0..65535` mapped onto `0..size.height`. It is the canonical heightmap because it is
  * exact in every host — a `DataView` reads it in Node and in the browser alike, whereas no browser
- * image API decodes a 16-bit PNG losslessly (spike S0.3).
+ * image API decodes a 16-bit PNG losslessly.
  */
 
 /**

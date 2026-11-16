@@ -8,8 +8,8 @@
  *   are forbidden (same section) and so are circular module dependencies.
  * - The Babylon Lite adapter boundary of `CONSTITUTION.md` §3.4 / coding standards §4 —
  *   `@babylonjs/lite` (and the other native/WASM backends) may be imported only from
- *   `src/lite/**`. The custom ESLint rule `ignifx/no-lite-outside-adapter` (standards §6.5,
- *   Phase 1) covers the same ground from the linter side; this is the belt-and-braces copy that
+ *   `src/lite/**`. The custom ESLint rule `ignifx/no-lite-outside-adapter` (standards §6.5)
+ *   covers the same ground from the linter side; this is the belt-and-braces copy that
  *   also sees files ESLint is not asked to lint.
  *
  * Run with `pnpm deps` (coding standards §12, job 6).

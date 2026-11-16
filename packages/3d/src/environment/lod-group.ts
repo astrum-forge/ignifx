@@ -24,11 +24,11 @@ import type { ComponentHooks, Schema, System, SystemContext } from "@ignifx/core
  * ## Edit mode
  *
  * The switch writes `MeshRenderer.enabled`, which scene files save, and an editor's camera moving
- * must not change the document (ADR-0028). So in an edit-mode app the switch is display-only
- * (spike S0.7 §5): the group picks its level from the main camera, which there is the editor's,
- * exactly as in a game, but hides the other levels with `MeshRenderer.displayHidden`, which is not
- * saved. Every level keeps its authored `enabled`, a level the group shows still draws only if it
- * is enabled, and a group that is removed or disabled shows every level again.
+ * must not change the document (ADR-0028). So in an edit-mode app the switch is display-only:
+ * the group picks its level from the main camera, which there is the editor's, exactly as in a
+ * game, but hides the other levels with `MeshRenderer.displayHidden`, which is not saved. Every
+ * level keeps its authored `enabled`, a level the group shows still draws only if it is enabled,
+ * and a group that is removed or disabled shows every level again.
  *
  * ## One group per renderer
  *

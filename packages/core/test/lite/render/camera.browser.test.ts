@@ -23,9 +23,9 @@ import type { CapturedFrame } from "../../../src/lite/screenshot.js";
 import type { FreeCamera, SceneNode } from "@babylonjs/lite";
 
 /**
- * Spike S2.1, pixel proof: a Lite `FreeCamera` parented under an entity node really does follow the
- * node — moving the node moves what is drawn — and the orthographic toggle and the viewport
- * mapping behave the way `camera.test.ts` predicts numerically.
+ * The camera adapter, pixel proof: a Lite `FreeCamera` parented under an entity node really does
+ * follow the node — moving the node moves what is drawn — and the orthographic toggle and the
+ * viewport mapping behave the way `camera.test.ts` predicts numerically.
  *
  * The scene is a red box at the world origin under a white hemispheric light, seen from `z = -5`
  * down `+Z`. Assertions are on the **red channel** rather than an exact colour, so they hold on a
@@ -109,7 +109,7 @@ function isBox(frame: CapturedFrame, x: number, y: number): boolean {
   return pixel.r > BOX_RED && pixel.r > pixel.b * 2;
 }
 
-describe("S2.1 · the rendered image follows the camera's parent node", () => {
+describe("the rendered image follows the camera's parent node", () => {
   it("draws the box in the middle while the parent sits on the axis", async () => {
     const { harness } = await buildScene();
     const frames = await framesUntil(harness, (frame) => isBox(frame, 32, 32), FRAME_BUDGET);
@@ -139,7 +139,7 @@ describe("S2.1 · the rendered image follows the camera's parent node", () => {
   });
 });
 
-describe("S2.1 · the orthographic toggle", () => {
+describe("the orthographic toggle", () => {
   it("changes the projection, and the silhouette with it", async () => {
     const { harness, camera } = await buildScene();
     expect(await framesUntil(harness, (frame) => isBox(frame, 32, 32), FRAME_BUDGET)).not.toBeNull();
@@ -157,7 +157,7 @@ describe("S2.1 · the orthographic toggle", () => {
   });
 });
 
-describe("S2.1 · viewport mapping", () => {
+describe("viewport mapping", () => {
   it("draws only into the pixel rectangle resolveCameraViewport reports", async () => {
     const { harness, camera } = await buildScene();
     expect(await framesUntil(harness, (frame) => isBox(frame, 32, 32), FRAME_BUDGET)).not.toBeNull();
@@ -173,7 +173,7 @@ describe("S2.1 · viewport mapping", () => {
   });
 });
 
-describe("S2.1 · screen to ray against the rendered image", () => {
+describe("screen to ray against the rendered image", () => {
   it("aims the centre ray at the box the centre pixel shows", async () => {
     const { harness, camera } = await buildScene();
     expect(await framesUntil(harness, (frame) => isBox(frame, 32, 32), FRAME_BUDGET)).not.toBeNull();

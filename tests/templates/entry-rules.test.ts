@@ -68,8 +68,8 @@ describe.each(TEMPLATES)("%s's entry", (name) => {
     expect(main).toContain(`loadScene(MAIN_SCENE)`);
   });
 
-  // ignifx-editor spike S0.1 §6: an edit to a script that a module of the entry imports at run time
-  // dead-ends at `main.ts` and reloads every page on the dev server. `import type` is erased first.
+  // An edit to a script that a module of the entry imports at run time dead-ends at `main.ts` and
+  // reloads every page on the dev server. `import type` is erased first.
   it("reaches src/scripts/** only through virtual:ignifx/scripts", () => {
     expect(runtimeScriptImports(sourceDir)).toEqual([]);
     expect(readFileSync(join(sourceDir, "main.ts"), "utf8")).toContain('from "virtual:ignifx/scripts"');

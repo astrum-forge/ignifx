@@ -5,7 +5,7 @@ import type { EngineHandles } from "../../src/lite/engine.js";
 
 /**
  * The GPU half of the engine adapter. This file only passes if Chromium really handed out a WebGPU
- * adapter and Babylon Lite could build a device against it (spike S0.1, kept as the adapter's
+ * adapter and Babylon Lite could build a device against it (kept as the adapter's
  * compatibility check).
  */
 describe("the WebGPU engine (real browser)", () => {

@@ -6,10 +6,11 @@ import type { App, AssetManifestEntry, ErrorReport, MemorySink, SettingsInput, W
 /**
  * A real `createApp({ canvas })` with `@ignifx/2d` registered, on a WebGPU device.
  *
- * What the browser project has to prove about Phase 6 is the half a headless suite cannot reach:
- * that the sprite renderer registers on the surface **after** the render scene, that a sprite's
- * texels land where `Camera2D` says they will, and that Y-sort, picking and pixel-perfect all agree
- * with the arithmetic the node suites assert. Everything else is already covered on the null engine.
+ * What the browser project has to prove about `@ignifx/2d` is the half a headless suite cannot
+ * reach: that the sprite renderer registers on the surface **after** the render scene, that a
+ * sprite's texels land where `Camera2D` says they will, and that Y-sort, picking and pixel-perfect
+ * all agree with the arithmetic the node suites assert. Everything else is already covered on the
+ * null engine.
  *
  * `msaaSamples: 1` throughout, so a single-pixel assertion is exact rather than a resolve of four
  * samples (ADR-0002 Validation).

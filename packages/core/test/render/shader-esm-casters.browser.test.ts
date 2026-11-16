@@ -18,8 +18,8 @@ import type { ShadowTechniqueName } from "../../src/render/light.js";
  * validation): a shader material casts a PCF shadow with no flag, but Babylon Lite 1.27.0 has no
  * ESM view for the shader family and would write the fragment colour into the map, so the render
  * sync system leaves such a mesh out of every ESM generator's caster list and says so once
- * (`IGX-0724`). Measured on 2026-09-08 (spike S0.1.2): a colour fragment gave an orange ESM
- * "shadow", a black one none at all.
+ * (`IGX-0724`). Measured on 2026-09-08: a colour fragment gave an orange ESM "shadow", a black one
+ * none at all.
  */
 
 let harness: BrowserApp | null = null;

@@ -1,6 +1,6 @@
 // Pre-commit formatting and linting of staged files (coding standards §6).
 //
-// Two rules learned the hard way in Phase 6:
+// Two rules learned the hard way:
 // - lint-staged hands oxfmt explicit paths, which bypasses `.oxfmtignore`, so the generated template
 //   documents are filtered out here as well — otherwise the committed file differs from what the
 //   generator writes and every regeneration leaves a diff.

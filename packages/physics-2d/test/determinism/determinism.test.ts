@@ -6,10 +6,10 @@ import type { Physics2DAppHarness } from "../support/harness.js";
 import type { Entity } from "@ignifx/core";
 
 /**
- * 2D physics determinism (`docs/architecture/09-physics.md` §8, ADR-0006, Phase 6 exit criterion):
- * the same scene, the same number of fixed steps, the same poses — across two apps in one process,
- * across interleaved runs, and against a **committed** hash, which is what makes consecutive process
- * runs comparable at all (each `vitest run` is a fresh process).
+ * 2D physics determinism (`docs/architecture/09-physics.md` §8, ADR-0006): the same scene, the same
+ * number of fixed steps, the same poses — across two apps in one process, across interleaved runs,
+ * and against a **committed** hash, which is what makes consecutive process runs comparable at all
+ * (each `vitest run` is a fresh process).
  */
 
 /** One prepared determinism run. */

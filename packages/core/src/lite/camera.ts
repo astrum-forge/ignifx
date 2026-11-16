@@ -32,8 +32,8 @@ import type { Vec3Like } from "../math/types.js";
  * - `createFreeCamera(position, target)` (`index.d.ts` 2535, `lib/camera/free-camera.js`) builds a
  *   camera whose **local** matrix is `lookAtWorldLH(position, target, up)` and whose world matrix
  *   is `parentWorld × local`. So a camera created at the origin looking down `+Z` and parented to
- *   an entity node has exactly the entity's world transform — that is what makes spike S2.1 work
- *   and why the adapter never writes `camera.position` for a parented camera.
+ *   an entity node has exactly the entity's world transform — that is why a parented camera follows
+ *   its entity and why the adapter never writes `camera.position` for a parented camera.
  * - `getViewMatrix(camera)` (`index.d.ts` 6013, `lib/camera/camera.js`) is the *inverse* of the
  *   world matrix, built by transposing the rotation block and negating the translation, cached
  *   against `worldMatrixVersion`. It therefore follows the parent automatically.

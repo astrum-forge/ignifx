@@ -8,9 +8,8 @@ import type { ThreeDAppHarness } from "../support/harness.js";
 import type { Entity } from "@ignifx/core";
 
 /**
- * The `ThirdPersonCamera` collision test that `docs/plan/engineering-plan.md` names as a Phase 7
- * exit criterion: headless, with a wall between the target and the camera, the boom shrinks; with
- * the wall gone, it eases back out.
+ * The `ThirdPersonCamera` collision test: headless, with a wall between the target and the camera,
+ * the boom shrinks; with the wall gone, it eases back out.
  *
  * Physics runs on the real Havok backend under the null engine, so the sweep is the same code the
  * browser runs.

@@ -50,7 +50,7 @@ export function resolveSurfaceHost(material: MaterialAsset, isHeadless: boolean)
  * Re-uploads the host material's uniform block after a value write.
  *
  * @remarks
- * Lite ignores `dynamic` for a PBR host and re-reads the plugin slice only after this (spike S0.2);
+ * Lite ignores `dynamic` for a PBR host and re-reads the plugin slice only after this;
  * a Standard host re-uploads every frame because the plugin sets `dynamic`.
  *
  * @param host - The host material, or `null`.

@@ -88,7 +88,7 @@ describe("scene round trip", () => {
     const first = serializeScene(source.world.activeScene, { engineVersion: null, name: "Level01" });
     const text = stringifySceneFile(first);
 
-    // The scene's dependency list is what an `asset()` field resolves through since Phase 2
+    // The scene's dependency list is what an `asset()` field resolves through
     // (`05-assets-and-loading.md` §3), so the clip has to be in it for the round trip to close.
     const asset = await createSceneAsset("levels/level01.scene.json", first, [clipHandle()]);
     const target = world();

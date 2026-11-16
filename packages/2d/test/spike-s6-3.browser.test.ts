@@ -7,8 +7,7 @@ import type { Capture, Rgba, TwoDBrowserApp } from "./support/browser-harness.js
 import type { SpriteAtlasAsset } from "../src/atlas/sprite-atlas-asset.js";
 
 /**
- * **Spike S6.3 — pixel-perfect** (`docs/plan/engineering-plan.md` Phase 6,
- * `docs/architecture/11-2d-toolkit.md` §4).
+ * **Pixel-perfect rendering** (`docs/architecture/11-2d-toolkit.md` §4).
  *
  * The `checker.png` fixture is a 16x16 one-pixel magenta/black checkerboard: the worst case for any
  * filtering, because every texel borders four of the opposite colour. Crisp means every screen
@@ -92,7 +91,7 @@ async function render(
   return { shot: await running.capture(), zoom: camera.zoom };
 }
 
-describe("S6.3 pixel-perfect", () => {
+describe("pixel-perfect", () => {
   for (const [label, backingStore, expectedZoom] of [
     ["1x", REFERENCE, 1],
     ["1.5x", Math.round(REFERENCE * 1.5), 1],
@@ -104,7 +103,7 @@ describe("S6.3 pixel-perfect", () => {
       expect(zoom).toBe(expectedZoom);
       const blended = countBlended(shot);
       globalThis.console.log(
-        `S6.3 dpr=${label} backingStore=${String(backingStore)} zoom=${String(zoom)} blendedPixels=${String(blended)}`,
+        `pixel-perfect dpr=${label} backingStore=${String(backingStore)} zoom=${String(zoom)} blendedPixels=${String(blended)}`,
       );
       expect(blended).toBe(0);
       expect(harness?.errors).toEqual([]);
@@ -118,7 +117,7 @@ describe("S6.3 pixel-perfect", () => {
     const { shot, zoom } = await render(REFERENCE, false, "2d/checker-linear.atlas.json", 5.3);
     expect(Number.isInteger(zoom)).toBe(false);
     const blended = countBlended(shot);
-    globalThis.console.log(`S6.3 counterExample zoom=${zoom.toFixed(4)} blendedPixels=${String(blended)}`);
+    globalThis.console.log(`pixel-perfect counterExample zoom=${zoom.toFixed(4)} blendedPixels=${String(blended)}`);
     expect(blended).toBeGreaterThan(0);
   }, 60_000);
 

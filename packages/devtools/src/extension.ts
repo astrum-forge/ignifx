@@ -93,7 +93,7 @@ function registerDevtools(ctx: ExtensionContext, options: DevtoolsOptions): Devt
     settings,
     logSink,
     // Deliberately deferred: registering the sampler here would put a system in every frame of a
-    // game that never opens the overlay, which is the one thing the Phase 10 exit criterion
+    // game that never opens the overlay, which is the one thing zero cost when closed
     // forbids. The first `open()` calls this instead.
     registerSystem: (system: System): void => {
       ctx.registerSystem(system, { phase: Phase.PreRender, order: DEVTOOLS_SAMPLE_ORDER });

@@ -17,8 +17,7 @@ import type { LiteSceneNode, MutableVec3, QuatLike, Vec3Like } from "@ignifx/cor
  *
  * `09-physics.md` §5 promises `shapeCast(...) : ShapeCastHit` and `overlap(...) : Entity[]`. Neither
  * identity is available upstream, so `PhysicsService` resolves those two against its own body index
- * (bounds-accurate) and the doc correction is recorded in the Phase 4 report. Everything here stays
- * a thin, typed pass-through.
+ * (bounds-accurate). Everything here stays a thin, typed pass-through.
  *
  * Everything here is `@internal`.
  */

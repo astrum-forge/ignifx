@@ -8,11 +8,11 @@ import type { App, AssetManifestEntry, ErrorReport, MemorySink, SettingsInput, W
 /**
  * A real `createApp({ canvas })` with `@ignifx/3d` registered, on a WebGPU device.
  *
- * What the browser project has to prove about Phase 7 is the half a headless suite cannot reach:
- * that a `.glb` really carries four clips and a skeleton, that the `Animator` really poses that
- * skeleton on ignifx's clock, and that a crossfade really reaches Lite's mixer. Everything else —
- * the state machine, navigation, the controllers, the camera rig — is already covered on the null
- * engine.
+ * What the browser project has to prove about `@ignifx/3d` is the half a headless suite cannot
+ * reach: that a `.glb` really carries four clips and a skeleton, that the `Animator` really poses
+ * that skeleton on ignifx's clock, and that a crossfade really reaches Lite's mixer. Everything
+ * else — the state machine, navigation, the controllers, the camera rig — is already covered on the
+ * null engine.
  *
  * `msaaSamples: 1` throughout, so a pixel comparison is exact rather than a resolve of four samples
  * (ADR-0002 Validation).

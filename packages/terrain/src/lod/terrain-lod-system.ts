@@ -9,7 +9,7 @@ import type { Camera, DiagnosticsGroup, MutableVec3, System, SystemContext, Worl
  * chunk's level of detail, and culls the chunks the camera cannot see
  * (ADR-0026).
  *
- * Babylon Lite does not frustum-cull plain meshes (spike S0.3), so the culling is the system's own:
+ * Babylon Lite does not frustum-cull plain meshes, so the culling is the system's own:
  * six planes from the main camera's view-projection against each chunk's world box.
  */
 

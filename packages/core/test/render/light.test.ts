@@ -256,7 +256,7 @@ describe("include and exclude lists", () => {
 
 describe("following the entity", () => {
   it("never parents the Lite light", async () => {
-    // The regression the Phase 2 visual suite found: a parented light is rotated twice, because
+    // The regression the visual suite found: a parented light is rotated twice, because
     // Lite composes `parentWorld × localMatrixFromDirection(direction)` and the component writes a
     // world direction. ADR-0002, "Corrections after the visual suite".
     const h = await app();

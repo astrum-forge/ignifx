@@ -42,7 +42,7 @@ import type { ComponentHooks, LiteSceneNode, MutableVec3, Schema, Vec3Like } fro
  *
  * - {@link NavMeshSurface.addSource} takes world-space `{ positions, indices }` directly. This is
  *   the path a procedural level uses, and the only one that works under a headless app — which is
- *   what makes the navigation tests of Phase 7 run in plain Node.
+ *   what makes the navigation tests run in plain Node.
  * - Otherwise the surface collects the Lite meshes of every enabled `MeshRenderer` whose entity's
  *   layer is in {@link NavMeshSurface.layerMask} and lets Lite transform and merge them.
  *

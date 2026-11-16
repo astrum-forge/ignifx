@@ -182,7 +182,7 @@ export type SceneNotification = (typeof SceneNotification)[keyof typeof SceneNot
 
 /**
  * The fewest milliseconds between two `transformDragging` notifications for the same gesture: at
- * most 20 a second, which S0.2 measured as smooth enough for an inspector to follow a drag.
+ * most 20 a second, which is smooth enough for an inspector to follow a drag.
  *
  * @public
  */
@@ -537,7 +537,7 @@ export interface FrameParams {
 }
 
 /**
- * The unit of a `pick` point (S0.2 §6.1).
+ * The unit of a `pick` point.
  *
  * @public
  */

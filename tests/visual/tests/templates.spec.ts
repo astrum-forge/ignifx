@@ -5,7 +5,7 @@ import type { Page } from "playwright/test";
 
 /**
  * The template scenes `create-ignifx` scaffolds, each against a committed golden, plus the front
- * end Phase 12 added to all four: a title screen, a pause menu, a settings screen with volume
+ * end all four share: a title screen, a pause menu, a settings screen with volume
  * sliders and an interactive rebinding page, and a save file.
  *
  * ## The viewport
@@ -207,9 +207,7 @@ test.describe("template scenes", () => {
 });
 
 /**
- * The Phase 12 exit criterion, in the four templates that have to meet it: *"polish of the four
- * templates: art, audio, menus, settings/rebinding screens, save/load"*
- * (`docs/plan/engineering-plan.md`, Phase 12).
+ * The four templates' front end: menus, settings and rebinding screens, save and load.
  *
  * These open each template **without** `?static=1`, because the overlay is exactly what a golden
  * hides: the point here is that the DOM is right, not that the pixels are. Every screen is

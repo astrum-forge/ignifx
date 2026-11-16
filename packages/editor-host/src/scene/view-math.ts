@@ -167,8 +167,8 @@ function snapTo(value: number, step: number): number {
 type Channels = number[];
 
 /**
- * Snaps a gizmo drag after Lite has applied each move (S0.2 §3.4, post-correction). The raw, unsnapped
- * value is kept apart from the node, so the snapped steps do not accumulate rounding.
+ * Snaps a gizmo drag after Lite has applied each move. The raw, unsnapped value is kept apart from
+ * the node, so the snapped steps do not accumulate rounding.
  */
 export class DragSnapper {
   readonly #mode: "translate" | "rotate" | "scale";

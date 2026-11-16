@@ -41,7 +41,7 @@ describe("scenes", () => {
     harness.dispose();
   });
 
-  it("exposes an onUnloading signal that Phase 1 never fires", () => {
+  it("does not fire the active scene's onUnloading signal when the world is disposed", () => {
     const harness = createTestWorld();
     let fired = false;
     harness.world.activeScene.onUnloading.connect(() => {

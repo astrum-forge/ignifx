@@ -63,7 +63,7 @@ export const MATERIAL_PLUGIN_DEFAULT_PRIORITY = 500;
  * How many `texture`/`sampler` pairs one material's plugins may declare together.
  *
  * @remarks
- * Measured on a device on 2026-09-08 (spike S0.2): a fully textured PBR material — base colour,
+ * Measured on a device on 2026-09-08: a fully textured PBR material — base colour,
  * normal, ORM, emissive — with image-based lighting and one PCF shadow light already binds seven
  * textures and seven samplers of the sixteen per stage that every WebGPU implementation guarantees,
  * SwiftShader included, and Lite requests no higher `requiredLimits`. Nine is what is left, and it
