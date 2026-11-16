@@ -8,10 +8,10 @@ By [Astrum Forge Studios](https://astrumforge.com) · [ignifx.com](https://ignif
 
 ## Start a game
 
-Use Node 24 and pnpm:
+Use Node 24 or later and pnpm:
 
 ```sh
-npx @ignifx/cli@latest my-game --template 2d-topdown
+npx --package=@ignifx/cli@latest create-ignifx my-game --template 2d-topdown
 cd my-game
 pnpm install
 pnpm dev
@@ -23,18 +23,19 @@ the project to include Electron support, then run `pnpm dev:desktop`.
 See the [CLI guide](packages/cli/README.md) for options.
 
 ignifx requires WebGPU; there is no WebGL fallback. The engine is pre-1.0, so minor releases may
-include breaking changes. See the [changelog](packages/ignifx/CHANGELOG.md) and
-[engineering plan](docs/plan/engineering-plan.md) for release history and remaining work.
+include breaking changes. See the [changelog](packages/ignifx/CHANGELOG.md) for release history and
+the [engineering plan](docs/plan/engineering-plan.md) for open work.
 
 ## What is included
 
-- **Core:** scenes, entities, scripts, rendering, assets, tweens, storage, and hot reload.
-- **2D:** sprites, tilemaps, animation, pixel-perfect cameras, and Rapier physics.
-- **3D:** Havok physics, character controllers, camera rigs, animation, and navigation.
+- **Core:** scenes, prefabs, entities, scripts, rendering, custom shaders, assets, tweens, storage, and hot reload.
+- **Lighting:** HDR, shadows, ambient occlusion, reflection probes, and baked light probes and lightmaps.
+- **2D:** sprites, tilemaps, animation, pixel-perfect cameras, 2D particles, and Rapier physics.
+- **3D:** Havok physics, character controllers, camera rigs, animation, navigation, particles, and terrain.
 - **Game systems:** input actions, rebinding, audio, DOM UI, and devtools.
-- **Tooling:** Vite integration, starter templates, and Electron builds.
+- **Tooling:** Vite integration, starter templates, Electron builds, and the host an editor embeds (`@ignifx/editor-host`).
 
-Use `ignifx` for core and standard runtime extensions, or choose individual `@ignifx/*` packages.
+Use `ignifx` for core and the standard runtime extensions, or choose individual `@ignifx/*` packages.
 Register the extensions your game needs when creating the app.
 
 ## A spinning cube
@@ -84,7 +85,7 @@ loading, prefabs, input, physics, audio, and UI.
 
 ## Documentation
 
-- [Engine guide and agent skill](skills/ignifx/SKILL.md): setup, concepts, API references, and recipes.
+- [Engine guide and agent skill](skills/ignifx/SKILL.md): setup, concepts, API references, and recipes. The `ignifx` package ships it under `skills/`. To give a coding agent the skill in another project, copy `skills/ignifx/` into its skills directory (`.claude/skills/` for Claude Code) or run `npx skills add astrum-forge/ignifx`.
 - [Architecture](docs/architecture/00-overview.md): engine structure and subsystem design.
 - [Contributing](CONTRIBUTING.md): repository setup, commands, and checks.
 - [Coding standards](docs/standards/coding-standards.md) and [constitution](CONSTITUTION.md): development rules.

@@ -12,11 +12,12 @@ dependencies beyond the Node standard library — which means **erasable syntax 
 | `docs-schemas.ts`         | `pnpm docs:schemas`     | Regenerates `skills/ignifx/references/formats/*.md` and `ignifx.schemas.json` from the component schemas the packages export.                                                                                 |
 | `docs-recipes.ts`         | `pnpm docs:recipes`     | Regenerates `skills/ignifx/references/recipes/<name>.md` from `examples/recipes/<name>/main.ts`.                                                                                                              |
 | `check.ts`                | `pnpm check`            | Runs the pre-PR gate as a graph of parallel steps; prints one line per step and the log tail of a failed one.                                                                                                 |
-| `docs-harness.ts`         | `pnpm docs:harness`     | Runs the CI `docs-harness` checks and exits non-zero on the first failure.                                                                                                                                    |
+| `docs-harness.ts`         | `pnpm docs:harness`     | Runs every CI `docs-harness` check and exits non-zero if any failed.                                                                                                                                          |
 | `licenses.ts`             | `pnpm licenses:notices` | Regenerates `THIRD_PARTY_NOTICES.md` from `pnpm licenses list --prod` and the workspace manifests.                                                                                                            |
 | `verify-published.ts`     | `pnpm release:verify`   | Asks registry.npmjs.org whether every publishable package under `packages/` is really there at the version its manifest carries, and fails a version whose dependencies still say `workspace:` or `catalog:`. |
 | `require-pnpm-publish.ts` | `prepublishOnly`        | Run by every published package before a publish; refuses anything but `pnpm publish`, the only client that rewrites `workspace:` and `catalog:` dependencies.                                                 |
 | `sync-skill-versions.ts`  | `pnpm skills:version`   | Writes `@ignifx/core`'s version into every skill's `metadata.ignifx-version`. Runs inside `pnpm version-packages`, which is the Changesets version step.                                                      |
+| `vendor-decoders.ts`      | `pnpm vendor:decoders`  | Refreshes `packages/core/decoders/` from the pinned npm tarballs and rewrites `vendored.json` with their SHA-256 digests. Needs the network, so it is not part of `pnpm check`.                               |
 
 Shared helpers live in `lib/`; they return results instead of exiting, so only the entry
 scripts decide the exit code, and all output goes through `lib/log.ts`. Their tests live in
@@ -100,9 +101,7 @@ contributes nothing. One `typeId` is documented once — the `ignifx` umbrella r
 umbrella's copy is dropped. Entries are grouped onto `references/formats/<format>.md` by their
 `format` (default `components`) and bundled into `references/formats/ignifx.schemas.json`. The
 generator only writes those files, so `formats/README.md` and the hand-written prose pages survive
-regeneration. Today `@ignifx/core` contributes twelve records: eight components on `components.md`,
-the built-in `ignifx/Transform` among them, and the four file formats on `ignifx.scene.md`,
-`ignifx.material.md`, `ignifx.environment.md`, and `ignifx.mesh.md`.
+regeneration.
 
 ## Recipe extraction convention
 

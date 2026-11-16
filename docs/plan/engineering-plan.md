@@ -4,7 +4,7 @@ The engine's open-work list, and the document `CONSTITUTION.md` §4.3, §7.6 and
 
 ## Shipped
 
-The planned 0.x scope is on `main` and on npm as one fixed version line: the kernel, renderer, assets, scenes, prefabs with nested overrides, storage and edit mode (`@ignifx/core`); sprites, tilemaps and 2D cameras (`2d`); character controllers, camera rigs, animation and navigation (`3d`); Havok and Rapier physics; `input`, `audio`, `ui`, `devtools`; custom shaders, instancing, `particles`, `particles-2d`, `terrain`; HDR, TAA, ambient occlusion, contact shadows, SSGI, AgX, auto exposure, quality tiers, reflection probes, baked light probes and lightmap run time; `electron`, `editor-host`, `vite-plugin`, `cli`, the `ignifx` umbrella; four templates with desktop variants; the skills and their compiled recipes.
+The planned 0.x scope is on `main` and on npm as one fixed version line: the kernel, renderer, assets, scenes and prefabs, storage and edit mode (`core`); the 2D and 3D toolkits; Havok and Rapier physics; input, audio, UI and devtools; custom shaders, instancing, particles and terrain; HDR, TAA, ambient occlusion, screen-space GI, reflection probes, baked light probes and lightmap run time; Electron, the editor host, the Vite plugin, the CLI and the `ignifx` umbrella; four templates with desktop variants; the skills and their compiled recipes.
 
 ## 1.0 gates
 
@@ -90,7 +90,9 @@ The planned 0.x scope is on `main` and on npm as one fixed version line: the ker
 - Independently animated instances of one model asset; the displacement margin on `Model` material overrides and terrain chunks; a bilateral upsample for half-resolution ambient occlusion.
 - Whether any upstream ask has been filed: the repository links no Lite issue.
 
-### Wanted, not started
+### Candidates, not commitments
+
+Feature wishes with no code behind them.
 
 Compute shaders for game code; screen-space reflections; motion blur, FXAA; volumetric fog; subsurface scattering; water; decals; video and texture-array assets; CSG; procedural sky; joints, ragdoll, cloth, vehicles; inverse kinematics, retargeting, morph-target weights; Gaussian splats; runtime auto-tiling; nine-slice and masks for world sprites; 2D skeletal animation; replays; captions and other accessibility helpers; a mobile template; Steam and portal adapters; dialogue, behaviour trees, a cutscene timeline; pooling and hit-stop helpers; pseudo-localisation and right-to-left text; adaptive music; a production error overlay; achievements; mod support; photo mode.
 
