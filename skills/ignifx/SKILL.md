@@ -118,7 +118,7 @@ Without a GPU — how tests and tools run it — `createApp({ headless: true, cl
 
 ### Adding extensions
 
-Extensions register in `createApp({ extensions })`; each adds an `app.<name>` service, components, asset types and a settings section. `ignifx` re-exports `@ignifx/core` and all of them but `@ignifx/editor-host`. Headless apps drive input with `simulate` and advance audio playback by the frame delta, so both are testable without a device.
+Extensions register in `createApp({ extensions })`; each adds an `app.<name>` service, components, asset types and a settings section. `ignifx` re-exports `@ignifx/core` and every factory below. Headless apps drive input with `simulate` and advance audio playback by the frame delta, so both are testable without a device.
 
 **Each extension package ships its own skill** with the detail, at `skills/<name>/SKILL.md` inside the package, where `<name>` is the package name without `@ignifx/`: `node_modules/@ignifx/<name>/skills/<name>/SKILL.md` in an installed project, `packages/<name>/skills/<name>/SKILL.md` in the engine repository. Read it before using the extension.
 
@@ -136,7 +136,7 @@ Extensions register in `createApp({ extensions })`; each adds an `app.<name>` se
 | `@ignifx/terrain` (`terrain()`) | `Terrain`: heightmaps or noise, level of detail, height queries, `TerrainScatter` |
 | `@ignifx/electron` (`electron()`) | Desktop builds: the game window, the `ignifx://` protocol, the preload bridge, file storage |
 | `@ignifx/devtools` (`devtools()`) | `app.devtools`: the debug overlay; backtick toggles it |
-| `@ignifx/editor-host` (`editorHostPlugin()`, a Vite plugin) | Opens the project in the ignifx editor; development only |
+| `@ignifx/editor-host` (no factory: `editorHostPlugin()` in `vite.config.ts`) | Opens the project in the ignifx editor; development only, not re-exported from `ignifx` |
 
 ```ts run
 import { audio, AudioSource, createApp, defineInputActions, input } from "ignifx";
