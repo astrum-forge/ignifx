@@ -115,7 +115,7 @@ export const physics = defineExtension<PhysicsOptions>((options = {}) => {
 const app = await createApp({ canvas, extensions: [input(), physics(), audio(), threeD()] });
 ```
 
-First-party extensions write `version: "0.0.0"` and `engine: ">=0.0.0 <1.0.0"`: they ship on core's version line, and a core run from source reports `0.0.0`, so the range only has to admit every `0.x` core.
+First-party extensions write `engine: ">=0.0.0 <1.0.0"` and their package's build-stamped `VERSION` (`src/version.ts`) as `version`; `physics` and `physics-2d` write the literal `"0.0.0"`. They ship on core's version line, and a core run from source reports `0.0.0`, so the range only has to admit every `0.x` core.
 
 ## 2. Registration order and validation
 

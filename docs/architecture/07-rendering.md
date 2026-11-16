@@ -35,7 +35,7 @@ Invariants:
 
 ## 1. Engine and surface
 
-- `createApp({ canvas })` runs a capability check (`navigator.gpu` present and `requestAdapter()` succeeds) and then `createEngine(canvas, options)`. Failure rejects with `IgnifxError` code `IGX-0701` carrying a reason in `context` (`no-navigator-gpu`, `no-adapter`, `device-failed`, `context-failed`). Templates catch it and show a static "WebGPU required" page.
+- `createApp({ canvas })` first checks that `navigator.gpu` exists (`isWebGpuAvailable`; `assertWebGpuAvailable` in `src/lite/engine.ts`) and rejects with `IgnifxError` code `IGX-0701` when it does not, then calls `createEngine(canvas, options)`. The check does not request an adapter. Templates catch it and show a static "WebGPU required" page.
 - Engine options exposed by `createApp`: `msaaSamples` (1 or 4, default 4), `alphaMode`, `srgb`, `format`, `maxDevicePixelRatio` (default `0`, which means "do not clamp": native DPR), `useHighPrecisionMatrix`/`useFloatingOrigin` (large worlds; off by default), `requiredLimits`.
 - Sizing: Lite re-reads `clientWidth × clientHeight × devicePixelRatio` at the start of every frame (`resizeEngine`). ignifx exposes `app.renderer.pixelRatio` (maps to `maxDevicePixelRatio`) and `app.renderer.resolutionScale` (0.25–1, implemented by lowering `maxDevicePixelRatio`); for `OffscreenCanvas` it exposes `app.renderer.setSize(w, h)` (`setSurfaceSize`; on a laid-out DOM canvas Lite re-reads the layout size next frame, so `setSize` is an `OffscreenCanvas`-only API). Lite always requests a `high-performance` adapter; there is no `powerPreference` option.
 - One render scene per world (`createSceneContext(engine)`), registered in `app.start()` via `registerScene`, or `registerSceneWithShadowSupport` when `rendering.features.shadows` is on (§1.1).
@@ -433,6 +433,7 @@ Rendering:
 - **Area lights** and **point-light shadows.** Neither exists; the schema rejects both (§2.2).
 - **Probe-set dispose.** `createPbrLocalEnvironmentProbeSet` has no dispose. Workaround: the runtime destroys a replaced set's private GPU objects (§2.15).
 - **Light and shadow bindings for shader materials**, and a **`time` system uniform**. Workaround: shader materials are unlit and ignifx uploads `time` itself (§2.8).
+- **`composite` slot for Standard materials.** Lite's Standard template has no injection point after composition, so a surface shader's `composite` stage is refused on a Standard host (`src/render/surface-shader-compiler.ts`).
 - **Device-loss recovery of PCF shadows and glTF image-based lights** (§4).
 - **Mesh removal without disposal.** A mesh leaving its last scene is disposed for good (§2.3).
 - **Basis transcoder URL setter.** `loadBasisTexture2D` hard-codes a CDN URL, so ignifx refuses `.basis` (`05-assets-and-loading.md` §5).
