@@ -12,8 +12,8 @@ import type { PixelRgba } from "../../src/lite/screenshot.js";
 import type { EnvironmentAsset } from "../../src/render/environment-asset.js";
 
 /**
- * `LightProbeVolume` (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B2): a white, rough
- * sphere lit only by the environment turns red inside a grid of red probes, with HDR off and on.
+ * `LightProbeVolume` (`docs/architecture/07-rendering.md` §2.15): a white, rough sphere lit only by
+ * the environment turns red inside a grid of red probes, with HDR off and on.
  */
 
 /** The canvas edge. */

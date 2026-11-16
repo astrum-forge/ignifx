@@ -73,7 +73,7 @@ export const LIGHTMAP_MODES = ["add", "shadowmap"] as const;
 export type LightmapMode = (typeof LIGHTMAP_MODES)[number];
 
 /**
- * The `lightmap` record of a {@link MeshRenderer} (GI Phase 2, step B3).
+ * The `lightmap` record of a {@link MeshRenderer}.
  *
  * @remarks
  * Mutable, because a schema `record()` field is a plain object a script edits in place.
@@ -131,7 +131,7 @@ export class MeshRenderer extends Component implements ComponentHooks {
   declare pickable: boolean;
 
   /**
-   * A baked lightmap, or `null` (default) for none (GI Phase 2, step B3).
+   * A baked lightmap, or `null` (default) for none.
    *
    * @remarks
    * Only a renderer on a static entity (`entity.isStatic`) with a PBR material samples it; it then

@@ -16,7 +16,7 @@ import { createRenderHarness } from "./support/render-harness.js";
 import type { RenderHarness } from "./support/render-harness.js";
 
 /**
- * `bakeLightProbes` (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B4): the CPU bake runs
+ * `bakeLightProbes` (`docs/architecture/07-rendering.md` §2.15): the CPU bake runs
  * headless and matches the analytic answers for a sky, a directional light, a shadow and one bounce.
  */
 

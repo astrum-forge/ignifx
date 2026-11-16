@@ -90,9 +90,9 @@ test.describe("Phase 2 golden scenes", () => {
   });
 });
 
-// `rendering.hdr` (GI plan step G2): a scene of PBR materials only has to present the image the
-// plain path presents, so these compare against the same goldens. The tolerance covers half-float
-// rounding of the linear colour before the output pass encodes it.
+// `rendering.hdr`: a scene of PBR materials only has to present the image the plain path presents,
+// so these compare against the same goldens. The tolerance covers half-float rounding of the linear
+// colour before the output pass encodes it.
 test.describe("HDR output matches the plain goldens", () => {
   test("hello cube, HDR", async ({ page }) => {
     await openScene(page, `${HELLO_CUBE}/?static=1&hdr=1`);
@@ -110,8 +110,8 @@ test.describe("HDR output matches the plain goldens", () => {
   });
 });
 
-// HDR bloom (GI plan step G12): an emissive sphere glows through the downsample/upsample chain on
-// the linear scene colour, before the output pass tone maps it.
+// HDR bloom: an emissive sphere glows through the downsample/upsample chain on the linear scene
+// colour, before the output pass tone maps it.
 test.describe("HDR bloom", () => {
   test("hello cube, HDR bloom", async ({ page }) => {
     await openScene(page, `${HELLO_CUBE}/?static=1&hdr=1&bloom=1`);

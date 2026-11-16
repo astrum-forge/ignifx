@@ -11,7 +11,7 @@ import type {
 } from "@babylonjs/lite";
 
 /**
- * Screen-space global illumination (GI plan step G11): Lite's `@beta`
+ * Screen-space global illumination: Lite's `@beta`
  * `createScreenSpaceGlobalIlluminationPostProcessTask` (`index.d.ts` 3681), fed the shared
  * scene-input depth and run as a scene-colour pass (`./scene-color-passes.ts`), plus a material
  * plugin that turns the environment's diffuse light down while it runs. Its own chunk, loaded only

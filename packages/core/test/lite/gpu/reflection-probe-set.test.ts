@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { releaseLiteProbeSet } from "../../../src/lite/gpu/reflection-probe.js";
 
 /**
- * Freeing a Babylon Lite probe set (GI Phase 2 B1b): Lite has no dispose for one, so ignifx destroys
- * its three GPU resources and takes its cleanup closure off `scene._disposables`, and a Lite change
- * that renames any of them must log, never throw.
+ * Freeing a Babylon Lite probe set: Lite has no dispose for one, so ignifx destroys its three GPU
+ * resources and takes its cleanup closure off `scene._disposables`, and a Lite change that renames
+ * any of them must log, never throw.
  */
 
 /**

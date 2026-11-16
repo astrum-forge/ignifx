@@ -54,9 +54,8 @@ import type { PlaywrightTestConfig } from "playwright/test";
  *
  * `gpu-budget` is `gpu-time.spec.ts` alone, and the one project that does **not** pin SwiftShader:
  * it measures each 3D template's GPU milliseconds per frame on the host GPU (Apple M1 through Metal
- * on the reference machine, GI Phase 1 spike S4), which a software rasteriser cannot stand in for.
- * GitHub's runners have no GPU, so it never runs in CI: `pnpm test:gpu-budget`, locally (coding
- * standards §7 and §12).
+ * on the reference machine), which a software rasteriser cannot stand in for. GitHub's runners have
+ * no GPU, so it never runs in CI: `pnpm test:gpu-budget`, locally (coding standards §7 and §12).
  */
 
 /** One `webServer` entry. Playwright does not export `TestConfigWebServer` by name. */

@@ -226,8 +226,8 @@ export interface RenderingFeatureSettings {
 }
 
 /**
- * Auto exposure under `rendering.hdr` (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G14):
- * a compute pass meters the HDR scene and eases the exposure towards middle grey.
+ * Auto exposure under `rendering.hdr` (`docs/architecture/07-rendering.md` §2.7): a compute pass
+ * meters the HDR scene and eases the exposure towards middle grey.
  *
  * @remarks
  * EV here is `log2` of the scene's metered luminance (the average of a `log2` luminance histogram,

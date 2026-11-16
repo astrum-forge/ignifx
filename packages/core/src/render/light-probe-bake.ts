@@ -21,8 +21,8 @@ import type { ColorLike, Vec3Like } from "../math/types.js";
 import type { World } from "../world/world.js";
 
 /**
- * The CPU light-probe bake (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B4): one bounce
- * of diffuse light, needing no device, so it runs headless, in a tool, or in a test.
+ * The CPU light-probe bake (`docs/architecture/07-rendering.md` §2.15): one bounce of diffuse
+ * light, needing no device, so it runs headless, in a tool, or in a test.
  *
  * - **Geometry.** Triangles of every enabled `MeshRenderer` (a `MeshAsset.fromData` mesh's own
  *   arrays, or a primitive rebuilt on the CPU by `light-probe-bake-primitives.ts`) and every enabled

@@ -8,9 +8,9 @@ import type { RendererImpl } from "../../src/render/renderer.js";
 import type { RenderingQualityPreset } from "../../src/render/rendering-settings.js";
 
 /**
- * When `ScreenSpaceEffects` builds, rebuilds and tears down contact shadows and SSGI (GI plan G10,
- * G11), over a fake renderer and fake GPU chunks. What the passes draw is
- * `screen-space-effects.browser.test.ts`; this file pins the build key and the lifecycle around it.
+ * When `ScreenSpaceEffects` builds, rebuilds and tears down contact shadows and SSGI, over a fake
+ * renderer and fake GPU chunks. What the passes draw is `screen-space-effects.browser.test.ts`;
+ * this file pins the build key and the lifecycle around it.
  */
 
 const gpu = vi.hoisted(() => ({

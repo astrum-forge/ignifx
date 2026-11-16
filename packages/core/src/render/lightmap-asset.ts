@@ -6,7 +6,7 @@ import type { AssetHandle } from "../assets/types.js";
 import type { Vec2Like } from "../math/types.js";
 
 /**
- * Lightmaps (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B3): a baked texture that static
+ * Lightmaps (`docs/architecture/07-rendering.md` §2.15): a baked texture that static
  * `MeshRenderer`s sample through their second UV set, and the per-entity placement of each renderer
  * in it. Everything here is plain data and runs in Node; the GPU half is `./gpu/lightmaps.ts`.
  */

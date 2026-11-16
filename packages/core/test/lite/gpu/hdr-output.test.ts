@@ -18,8 +18,8 @@ import { linearOutputFragment } from "../../../src/lite/gpu/shader-material.js";
 import { imageProcessedColor, linearClearColor } from "../../../src/render/image-processing-color.js";
 
 /**
- * The device-free half of `rendering.hdr` (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step
- * G2): the plugin's code, the output pass's curve selection and uniforms, and the clear colour.
+ * The device-free half of `rendering.hdr` (`docs/architecture/07-rendering.md` §2.7): the plugin's
+ * code, the output pass's curve selection and uniforms, and the clear colour.
  * `hdr-output.browser.test.ts` checks the frame on a device.
  */
 

@@ -276,7 +276,7 @@ export function describeMeshFileFormat(): SchemaDescription {
 }
 
 /**
- * Describes the `.probes.json` light-probe grid format (GI Phase 2, step B2).
+ * Describes the `.probes.json` light-probe grid format.
  *
  * @returns The description of the top-level file fields.
  *
@@ -317,7 +317,7 @@ export function describeLightProbeFileFormat(): SchemaDescription {
 }
 
 /**
- * Describes the `.lightmap.json` lightmap format (GI Phase 2, step B3).
+ * Describes the `.lightmap.json` lightmap format.
  *
  * @returns The description of the top-level file fields.
  *

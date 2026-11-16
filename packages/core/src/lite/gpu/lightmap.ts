@@ -3,7 +3,7 @@ import { markMaterialDirty } from "../material.js";
 import type { Material, MaterialPlugin, SceneContext, Texture2D } from "@babylonjs/lite";
 
 /**
- * Lightmaps on the GPU (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B3). Loaded with
+ * Lightmaps on the GPU (`docs/architecture/07-rendering.md` §2.15). Loaded with
  * `../../render/gpu/lightmaps.ts` as one chunk, only once a static `MeshRenderer` names a loaded
  * lightmap (`CONSTITUTION.md` §2.5). Every Lite claim was read from `@babylonjs/lite@1.34.0`.
  *
@@ -18,9 +18,9 @@ import type { Material, MaterialPlugin, SceneContext, Texture2D } from "@babylon
  *   decode onto one material and claims TEXCOORD_1 for it, so a renderer gets its own material
  *   before the call. Only `level` is a uniform (`writeLightmapUBO`); the rest are feature bits, so a
  *   change of them needs a new material.
- * - **Atlas placement (GI plan §5, spike P2).** The fragment samples `input.uv2` raw (line 24) and
- *   ignores the texture's `uScale`/`uOffset`, so Lite has no lightmap UV transform. The PBR vertex
- *   template writes `out.uv2 = uv2;` just before the `CUSTOM_VERTEX_MAIN_END` slot
+ * - **Atlas placement.** The fragment samples `input.uv2` raw (line 24) and ignores the texture's
+ *   `uScale`/`uOffset`, so Lite has no lightmap UV transform. The PBR vertex template writes
+ *   `out.uv2 = uv2;` just before the `CUSTOM_VERTEX_MAIN_END` slot
  *   (`lib/material/pbr/pbr-template.js` 133, `pbr-template-ext.js` 71), so a plugin there rewrites
  *   the varying the lightmap reads: {@link lightmapAtlasPlugin}. The scale and offset are WGSL
  *   constants rather than uniforms, because a vertex-visible plugin uniform needs
@@ -28,10 +28,10 @@ import type { Material, MaterialPlugin, SceneContext, Texture2D } from "@babylon
  *   `CUSTOM_FRAGMENT_BEFORE_FINALCOLORCOMPOSITION` to the `NI` slot only
  *   (`lib/material/plugin/pbr-plugin-vertex-data.js` versus `plugin-bridge-shared.js`, which also
  *   injects it at `AI`), and the light-probe, HDR-output and SSGI plugins count on the double
- *   injection. So each distinct placement is its own pipeline variant. The varying exists only
- *   when the lightmap samples TEXCOORD_1 and the mesh has a `uvs2` buffer (`pbr-compose.js` 42), so
- *   the plugin is only for that case. Lite's own V flip, when the texture asks for one, applies to
- *   the transformed coordinate, as it does to the raw one.
+ *   injection. So each distinct placement is its own pipeline variant. The varying exists only when
+ *   the lightmap samples TEXCOORD_1 and the mesh has a `uvs2` buffer (`pbr-compose.js` 42), so the
+ *   plugin is only for that case. Lite's own V flip, when the texture asks for one, applies to the
+ *   transformed coordinate, as it does to the raw one.
  */
 
 /**

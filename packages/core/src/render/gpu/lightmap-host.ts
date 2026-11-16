@@ -9,7 +9,7 @@ import type { MaterialAsset } from "../material-asset.js";
 import type { MeshRenderer } from "../mesh-renderer.js";
 
 /**
- * The renderer's handle on lightmaps (GI B3): it decides whether a `MeshRenderer` samples its
+ * The renderer's handle on lightmaps: it decides whether a `MeshRenderer` samples its
  * lightmap, loads the lightmap chunk (`./lightmaps.ts`) the first time one does, and hands the
  * renderer its lightmapped material. Device-only, like the rest of `src/render/gpu/`: only a
  * renderer with a clone in the scene asks.

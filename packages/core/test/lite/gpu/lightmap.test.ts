@@ -11,8 +11,8 @@ import type { LiteLightmapAtlas, LiteLightmapOptions } from "../../../src/lite/g
 import type { MaterialPlugin, Texture2D } from "@babylonjs/lite";
 
 /**
- * The lightmap atlas transform (GI plan §5, spike P2): the vertex plugin that moves a renderer's
- * UV2 into its atlas square, headless. Drawing with it is `lightmap.browser.test.ts`.
+ * The lightmap atlas transform: the vertex plugin that moves a renderer's UV2 into its atlas
+ * square, headless. Drawing with it is `lightmap.browser.test.ts`.
  */
 
 /** A stand-in texture handle: setting a lightmap only stores it. */

@@ -99,7 +99,7 @@ import type { Schema } from "../schema/types.js";
  * chain after tone mapping, and `order`, `weight`, `kernel`, `threshold`, `exposure` and `scale`
  * apply. With `rendering.hdr` the HDR bloom **replaces** it: a downsample/upsample chain on the
  * linear scene colour, always before the output pass whatever `order` says, tuned by `intensity`,
- * `radius` and `hdrThreshold` (GI plan step G12).
+ * `radius` and `hdrThreshold`.
  *
  * @public
  */
@@ -160,8 +160,8 @@ export interface ImageProcessingEffectSettings {
 }
 
 /**
- * The `contactShadows` record a `PostProcessStack` declares (GI plan step G10,
- * `docs/architecture/07-rendering.md` §2.7): Lite's screen-space contact shadows towards the main
+ * The `contactShadows` record a `PostProcessStack` declares
+ * (`docs/architecture/07-rendering.md` §2.7): Lite's screen-space contact shadows towards the main
  * directional light, fed from the shared scene-input depth.
  *
  * @public
@@ -180,9 +180,9 @@ export interface ContactShadowsEffectSettings {
 }
 
 /**
- * The `ssgi` record a `PostProcessStack` declares (GI plan step G11,
- * `docs/architecture/07-rendering.md` §2.7): Lite's `@beta` screen-space global illumination, one
- * bounce of the lit scene colour. Desktop tier.
+ * The `ssgi` record a `PostProcessStack` declares (`docs/architecture/07-rendering.md` §2.7):
+ * Lite's `@beta` screen-space global illumination, one bounce of the lit scene colour. Desktop
+ * tier.
  *
  * @beta
  */

@@ -209,7 +209,7 @@
         "budgetMs": 2,
         "standardsBudgetMs": 12,
         "recordedOn": "2026-11-02",
-        "note": "Three runs measured medians of 0.585, 0.606 and 0.555 ms and worst frames of 0.96, 0.99 and 0.67 ms; the row records the highest of each. The ceiling is 2 ms, about 3x the median. No Phase 1 effect is on yet, so this is the baseline later GI steps add to."
+        "note": "Three runs measured medians of 0.585, 0.606 and 0.555 ms and worst frames of 0.96, 0.99 and 0.67 ms; the row records the highest of each. The ceiling is 2 ms, about 3x the median. No HDR, TAA, ambient-occlusion or other screen-space effect was on when this was recorded, so it is the baseline those effects add to."
       },
       "3d-first-person": {
         "medianMs": 0.61,

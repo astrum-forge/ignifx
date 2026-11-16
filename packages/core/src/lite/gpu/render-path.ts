@@ -89,7 +89,7 @@ export interface HdrOutputHandle {
    */
   readonly exposureTexture: Texture2D | null;
   /**
-   * The same target with its sampled facade and resize hook: what HDR bloom (step G12) samples,
+   * The same target with its sampled facade and resize hook: what HDR bloom samples,
    * writes back into, and rebinds on resize.
    */
   readonly sceneTargetTexture: RenderTargetTextureResult;
@@ -103,7 +103,7 @@ export interface HdrOutputHandle {
   update(isSceneRegistered: boolean): void;
   /**
    * Puts a task between the scene pass and the output pass, where it reads and writes linear
-   * colour: a `PostProcessStack`'s custom effects ordered before any built-in one (GI plan G3).
+   * colour: a `PostProcessStack`'s custom effects ordered before any built-in one.
    *
    * @param task - The task; it must write an `rgba16float` target.
    * @param isFrameGraphBuilt - Whether the scene is registered, so the task has to be recorded now.

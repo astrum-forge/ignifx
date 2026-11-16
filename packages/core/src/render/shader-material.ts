@@ -1109,8 +1109,8 @@ export function buildShaderMaterialState(
  * Builds the Babylon Lite material a declaration describes, through the dynamically loaded adapter.
  *
  * @remarks
- * Under `rendering.hdr` the fragment is wrapped to write linear colour (GI plan step G3), so the
- * output pass does not encode it a second time.
+ * Under `rendering.hdr` the fragment is wrapped to write linear colour, so the output pass does not
+ * encode it a second time.
  *
  * @param app - The app, whose scene says whether it renders through `rendering.hdr`.
  * @param name - The material's name.

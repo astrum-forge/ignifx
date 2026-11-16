@@ -5,7 +5,7 @@ import type { RenderHarness } from "./support/render-harness.js";
 import type { RendererImpl } from "../../src/render/renderer.js";
 
 /**
- * A `PostProcessStack`'s HDR bloom lifecycle under `rendering.hdr` (GI plan G12), over a renderer
+ * A `PostProcessStack`'s HDR bloom lifecycle under `rendering.hdr`, over a renderer
  * that reports an HDR presenter and a fake bloom chunk: the chain loads on first want, is installed
  * on the next sync, follows `bloom.enabled`, and is disposed with the stack. What it draws is
  * `bloom-hdr.browser.test.ts`.

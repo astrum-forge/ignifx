@@ -11,9 +11,8 @@ import type { Entity } from "../../src/entity/entity.js";
 import type { RenderCapture } from "../../src/render/renderer.js";
 
 /**
- * `rendering.taa` on a real device (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, G5–G6): a
- * still scene converges to a stable image no blurrier than a tolerance, and a camera cut resets the
- * history.
+ * `rendering.taa` on a real device (`docs/architecture/07-rendering.md` §2.13): a still scene
+ * converges to a stable image no blurrier than a tolerance, and a camera cut resets the history.
  */
 
 /** The canvas edge. Small keeps SwiftShader fast. */

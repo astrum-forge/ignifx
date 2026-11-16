@@ -7,8 +7,8 @@ import {
 import type { AssetLoader, LoaderContext } from "../../assets/types.js";
 
 /**
- * Builds the loader for `.probes.json` light-probe grids (GI Phase 2, step B2). It needs no device,
- * so a grid loads in Node too.
+ * Builds the loader for `.probes.json` light-probe grids. It needs no device, so a grid loads in
+ * Node too.
  *
  * @returns The loader to register with `ctx.registerAssetLoader`.
  *

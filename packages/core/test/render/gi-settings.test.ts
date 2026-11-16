@@ -10,9 +10,9 @@ import {
 import type { RenderingSettings } from "../../src/render/rendering-settings.js";
 
 /**
- * The GI records of the `rendering` section read as complete records (GI plan G8, G5–G6, G14): the
- * settings store merges a section shallowly, so each resolver fills in what a project left out and
- * clamps what it wrote out of range.
+ * The GI records of the `rendering` section read as complete records: the settings store merges a
+ * section shallowly, so each resolver fills in what a project left out and clamps what it wrote out
+ * of range.
  */
 
 /**

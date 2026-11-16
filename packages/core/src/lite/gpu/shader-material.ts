@@ -189,7 +189,7 @@ const WRAPPED_FRAGMENT = "ignifxDisplayFragment";
 
 /**
  * Wraps a custom shader's `mainFragment` so that, under `rendering.hdr`, it writes linear colour
- * (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G3).
+ * (`docs/architecture/07-rendering.md` §2.7).
  *
  * @remarks
  * A custom shader writes the colour that is displayed: with HDR off it lands on the swapchain as

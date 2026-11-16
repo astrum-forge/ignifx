@@ -40,9 +40,9 @@ import type {
 } from "@babylonjs/lite";
 
 /**
- * The HDR render path (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G2): the frame graph
- * a scene gets when the project declares `rendering.hdr`. Its own chunk: `../engine.ts` imports it
- * only when the setting is on, so a project without HDR loads none of it (`CONSTITUTION.md` §2.5).
+ * The HDR render path (`docs/architecture/07-rendering.md` §2.7): the frame graph a scene gets when
+ * the project declares `rendering.hdr`. Its own chunk: `../engine.ts` imports it only when the
+ * setting is on, so a project without HDR loads none of it (`CONSTITUTION.md` §2.5).
  *
  * ```text
  * [shadow] → scene ──→ hdr (rgba16float) ─ [custom effects, linear] ─→ output ──→ swapchain
@@ -52,7 +52,7 @@ import type {
  * - **Linear colour.** Lite's PBR shader ends every fragment with fog, exposure, the curve, a
  *   `pow(1/2.2)` encode, a clamp and contrast (`lib/material/pbr/pbr-template.js` line 171), so an
  *   `rgba16float` target alone still holds values ≤ 1. {@link createLinearOutputPlugin} saves the
- *   colour before that block and restores it before the fragment is written (spike S1).
+ *   colour before that block and restores it before the fragment is written.
  * - **The output pass** applies the scene's `imageProcessing` — exposure, contrast and the curve
  *   the `Environment` set, or `loadEnvironment` set — then the same encode, clamp and contrast,
  *   so a PBR-only scene presents the same bytes as without HDR, within half-float rounding.
@@ -61,7 +61,7 @@ import type {
  *   `PostProcessStack` chain reads. {@link ScenePresenter.setPresentEnabled} switches between them,
  *   so the frame runs exactly one.
  *
- * - **Every other colour writer (step G3).** The restore re-applies the PBR fog, so a fogged scene
+ * - **Every other colour writer.** The restore re-applies the PBR fog, so a fogged scene
  *   keeps its fog. A Standard material (and a surface shader on one) gets
  *   {@link createStandardLinearPlugin}, which decodes its display colour; a surface shader on a PBR
  *   host is caught by the PBR plugin, because its composite runs before the save. Lite's environment

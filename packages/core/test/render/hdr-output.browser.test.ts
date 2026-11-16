@@ -9,7 +9,7 @@ import { createBrowserApp, gpuDeviceErrors, pixelLuminance, settle, SETTLE_FRAME
 import type { BrowserApp } from "./support/browser-harness.js";
 
 /**
- * `rendering.hdr` on a real device (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G2): the
+ * `rendering.hdr` on a real device (`docs/architecture/07-rendering.md` §2.7): the
  * scene lands in an `rgba16float` target with values above 1, and one output pass tone maps it onto
  * the swapchain.
  */

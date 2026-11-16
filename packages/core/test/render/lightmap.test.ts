@@ -15,8 +15,8 @@ import type { RenderHarness } from "./support/render-harness.js";
 import type { LightmapAsset, LightmapFileData } from "../../src/render/lightmap-asset.js";
 
 /**
- * Lightmaps (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B3): the `.lightmap.json`
- * format and the component field headless. The GPU path is covered by `lightmap.browser.test.ts`.
+ * Lightmaps (`docs/architecture/07-rendering.md` §2.15): the `.lightmap.json` format and the
+ * component field headless. The GPU path is covered by `lightmap.browser.test.ts`.
  */
 
 let harness: RenderHarness | null = null;

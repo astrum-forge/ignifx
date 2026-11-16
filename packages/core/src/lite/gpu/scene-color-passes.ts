@@ -11,10 +11,10 @@ import type { ScenePresenter } from "./render-path.js";
 import type { EngineContext, RenderTarget, SceneContext, Task } from "@babylonjs/lite";
 
 /**
- * Scene-colour passes (`docs/architecture/07-rendering.md` §2.7, GI plan steps G10 and G11): Lite
- * screen-space effects that read the lit scene colour and the shared scene-input depth, and whose
- * result replaces the scene colour before anything else reads it. Its own chunk, loaded with the
- * first such effect (`CONSTITUTION.md` §2.5).
+ * Scene-colour passes (`docs/architecture/07-rendering.md` §2.7): Lite screen-space effects that
+ * read the lit scene colour and the shared scene-input depth, and whose result replaces the scene
+ * colour before anything else reads it. Its own chunk, loaded with the first such effect
+ * (`CONSTITUTION.md` §2.5).
  *
  * ```text
  * scene ─→ S ─ pass 1 ─→ scratch ─ pass 2 ─→ S ─ … [─ copy ─→ S] ─→ present / output pass / chain

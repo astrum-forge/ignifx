@@ -26,9 +26,8 @@ import type { BrowserApp } from "../../render/support/browser-harness.js";
 import type { Texture2D } from "@babylonjs/lite";
 
 /**
- * Shared scene inputs on a real device (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G4;
- * `docs/architecture/07-rendering.md` §2.12): one geometry pass, added by the first effect that asks
- * and removed by the last release.
+ * Shared scene inputs on a real device (`docs/architecture/07-rendering.md` §2.12): one geometry
+ * pass, added by the first effect that asks and removed by the last release.
  */
 
 /** The canvas edge. Small keeps SwiftShader fast. */
@@ -96,8 +95,8 @@ async function acquire(running: BrowserApp): Promise<SceneInputs> {
 }
 
 /**
- * Reads one texel of a depth and a colour texture with a one-off compute pass, the way spike S2 did:
- * the depth target carries no `COPY_SRC`.
+ * Reads one texel of a depth and a colour texture with a one-off compute pass: the depth target
+ * carries no `COPY_SRC`.
  *
  * @param running - The running app.
  * @param depth - A `depth32float` texture.

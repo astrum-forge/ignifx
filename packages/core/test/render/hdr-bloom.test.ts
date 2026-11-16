@@ -6,9 +6,9 @@ import { createRenderHarness } from "./support/render-harness.js";
 import type { RenderHarness } from "./support/render-harness.js";
 
 /**
- * HDR bloom without a device (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G12): the
- * record's defaults, the uniform layout, the chunk gate, and the LDR bloom leaving the chain under
- * `rendering.hdr`. The chain itself is drawn in `bloom-hdr.browser.test.ts`.
+ * HDR bloom without a device (`docs/architecture/07-rendering.md` §2.7): the record's defaults, the
+ * uniform layout, the chunk gate, and the LDR bloom leaving the chain under `rendering.hdr`. The
+ * chain itself is drawn in `bloom-hdr.browser.test.ts`.
  */
 
 let harness: RenderHarness | null = null;

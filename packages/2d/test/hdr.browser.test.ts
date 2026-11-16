@@ -7,7 +7,7 @@ import type { TwoDBrowserApp, Rgba } from "./support/browser-harness.js";
 import type { SpriteAtlasAsset } from "../src/atlas/sprite-atlas-asset.js";
 
 /**
- * Sprites under `rendering.hdr` (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G3).
+ * Sprites under `rendering.hdr` (`docs/architecture/07-rendering.md` §2.7).
  *
  * A `SpriteRenderer` is its own rendering context: it opens a pass on the swapchain after the scene
  * has presented (`src/lite/gpu/sprite-renderer.ts`), so it never passes through the HDR output pass

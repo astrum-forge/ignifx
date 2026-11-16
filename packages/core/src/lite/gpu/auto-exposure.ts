@@ -18,9 +18,9 @@ import {
 import type { EngineContext, SceneContext, Texture2D } from "@babylonjs/lite";
 
 /**
- * Auto exposure for the HDR render path (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G14).
- * Its own chunk: `../engine.ts` imports it only when `rendering.hdr` and
- * `rendering.autoExposure.enabled` are both on (`CONSTITUTION.md` §2.5).
+ * Auto exposure for the HDR render path (`docs/architecture/07-rendering.md` §2.7). Its own chunk:
+ * `../engine.ts` imports it only when `rendering.hdr` and `rendering.autoExposure.enabled` are both
+ * on (`CONSTITUTION.md` §2.5).
  *
  * ```text
  * scene ─→ hdr ─→ [histogram] ─→ [average + adapt] ─→ exposure (1×1 r32float) ─→ output pass

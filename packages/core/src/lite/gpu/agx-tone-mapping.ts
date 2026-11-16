@@ -2,7 +2,7 @@ import type { ToneMapping } from "@babylonjs/lite";
 
 /**
  * AgX as a Babylon Lite custom `ToneMapping` (`index.d.ts`, `interface ToneMapping`), for the
- * `"agx"` tone-mapping name (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G13).
+ * `"agx"` tone-mapping name (`docs/architecture/07-rendering.md` §2.5).
  *
  * The formulation is Benjamin Wendt's "Minimal AgX implementation" (iolite engine, 2023,
  * https://iolite-engine.com/blog_posts/minimal_agx_implementation), a fit of Troy Sobotka's AgX

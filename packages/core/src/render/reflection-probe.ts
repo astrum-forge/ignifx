@@ -5,7 +5,7 @@ import type { Vec3Like } from "../math/types.js";
 import type { Schema } from "../schema/types.js";
 
 /**
- * The `ReflectionProbe` component (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B1).
+ * The `ReflectionProbe` component (`docs/architecture/07-rendering.md` §2.15).
  *
  * The component only holds settings and the "capture again" request. The renderer loads the probe's
  * GPU code (`./gpu/reflection-probes.ts`, `../lite/gpu/reflection-probe.ts`) only once a world has

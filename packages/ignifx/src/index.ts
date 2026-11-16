@@ -589,7 +589,7 @@ export {
   writeLightProbeFile,
 } from "@ignifx/core";
 
-// Lightmaps (GI Phase 2, step B3).
+// Lightmaps.
 export {
   createLightmapAsset,
   createLightmapLoader,

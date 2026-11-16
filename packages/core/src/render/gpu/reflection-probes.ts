@@ -26,11 +26,11 @@ import type {
 import type { RenderingQualityPreset } from "../rendering-settings.js";
 
 /**
- * The render layer's half of reflection probes (`docs/plan/2026-11-gi-phase-2-execution-plan.md`,
- * step B1): which probe captures when, and which probe each PBR material reflects. Loaded with
+ * The render layer's half of reflection probes (`docs/architecture/07-rendering.md` §2.15): which
+ * probe captures when, and which probe each PBR material reflects. Loaded with
  * `../../lite/gpu/reflection-probe.ts` as one chunk, only once a world has a `ReflectionProbe`.
  *
- * Blending (B1b): when `reflectionProbeBlendLayout` says the frame's probes blend and every box probe
+ * Blending: when `reflectionProbeBlendLayout` says the frame's probes blend and every box probe
  * has finished capturing (none `everyFrame`), one Lite probe set built from their cubes goes on every
  * lit PBR material. The set copies the cubes, so it is rebuilt when a probe moves, recaptures,
  * resizes its box or changes `blendDistance`, and the replaced set is freed once the material
