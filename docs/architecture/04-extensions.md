@@ -182,8 +182,8 @@ Games configure engine and extension settings in `ignifx.config.ts`:
 ```ts
 import { defineConfig } from "@ignifx/vite-plugin";
 export default defineConfig({
-  layers: { layers: ["Default", "Ground", "Player", "Enemy", "Projectile"] },
-  sortingLayers: { sortingLayers: ["Background", "Default", "Foreground", "UI"] },
+  layers: ["Default", "Ground", "Player", "Enemy", "Projectile"],
+  sortingLayers: ["Background", "Default", "Foreground", "UI"],
   time: { fixedDeltaTime: 1 / 60, maximumDeltaTime: 0.1 },
   physics: {
     gravity: { x: 0, y: -9.81, z: 0 },
@@ -195,7 +195,7 @@ export default defineConfig({
 ```
 
 - The Vite plugin resolves the config at build time and injects it as `import.meta.env.IGNIFX_CONFIG`; `createApp` also accepts `settings` directly (tests, Electron main-process tooling).
-- Each top-level key is a section, an object validated against the schema the owning extension registered (so the layer list is `layers.layers`). Unknown sections are an error in development (`IGX-0407`); a bad value or key is `IGX-0408`.
+- Each top-level key is a section, an object validated against the schema the owning extension registered. A section whose schema declares exactly one field of a non-object kind may be written as that field's value: `layers: [...]` is short for `layers: { layers: [...] }`. Unknown sections are an error in development (`IGX-0407`); a bad value or key is `IGX-0408`.
 
 **Settings as data.** The same object may live in `ignifx.settings.json` at the Vite root, which is the form a tool writes (the ignifx editor's Settings panel). The plugin reads both files and merges them a section at a time: **`ignifx.config.ts` wins a section both define, whole**, nothing of the JSON section is merged into it, and the plugin warns when the two differ. A project that keeps its settings as data needs no config file; one that wants both spreads the JSON in code (`defineConfig({ ...settings, time: { … } })`). Editing either file restarts the dev server, because the settings are a `define` that only the plugin's `config` hook computes.
 
