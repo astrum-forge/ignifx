@@ -107,7 +107,7 @@ load is delivered in `PreUpdate`.
 
 ## Core APIs
 
-Full signatures: `skills/ignifx/references/api/2d.md`.
+Full signatures: `skills/ignifx/references/api/2d.md` in the `ignifx` package.
 
 ### `app.twoD` — `TwoDService`
 
@@ -358,7 +358,7 @@ export function clearRect(map: Tilemap, layer: number, x0: number, y0: number, x
 
 ## File formats
 
-Generated reference: `skills/ignifx/references/formats/`.
+Generated reference: `skills/ignifx/references/formats/` in the `ignifx` package.
 
 - **`.atlas.json`** (`ignifx.spriteatlas`) — `image` (an address relative to the document, resolved through the manifest; `/x.png` and URLs verbatim), `sampling`,
   `premultipliedAlpha`, and `frames: [{ name, x, y, w, h, pivot?, sourceSize?, sourceOffset? }]` in **image pixels
@@ -398,7 +398,7 @@ Generated reference: `skills/ignifx/references/formats/`.
 - **`pixelPerfect` ignores `orthographicSize`** and scales `referenceResolution` by a whole number
   instead. It does **not** change an atlas's sampling: write `"sampling": "nearest"` in the
   `.atlas.json`, because a texture's sampler is fixed at upload.
-- **A tilemap's objects layer is authoring data.** Nothing spawns from it at runtime (ADR-0030):
+- **A tilemap's objects layer is authoring data.** Nothing spawns from it at runtime:
   move it into the scene with `ignifx import tilemap`, or read `tilemap.definition.objects` in code.
 - **Tiles are not pickable.** They have no component, so `pickAt` skips them and looks underneath; use
   `Tilemap.worldToCell`, which is exact and free.
@@ -422,8 +422,7 @@ Generated reference: `skills/ignifx/references/formats/`.
   precedence applies as usual.
 - **`clearColor` is sRGB and presents as authored**, so a channel lands on screen at `value * 255`:
   `{ r: 0.6, g: 0.2, b: 0.9 }` reads back as bytes `153, 51, 230`, and `#14181F` matches the same
-  page colour. That is the same in both 2D modes and on the 3D path — one setting, one colour
-  (`packages/2d/test/clear-color.browser.test.ts`).
+  page colour. That is the same in both 2D modes and on the 3D path — one setting, one colour.
 - **A world whose only camera is a `Camera2D` does not log `IGX-0706`.** Core's "no enabled camera"
   warning is suppressed while the sprite renderer has an active `Camera2D`, so a correct 2D-only
   scene is quiet. Build the camera **before** `app.start()`, as the templates do: a world that is
@@ -440,5 +439,6 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-`skills/ignifx/SKILL.md` for the engine entry skill · `docs/architecture/11-2d-toolkit.md` for
-design rationale · `skills/ignifx/references/api/2d.md` for full signatures.
+The entry skill is `skills/ignifx/SKILL.md` in the `ignifx` package: `node_modules/ignifx/` in an
+installed project, the repository root in the engine repository. Under it, `references/api/2d.md` has every exact signature and `references/formats/` the atlas,
+sprite-animation and tilemap field tables.

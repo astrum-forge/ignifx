@@ -169,7 +169,7 @@ is how the widget reaches a gamepad without importing the package.
 **`app.i18n`** — `load(handleOrAsset)`, `t(key, params)`, `has(key)`, `locale`, `fallbackLocale`,
 `availableLocales`, `onLocaleChanged`.
 
-Full signatures: `skills/ignifx/references/api/ui.md`.
+Full signatures: `skills/ignifx/references/api/ui.md` in the `ignifx` package.
 
 ## Recipes
 
@@ -303,7 +303,7 @@ changes; `i18nKey` wins over `text`.
 Supported: `{name}` interpolation, `{n, plural, …}` with `=0`-style exact matches, the CLDR
 categories for the active locale, and `#` for the number. Not supported: `select`, number and date
 skeletons, and ICU's apostrophe quoting — braces are structural, so a literal brace arrives as a
-parameter. Field reference: `skills/ignifx/references/formats/ignifx.i18n.md`.
+parameter. Field reference: `skills/ignifx/references/formats/ignifx.i18n.md` in the `ignifx` package.
 
 ## Gotchas
 
@@ -351,5 +351,6 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-`skills/ignifx/SKILL.md` for the engine entry skill · `docs/architecture/13-ui.md` for design
-rationale · `skills/ignifx/references/api/ui.md` for full signatures.
+The entry skill is `skills/ignifx/SKILL.md` in the `ignifx` package: `node_modules/ignifx/` in an
+installed project, the repository root in the engine repository. Under it, `references/api/ui.md` has every exact signature and
+`references/formats/ignifx.i18n.md` the translation file's fields.

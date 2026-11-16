@@ -119,7 +119,7 @@ app.dispose();
 
 ## Core APIs
 
-`skills/ignifx/references/api/devtools.md` has the generated surface. The parts a developer touches:
+`skills/ignifx/references/api/devtools.md` in the `ignifx` package has the generated surface. The parts a developer touches:
 
 | Member | What it does |
 | --- | --- |
@@ -244,6 +244,6 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-`skills/ignifx/SKILL.md` for the engine entry skill · `docs/architecture/15-devtools-and-diagnostics.md`
-§3–§5 for the diagnostics, overlay and hot-reload design · `packages/devtools/api/devtools.api.md`
-for the exact surface.
+The entry skill is `skills/ignifx/SKILL.md` in the `ignifx` package: `node_modules/ignifx/` in an
+installed project, the repository root in the engine repository. Under it, `references/api/devtools.md` has every exact signature, and
+`references/concepts/scripting.md` covers script hot reload.

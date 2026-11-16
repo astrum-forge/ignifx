@@ -220,9 +220,8 @@ the declared schemes, `-1` for none), `pointerLocked`.
 ## File formats
 
 `.input.json`, format `ignifx.inputactions`, version 1 — maps, actions, binding paths, composites,
-processors, control schemes. Prose and tables:
-[`inputactions.md`](../../../../skills/ignifx/references/formats/inputactions.md); generated field
-table: [`ignifx.inputactions.md`](../../../../skills/ignifx/references/formats/ignifx.inputactions.md).
+processors, control schemes. Prose and tables: `skills/ignifx/references/formats/inputactions.md` in
+the `ignifx` package; generated field table: `ignifx.inputactions.md` beside it.
 Overrides are a separate `ignifx.inputoverrides` document produced by `saveOverrides()`.
 
 ## Gotchas
@@ -267,5 +266,6 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-`skills/ignifx/SKILL.md` for the engine entry skill · `skills/ignifx/references/api/input.md` for the
-generated API · `docs/architecture/08-input.md` for design rationale.
+The entry skill is `skills/ignifx/SKILL.md` in the `ignifx` package: `node_modules/ignifx/` in an
+installed project, the repository root in the engine repository. Under it, `references/api/input.md` has every exact signature and
+`references/formats/inputactions.md` the action file in full.

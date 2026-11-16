@@ -134,8 +134,8 @@ the same order as the sheet tiles and `tiles: { x: 2, y: 2 }` picks frames 0–3
 `SpriteRenderer` falls back.
 
 **The Z rule.** Records are simulated in three dimensions — a cone shape, gravity and an orbit all
-produce Z — but only X and Y are drawn, because 2D ordering is sorting layers, not depth
-(`docs/architecture/11-2d-toolkit.md` §3). An effect written for a 2D scene should emit in the XY
+produce Z — but only X and Y are drawn, because 2D ordering is sorting layers, not depth.
+An effect written for a 2D scene should emit in the XY
 plane; a `cone` pointing along +Z looks like a still point.
 
 **Which way a shape faces.** Shapes are authored in the emitter's local space and directional ones
@@ -296,7 +296,7 @@ app.dispose();
 There is no format of this package's own. `ParticleSystem2D` reads `ignifx.particles`
 (`.particles.json`), which `@ignifx/particles` defines and documents, and `ignifx.spriteatlas`
 (`.atlas.json`), which `@ignifx/2d` defines. The generated tables are in
-`skills/ignifx/references/formats/`.
+`skills/ignifx/references/formats/` in the `ignifx` package.
 
 The component serializes as any other: `definition` and `atlas` are asset references, `playOnAwake`,
 `seed` and `sortingLayer` are plain fields.
@@ -332,7 +332,7 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-`packages/particles/skills/particles/SKILL.md` for the document and the presets ·
-`packages/2d/skills/2d/SKILL.md` for atlases, sorting layers and cameras ·
-`skills/ignifx/SKILL.md` for the engine entry skill ·
-`docs/plan/2026-09-terrain-particles-shaders.md` §4 for the design.
+The entry skill is `skills/ignifx/SKILL.md` in the `ignifx` package: `node_modules/ignifx/` in an
+installed project, the repository root in the engine repository. Under it, `references/api/particles-2d.md` has every exact signature. The `@ignifx/particles` skill
+(`skills/particles/SKILL.md` in that package) has the document and the presets; the `@ignifx/2d`
+skill (`skills/2d/SKILL.md` in that package) has atlases, sorting layers and cameras.

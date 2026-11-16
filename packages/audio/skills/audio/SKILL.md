@@ -324,6 +324,6 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-`skills/ignifx/SKILL.md` for the engine entry skill · `references/api/audio.md` for the generated
-API · `references/formats/ignifx.audiobuses.md` for the bus file · `docs/architecture/10-audio.md`
-for the design rationale.
+The entry skill is `skills/ignifx/SKILL.md` in the `ignifx` package: `node_modules/ignifx/` in an
+installed project, the repository root in the engine repository. Under it, `references/api/audio.md` has every exact signature and
+`references/formats/ignifx.audiobuses.md` the bus file's fields.

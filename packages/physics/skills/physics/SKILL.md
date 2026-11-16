@@ -22,7 +22,7 @@ through, or has to be asked "what is under the crosshair".
 ## Environment
 
 - Engine: ignifx `0.21.0`; this package targets `@ignifx/core` `>=0.0.0 <1.0.0`.
-- Peer dependencies: `@babylonjs/lite` (exactly `1.34.0`) and `@babylonjs/havok` (`^1.3.0`).
+- Peer dependencies: `@babylonjs/lite` (exactly `1.34.0`) and `@babylonjs/havok` (`^1.3.14`).
 - Browsers, Electron, and Node. The Vite plugin copies `HavokPhysics.wasm` into the public asset
   path, so the browser loads it from `assets/HavokPhysics.wasm`; under Node the extension reads the
   binary out of the installed `@babylonjs/havok` package, so a headless test needs no setup.
@@ -226,8 +226,8 @@ collides with everything. Havok tests a pair in both directions, so one side ref
 ## File formats
 
 - `*.physicsmaterial.json` — `ignifx.physicsmaterial`: `friction`, `staticFriction`, `restitution`.
-  See `skills/ignifx/references/formats/ignifx.physicsmaterial.md`.
-- Component fields as they appear in a scene file: `skills/ignifx/references/formats/components.md`.
+  See `skills/ignifx/references/formats/ignifx.physicsmaterial.md` in the `ignifx` package.
+- Component fields as they appear in a scene file: `components.md` beside it.
 
 ## Gotchas
 
@@ -268,5 +268,6 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-`skills/ignifx/SKILL.md` for the engine entry skill · `skills/ignifx/references/api/physics.md` for
-the generated API · `docs/architecture/09-physics.md` and ADR-0003 for the design rationale.
+The entry skill is `skills/ignifx/SKILL.md` in the `ignifx` package: `node_modules/ignifx/` in an
+installed project, the repository root in the engine repository. Under it, `references/api/physics.md` has every exact signature and `references/formats/` the
+physics material and component field tables.

@@ -11,12 +11,12 @@ metadata:
 ## What this is / when to use
 
 `@ignifx/physics-2d` is the ignifx extension that simulates 2D rigid bodies with **Rapier 2D**
-(`@dimforge/rapier2d-compat`, Apache-2.0, ADR-0006). Add a 2D collider to make an entity solid, add
+(`@dimforge/rapier2d-compat`, Apache-2.0). Add a 2D collider to make an entity solid, add
 a `Rigidbody2D` to make it move, and read the result off `entity.transform.position2D` /
 `rotation2D` like any other pose.
 
 Units are **metres and seconds**, +Y is up, and `rotation2D` is degrees counter-clockwise about +Z.
-Pixels-per-unit affects only rendering (`docs/architecture/11-2d-toolkit.md` §3). The simulation is
+Pixels-per-unit affects only rendering. The simulation is
 stepped directly by ignifx's fixed loop — there is no Babylon Lite scene involved — so it advances
 at a fixed rate whatever the frame rate does, and it runs headless with no GPU.
 
@@ -134,7 +134,7 @@ Colliders share `offset`, `isTrigger`, `material` (a `.physicsmaterial.json` ass
 `app.physics2d` — `gravity`, `raycast`, `raycastAll`, `overlapCircle`, `overlapBox`, `shapeCast`,
 `colliderOutlines(entity)` (Rapier's drawing of each collider as world-space XY segments, for an
 editor's gizmos), and `rapier` (the unstable escape hatch). Full signatures:
-`skills/ignifx/references/api/physics-2d.md`.
+`skills/ignifx/references/api/physics-2d.md` in the `ignifx` package.
 
 ## Recipes
 
@@ -274,11 +274,11 @@ app.step(1 / 60);
 ## File formats
 
 `ignifx.physicsmaterial` — the **same** `.physicsmaterial.json` document 3D physics reads
-(`skills/ignifx/references/formats/ignifx.physicsmaterial.md`): `{ "format":
+(`skills/ignifx/references/formats/ignifx.physicsmaterial.md` in the `ignifx` package): `{ "format":
 "ignifx.physicsmaterial", "friction": 0.6, "restitution": 0 }`. `staticFriction` is ignored, because
 Rapier 2D has one friction coefficient. The combine rules are collider fields, not asset fields.
 
-Component field tables: `skills/ignifx/references/formats/components.md`.
+Component field tables: `components.md` beside it.
 
 ## Gotchas
 
@@ -288,25 +288,25 @@ Component field tables: `skills/ignifx/references/formats/components.md`.
 - **Queries need one completed step.** Rapier builds its broadphase inside `step`, so a query before
   the first fixed step throws `IGX-1153`. Call `app.step(1 / 60)` once first.
 - **Autostep needs a box.** `stepOffset` clears a 0.3 m step with `shape: "box"`; with the default
-  capsule of radius 0.2 it clears about 0.15 m and no more (measured, ADR-0006 Validation). Give a
+  capsule of radius 0.2 it clears about 0.15 m and no more. Give a
   stair-climbing character `shape: "box"`.
 - **A trigger is never an obstacle to a character controller.** `CharacterController2D` filters
   sensors out of its collide-and-slide sweep, so it passes through an `isTrigger` collider without
   slowing and the trigger callbacks fire on both entities. The flip side: a sensor never shows up in
   `CharacterController2D.onCollided` — use `onTriggerEnter`/`onTriggerExit` for pickups and zones,
   and `onCollided` only for the walls and floors the character actually pushed against. (Rapier's
-  controller counts sensors as walls unless `QueryFilterFlags.EXCLUDE_SENSORS` is passed; measured
-  2026-09-08 against 0.20.0, ADR-0006 Validation.)
+  own controller counts sensors as walls unless `QueryFilterFlags.EXCLUDE_SENSORS` is passed, which
+  `CharacterController2D` does.)
 - **One-way platforms are a character-controller feature.** `oneWay` changes what
   `CharacterController2D` collides with; rigid bodies fall through such a collider in both
-  directions in the MVP.
+  directions.
 - **`PolygonCollider2D` is convex.** Rapier builds the convex hull of the points, so a concave
   outline is silently filled in. Use several polygons on one entity, or an `EdgeCollider2D`.
 - **`EdgeCollider2D` is infinitely thin.** A fast body can tunnel through it and a body that starts
   inside it is not pushed out. It is for static level geometry.
 - **Determinism is same-machine only.** `@dimforge/rapier2d-compat` is Rapier's main build, which
   promises local determinism, not cross-platform bit-exactness; the
-  `-deterministic-` builds are the ones that do (ADR-0006 Validation).
+  `-deterministic-` builds are the ones that do.
 - **`angularVelocity` is degrees per second**, matching `Transform.rotation2D`, while Rapier's own
   API is radians. The `rapier` escape hatch gives you radians.
 - **Interpolated poses are display-only.** Read `transform.position` in `fixedUpdate` when you need
@@ -325,5 +325,6 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-`skills/ignifx/SKILL.md` for the engine entry skill · `docs/architecture/11-2d-toolkit.md` §8 and
-ADR-0006 for design rationale.
+The entry skill is `skills/ignifx/SKILL.md` in the `ignifx` package: `node_modules/ignifx/` in an
+installed project, the repository root in the engine repository. Under it, `references/api/physics-2d.md` has every exact signature and `references/formats/` the
+physics material and component field tables.

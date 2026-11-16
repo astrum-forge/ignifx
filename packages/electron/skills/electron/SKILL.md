@@ -29,7 +29,7 @@ Engine `>=0.0.0 <1.0.0` · Electron 44.x (peer, optional) · Babylon Lite 1.34.0
 The fastest way in is the scaffolder — it writes everything below for you:
 
 ```sh
-npx @ignifx/cli my-game --template 3d-third-person --desktop
+npx --package=@ignifx/cli create-ignifx my-game --template 3d-third-person --desktop
 cd my-game && pnpm install && pnpm dev:desktop
 ```
 
@@ -167,7 +167,7 @@ The main entry never imports `@ignifx/core`; it throws `ElectronMainError` (same
 
 ### Security defaults
 
-`createGameWindow` and `installHostHandlers` harden the window for you. None of it is a flag you pass; deviating means an ADR (`CONSTITUTION.md` §9.2). What the package enforces:
+`createGameWindow` and `installHostHandlers` harden the window for you. None of it is a flag you pass. What the package enforces:
 
 | Layer | What it does |
 | --- | --- |
@@ -203,7 +203,7 @@ Unchanged API, different backend: `userData/<namespace>/<encoded key>.json` (or 
 | `pnpm build:desktop` | `electron-vite build` — `out/{main,preload,renderer}`. |
 | `pnpm dist:desktop` | `electron-builder --dir` — an unpacked, **unsigned** app in `release/`. |
 
-Add `--mac`, `--win`, or `--linux` to `electron-builder` for a real installer, on a runner of that platform: cross-compilation is not available for most targets. Code signing, notarization, and auto-update are documented after 1.0.
+Add `--mac`, `--win`, or `--linux` to `electron-builder` for a real installer, on a runner of that platform: cross-compilation is not available for most targets. The package does no code signing, notarization or auto-update: the scaffolded `electron-builder.yml` builds unsigned, and those are `electron-builder` settings with your own credentials.
 
 **Per-OS caveats.** macOS arm64 is verified end to end. Windows is NSIS (Squirrel needs `electron-winstaller`, whose install script this repository does not allow) and is **configuration only** — written, never built. Linux is likewise configuration only; it needs `enable-features=Vulkan`, which `applyWebGpuSwitches` appends, and a display (`xvfb-run`) on CI.
 
@@ -215,11 +215,11 @@ None of its own. It serves whatever `@ignifx/vite-plugin` built — the manifest
 
 | Trap | Use instead |
 | --- | --- |
-| Building the preload script as an ES module. Under `sandbox: true` — which `CONSTITUTION.md` §9.2 fixes — `window.ignifxHost` is silently `undefined`, with no error anywhere. | Build `desktop/preload.ts` with `format: "cjs"` and the file name `index.cjs`. The templates' `electron.vite.config.ts` already does. |
+| Building the preload script as an ES module. Under `sandbox: true`, which `createGameWindow` enforces, `window.ignifxHost` is silently `undefined`, with no error anywhere. | Build `desktop/preload.ts` with `format: "cjs"` and the file name `index.cjs`. The templates' `electron.vite.config.ts` already does. |
 | Calling `applyWebGpuSwitches()` or `registerIgnifxScheme()` after `app.whenReady()`. Both are inert, and the symptom is no `navigator.gpu`. | Call both at the top of `desktop/main.ts`, before the `whenReady` await. |
 | Loading the packaged renderer over `file://`. Opaque origin: no secure context, so no WebGPU; `'self'` matches nothing; relative `fetch` fails. | `serveIgnifxProtocol(dir)` and `entry: "index.html"`. |
 | Expecting `onApplicationPause` when the window is minimised. An Electron renderer receives **no** DOM lifecycle events — no `visibilitychange`, no window `focus`/`blur`, and `document.hidden` never changes. | `onApplicationFocus` works (`electron()` forwards it). For minimise, subscribe to `app.desktop.onWindowEvent`. |
-| Expecting device-loss recovery with PCF or spot-light shadows. Babylon Lite 1.34.0 rebuilds **only** ESM and CSM directional shadow generators; anything else fails recovery and the frame loop stops. | `light.shadows.technique = "csm"` (or `"esm"`) on a game that must survive a lost device. |
+| Expecting device-loss recovery with PCF or spot-light shadows. Babylon Lite rebuilds **only** ESM and CSM directional shadow generators; anything else fails recovery and the frame loop stops. | `light.shadows.technique = "csm"` (or `"esm"`) on a game that must survive a lost device. |
 | Importing `@ignifx/electron/main` from the renderer. It pulls `electron` and Node built-ins into a bundle that has neither. | Import the root `@ignifx/electron` in the renderer; `/main` and `/preload` belong to their own processes. |
 | Expecting `webContents.getWebPreferences()`. It does not exist in Electron 44. | `getLastWebPreferences()` exists at runtime (though not in `electron.d.ts`), or assert `windowOptionsFor(...)` — it is pure. |
 | Scaffolding with `--desktop` you did not want. The three Electron build tools are large binary downloads. | Leave `--desktop` off; the scaffold stays browser-only and `electron()` is still there, inert. |
@@ -230,4 +230,7 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-`skills/ignifx/SKILL.md` for the engine entry skill · `references/api/electron.md`, `references/api/electron-main.md` and `references/api/electron-preload.md` for every exact signature of the three entry points · `docs/architecture/14-platform-electron.md` for the design · `docs/adr/0018-electron-tooling.md` for what the S9.1 spike measured, and for what is still unverified.
+The entry skill is `skills/ignifx/SKILL.md` in the `ignifx` package: `node_modules/ignifx/` in an
+installed project, the repository root in the engine repository. Under it, `references/api/electron.md`, `references/api/electron-main.md` and
+`references/api/electron-preload.md` have every exact signature of the three entry points, and
+`references/concepts/platform-and-storage.md` covers `app.platform` and `app.storage`.

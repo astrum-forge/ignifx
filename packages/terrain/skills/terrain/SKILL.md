@@ -302,7 +302,7 @@ An 8-bit source converts, and the command says on stderr that the heights are al
 
 | Format | Extension | Reference |
 | --- | --- | --- |
-| `ignifx.terrain` | `.terrain.json` | `skills/ignifx/references/formats/` |
+| `ignifx.terrain` | `.terrain.json` | `skills/ignifx/references/formats/ignifx.terrain.md` in the `ignifx` package |
 | raw heightmap | `.r16` | This page, below. |
 
 ```jsonc
@@ -376,9 +376,8 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-`skills/ignifx/SKILL.md` for the engine entry skill · `skills/ignifx/references/api/terrain.md` for
-the generated API · `skills/ignifx/references/formats/` for the document schema ·
-`docs/architecture/07-rendering.md` and `docs/adr/0023-terrain-chunked-geomipmapping.md` for the
-design and what it costs.
+The entry skill is `skills/ignifx/SKILL.md` in the `ignifx` package: `node_modules/ignifx/` in an
+installed project, the repository root in the engine repository. Under it, `references/api/terrain.md` has every exact signature and
+`references/formats/ignifx.terrain.md` the document's fields.
 
 `docs/migrations/` exists only after 1.0.

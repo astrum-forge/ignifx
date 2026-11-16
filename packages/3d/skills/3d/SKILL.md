@@ -339,14 +339,14 @@ Past the last level's distance every renderer is off — that is how a group cul
 
 | Format | Extension | Reference |
 | --- | --- | --- |
-| `ignifx.animator` | `.animator.json` | `skills/ignifx/references/formats/` |
+| `ignifx.animator` | `.animator.json` | `skills/ignifx/references/formats/ignifx.animator.md` in the `ignifx` package |
 
 ## Gotchas
 
 | Trap | What happens | Do this instead |
 | --- | --- | --- |
 | Two `Model`s of one `.glb`, each with an `Animator` | The second animator is refused the clips (reported on `app.onError`) and both instances would share one pose anyway: Babylon Lite binds an animation group to one manager, and a cloned skinned mesh shares the template's skeleton. | One animated instance per model asset. Load a second copy of the `.glb` under a different address for a second animated character. |
-| `.navmesh.bin` / `ignifx bake navmesh` | Babylon Lite 1.27.0 has no navmesh serialization at all. `NavMeshSurface.prebaked` logs a warning and bakes at runtime. | Bake at runtime, or keep the bake cheap by baking from `addSource` geometry. See `docs/adr/0017-navigation-wasm.md`. |
+| A pre-baked `.navmesh.bin` in `NavMeshSurface.prebaked` | Babylon Lite cannot read or write a baked navmesh, and there is no command that bakes one. The surface logs a warning and bakes at runtime. | Bake at runtime, and keep the bake cheap by baking from `addSource` geometry. |
 | Destroying `NavMeshAgent`s in a loop | Lite has no `removeAgent`; the slot is never freed and `maxAgents` fills up. | Re-bake the surface, which builds a fresh crowd, or pool your agents. |
 | Reading `CharacterController.isGrounded` for animation | Havok's character controller has no static friction, so it reports `false` on _any_ incline. | Read `ThirdPersonController.isGrounded`, which classifies the ground against `slopeLimit`. |
 | Expecting `app.navigation.findPath` to work on the first frame | Recast is WebAssembly and loads asynchronously; nothing is baked yet, so the path is empty. | `await surface.bake()`, or connect to `surface.onBaked`. Queries never throw — they answer empty. |
@@ -355,7 +355,7 @@ Past the last level's distance every renderer is off — that is how a group cul
 | `scale(18)` on a stick's look binding | The stick is counted twice: `stickLookSpeed × dt` already turns the deflection into degrees per second, so the view whips round. | Keep only `deadzone(...)` on the binding and tune `stickLookSpeed`. |
 | `scale(1, -1)` to line a stick up with the mouse | The rigs already normalise the pitch axis per device, so a hand-rolled sign flip inverts that one device on its own. | Delete the flip and use `invertY`, which flips every device together. |
 | A third-person camera inside the character in a corner | With `minDistance` at 0 the wall sweep pulls the boom in to the hit, so a character backed into a corner puts the camera inside its own mesh. With the default 0.5 m the camera stops there and may enter the wall instead. | Keep `minDistance` at or above 0.5. To hide the model when the camera is close, compare `currentDistance` with a threshold each frame. |
-| Retuning `sensitivity` per display | It used to change with the device pixel ratio and the render scale, because pointer deltas were backing-store pixels. They are CSS pixels now. | One value everywhere: degrees per CSS pixel, 0.08–0.15 for a mouse. |
+| Retuning `sensitivity` per display | Pointer deltas are CSS pixels, so the same value turns the view equally at every device pixel ratio and render scale. | One value everywhere: degrees per CSS pixel, 0.08–0.15 for a mouse. |
 
 In an edit-mode app (`createApp({ editMode: true })`) animators do not advance (a skinned model shows its loaded pose until `animator.sample(state, normalizedTime)` poses it), billboards keep their authored rotation, a `LodGroup` switches for display only (the editor camera's distance picks the level, the others are hidden with `MeshRenderer.displayHidden`, and every level keeps its authored, saved `enabled`; a removed or disabled group shows every level again; a renderer belongs to one group, and a second group that lists it leaves it alone and warns with `IGX-1217`), and navigation neither bakes on awake nor steps.
 
@@ -367,6 +367,6 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-`skills/ignifx/SKILL.md` for the engine entry skill · `skills/ignifx/references/api/3d.md` for the
-generated API · `docs/architecture/12-3d-toolkit.md` for design rationale ·
-`docs/adr/0017-navigation-wasm.md` for how Recast is loaded and what it costs.
+The entry skill is `skills/ignifx/SKILL.md` in the `ignifx` package: `node_modules/ignifx/` in an
+installed project, the repository root in the engine repository. Under it, `references/api/3d.md` has every exact signature and
+`references/formats/ignifx.animator.md` the animator file's fields.

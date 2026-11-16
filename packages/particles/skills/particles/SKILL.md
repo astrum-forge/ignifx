@@ -331,7 +331,7 @@ export const exhaust = particleDefinition("smoke", {
 
 | Format | Extension | Reference |
 | --- | --- | --- |
-| `ignifx.particles` | `.particles.json` | `skills/ignifx/references/formats/` |
+| `ignifx.particles` | `.particles.json` | `skills/ignifx/references/formats/ignifx.particles.md` in the `ignifx` package |
 
 Every module and every field is optional; `defineParticles` fills in the defaults and refuses a
 document it cannot read with `IGX-1701`, naming the exact path — `start.lifetime.min`, not "invalid
@@ -362,7 +362,7 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-`skills/ignifx/SKILL.md` for the engine entry skill · `skills/ignifx/references/api/particles.md` for
-the generated API · `docs/plan/2026-09-terrain-particles-shaders.md` §4 for the design ·
-`docs/adr/0025-stateless-gpu-particles.md` for why particles are stateless and what that costs ·
-`packages/particles-2d/skills/particles-2d/SKILL.md` for the same documents drawn as sprites.
+The entry skill is `skills/ignifx/SKILL.md` in the `ignifx` package: `node_modules/ignifx/` in an
+installed project, the repository root in the engine repository. Under it, `references/api/particles.md` has every exact signature and
+`references/formats/ignifx.particles.md` the document's fields. The `@ignifx/particles-2d` skill
+(`skills/particles-2d/SKILL.md` in that package) draws the same documents as sprites.
