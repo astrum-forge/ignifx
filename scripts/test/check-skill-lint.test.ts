@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { checkSkillLint } from "../lib/check-skill-lint.ts";
+import { readFileSync } from "node:fs";
+import { MAX_SKILL_BYTES, checkSkillLint } from "../lib/check-skill-lint.ts";
 import { TEMPLATE_SECTIONS, writePage, writeSkill } from "./support/skill-tree.ts";
 import type { CheckResult } from "../lib/check-result.ts";
 import type { SkillFixture } from "./support/skill-tree.ts";
@@ -41,6 +42,39 @@ afterEach(() => {
   for (const fixture of fixtures.splice(0)) {
     fixture.cleanup();
   }
+});
+
+describe("skill-lint: size", () => {
+  /**
+   * Lints a fixture whose `SKILL.md` is padded to an exact UTF-8 size.
+   *
+   * @param bytes - The size the file is padded to.
+   * @returns The lint result.
+   */
+  function lintAtSize(bytes: number): CheckResult {
+    const empty = writeSkill("demo", { bodies: { Environment: "" } });
+    fixtures.push(empty);
+    const base = Buffer.byteLength(readFileSync(empty.root.skillFile, "utf8"), "utf8");
+    // "é" is two bytes, so a limit counted in characters would let this file through.
+    const filler = "é".repeat(Math.floor((bytes - base) / 2)) + "x".repeat((bytes - base) % 2);
+    return lint({ bodies: { Environment: filler } });
+  }
+
+  it("accepts a `SKILL.md` of exactly the byte limit", () => {
+    expect(lintAtSize(MAX_SKILL_BYTES).status).toBe("pass");
+  });
+
+  it("rejects a `SKILL.md` one byte over the limit, counting bytes rather than characters", () => {
+    const result = lintAtSize(MAX_SKILL_BYTES + 1);
+    expect(result.status).toBe("fail");
+    expect(text(result)).toContain(`${String(MAX_SKILL_BYTES + 1)} bytes, limit is ${String(MAX_SKILL_BYTES)}`);
+  });
+
+  it("rejects more than 500 lines", () => {
+    const result = lint({ bodies: { Environment: "line\n".repeat(500) } });
+    expect(result.status).toBe("fail");
+    expect(text(result)).toContain("lines, limit is 500");
+  });
 });
 
 describe("skill-lint: section order", () => {

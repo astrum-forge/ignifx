@@ -21,6 +21,12 @@ import type { SkillRoot } from "./skill-files.ts";
 /** Hard cap on `SKILL.md` length (§4). */
 const MAX_SKILL_LINES = 500;
 
+/**
+ * Hard cap on `SKILL.md` size in UTF-8 bytes (§4). An agent loads the whole file on every task, and
+ * a line cap alone lets it grow through long table rows. Reference pages take what does not fit.
+ */
+export const MAX_SKILL_BYTES = 36_000;
+
 /** Hard cap on the frontmatter `description` (Agent Skills spec, §1). */
 const MAX_DESCRIPTION_LENGTH = 1024;
 
@@ -42,6 +48,12 @@ function checkSkillHeader(root: SkillRoot, releaseVersion: string, problems: str
   const lineCount = source.split("\n").length;
   if (lineCount > MAX_SKILL_LINES) {
     problems.push(`${root.label}: ${String(lineCount)} lines, limit is ${String(MAX_SKILL_LINES)}`);
+  }
+  const byteCount = Buffer.byteLength(source, "utf8");
+  if (byteCount > MAX_SKILL_BYTES) {
+    problems.push(
+      `${root.label}: ${String(byteCount)} bytes, limit is ${String(MAX_SKILL_BYTES)}; move detail to a references/ page`,
+    );
   }
   const { frontmatter, errors } = parseFrontmatter(source);
   for (const error of errors) {
