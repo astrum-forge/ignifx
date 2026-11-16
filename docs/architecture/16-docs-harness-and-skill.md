@@ -31,24 +31,26 @@ AGENTS.md                              tool-agnostic repo instructions: commands
 CLAUDE.md                              "@AGENTS.md" + Claude-specific notes only
 .claude/skills/ignifx  →  ../../skills/ignifx          (symlink so Claude Code discovers the skill in-repo)
 skills/ignifx/
-  SKILL.md                             the entry skill (≤ 500 lines): what ignifx is, install, first app, core concepts, recipe index, gotchas, pointers
+  SKILL.md                             the entry skill (≤ 500 lines and ≤ 36,000 bytes): what ignifx is, install, first app, core concepts, gotchas, pointers to the indexes below
   references/
     concepts/*.md                      assets, baked-lighting, extensions, lifecycle, platform-and-storage, rendering, scene-graph, scripting (curated, API-level, short)
-    api/<entry>.md                     GENERATED from the sources by TypeDoc, one file per package entry point (electron adds electron-main.md and electron-preload.md)
+    api/<entry>.md                     GENERATED from the sources by TypeDoc, one file per package entry point (electron adds electron-main.md and electron-preload.md); README.md is the hand-written index
     recipes/*.md                       GENERATED from examples/recipes/<name>/; README.md is the hand-written index
-    formats/*.md                       GENERATED field tables (ignifx.*.md, components.md, ignifx.schemas.json) beside hand-written prose pages (scene.md, material.md, inputactions.md, wgsl.md, README.md)
+    formats/*.md                       GENERATED field tables (ignifx.*.md, ignifx-lightmap.md, ignifx-probes.md, components.md, ignifx.schemas.json) beside hand-written prose pages (scene.md, material.md, inputactions.md, wgsl.md) and README.md, the hand-written index of all of them
     gotchas.md                         known traps (mesh removal disposes, unlock audio, WebGPU only, Lite escape hatches are unstable)
   scripts/
     check-webgpu.mjs                   prints WebGPU availability for the current environment
     new-script.mjs                     scaffolds a Script class with schema and typeId
-packages/<name>/skills/<name>/SKILL.md subsystem skills (2d, 3d, audio, devtools, editor-host, electron, input, particles, particles-2d, physics, physics-2d, terrain, ui) following one template
+packages/<name>/skills/<name>/SKILL.md subsystem skills (2d, 3d, audio, devtools, editor-host, electron, input, particles, particles-2d, physics, physics-2d, terrain, ui) following one template; a skill may add reference pages of its own (editor-host has references/protocol.md)
 docs/architecture/*.md                 the design of each engine area, for whoever changes the engine
 docs/migrations/                       post-1.0 migration guides; NEVER linked from SKILL.md except one pointer line
 ```
 
 - The umbrella `ignifx` npm package includes `skills/` so `npx skills add astrum-forge/ignifx` (Vercel's community CLI) and manual copy into `.claude/skills/` both work; `AGENTS.md` documents both.
 - Every skill's frontmatter follows the open Agent Skills spec: `name` (lowercase, hyphens, equals the directory name), `description` (third person, trigger keywords, ≤ 1024 chars), `license`, `metadata.ignifx-version`.
-- What code enforces and what is convention. Enforced by `skill-lint`: the 500-line cap on every `SKILL.md` (the lint counts the text split on newlines, so a file of 499 lines with a final newline is at the limit), the frontmatter rules, and the ten sections of §2. Enforced by `docs:recipes`: 80 code lines a recipe. Convention only, checked by nothing: the length of `AGENTS.md`, and the per-section lengths §2 suggests. The cap counts lines, not bytes.
+- What code enforces and what is convention. Enforced by `skill-lint`: two caps on every `SKILL.md`, 500 lines (the lint counts the text split on newlines, so a file of 499 lines with a final newline is at the limit) and 36,000 UTF-8 bytes (`MAX_SKILL_BYTES`; an agent loads the whole file on every task, and the line cap alone let long table rows carry it to twice that), the frontmatter rules, and the ten sections of §2. Enforced by `docs:recipes`: 80 code lines a recipe. Convention only, checked by nothing: the length of `AGENTS.md`.
+- Prettier does not format skill pages: `.prettierignore` lists `skills/ignifx/` and `packages/*/skills/`. Prettier pads every table column to its widest cell, which was 40% of the entry skill's bytes, so skill tables are written with one space around each cell, and `pnpm format` and the pre-commit hook leave them as written.
+- A skill page names another package's skill by the package that ships it and the path inside it (`skills/input/SKILL.md` in `@ignifx/input`; `skills/ignifx/…` in `ignifx`), never by a repository path or a relative link that leaves its own package: a package publishes only its own `skills/` directory. The entry skill says once where those paths are in an installed project and in this repository.
 
 ## 2. SKILL.md template (entry skill)
 
@@ -79,7 +81,7 @@ Subsystem skills use the same ten sections, with the subsystem's components, ser
 `pnpm docs:harness` runs seven named checks, prints one line for each, and exits 1 if any failed. It runs in the CI job `docs-harness` and as a step of `pnpm check`. The two pull-request checks need `--base <ref>`, which only CI passes; locally they report themselves skipped. `--no-regenerate` skips `regeneration-diff`.
 
 - **`skill-lint`** fails on any of:
-  - a `SKILL.md` over 500 lines;
+  - a `SKILL.md` over 500 lines or over 36,000 UTF-8 bytes;
   - frontmatter `name` not lowercase-with-hyphens or not the directory's name; `description` missing, over 1024 characters or starting with a first- or second-person pronoun; `license` missing; `metadata.ignifx-version` not `@ignifx/core`'s version;
   - `##` sections that are not exactly §2's ten, in order (`Gotchas` may carry a ` (top N)` suffix);
   - a "Deprecated (current window)" section that is not one `None …` line before 1.0, or not one `` `X` is deprecated; use `Y`. `` line per symbol after it;
