@@ -4,11 +4,11 @@
 
 ## Context
 
-The ignifx editor (repository `astrum-forge/ignifx-editor`, plan `docs/plan/2026-10-editor-plan.md` §3.5 and §5 ask E1) runs the project's own engine in its scene view. That view must show a scene without playing it: no game script may run, nothing may simulate, and the systems that turn component data into pixels, text, and sound must keep working. `CONSTITUTION.md` §1.3 allows an editor after 1.0 only if it builds on the runtime, so this belongs in the engine, not in an editor-side imitation.
+The ignifx editor (repository `astrum-forge/ignifx-editor`) runs the project's own engine in its scene view. That view must show a scene without playing it: no game script may run, nothing may simulate, and the systems that turn component data into pixels, text, and sound must keep working. `CONSTITUTION.md` §1.3 allows an editor after 1.0 only if it builds on the runtime, so this belongs in the engine, not in an editor-side imitation.
 
-`time.paused` is not that mode. Under `app.pause()` scripts still receive `awake`, `onEnable`, and `start`, coroutines still resume, and every system runs with a non-zero `dt` (`01-lifecycle-and-time.md` §7; the editor's spike S0.7, `docs/research/spikes/s0.7-edit-mode-inventory.md` §1.4, checked this with a probe). The editor plan forbids emulating edit mode with it.
+`time.paused` is not that mode. Under `app.pause()` scripts still receive `awake`, `onEnable`, and `start`, coroutines still resume, and every system runs with a non-zero `dt` (`01-lifecycle-and-time.md` §7; an editor spike checked this with a probe). The editor does not emulate edit mode with it.
 
-The spike inventoried the frame (S0.7 §1–§5, engine commit `182343b`):
+The spike inventoried the frame (engine commit `182343b`):
 
 - Every script callback, from every call site, ends in `LifecycleQueue.invokeCallback`: the scheduler, `World.loadScene`'s synchronous flush, `destroyImmediate`, `unloadScene`, nested enables, `onApplicationPause`/`onApplicationFocus` from DOM events, physics callbacks through `ExtensionContext.dispatchScriptCallback`, and the hot-reload `"recreate"` teardown. Only `onAttach` and `onDetach` bypass it.
 - There are 25 systems. Every `FixedUpdate` system is simulation. Two `Update` systems (physics interpolation, 3D and 2D) write a pose into the transform every frame and would fight an editor's gizmo.
@@ -26,7 +26,7 @@ Constraints: correctness and determinism of games must not change (§2.1, §3.1,
 
 Option 3, as these rules.
 
-**R1 · The switch.** `createApp({ editMode: true })` builds an edit-mode app. The default is `false`. It is fixed for the app's life; `app.isEditMode` reports it. (The plan calls it `app.editMode`; coding standards §5.1 name boolean queries `is…`, as `app.isHeadless` is.) Play mode is a separate app in a separate document (editor plan §3.6), so switching at run time is not needed.
+**R1 · The switch.** `createApp({ editMode: true })` builds an edit-mode app. The default is `false`. It is fixed for the app's life; `app.isEditMode` reports it. (Not `app.editMode`: coding standards §5.1 name boolean queries `is…`, as `app.isHeadless` is.) Play mode is a separate app in a separate document, so switching at run time is not needed.
 
 **R2 · The callback gate.** In an edit-mode app, a script receives none of the fifteen `ScriptCallbacks` (`awake`, `onEnable`, `start`, `fixedUpdate`, `update`, `lateUpdate`, `onDisable`, `onDestroy`, `onCollisionEnter/Stay/Exit`, `onTriggerEnter/Exit`, `onApplicationPause`, `onApplicationFocus`) unless its class declares `static runInEditMode = true`. The check sits in `LifecycleQueue.invokeCallback`, so it covers every call site in the Context list, including `loadScene`, `destroyImmediate`, application events, physics callbacks, and hot reload. A script that may not be called is never filed in the per-callback dispatch lists either, so it costs no frame work and `diagnostics.frame.scriptsUpdated` counts only real calls.
 
@@ -52,7 +52,7 @@ Option 3, as these rules.
 
 The scheduler resolves the value at registration; in an app that is not in edit mode every entry is `"run"`, so a game's frame takes the path it always took and pays one comparison per system. `onWorldCreated`, `onWorldDisposed`, and `dispose` are called for every system, skipped ones included.
 
-The first-party systems, from the spike's inventory (S0.7 §2):
+The first-party systems, from the spike's inventory:
 
 | System                                                  | Phase, order          | Edit mode        | Why                                                                                                   |
 | ------------------------------------------------------- | --------------------- | ---------------- | ----------------------------------------------------------------------------------------------------- |
@@ -87,18 +87,18 @@ The first-party systems, from the spike's inventory (S0.7 §2):
 
 **R14 · Pose on demand.** `SpriteAnimator.sample(clip, frameIndex)` shows one frame of a clip without playing it and emits no signal; it works in any app. The 3D equivalent is not part of this decision (Consequences).
 
-### The spike's open questions (S0.7 §6.4)
+### The spike's open questions
 
 | #   | Question                                                      | Answer                                                                                                                                                                                                                                       |
 | --- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | Do opted-in scripts get `fixedUpdate` and physics callbacks?  | Decided: no (R3, R6)                                                                                                                                                                                                                         |
 | 2   | Are `onAttach`/`onDetach` of gated scripts gated?             | Decided: no (R5)                                                                                                                                                                                                                             |
 | 3   | `static onHotReload`; a patch that flips `runInEditMode`      | Decided: `onHotReload` runs; a flip re-creates (R8)                                                                                                                                                                                          |
-| 4   | Build physics bodies without stepping? Load the physics WASM? | **Decided 2026-10-20: yes, bodies without stepping; the WASM loads as in a game** (Amendment, P1–P6). Until then no body existed and a query threw `IGX-0902` (3D) or `IGX-1153` (2D)                                                        |
-| 5   | The shape of pose on demand                                   | Decided for 2D (R14). **3D left to the owner** with a proposed signature (Consequences)                                                                                                                                                      |
+| 4   | Build physics bodies without stepping? Load the physics WASM? | **Decided 2026-10-20: yes, bodies without stepping; the WASM loads as in a game** (Amendment, P1–P6)                                                                                                                                         |
+| 5   | The shape of pose on demand                                   | Decided for 2D (R14), and for 3D by the amendment of 2026-10-20 (`Animator.sample`)                                                                                                                                                          |
 | 6   | Audio preview and a listener on the editor camera             | **Left to the owner.** Options: let engine-owned audio scripts opt in to teardown only, so a host-started voice is released on destroy; or give `AudioService` a host-owned preview call. A spatial preview needs a listener the host places |
 | 7   | Which engine-shipped scripts opt in                           | Decided: none in this change. No gameplay script may. `AudioListener` waits on question 6                                                                                                                                                    |
-| 8   | Should the shader `time` uniform animate on request?          | **Decided 2026-10-20: yes, on by default** (Amendment, M1–M3). It was held (R9) until then                                                                                                                                                   |
+| 8   | Should the shader `time` uniform animate on request?          | **Decided 2026-10-20: yes, on by default** (Amendment, M1–M3)                                                                                                                                                                                |
 | 9   | Do `app.pause()` and `updateWhenPaused` mean anything?        | Decided: yes, the game's meaning (R11)                                                                                                                                                                                                       |
 | 10  | The error code for `startCoroutine`                           | Decided: `IGX-0111` (R7)                                                                                                                                                                                                                     |
 
@@ -108,17 +108,17 @@ The first-party systems, from the spike's inventory (S0.7 §2):
 - Third-party extensions get the same contract: a reconciler needs no change; a simulation system adds `editMode: "skip"`; a clock-driven display system adds `editMode: "hold"` and treats `ctx.isClockHeld` like `time.paused`.
 - A game pays one comparison per system per frame in the scheduler and one branch per callback in `invokeCallback`. Both flags are resolved at construction or registration; nothing is looked up per frame (§2.5).
 - `SystemContext` gains a required `isClockHeld` field. Code that builds a `SystemContext` by hand, which only tests do, must add `isClockHeld: false`.
-- ~~Physics queries do not work in edit mode (question 4).~~ Superseded by the amendment of 2026-10-20: bodies exist and queries work. Moves made in edit mode still never meet a stale body in play mode, because play mode is a new app that builds bodies from the saved scene on its first step. Moving a dynamic body _during_ play needs `Rigidbody.teleport`, which is the host's job.
+- Physics queries work in edit mode (question 4, amendment of 2026-10-20): bodies exist. Moves made in edit mode still never meet a stale body in play mode, because play mode is a new app that builds bodies from the saved scene on its first step. Moving a dynamic body _during_ play needs `Rigidbody.teleport`, which is the host's job.
 - Follow-ups this decision does not implement:
-  - **`Animator.sample`**, proposed as `sample(state: string, normalizedTime: number, options?: { layer?: string }): boolean`: put a layer in a state at a normalised time, write the pose with `mixer.tick(0)`, emit no signal, and return `false` until the document and the model's clips are bound. It needs a seek on `AnimatorStateMachine`, which is more than a small addition. Until then a skinned model shows its loaded rest pose.
-  - **LOD writes authored data.** `LodSystem` switches `MeshRenderer.enabled`, a serialised field, so an editor that reads fields back would save camera-dependent values. _Done 2026-10-28 (editor audit defect B1): the system is `"skip"` and `LodGroup.onDetach` leaves the levels alone in an edit-mode app, so every level shows as authored. A display-only switch (S0.7 §5), which would bring distance switching back to the scene view, is still open._ _Superseded on 2026-10-29 by the display-only switch: see "Amendment (2026-10-29)" below._
-  - **Static sprites sync once.** A `SpriteRenderer` on an `isStatic` entity is written once, so a gizmo move of a static sprite is not drawn. Edit mode should re-sync static sprites on transform change (S0.7 §5).
+  - **`Animator.sample`** was proposed here as a seek on `AnimatorStateMachine`. The amendment of 2026-10-20 below decides it without a seek.
+  - **LOD writes authored data.** `LodSystem` switches `MeshRenderer.enabled`, a serialised field, so an editor that reads fields back would save camera-dependent values. Answered by the display-only switch of the amendment of 2026-10-29 below.
+  - **Static sprites sync once.** A `SpriteRenderer` on an `isStatic` entity is written once, so a gizmo move of a static sprite is not drawn. Edit mode should re-sync static sprites on transform change; open work (`docs/plan/engineering-plan.md`).
   - `WorldAnchor.element` is assigned by game code in `awake`, so anchored DOM is absent in edit mode. This is expected.
 - Revisit if play-in-place (switching one app between modes) is ever wanted: R1, R4, and R8 assume the answer never changes for a live app.
 
 ## Amendment (2026-10-20): physics bodies without stepping, and an "animate materials" toggle
 
-**Status:** Accepted by the owner on 2026-10-20 (editor tracker Q5b, part 1), answering open questions 4 and 8.
+**Status:** Accepted by the owner on 2026-10-20 , answering open questions 4 and 8.
 
 ### Physics bodies exist, nothing steps
 
@@ -127,7 +127,7 @@ An editor needs the physics world for collider gizmos and for queries against th
 - **P1 · Bodies follow the scene.** In an edit-mode app `@ignifx/physics` and `@ignifx/physics-2d` build, rebuild and remove bodies and colliders from component, layer and tile changes, exactly as a game's fixed step would, and place every body whose transform changed where the transform now is (a teleport, never a simulated move). Each extension registers one extra system for this, `physics-edit-sync` and `physics2d-edit-sync` (`PreRender`, order −800), **only in an edit-mode app**, so a game registers and pays nothing. The restore, step and interpolation systems stay `"skip"` (R9).
 - **P2 · Nothing steps.** No fixed step runs (R6), so no body falls, no velocity integrates, no collision or trigger callback fires (an opted-in script gets none either, R3), no simulated pose is written to a transform, and the diagnostics report `stepsThisFrame = 0`. `app.physics.hasStepped` stays `false`.
 - **P3 · Queries work from the first frame.** `raycast`, `shapeCast`, `overlap` and `distanceToNearest` (3D) and the 2D queries answer in an edit-mode app without a step: each query first brings the bodies in line with the world, so a query issued right after an editor's move sees it. Outside edit mode a query before the first step still throws `IGX-0902` / `IGX-1153`.
-- **P4 · Broadphase, per backend.** Havok inserts a new body into its broadphase but does not move it there on a teleport until the next step (measured on Lite 1.34.0 / Havok 1.3.14: after `setPhysicsBodyTransform` a ray at the new place misses and one at the old place misses too). A moved 3D body is therefore removed and added again with the shapes it has; a changed lossy scale rebuilds the shapes. Rapier refreshes its broadphase only inside a step, so 2D runs the zero-length step a game already runs before its first real one (S6.2) after any change; with a zero timestep nothing moves, and the events it reports are dropped.
+- **P4 · Broadphase, per backend.** Havok inserts a new body into its broadphase but does not move it there on a teleport until the next step (measured on Lite 1.34.0 / Havok 1.3.14: after `setPhysicsBodyTransform` a ray at the new place misses and one at the old place misses too). A moved 3D body is therefore removed and added again with the shapes it has; a changed lossy scale rebuilds the shapes. Rapier refreshes its broadphase only inside a step, so 2D runs the zero-length step a game already runs before its first real one after any change; with a zero timestep nothing moves, and the events it reports are dropped.
 - **P5 · Collider gizmos.** `app.physics.colliderOutlines(entity)` and `app.physics2d.colliderOutlines(entity)` return each enabled collider's outline as world-space line segments with `isTrigger`. 3D outlines are built from the same fields, world pose and lossy scale the Havok shape is (a `MeshCollider` has none headless; a `HeightfieldCollider` outlines the box of its samples); 2D outlines are Rapier's own debug drawing of the colliders, tile collision included. `@ignifx/editor-host` serves them as `getColliderOutlines`. The 3D debug viewer now also follows bodies built, rebuilt or removed after it was switched on, so it draws an edit-mode scene correctly.
 - **P6 · Play mode is unchanged.** A game app behaves exactly as before; the editor's play view is a separate app (R1).
 
@@ -141,7 +141,7 @@ The R9 table above shows both changes: the `ignifx/shader-uniforms` row and the 
 
 ## Amendment (2026-10-20): `Animator.sample`, the 3D pose on demand
 
-**Status:** Accepted by the owner on 2026-10-20 (editor tracker Q5b, part 2), answering open question 5 for 3D and the `Animator.sample` follow-up under Consequences. The sections above are unchanged; where they say the 3D pose is left to the owner, this section is the answer.
+**Status:** Accepted by the owner on 2026-10-20 , answering open question 5 for 3D and the `Animator.sample` follow-up under Consequences. The sections above are unchanged; where they say the 3D pose is left to the owner, this section is the answer.
 
 An editor previews a character's pose at a chosen point of an animation state while the animator's clock is held (R9: `ignifx/3d-animation` is `"skip"`).
 
@@ -158,14 +158,14 @@ An editor previews a character's pose at a chosen point of an animation state wh
 
 ## Amendment (2026-10-29): level of detail switches for display only
 
-**Status:** Proposed on 2026-10-29 (engine E41, from the review of engine #85), for the owner to ratify with editor ADR-E009 (its Open question 2). It answers the "LOD writes authored data" follow-up under Consequences. It replaces the `"skip"` of 2026-10-28.
+**Status:** Proposed on 2026-10-29 (from the review of engine #85) — implemented on `main`; awaiting ratification by the owner, with editor ADR-E009 (its Open question 2). It answers the "LOD writes authored data" follow-up under Consequences. It replaces the `"skip"` of 2026-10-28.
 
-With `ignifx/3d-lod` skipped, every level of a `LodGroup` drew at once in an editor's scene view. Spike S0.7 §5 asked for the switch to be display-only instead, so it runs again, without writing anything a scene file saves.
+With `ignifx/3d-lod` skipped, every level of a `LodGroup` drew at once in an editor's scene view. The editor's edit-mode spike asked for the switch to be display-only instead, so it runs again, without writing anything a scene file saves.
 
 - **L1 · The seam.** `MeshRenderer.displayHidden: boolean` (`@ignifx/core`, new public member). It is a runtime flag, not a schema field, so serialization never reads it and `enabled` keeps its authored value. While it is set, render sync hides the clone exactly as `enabled = false` does (the mesh stays in the scene, casts no shadow, `isVisible` is `false`) and also writes Lite's `pickable = false`, because Lite's pickers ignore `visible`: a mesh hidden for display neither returns from nor occludes `pickAsync` or `raycastRender`.
 - **L2 · The switch.** `ignifx/3d-lod` registers as `"run"`. In an edit-mode app `LodGroup` picks its level as a game does, from the highest-priority enabled camera (the editor's) and with hysteresis, and hides every other level with `displayHidden`; it writes only when the shown renderer or the level list changes. A level it shows draws only if its authored `enabled` says so.
 - **L3 · Restoring.** A group that is removed, disabled, or whose level list drops a renderer shows that renderer again, so nothing stays hidden behind it.
-- **L4 · One owner.** `displayHidden` is a single flag, not a count, so a renderer has one owner: the `LodGroup` that lists it as a level, and nothing else in the engine writes it. If two groups list one renderer, the first to claim it keeps it; the other warns once with `IGX-1217` (new, `@ignifx/3d`) and leaves that renderer alone, and claims it on its next frame once the owner lets go (removed, disabled, or the level dropped). Without this, a group that let go cleared a hide the other still wanted (engine E41b). A per-owner count (`hide(owner)`/`show(owner)`) was not chosen: no second writer exists or is planned, and two groups switching one renderer is a scene mistake in a game too, where both write its `enabled`. A second writer, such as an editor "hide in scene view" toggle, would bring the count back.
+- **L4 · One owner.** `displayHidden` is a single flag, not a count, so a renderer has one owner: the `LodGroup` that lists it as a level, and nothing else in the engine writes it. If two groups list one renderer, the first to claim it keeps it; the other warns once with `IGX-1217` (new, `@ignifx/3d`) and leaves that renderer alone, and claims it on its next frame once the owner lets go (removed, disabled, or the level dropped). Without this, a group that let go cleared a hide the other still wanted. A per-owner count (`hide(owner)`/`show(owner)`) was not chosen: no second writer exists or is planned, and two groups switching one renderer is a scene mistake in a game too, where both write its `enabled`. A second writer, such as an editor "hide in scene view" toggle, would bring the count back.
 - **L5 · Play mode is unchanged.** A game app switches `enabled` as before and never sets `displayHidden`. The editor's play view is a new app built from the saved scene (R1), so nothing hidden for display can reach it. **Play in place** (one app switching modes), if it is ever wanted, must clear every group's display hides (`LodGroup.releaseDisplay`) on the switch, because the game switch writes `enabled` and would leave a level hidden for display in the edit session hidden for good.
 
 The R9 table above shows the change in the `ignifx/3d-lod` row.

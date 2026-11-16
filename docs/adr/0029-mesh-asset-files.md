@@ -6,7 +6,7 @@
 
 A scene file names an asset by address (`06-serialization-and-scene-format.md` §3). A primitive mesh had no address a file could name: `MeshAsset.box(app)` and its siblings publish at a `memory:` address, the serializer writes such a reference as `null` (`IGX-0602`), and core's `mesh` type had no loader, so a `"mesh"` address failed with `IGX-0504`.
 
-Converting `templates/3d-third-person` to a scene file (engine PR #46, editor plan ask E2) hit this. The template publishes each primitive a second time at a plain address (`src/level-meshes.ts`) before `loadScene`. The scene then loads only in an app that ran that code. `@ignifx/editor-host` creates the app from the extensions and scripts only, so the editor's scene view cannot open the level at all (editor plan ask E15, "format gap 1").
+Converting `templates/3d-third-person` to a scene file (engine PR #46) hit this. The template published each primitive a second time at a plain address (`src/level-meshes.ts`) before `loadScene`. The scene then loads only in an app that ran that code. `@ignifx/editor-host` creates the app from the extensions and scripts only, so the editor's scene view cannot open the level at all.
 
 Constraints: core stays small (`CONSTITUTION.md` §2.3), unused features cost nothing (§2.5), only `src/lite/**` imports Lite (§3.4), file formats are versioned JSON with a schema (§3.7, `06` §6 and §8), and a headless app must load the same files (§3.8).
 
@@ -39,7 +39,7 @@ This lives in core because core already owns the `mesh` type, the factories, and
 ## Consequences
 
 - A scene or prefab can name a primitive, the scene loads in any app that registers the core extension, and saving it writes the address back instead of `null`.
-- `templates/3d-third-person` can delete `src/level-meshes.ts` and add seven `assets/meshes/*.mesh.json` files. In its scene, each `{ "$asset": "meshes/<name>", "type": "mesh" }` becomes `{ "$asset": "meshes/<name>.mesh.json" }`. That is a follow-up to PR #46, not part of this change.
-- A `.mesh.json` edit reloads through the default hot-reload path, and `onReplaced` fires. `MeshRenderer` does not listen for it, so a renderer keeps drawing its old clone until its `mesh` field is assigned again or the scene reloads. Rebuilding on `onReplaced` is possible follow-up work.
+- `templates/3d-third-person` has no `src/level-meshes.ts`: it ships seven `assets/meshes/*.mesh.json` files, and its scene names them as `{ "$asset": "meshes/<name>.mesh.json" }`.
+- A `.mesh.json` edit reloads through the default hot-reload path, and `onReplaced` fires. `MeshRenderer` does not listen for it, so a renderer keeps drawing its old clone until its `mesh` field is assigned again or the scene reloads. Rebuilding on `onReplaced` is open work (`docs/plan/engineering-plan.md`).
 - Adding a primitive means adding a factory, a `MeshPrimitiveDefinition` member, and a table row. The compiler checks the last two against each other.
 - Revisit if games want vertex data in files. That would be a binary format, not more JSON fields.

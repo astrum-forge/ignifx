@@ -6,7 +6,7 @@
 
 A scene cannot say that it needs the input actions and the audio buses. Controllers resolve their action names in `awake`, which runs inside `World.loadScene`, so the action maps must be installed before the load. The `input.actions` and `audio.buses` settings exist, but the extensions start those loads in `onStart` and install them a frame later (`packages/input/src/extension.ts`, `startInput`). Every template therefore loads `game.input.json` and `game.audio.json` in `src/main.ts`, installs them by hand, and only then calls `loadScene` (`templates/3d-third-person/src/main.ts`; engine PR #46, gap 6, recurring in all three templates of PR #52). A headless test, a tool, or an editor play view must copy that code or get controllers with no actions.
 
-These documents are project-wide: every scene of a game uses the same actions and buses. Settings are data since ask E6 (`ignifx.settings.json`, engine PR #63), and the editor's Settings panel already edits both keys.
+These documents are project-wide: every scene of a game uses the same actions and buses. Settings are data (`ignifx.settings.json`, engine PR #63), and the editor's Settings panel already edits both keys.
 
 ## Options considered
 

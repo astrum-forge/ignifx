@@ -4,7 +4,7 @@ Every file in this directory is redistributed under the licence recorded below, 
 line its upstream project requires (`CONSTITUTION.md` §11.3). Tests, examples, and benchmarks share
 these files; nothing here is published in an `@ignifx/*` package.
 
-Downloaded 2026-09-05 for Phase 2 (spikes S2.2–S2.4). Re-download with the commands in
+Downloaded 2026-09-05. Re-download with the commands in
 [Provenance](#provenance) and compare the SHA-256 digests before replacing a file.
 
 ---
@@ -22,8 +22,7 @@ The Khronos glTF sample cube: one mesh, one metallic-roughness material. Used as
 ## `Box-draco.glb` — 1 084 bytes and `Box-meshopt.glb` — 1 940 bytes
 
 `Box.glb` compressed with `KHR_draco_mesh_compression` and with `EXT_meshopt_compression` (plus
-`KHR_mesh_quantization`), so a test can load each through the decoders `@ignifx/core` hosts (engine
-ask E9). Same licence and copyright as `Box.glb`; the commands are under [Provenance](#provenance).
+`KHR_mesh_quantization`), so a test can load each through the decoders `@ignifx/core` hosts. Same licence and copyright as `Box.glb`; the commands are under [Provenance](#provenance).
 
 - **SHA-256:** `df9a448a091e070bd8a9231b71243a9bc0f2559b0e9fe34a4376999db4d5d6d1` (Draco), `b0a6b16254ed0743cb3b3dcb35a6dcf737bc16707f133dabcf5bb7dcc2078bd6` (meshopt)
 
@@ -55,7 +54,7 @@ base64-decoded byte for byte, with nothing re-encoded.
 
 ## `ui/ShareTechMono-Regular.ttf` — 43 272 bytes
 
-Added 2026-09-06 for Phase 8. A single-weight monospaced TrueType face, used by the `@ignifx/ui`
+Added 2026-09-06. A single-weight monospaced TrueType face, used by the `@ignifx/ui`
 text tests. It lives in the `ui/` subdirectory and its full entry — licence text, reserved font
 name, provenance command — is in [`ui/ATTRIBUTION.md`](ui/ATTRIBUTION.md), alongside the sibling
 `2d/` and `2d-templates/` files.
@@ -68,7 +67,7 @@ name, provenance command — is in [`ui/ATTRIBUTION.md`](ui/ATTRIBUTION.md), alo
 
 ## `ktx2/` — `quadrants.png` (108 bytes) and three `.ktx2` files (710, 709 and 750 bytes)
 
-Added 2026-10-19 for engine ask E13 (KTX2 in games). One 32×32 image with four solid quadrants —
+Added 2026-10-19 for KTX2 textures in games. One 32×32 image with four solid quadrants —
 red top-left, green top-right, blue bottom-left, white bottom-right, top row first — as a PNG and
 as three KTX2 files with sRGB transfer and a full six-level mip chain: `quadrants-etc1s.ktx2`
 (ETC1S, BasisLZ) and `quadrants-uastc.ktx2` (UASTC, Zstandard) are encoded from the image flipped
@@ -108,7 +107,7 @@ requirement would then travel to every game made from that template.
 curl -L -o Box.glb \
   https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Box/glTF-Binary/Box.glb
 curl -L -o studio.env https://assets.babylonjs.com/environments/studio.env
-# 2026-11-03, engine ask E9: the compressed boxes, with the WASM-only glTF-Transform CLI.
+# 2026-11-03: the compressed boxes, with the WASM-only glTF-Transform CLI.
 pnpm dlx @gltf-transform/cli@4.5.1 draco Box.glb Box-draco.glb
 pnpm dlx @gltf-transform/cli@4.5.1 meshopt Box.glb Box-meshopt.glb
 # brdf-lut.png is the base64 payload of `_environmentBRDFBase64Texture`, decoded:
