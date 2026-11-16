@@ -1,25 +1,46 @@
 # 15 · Devtools and Diagnostics
 
-**Status:** Design standard (pre-1.0) · **Packages:** `@ignifx/core` (`app.diagnostics`, errors, logging), `@ignifx/devtools`, `@ignifx/vite-plugin` (HMR)
+**Status:** Implemented; describes the code on `main` · **Packages:** `@ignifx/core` (`app.diagnostics`, errors, logging), `@ignifx/devtools`, `@ignifx/vite-plugin` (HMR)
+
+**Source map**
+
+- `packages/core/src/errors/` — `ignifx-error.ts`, `error-codes.ts` (core's codes), `error-code-registry.ts` (an app refuses a duplicate registration) (§1).
+- `packages/core/src/log/` — `logger.ts`, `console-sink.ts`, `memory-sink.ts` (§2).
+- `packages/core/src/diagnostics/` — `diagnostics.ts` (`app.diagnostics`, the 300-frame history), `diagnostics-group.ts`, `frame-sample.ts` (§3).
+- `packages/core/src/hot-reload/` — `hot-reload-host.ts` (`app.hotReload`), `patch.ts`, `recreate.ts`, `schema-shape.ts`, `statics.ts`, `contract.ts` (§5).
+- `packages/vite-plugin/src/virtual-modules.ts` — generates `virtual:ignifx/scripts` and `acceptHotReload` (§5).
+- `packages/devtools/src/` — `extension.ts`, `service.ts` (`app.devtools`), `overlay/` (the overlay, the sampler at `PreRender` 9000, the toggle key, the scene-tree index), `panels/` (one file per panel), `inspector/fields.ts`, `log-sink.ts`, `probes.ts` (structural access to optional peers), `scene-reload.ts` (§4).
+- Performance: `benchmarks/` and `benchmarks/baselines.json` (§6).
+
+Invariants to keep:
+
+- Every thrown engine error is an `IgnifxError` with a registered `IGX-####` code from its owner's range; a new package takes a new range here (§1).
+- Diagnostics sampling allocates nothing: counters are indexed and a live group never grows (§3).
+- A closed overlay costs nothing: no DOM, no subscriptions, and a sampler that returns on its first line (§4).
+- Devtools reaches every optional peer structurally and never imports it (§4).
+- The toggle key is a raw `keydown`, never an input action (§4).
+- `app.hotReload.apply` runs only outside lifecycle callbacks (`IGX-0208`) (§5).
+- A `"patch"` class whose schema shape changed is re-created, never patched (§5).
+- The hot-reload policy lives in core and works with no bundler; the Vite plugin supplies only the channel (§5).
 
 ---
 
 ## 1. Errors
 
 - `IgnifxError extends Error` with `code: "IGX-####"`, `context` (entity/component/asset identifiers), and `hint`. Development builds format the full message; production builds keep the code and context. Ranges: `01xx` lifecycle, `02xx` components, `03xx` scenes, `04xx` extensions, `05xx` assets, `06xx` serialization, `07xx` rendering, `08xx` input, `09xx` physics, `10xx` audio, `11xx` 2D, `12xx` 3D, `13xx` UI, `14xx` platform — split by owner: `IGX-1401`–`1419` `@ignifx/cli` (scaffolding), `IGX-1420`–`1459` core platform and storage, `IGX-1460`–`1499` `@ignifx/electron` — `15xx` devtools (`IGX-1500`–`1549` core diagnostics, `IGX-1550`–`1599` `@ignifx/devtools`), `16xx` `@ignifx/terrain`, `17xx` particles (`IGX-1700`–`1749` `@ignifx/particles`, `IGX-1750`–`1799` `@ignifx/particles-2d`), `18xx` `@ignifx/editor-host` (`17-editor-host.md` §8), `9xxx` reserved for third parties.
-- `app.onError: Signal<ErrorReport>` receives every error thrown from a lifecycle callback, coroutine, system, or asset loader, with the source identified; the default handler logs and, in development, shows an overlay. Babylon Lite coded errors are decoded (`enableErrorDecoding` in dev; lazy `decodeError` in prod).
+- `app.onError: Signal<ErrorReport>` receives every error thrown from a lifecycle callback, coroutine, system, or asset loader, with the source identified; the default handler logs one line naming the boundary, the phase and the object. Core shows no overlay; `@ignifx/devtools` lists the reports in its Console panel (§4). Babylon Lite coded errors are decoded (`enableErrorDecoding` in dev; lazy `decodeError` in prod).
 
 ## 2. Logging
 
-`app.log` (and `ctx.log` per extension) with levels `debug/info/warn/error`, scoped prefixes, rate limiting for per-frame warnings ("warned once" helper), and a pluggable sink (console by default; devtools console panel; file sink in Electron).
+`app.log` (and `ctx.log` per extension) with levels `debug/info/warn/error`, scoped prefixes, rate limiting for per-frame warnings ("warned once" helper), and pluggable sinks added with `Logger.addSink` (console by default; a memory sink; the devtools Console panel's sink).
 
 ## 3. Diagnostics (`app.diagnostics`)
 
-A frame-sampled, allocation-free set of counters grouped by subsystem (`frame`, `render`, `physics`, `assets`, `input`, `audio`, `twoD`, `animation`) plus per-phase CPU timings in development — where "development" means `createApp({ mode })` is `"development"`, the default in every build including `vite build`, until a game passes `mode: import.meta.env.PROD ? "production" : "development"`. Consumers read the latest sample; a ring buffer of the last 300 frames supports graphs. Extensions and games add groups with `registerGroup(name, counterNames)` (`IGX-1503` on a duplicate) or `groupOrRegister(name, counterNames)`, which returns an existing group as first registered — counters are indexed, so a live group never grows.
+A frame-sampled, allocation-free record: the frame sample (`app.diagnostics.frame`) and counter groups registered by the subsystem that owns them (`render` and `assets` in core; `input`, `audio`, `physics`, `physics2d`, `particles`, `particles-2d` and `terrain` by their extensions), plus per-phase CPU timings in development — where "development" means `createApp({ mode })` is `"development"`, the default in every build including `vite build`, until a game passes `mode: import.meta.env.PROD ? "production" : "development"`. Consumers read the latest sample; a ring buffer of the last 300 frames supports graphs. Extensions and games add groups with `registerGroup(name, counterNames)` (`IGX-1503` on a duplicate) or `groupOrRegister(name, counterNames)`, which returns an existing group as first registered — counters are indexed, so a live group never grows.
 
 ## 4. Devtools overlay (`@ignifx/devtools`)
 
-Toggled with a configurable key or `app.devtools.open()`; DOM-based, and zero cost when closed. `app.devtools` is `{ open, close, toggle, isOpen, panel(name), panels, select, selected, reloadScenes, onOpened, onClosed, onSelectionChanged }`, and the `devtools` settings section carries `toggleKey` (a `KeyboardEvent.code`, default `"Backquote"`), `openOnStart`, `reloadScenes`, `panels` (the tab order, and by omission a filter), `position` and `opacity`. The extension owns `IGX-1550`–`IGX-1599`; `IGX-1501`–`IGX-1549` belong to `@ignifx/core`'s diagnostics and logging.
+Toggled with a configurable key or `app.devtools.open()`; DOM-based, and zero cost when closed. `app.devtools` is `{ open, close, toggle, isOpen, panel(name), panels, select, selected, position, reloadScenes, isSceneReloadDelegated, onOpened, onClosed, onSelectionChanged }`, and the `devtools` settings section carries `toggleKey` (a `KeyboardEvent.code`, default `"Backquote"`), `openOnStart`, `reloadScenes`, `panels` (the tab order, and by omission a filter), `position` and `opacity`. The extension owns `IGX-1550`–`IGX-1599`; `IGX-1501`–`IGX-1549` belong to `@ignifx/core`'s diagnostics and logging.
 
 - **The toggle key is a raw `keydown` on the document**, never an input action: `@ignifx/input` is an optional peer, and an action map a pause menu disables would take the developer's escape hatch with it (`08-input.md` §5).
 - **Where it mounts.** In `app.ui.layer("devtools")` when `@ignifx/ui` is registered and its overlay is live; otherwise the overlay builds its own root as the canvas's next sibling, the way `13-ui.md` §1's host does. Every optional peer — `ui`, `input`, `audio`, `physics`, `physics-2d` — is reached structurally, so a game with only `@ignifx/core` opens the same overlay with three of its nine panels saying "not registered".
@@ -31,9 +52,9 @@ Panels: **Stats** (FPS, frame/CPU/GPU ms, draw calls, fixed steps, entities, com
 
 Three of those need a qualification the one-line list cannot carry:
 
-- **Inspector.** A field's editor is chosen from its kind: number, bool, string, enum, vector, quaternion, colour, asset and reference get a control, and `array`, `record`, `map`, `layerMask`, `curve` and `custom` are shown as their encoded JSON and are not editable — a nested editor for them, and a wrong `custom` codec write, would corrupt game state rather than merely look wrong. `hidden` drops a field, `readonly` disables it, `min`/`max`/`step`/`tooltip`/`group` are honoured. A write is `component[name] = value`, which is exactly what the scene loader's `applyProps` does; core has no field-change hook, so the assignment _is_ the documented path. `Transform` declares no schema — the scene format writes it as a first-class record — so the panel builds its position/rotation/scale rows by hand and writes through `transform.localPosition` and friends, which are live views over the Lite node; that is why an inspector edit moves the entity in the same frame.
+- **Inspector.** A field's editor is chosen from its kind: number, bool, string, enum, vector, quaternion, colour, asset and reference get a control, and `array`, `record`, `map`, `layerMask`, `curve` and `custom` are shown as their encoded JSON and are not editable — a nested editor for them, and a wrong `custom` codec write, would corrupt game state rather than merely look wrong. `hidden` drops a field, `readonly` disables it, `min`/`max`/`step`/`tooltip`/`group` are honoured. A write is `component[name] = value`, which is exactly what the scene loader's `applyProps` does; core has no field-change hook, so the assignment _is_ the documented path. The `Transform` class declares no schema — the scene format writes it as a first-class record — so the panel builds its position/rotation/scale rows by hand and writes through `transform.localPosition` and friends, which are live views over the Lite node; that is why an inspector edit moves the entity in the same frame.
 - **Assets.** `Assets` publishes `get(address)` but no listing of live handles, so the panel walks `app.assets.manifest` and asks for a handle per address: an asset registered at run time under an address the manifest never carried does not appear. Force reload calls the asset service's `reload(address)` — the entry point the Vite plugin's HMR channel uses — which is not on the public `Assets` interface, so the button is disabled and reports `IGX-1555` on a build that has none.
-- **Console.** The extension creates a `DevtoolsLogSink` and adds it to `app.log` with `Logger.addSink` (added to core at the Phase 10 integration precisely for this), so every logger in the tree — `ctx.log` included — reaches the panel with no game-side wiring; `devtools({ logSink })` substitutes a shared or differently sized sink. The panel also lists `app.onError` reports and `app.hotReload` reports, newest first.
+- **Console.** The extension creates a `DevtoolsLogSink` and adds it to `app.log` with `Logger.addSink`, so every logger in the tree — `ctx.log` included — reaches the panel with no game-side wiring; `devtools({ logSink })` substitutes a shared or differently sized sink. The panel also lists `app.onError` reports and `app.hotReload` reports, newest first.
 
 ## 5. Script hot reload
 
@@ -52,4 +73,4 @@ The policy lives in `@ignifx/core` as `app.hotReload`, so it works headlessly wi
 ## 6. Performance tooling
 
 - `app.diagnostics.profile(name)` scopes in development add `performance.mark/measure` entries visible in browser profilers.
-- Benchmark scenes under `benchmarks/` run with Vitest `bench` (headless simulation) and a Playwright GPU job (frame time, draw calls) whose results are compared against committed baselines (`CONSTITUTION.md` §6.4).
+- Benchmark scenes under `benchmarks/` run with Vitest: `pnpm bench` (headless simulation) and the `perf` project (`pnpm test:perf`, also a CI job), whose timing, heap and bundle-size budgets are compared against the committed `benchmarks/baselines.json` (`CONSTITUTION.md` §6.4). GPU frame time is measured by `pnpm test:frame-budget`, a Playwright run against the same baselines that is local only and not a CI job.
