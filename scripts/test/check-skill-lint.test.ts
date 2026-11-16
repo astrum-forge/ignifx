@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
+import { afterEach, describe, expect, it } from "vitest";
 import { MAX_SKILL_BYTES, checkSkillLint } from "../lib/check-skill-lint.ts";
 import { TEMPLATE_SECTIONS, writePage, writeSkill } from "./support/skill-tree.ts";
 import type { CheckResult } from "../lib/check-result.ts";

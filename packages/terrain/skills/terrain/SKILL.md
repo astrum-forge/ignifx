@@ -381,5 +381,3 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 The entry skill is `skills/ignifx/SKILL.md` in the `ignifx` package: `node_modules/ignifx/` in an
 installed project, the repository root in the engine repository. Under it, `references/api/terrain.md` has every exact signature and
 `references/formats/ignifx.terrain.md` the document's fields.
-
-`docs/migrations/` exists only after 1.0.
