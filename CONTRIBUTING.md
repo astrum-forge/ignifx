@@ -90,10 +90,11 @@ Constitution amendments need an ADR, a `constitution: …` PR title, and project
 
 Copy the shape of `packages/3d`: `package.json` (the name, `keywords`, `files: ["dist", "skills"]`, the scripts, `catalog:` and `workspace:*` dependencies, `publishConfig`, and the `ignifx` manifest with its `skill` entry), `README.md`, `tsconfig.json`, `tsconfig.test.json`, `test/tsconfig.json`, `tsdown.config.ts`, `api-extractor.json` (`reportFileName`), `typedoc.json` (`entryFileName`), the `src/` entry files, and `skills/<name>/SKILL.md`.
 
-These files hold a package list and must change too; nothing else does (Vitest, Turborepo, the workspace file, Changesets, the workflows and the scripts find packages by glob or manifest):
+These files hold a package list and must change too; nothing else does (Vitest, the workspace file, Changesets, the workflows and the scripts find packages by glob or manifest):
 
 - Root `tsconfig.json`: a `references` entry.
 - `.dependency-cruiser.cjs`: a key in `ALLOWED_IMPORTS`, and the `ignifx` list if the umbrella re-exports the package.
+- `turbo.json`: a `<package>#docs:api` entry naming the package's generated API page as its output.
 - `commitlint.config.ts`: the `scope-enum` list.
 - The umbrella, if it re-exports the package: `packages/ignifx/package.json` `dependencies`, `tsdown.config.ts` `neverBundle`, the re-export block in `src/index.ts`, and the surface assertion in `test/index.test.ts`.
 - A new asset type: `packages/vite-plugin/src/asset-types.ts`.

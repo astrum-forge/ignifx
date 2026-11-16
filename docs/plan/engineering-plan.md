@@ -35,9 +35,9 @@ The planned 0.x scope is on `main` and on npm as one fixed version line: the ker
 
 ### Rendering and lighting
 
-- Lightmap baker and dynamic diffuse GI: ADR-0040.
+- Lightmap baker: decided as editor work, for editor 0.8 or later (ADR-0040). Dynamic diffuse GI is a candidate for after 1.0, not committed (ADR-0040, Consequences).
 - Reflection probes: no GGX prefilter, no capture to a file, no blending while any probe captures every frame; probe resources are freed through undeclared Lite fields.
-- Lightmaps: a placement with `uv2: false`, or on a mesh without `uvs2`, is refused (`IGX-0735`).
+- Lightmaps: a placement with `uv2: false`, or on a mesh without `uvs2`, is not applied as authored: it logs `IGX-0735` once and samples the whole texture.
 - TAA: no per-object velocity for PBR meshes, no floating-origin handling. Ambient occlusion: no history of its own; a render-to-texture camera samples the main view's.
 - Shadows: the technique cannot change at run time and a `Light`'s `shadows` record is read once. Soft shadows, area lights and point-light shadows wait on Lite.
 - One camera draws to the screen (no split view). The material format has no emissive strength.
