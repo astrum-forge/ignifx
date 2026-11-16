@@ -4,16 +4,14 @@
 
 **Source map**
 
-| Where                                                                                         | What                                                                                                      |
-| --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `packages/core/src/assets/assets-service.ts`, `asset-handle.ts`, `asset-ref.ts`, `address.ts` | `app.assets`, handles, refs, address and fragment parsing (§2 to §4)                                      |
-| `packages/core/src/assets/request-queue.ts`, `fetcher.ts`, `delivery-system.ts`               | Priority queue and retries, the one `fetch` path, delivery in `PreUpdate` (§4, §9)                        |
-| `packages/core/src/assets/loader-context.ts`, `generic-loaders.ts`, `manifest.ts`             | `LoaderContext`, the json/text/binary loaders, the manifest (§5, §7)                                      |
-| `packages/core/src/render/loaders/`, `packages/core/src/render/*-asset.ts`                    | Core's GPU loaders and asset classes (§5)                                                                 |
-| `packages/core/src/render/decoder-urls.ts`, `packages/core/src/lite/gpu/decoders.ts`          | Decoder URLs, the left-out mark, the Lite glue (§5, "Compressed textures")                                |
-| `packages/core/decoders/`, `scripts/vendor-decoders.ts`                                       | The vendored decoder files and the script that writes them (`vendored.json` records sources and versions) |
-| `packages/vite-plugin/src/manifest.ts`, `extension-assets.ts`, `decoders.ts`, `plugin.ts`     | Manifest generation, `ignifx.assets.public`, decoder groups, HMR (§7)                                     |
-| `packages/core/src/hot-reload/`                                                               | Script hot reload; asset reload is in `assets-service.ts`                                                 |
+- `packages/core/src/assets/assets-service.ts`, `asset-handle.ts`, `asset-ref.ts`, `address.ts`: `app.assets`, handles, refs, address and fragment parsing (§2 to §4).
+- `packages/core/src/assets/request-queue.ts`, `fetcher.ts`, `delivery-system.ts`: Priority queue and retries, the one `fetch` path, delivery in `PreUpdate` (§4, §9).
+- `packages/core/src/assets/loader-context.ts`, `generic-loaders.ts`, `manifest.ts`: `LoaderContext`, the json/text/binary loaders, the manifest (§5, §7).
+- `packages/core/src/render/loaders/`, `packages/core/src/render/*-asset.ts`: Core's GPU loaders and asset classes (§5).
+- `packages/core/src/render/decoder-urls.ts`, `packages/core/src/lite/gpu/decoders.ts`: Decoder URLs, the left-out mark, the Lite glue (§5, "Compressed textures").
+- `packages/core/decoders/`, `scripts/vendor-decoders.ts`: The vendored decoder files and the script that writes them (`vendored.json` records sources and versions).
+- `packages/vite-plugin/src/manifest.ts`, `extension-assets.ts`, `decoders.ts`, `plugin.ts`: Manifest generation, `ignifx.assets.public`, decoder groups, HMR (§7).
+- `packages/core/src/hot-reload/`: Script hot reload; asset reload is in `assets-service.ts`.
 
 Invariants:
 

@@ -4,15 +4,13 @@
 
 **Source map** (paths under `packages/core/src/`)
 
-| Where                                                                                                 | What                                                                                   |
-| ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `serialization/scene-file.ts`, `serialization/validate.ts`                                            | The scene file type, its JSON Schema and structural validation (§2, §7)                |
-| `serialization/load.ts`, `scene-loader.ts`, `scene-asset.ts`                                          | The loading algorithm and the `scene` asset loader (§4)                                |
-| `serialization/expand.ts`, `overrides.ts`, `instance-paths.ts`, `instance-targets.ts`, `uid-remap.ts` | Instance expansion, override application, instance paths, the uid remap (§2, §4)       |
-| `serialization/serialize.ts`, `prefab-overrides.ts`                                                   | `serializeScene` and the override diff; applying and reverting overrides on files (§5) |
-| `schema/encode.ts`, `schema/validate.ts`                                                              | Value encoding, `canonicalizeNumber`, field validation (§3)                            |
-| `schema/json.ts`, `schema/describe.ts`, `scripts/docs-schemas.ts` (repository root)                   | `toJsonSchema`, descriptions, the generator of §8                                      |
-| `skills/ignifx/references/formats/` (repository root)                                                 | The generated page and JSON Schema for every format of §6                              |
+- `serialization/scene-file.ts`, `serialization/validate.ts`: The scene file type, its JSON Schema and structural validation (§2, §7).
+- `serialization/load.ts`, `scene-loader.ts`, `scene-asset.ts`: The loading algorithm and the `scene` asset loader (§4).
+- `serialization/expand.ts`, `overrides.ts`, `instance-paths.ts`, `instance-targets.ts`, `uid-remap.ts`: Instance expansion, override application, instance paths, the uid remap (§2, §4).
+- `serialization/serialize.ts`, `prefab-overrides.ts`: `serializeScene` and the override diff; applying and reverting overrides on files (§5).
+- `schema/encode.ts`, `schema/validate.ts`: Value encoding, `canonicalizeNumber`, field validation (§3).
+- `schema/json.ts`, `schema/describe.ts`, `scripts/docs-schemas.ts` (repository root): `toJsonSchema`, descriptions, the generator of §8.
+- `skills/ignifx/references/formats/` (repository root): The generated page and JSON Schema for every format of §6.
 
 Invariants:
 

@@ -6,15 +6,13 @@ This document is the single definition of _when things happen_. Extensions plug 
 
 **Source map** (paths under `packages/core/src/`)
 
-| Where                                                                             | What                                                                                     |
-| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `scheduler/scheduler.ts`                                                          | The frame function: the steps of §3 in order, the fixed loop and its accumulator         |
-| `scheduler/deferred-queue.ts`, `lifecycle/lifecycle-queue.ts`                     | Deferred work; the `awake`/`onEnable`/`start` flushes and the destroy flush              |
-| `lifecycle/callbacks.ts`, `lifecycle/script-list.ts`, `lifecycle/pause-filter.ts` | The one call site for script callbacks, script ordering, the pause and edit-mode filters |
-| `time/time.ts`, `time/clock.ts`                                                   | `app.time` (§2); the wall clock and the manual clock                                     |
-| `coroutine/coroutine-host.ts`, `script/wait.ts`                                   | Coroutines and the wait instructions (§5)                                                |
-| `app/app.ts`                                                                      | `start`, `stop`, `step`, `pause`, focus and visibility listeners, disposal               |
-| `lite/loop.ts`                                                                    | The one Lite before-render callback, `startEngine`/`stopEngine`                          |
+- `scheduler/scheduler.ts`: The frame function: the steps of §3 in order, the fixed loop and its accumulator.
+- `scheduler/deferred-queue.ts`, `lifecycle/lifecycle-queue.ts`: Deferred work; the `awake`/`onEnable`/`start` flushes and the destroy flush.
+- `lifecycle/callbacks.ts`, `lifecycle/script-list.ts`, `lifecycle/pause-filter.ts`: The one call site for script callbacks, script ordering, the pause and edit-mode filters.
+- `time/time.ts`, `time/clock.ts`: `app.time` (§2); the wall clock and the manual clock.
+- `coroutine/coroutine-host.ts`, `script/wait.ts`: Coroutines and the wait instructions (§5).
+- `app/app.ts`: `start`, `stop`, `step`, `pause`, focus and visibility listeners, disposal.
+- `lite/loop.ts`: The one Lite before-render callback, `startEngine`/`stopEngine`.
 
 Invariants:
 

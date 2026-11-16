@@ -4,16 +4,14 @@
 
 **Source map** (paths under `packages/core/src/`)
 
-| Where                                            | What                                                                        |
-| ------------------------------------------------ | --------------------------------------------------------------------------- |
-| `world/world.ts`                                 | `World`: entity registry, scenes, load, instantiate, world signals          |
-| `scene/scene-instance.ts`                        | `SceneInstance`                                                             |
-| `entity/entity.ts`, `entity/entity-path.ts`      | `Entity`, `find(path)`                                                      |
-| `transform/transform.ts`, `lite/node.ts`         | `Transform` and the Lite node it wraps; the `metadata.ignifx` bridge        |
-| `signal/signal.ts`                               | `Signal`                                                                    |
-| `layers/`, `tags/tag-set.ts`                     | `LayerTable`, `LayerMask`, `TagSet`                                         |
-| `ids/ulid.ts`, `handles/`                        | uids and run-time handles                                                   |
-| `serialization/prefab-overrides.ts`, `prefab.ts` | `applyOverridesToAsset`, `revertOverrides`; the `@ignifx/core/prefab` entry |
+- `world/world.ts`: `World`: entity registry, scenes, load, instantiate, world signals.
+- `scene/scene-instance.ts`: `SceneInstance`.
+- `entity/entity.ts`, `entity/entity-path.ts`: `Entity`, `find(path)`.
+- `transform/transform.ts`, `lite/node.ts`: `Transform` and the Lite node it wraps; the `metadata.ignifx` bridge.
+- `signal/signal.ts`: `Signal`.
+- `layers/`, `tags/tag-set.ts`: `LayerTable`, `LayerMask`, `TagSet`.
+- `ids/ulid.ts`, `handles/`: uids and run-time handles.
+- `serialization/prefab-overrides.ts`, `prefab.ts`: `applyOverridesToAsset`, `revertOverrides`; the `@ignifx/core/prefab` entry.
 
 The interface listings below are the members a reader needs to follow the design; the full, generated list is `packages/core/api/core.api.md`.
 

@@ -6,16 +6,14 @@ The scripting model is the part of ignifx users touch most. It follows Unity's c
 
 **Source map** (paths under `packages/core/src/`)
 
-| Where                                                               | What                                                                                            |
-| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `component/component.ts`, `component/component-type.ts`             | `Component`, `ComponentHooks`, `ComponentStatics`, `Component.define`                           |
-| `component/component-registry.ts`, `component/reference-tracker.ts` | Type ids and per-class statics (§4); tracked references                                         |
-| `script/script.ts`, `lifecycle/callbacks.ts`                        | `Script`, `ScriptCallbacks`; the one guarded call site for callbacks (§10)                      |
-| `schema/`                                                           | Field kinds, defaults, validation, encoding, `describeSchema`, `toJsonSchema` (§3)              |
-| `transform/transform-schema.ts`                                     | `transformSchema()`                                                                             |
-| `coroutine/coroutine-host.ts`, `script/wait.ts`                     | Coroutines (§5)                                                                                 |
-| `scheduler/scheduler.ts`, `extension/`                              | Phases and system registration (§6); services and app properties (§7)                           |
-| `tools/eslint-plugin-ignifx/src/rules/` (repository root)           | `no-async-lifecycle`, `no-entity-find-in-src`, `schema-field-shadowing`, `signal-connect-owner` |
+- `component/component.ts`, `component/component-type.ts`: `Component`, `ComponentHooks`, `ComponentStatics`, `Component.define`.
+- `component/component-registry.ts`, `component/reference-tracker.ts`: Type ids and per-class statics (§4); tracked references.
+- `script/script.ts`, `lifecycle/callbacks.ts`: `Script`, `ScriptCallbacks`; the one guarded call site for callbacks (§10).
+- `schema/`: Field kinds, defaults, validation, encoding, `describeSchema`, `toJsonSchema` (§3).
+- `transform/transform-schema.ts`: `transformSchema()`.
+- `coroutine/coroutine-host.ts`, `script/wait.ts`: Coroutines (§5).
+- `scheduler/scheduler.ts`, `extension/`: Phases and system registration (§6); services and app properties (§7).
+- `tools/eslint-plugin-ignifx/src/rules/` (repository root): `no-async-lifecycle`, `no-entity-find-in-src`, `schema-field-shadowing`, `signal-connect-owner`.
 
 Invariants:
 

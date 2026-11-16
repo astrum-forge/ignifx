@@ -6,15 +6,13 @@ An extension is the unit of optional functionality. Input, physics, audio, the 2
 
 **Source map**
 
-| Where                                                                                            | What                                                                                                              |
-| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `packages/core/src/extension/host.ts`                                                            | Sorting, validation, the engine-range check, `register`/`onStart`/`onStop`/`dispose` order (§2)                   |
-| `packages/core/src/extension/extension-context.ts`, `define-extension.ts`, `service-registry.ts` | `ExtensionContext`, `defineExtension`, services (§1)                                                              |
-| `packages/core/src/extension/core-extension.ts`                                                  | What core registers through the same contract (§7)                                                                |
-| `packages/core/src/settings/`                                                                    | The settings store, validation in the settings form, `describeSettings`, `settingsJsonSchema` (§5)                |
-| `packages/vite-plugin/src/ignifx-config.ts`, `extension-assets.ts`                               | `ignifx.config.ts` and `ignifx.settings.json` to `import.meta.env.IGNIFX_CONFIG`; `ignifx.assets.public` (§4, §5) |
-| `packages/physics/src/extension.ts`                                                              | The extension §1 abridges                                                                                         |
-| `packages/<name>/package.json` → `ignifx`                                                        | The manifest of §4                                                                                                |
+- `packages/core/src/extension/host.ts`: Sorting, validation, the engine-range check, `register`/`onStart`/`onStop`/`dispose` order (§2).
+- `packages/core/src/extension/extension-context.ts`, `define-extension.ts`, `service-registry.ts`: `ExtensionContext`, `defineExtension`, services (§1).
+- `packages/core/src/extension/core-extension.ts`: What core registers through the same contract (§7).
+- `packages/core/src/settings/`: The settings store, validation in the settings form, `describeSettings`, `settingsJsonSchema` (§5).
+- `packages/vite-plugin/src/ignifx-config.ts`, `extension-assets.ts`: `ignifx.config.ts` and `ignifx.settings.json` to `import.meta.env.IGNIFX_CONFIG`; `ignifx.assets.public` (§4, §5).
+- `packages/physics/src/extension.ts`: The extension §1 abridges.
+- `packages/<name>/package.json` → `ignifx`: The manifest of §4.
 
 Invariants:
 
