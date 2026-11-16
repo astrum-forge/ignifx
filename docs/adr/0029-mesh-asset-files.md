@@ -6,7 +6,7 @@
 
 A scene file names an asset by address (`06-serialization-and-scene-format.md` §3). A primitive mesh had no address a file could name: `MeshAsset.box(app)` and its siblings publish at a `memory:` address, the serializer writes such a reference as `null` (`IGX-0602`), and core's `mesh` type had no loader, so a `"mesh"` address failed with `IGX-0504`.
 
-Converting `templates/3d-third-person` to a scene file (engine PR #46) hit this. The template published each primitive a second time at a plain address (`src/level-meshes.ts`) before `loadScene`. The scene then loads only in an app that ran that code. `@ignifx/editor-host` creates the app from the extensions and scripts only, so the editor's scene view cannot open the level at all (editor plan ask E15, "format gap 1").
+Converting `templates/3d-third-person` to a scene file (engine PR #46) hit this. The template published each primitive a second time at a plain address (`src/level-meshes.ts`) before `loadScene`. The scene then loads only in an app that ran that code. `@ignifx/editor-host` creates the app from the extensions and scripts only, so the editor's scene view cannot open the level at all.
 
 Constraints: core stays small (`CONSTITUTION.md` §2.3), unused features cost nothing (§2.5), only `src/lite/**` imports Lite (§3.4), file formats are versioned JSON with a schema (§3.7, `06` §6 and §8), and a headless app must load the same files (§3.8).
 

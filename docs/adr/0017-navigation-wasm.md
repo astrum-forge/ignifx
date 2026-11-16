@@ -4,7 +4,7 @@
 
 ## Context
 
-`@ignifx/3d`'s navigation (`docs/architecture/12-3d-toolkit.md` §5) is Recast, reached through Babylon Lite's `createNavigationPluginAsync`. Recast is a WebAssembly module, and the Havok integration had already shown that a WebAssembly dependency is a _deployment_ decision as much as a runtime one: `@babylonjs/havok` cannot `fetch` a `file:` URL, so `@ignifx/physics` copies `HavokPhysics.wasm` through the Vite plugin's `ignifx.assets.public` and resolves it through the asset manifest (`09-physics.md` §7, spike S4.1).
+`@ignifx/3d`'s navigation (`docs/architecture/12-3d-toolkit.md` §5) is Recast, reached through Babylon Lite's `createNavigationPluginAsync`. Recast is a WebAssembly module, and the Havok integration had already shown that a WebAssembly dependency is a _deployment_ decision as much as a runtime one: `@babylonjs/havok` cannot `fetch` a `file:` URL, so `@ignifx/physics` copies `HavokPhysics.wasm` through the Vite plugin's `ignifx.assets.public` and resolves it through the asset manifest (`09-physics.md` §7).
 
 The question was whether navigation needs the same machinery, whether it can run at all in a plain Node process (which is what a headless test and a server-side simulation are), and what a game pays for it in a production bundle.
 
