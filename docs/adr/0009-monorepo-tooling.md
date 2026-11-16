@@ -1,267 +1,64 @@
 # ADR-0009 · Monorepo tooling
 
-**Status:** Accepted · **Date:** 2026-09-05 · **Revisit:** quarterly with the toolchain table in the coding standards
+**Status:** Accepted · **Date:** 2026-09-05 · **Revisit:** when a tool in the Decision is replaced
 
 ## Context
 
-A multi-package TypeScript monorepo with published libraries, templates, examples, benchmarks, a website, and a docs harness, started in September 2026 (see the toolchain research summarized in `docs/standards/coding-standards.md` §1).
+A multi-package TypeScript monorepo with published libraries, templates, examples, benchmarks and a docs harness, started in September 2026.
 
 ## Decision
 
-- **pnpm 11 workspaces** with `catalog:` for shared versions; **Turborepo 2** for task orchestration and caching.
-- **tsdown** for library builds (ESM only, `isolatedDeclarations` dts); **Vite 8** for apps, templates, website.
-- **Vitest 5** (node + browser/Playwright projects), **Playwright** for visual tests.
-- **Oxlint + tsgolint** primary lint; **ESLint 10 + typescript-eslint** (TS6 alias) only for gap and custom rules; **oxfmt** formatting.
-- **Changesets** with fixed versioning; **npm Trusted Publishing** (OIDC); **Renovate** for updates; **lefthook** hooks; **commitlint**.
-- **API Extractor** reports and **TypeDoc markdown** feeding the Agent Skill.
-- **Astro Starlight** is the candidate for a versioned docs site (VitePress 2 is still alpha); the public site stays a plain Vite SPA per the project brief.
+- **pnpm workspaces** with `catalog:` for shared versions; **Turborepo** for task orchestration and caching.
+- **tsdown** for library builds (ESM only, `isolatedDeclarations` declarations); **Vite** for apps and templates.
+- **Vitest** for unit, performance and browser tests (projects `node`, `node-isolated`, `perf`, `browser`); **Playwright** for visual tests.
+- **Oxlint with tsgolint** as the primary linter; **ESLint with typescript-eslint** only for gap rules and the repository's own `ignifx/*` rules; **oxfmt** for code and **Prettier** for Markdown.
+- **Changesets** with fixed versioning; **npm Trusted Publishing** (OIDC); **Renovate** for updates; **lefthook**, lint-staged and **commitlint** for hooks.
+- **API Extractor** reports and **TypeDoc** Markdown feeding the agent skill.
+
+The public site is not part of this repository (ADR-0019, ADR-0027).
 
 ## Consequences
 
-- Fast CI (native TS, Rolldown) and reproducible installs.
-- Tool churn is expected; the standards table is the single place versions are recorded.
+- Fast CI (native TypeScript, Rolldown) and reproducible installs.
+- Tool churn is expected. Versions are recorded in one place, the `pnpm-workspace.yaml` catalog; documents do not repeat them.
+- **Visual goldens, frame budgets and GPU budgets are not in CI** (owner decision, 2026-10-03). `ci.yml` has no visual or frame-budget job and no scheduled trigger: shared runners are too slow and too variable for a frame-time ceiling, and gameplay goldens failed on runner speed rather than on engine changes. The suites stay in `tests/visual/` and are run locally (`pnpm test:visual`, `pnpm test:frame-budget`, `pnpm test:gpu-budget`) when a change can affect rendering or frame time; the result goes in the pull request. `benchmarks/template-frame-time.test.ts` still holds the recorded rows in `benchmarks/baselines.json` to the coding-standards §7 budget in CI.
+- **Provenance is off.** `publishConfig.provenance` is `false` in every package manifest, which deviates from `CONSTITUTION.md` §9.4. It was switched off on 2026-09-07 because npm cannot attest from a private source repository. The repository is public, so that reason no longer holds; restoring provenance is open work (`docs/plan/engineering-plan.md`).
+- **A release bumps more than package versions.** `changeset version` knows nothing about the skills' `metadata.ignifx-version` or the `ignifxVersion` inside `skills/ignifx/references/formats/ignifx.schemas.json`, so the release workflow's version step is `pnpm version-packages`: `changeset version`, then `pnpm skills:version`, then `pnpm docs:schemas`. The values a skill may declare live in `scripts/lib/skill-version.ts`, which both the linter and the writer import.
+- **A publish is verified, not trusted.** `changeset publish` reaches `pnpm publish` (Changesets picks the workspace's package manager), and `pnpm release:verify` (`scripts/verify-published.ts`) asks the registry for every version the tree carries and fails the release when one is missing. Trusted Publishing cannot create a package that does not exist yet; the header of `release.yml` records how the existing names were claimed.
 
-## Validation (2026-09-05)
+## Validation
 
-Spikes S0.1 and S0.2 were run on macOS 26 (Darwin 25.5, arm64), Node 25.2.1 and Node 24.20.0, pnpm 11.17.0, against a single hello package `@ignifx/core@0.0.0`.
+Deviations and tool behaviour the configuration depends on. Each was checked against the configuration files on 2026-11-16 unless marked as carried over.
 
-| Tool                                | Version installed                                              | What was proven                                                                                                                                         | Notes / deviations                                                                                                                                                                                                                                                                                                                                                      |
-| ----------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| pnpm                                | 11.17.0                                                        | Workspace + `catalog:` + `allowBuilds` install cleanly; lockfile committed                                                                              | `catalog:` **does** accept `npm:` alias specifiers, so the ADR-0007 pair lives in the catalog, not in root `devDependencies`. The pnpm 11 build allow-list key is `allowBuilds` (a map of `<package>: true`), alongside `dangerouslyAllowAllBuilds`. pnpm also appended a `minimumReleaseAgeExclude` list of its own; `minimumReleaseAge` itself is left at the default |
-| TypeScript (native)                 | 7.0.2, aliased `typescript-native`                             | `tsc --build` type-checks `src` and `test` projects                                                                                                     | `tsc --version` → 7.0.2                                                                                                                                                                                                                                                                                                                                                 |
-| `@typescript/typescript6`           | 6.0.2 (reports `ts.version` 6.0.3), aliased `typescript`       | The alias resolves: `node -e 'require("typescript").version'` → `6.0.3` from `@typescript/typescript6`                                                  | Bins do not clash: TS 6 ships only `tsc6`, TS 7 ships `tsc`                                                                                                                                                                                                                                                                                                             |
-| tsdown                              | 0.23.0                                                         | ESM bundle + `isolatedDeclarations` d.ts, `@babylonjs/lite` kept external                                                                               | `external:` is deprecated in 0.23; use `deps.neverBundle`                                                                                                                                                                                                                                                                                                               |
-| Oxlint + tsgolint                   | 1.81.0 / oxlint-tsgolint 7.0.2001                              | `oxlint --type-aware` runs the type-aware rules of standards §6 and catches `no-explicit-any` / `no-unsafe-return`                                      | Config file is `.oxlintrc.json` (the name oxlint discovers), not `oxlint.json`. `no-redeclare` and `typescript/prefer-readonly-parameter-types` are disabled with justifications: the first misreads the `as const` + derived-union pattern the standards mandate (§5.2), the second contradicts the adapter's mutable engine handles                                   |
-| ESLint (gap config)                 | 10.10.0 + typescript-eslint 8.69.0                             | Flat config, jsdoc + import-x gap rules, 8 no-op `ignifx/*` placeholder rules                                                                           | ESLint 10 loads **`eslint.config.ts` natively** (verified by removing `jiti` from `node_modules`; commitlint 21 loads `commitlint.config.ts` natively too), so `jiti` is not a dependency                                                                                                                                                                               |
-| oxfmt                               | 0.66.0                                                         | Formats TS/JS/JSON/YAML at 2 spaces, double quotes, semicolons, trailing commas, 120 columns                                                            | Markdown is excluded through `.oxfmtignore`: standards §6 assign Markdown to Prettier, and Prettier is not wired up in Phase 0, so Markdown is not machine-formatted yet                                                                                                                                                                                                |
-| Vitest (node)                       | 5.0.0                                                          | 12 unit tests, fake-free and wall-clock-free, 100% coverage of everything reachable from Node                                                           | `coverage` is a **root-level** option in Vitest 5 — nested under `projects[].test` it is silently ignored, which had thresholds passing at 62%                                                                                                                                                                                                                          |
-| Vitest (browser)                    | 5.0.0 + `@vitest/browser-playwright` 5.0.0 + Playwright 1.63.0 | Real Chromium creates a WebGPU device and Lite's `createEngine` succeeds on a canvas; two engines coexist in one page                                   | The provider option is `launchOptions`, not `launch`; unknown keys are dropped silently                                                                                                                                                                                                                                                                                 |
-| API Extractor                       | 7.59.0                                                         | `api/core.api.md` generated and verified (`api-extractor run --verbose` fails on drift)                                                                 | **It does not use the alias.** `@microsoft/api-extractor@7.59.0` depends on `typescript@5.9.3` and analyses with that bundled copy, only reading the project's TS version to print "the target project appears to use TypeScript 6.0.2 which is newer than the bundled compiler engine". The standards §1 note "(TS6 alias)" on this row is therefore inaccurate        |
-| TypeDoc                             | 0.28.20 + typedoc-plugin-markdown 4.13.0                       | `skills/ignifx/references/api/core.md` generated; regeneration is byte-identical                                                                        | **Uses the alias**, and says so: `Using TypeScript 6.0.3 from node_modules/.pnpm/@typescript+typescript6@6.0.2/...`. `cleanOutputDir: false` is required or TypeDoc deletes the committed `references/api/README.md`; `disableSources: true` keeps the output stable across unrelated edits                                                                             |
-| publint                             | 0.3.24                                                         | `All good!` on the packed tarball                                                                                                                       | —                                                                                                                                                                                                                                                                                                                                                                       |
-| `@arethetypeswrong/cli`             | 0.18.5                                                         | Clean under `--profile esm-only`                                                                                                                        | Under the default `strict` profile it reports `no-resolution` (node10) and `cjs-resolves-to-esm`; both are the intended consequence of standards §4 "ESM only", so the package script pins `--profile esm-only`                                                                                                                                                         |
-| Turborepo                           | 2.10.12                                                        | Orchestrates build → api-report / docs:api / pack-check with correct `dependsOn`                                                                        | —                                                                                                                                                                                                                                                                                                                                                                       |
-| Changesets                          | 3.0.2                                                          | `changeset status` reports a bump for `@ignifx/core`                                                                                                    | `fixed` is `[["@ignifx/*"]]` only: listing the umbrella `ignifx` before `packages/ignifx` exists makes Changesets report a config error. The umbrella must be added to `fixed` in the pull request that creates it                                                                                                                                                      |
-| lefthook + lint-staged + commitlint | 2.1.12 / 17.4.1 / 21.2.2                                       | Hooks install and validate; `lint-staged` runs oxfmt + `oxlint --fix` on staged files; commitlint accepts `feat(core): …` and rejects an unlisted scope | —                                                                                                                                                                                                                                                                                                                                                                       |
+- pnpm's `catalog:` accepts `npm:` alias specifiers, so the ADR-0007 pair lives in the catalog. The build allow-list key is `allowBuilds`. `minimumReleaseAge` is left at pnpm's default.
+- TypeScript 6 ships only a `tsc6` bin, so the two installs do not clash. (carried over)
+- tsdown: `external` is deprecated; the configuration uses `deps.neverBundle`.
+- The Oxlint configuration file is `.oxlintrc.json`, the name Oxlint discovers.
+- Type-aware Oxlint resolves the nearest `tsconfig.json` for each file. A package's tests therefore carry a non-emitting `test/tsconfig.json`, repository scripts carry `scripts/tsconfig.json`, and `tsconfig.tools.json` type-checks root configuration files (coding standards §3).
+- ESLint and commitlint load their `.ts` configuration files natively, so `jiti` is not a dependency. (carried over)
+- Vitest: `coverage` is a root-level option; nested under `projects[].test` it is silently ignored. The browser provider option is `launchOptions`; unknown keys are dropped silently. Coverage excludes `packages/*/src/lite/render.ts`, which needs a GPU and is covered by the browser project.
+- API Extractor does not use the TypeScript 6 alias: it analyses with its own bundled TypeScript. TypeDoc does use the alias.
+- TypeDoc needs `cleanOutputDir: false`, or it deletes the committed `references/api/README.md`; `disableSources: true` keeps its output stable across unrelated edits.
+- `@arethetypeswrong/cli` runs with `--profile esm-only`: the default profile reports the intended consequences of ESM-only packages as errors.
+- `tsc --build` is a type-checker here. Its output goes to `.tsbuild/` and `.tsbuild-test/`, because `dist/` belongs to tsdown and whichever ran last would clobber the other.
+- Changesets' `fixed` group is `[["@ignifx/*", "ignifx"]]`.
+- lint-staged runs oxfmt and Oxlint on staged files without `--fix`: an autofix at commit time rewrote code that had passed the gate (`.lintstagedrc.mjs`).
+- dependency-cruiser declares `engines.node` as `^22||^24||>=26` and refuses to start on Node 25.
+- Subsystem skills are discovered through each package's `ignifx.skill` manifest entry (`docs/architecture/04-extensions.md` §4), not by globbing, so the umbrella's pack-time copy of the entry skill is never linted twice.
+- The `docs-harness` CI job checks out with `fetch-depth: 0`, because two of its checks diff against the base commit.
+- Babylon Lite: `disposeEngine` throws on a null engine. `createNullEngine()` returns an engine with no `_context` and no `_device`, and `disposeEngine` uses both unconditionally, so the headless adapter disposes only the scene, which is the complete teardown for an engine that holds no GPU resources. (carried over; pinned by `packages/core/test/lite/engine.test.ts`, not re-run)
+- Babylon Lite: `createEngine(canvas)` throws when `requestAdapter()` returns null, so the adapter probes first and raises `IGX-0701`. (carried over)
+- Test input holds are counted in frames, not milliseconds. A wall-clock hold is a frame-rate assumption: on a slow runner the release lands in the same tick as the press and the input is lost (`waitForFrames` in `tests/visual/tests/templates.spec.ts`; coding standards §10).
 
-### WebGPU flags (S0.1)
+### WebGPU flags
 
-Measured with Playwright 1.63.0's bundled Chrome Headless Shell 153 and with installed Google Chrome, on macOS arm64, over a `http://127.0.0.1` page:
+Measured with Playwright's bundled Chromium on macOS arm64. The outcome lives in `vitest.config.ts` and `tests/visual/playwright.config.ts`; change both together. (carried over; not re-measured)
 
-| Flags                                                                                                 | `navigator.gpu` | `requestAdapter()` | Adapter       |
-| ----------------------------------------------------------------------------------------------------- | --------------- | ------------------ | ------------- |
-| none (headless shell)                                                                                 | yes             | **null**           | —             |
-| `--enable-unsafe-webgpu`                                                                              | yes             | ok                 | SwiftShader   |
-| `--enable-unsafe-webgpu --use-webgpu-adapter=swiftshader`                                             | yes             | ok                 | SwiftShader   |
-| `--enable-unsafe-webgpu --use-angle=metal`                                                            | yes             | ok                 | Apple metal-3 |
-| `--enable-unsafe-webgpu --enable-features=Vulkan --use-angle=vulkan --use-webgpu-adapter=swiftshader` | yes             | **null**           | —             |
-
-Findings:
-
-- `--enable-unsafe-webgpu` is required for the bundled headless shell; without it `navigator.gpu` exists but hands out no adapter, and Babylon Lite fails with error 46 ("WebGPU adapter not available").
-- The Linux combination named in the plan (`--enable-features=Vulkan --use-angle=vulkan`) **breaks** WebGPU on macOS. The committed configuration is therefore `--enable-unsafe-webgpu --use-webgpu-adapter=swiftshader`, which pins the software adapter that coding standards §10 requires of CI and is verified working here; the Ubuntu CI job should start from the same two flags and add `--enable-features=Vulkan --use-angle=vulkan` only if a hardware adapter is wanted.
-- WebGPU needs a secure context: no adapter is handed out on `about:blank`, only on `http://127.0.0.1`/localhost or https.
+- `--enable-unsafe-webgpu` is required: without it `navigator.gpu` exists and `requestAdapter()` returns null.
+- `--use-webgpu-adapter=swiftshader` pins the software adapter, so results do not depend on the host GPU.
+- `--enable-features=Vulkan --use-angle=vulkan` returns a null adapter on macOS.
+- WebGPU needs a secure context: an adapter is handed out on `http://127.0.0.1`, localhost or https, never on `about:blank`.
 
 ### WebGPU flags on Linux (2026-09-06)
 
-The first CI runs on GitHub's `ubuntu-latest` failed every visual golden: the examples reported `unsupported` and the templates failed their first GPU allocation (`createBuffer … too large for the implementation when mappedAtCreation == true`) or asset load (`IGX-0505`). Reproduced in `mcr.microsoft.com/playwright:v1.63.0-noble` (Chromium 1243, arm64) with a bare page that requests the device the engine requests, configures the canvas, and presents cleared frames:
-
-| Flags (all with `--enable-unsafe-webgpu --use-webgpu-adapter=swiftshader`)  | Adapter | Device | First present                                                                                                   |
-| --------------------------------------------------------------------------- | ------- | ------ | --------------------------------------------------------------------------------------------------------------- |
-| none added                                                                  | ok      | ok     | **device destroyed**, `onSubmittedWorkDone` rejects with "A valid external Instance reference no longer exists" |
-| `--enable-features=Vulkan --use-angle=vulkan`                               | null    | —      | —                                                                                                               |
-| `--enable-features=Vulkan --use-vulkan=swiftshader`                         | ok      | ok     | **device destroyed**                                                                                            |
-| `--enable-features=Vulkan --use-vulkan=swiftshader --use-angle=swiftshader` | ok      | ok     | alive through three presented frames                                                                            |
-| `--use-angle=swiftshader`                                                   | ok      | ok     | **device destroyed**                                                                                            |
-| `--disable-gpu-sandbox`                                                     | ok      | ok     | **device destroyed**                                                                                            |
-
-MSAA (1× or 4×) and the canvas format (`rgba8unorm`, the Linux preferred format, or `bgra8unorm`) made no difference. Unit-style browser tests that never present to a canvas pass with the base flags on Linux, which is why `test-browser` was green while `test-visual` was red. Decision: `vitest.config.ts` and `tests/visual/playwright.config.ts` add `--enable-features=Vulkan --use-vulkan=swiftshader --use-angle=swiftshader` when `process.platform === "linux"` and keep the base pair elsewhere (the Vulkan flags still return a null adapter on macOS). With those flags the visual suite passed all 13 GPU-backed tests in the same image (arm64; 11 desktop-only tests skipped), every scene within its existing tolerance against the macOS goldens, so one golden per scene stays viable.
-
-### Babylon Lite 1.27.0 findings
-
-- `disposeEngine(engine)` is **not** safe for a null engine. `createNullEngine()` returns an engine that is its own surface with no `_context` and no `_device`, while `disposeEngine` unconditionally calls `surface._context.unconfigure()` and `engine._device.destroy()`. The headless adapter therefore disposes only the scene, which is the complete teardown for a GPU-free engine.
-- `createEngine(canvas)` throws Lite error 46 when `requestAdapter()` returns null, so the adapter runs its own capability probe first and raises `IgnifxError` `IGX-0001` instead (renumbered to `IGX-0701`, the rendering range, when Phase 1 introduced the error registry).
-- `runHeadlessSteps(engine, scene, steps, deltaMs?)` exists alongside `stepScene` and is a candidate for the Phase 1 fixed-step loop.
-
-### Timings
-
-`pnpm check` (format check, lint, typecheck, unit tests + coverage, API report, docs harness) from a cold Turborepo cache:
-
-| Runtime                           | Wall clock |
-| --------------------------------- | ---------- |
-| Node 25.2.1 (machine default)     | 10.0 s     |
-| Node 24.20.0 (`engines` baseline) | 8.0 s      |
-
-Both are far inside the 3-minute Phase 0 exit criterion. Node 24 had to be downloaded from nodejs.org: every Homebrew `node@NN` formula on this machine symlinks to the same Node 25.2.1 Cellar directory.
-
-### Other deviations from the standards
-
-- **`outDir`.** Coding standards §3 has each package set `outDir: "./dist"`. `dist/` belongs to tsdown (the published bundle plus the `isolatedDeclarations` declarations), and `tsc --build` here is a type-checker, so its project-reference output goes to `.tsbuild/` (`.tsbuild-test/` for the test project) with `emitDeclarationOnly` and an explicit `tsBuildInfoFile` inside that directory. Pointing both at `dist/` makes whichever runs last clobber the other.
-- **Coverage.** The unit-test coverage run excludes `packages/*/src/lite/render.ts`, which needs a real GPU and is covered by the browser project. The constitutional floors are unchanged (80% everywhere, 90% for `packages/core/src/**`) and everything Node can reach is at 100%.
-- **`tsconfig.tools.json`.** Added so repository-level configuration files are type-checked; it is what caught the silently-ignored `launch` vs `launchOptions` option above.
-
-### Phase 0 integration (2026-09-05, after the fan-out)
-
-- **Prettier 3.9.6 formats Markdown** as standards §6 requires (`pnpm format` / `format:check` run oxfmt then `prettier "**/*.md"`); generated Markdown (`packages/*/api/*.api.md`, `skills/ignifx/references/{api,formats,recipes}/`, changelogs, changesets, the umbrella's pack-time skill copy) is excluded through `.prettierignore`. The one-time pass reformatted 41 tracked documents (table padding, `_emphasis_`, embedded code blocks at 120 columns).
-- **dependency-cruiser 18.2.0 declares `engines.node` `^22 || ^24 || >=26`** and refuses to start on Node 25, so `pnpm deps` needs Node 24 locally (`.nvmrc`; CI is unaffected). On the development machine every Homebrew `node@NN` formula resolved to Node 25.2.1, so a Node 24 tarball from nodejs.org was used for the verification.
-- **Type-aware Oxlint resolves the nearest `tsconfig.json` per file.** Test files that import Node built-ins are otherwise checked against the root solution file and lose `types: ["node"]`, producing spurious `no-unsafe-*` findings. Packages whose tests need Node types carry a non-emitting `test/tsconfig.json` shim (`packages/cli` today), repository scripts carry `scripts/tsconfig.json`, and plain-JS config files (`*.cjs`, `*.mjs`) have the typed `no-unsafe-*` family switched off in `.oxlintrc.json`. Recorded in standards §3.
-- **Docs harness.** Subsystem skills are discovered through each package's `ignifx.skill` manifest entry (`04-extensions.md` §4), not by globbing `packages/*/skills/`, so the umbrella's `prepack` copy of the entry skill is never linted twice; `regeneration-diff` compares only generated paths (`references/api`, `references/formats`, `references/recipes` minus their READMEs, `packages/*/api`). `examples-compile` does not compile the TypeDoc `@example` fragments under `references/api/` (Phase 11 decides whether they are wrapped or exempt).
-- **Result.** `pnpm check` 15 s cold; `pnpm test:browser` 4 Chromium WebGPU tests; `pnpm deps` clean on 65 modules; `pnpm -r publish --dry-run` packs all 14 packages with publint and attw clean; the umbrella tarball ships `skills/ignifx/`. Not verifiable locally: the GitHub Actions run itself (Linux WebGPU flags remain unverified) and the `0.0.1` tag, which needs the first commit.
-
-### Frame budgets need a comparable machine, so they left the Linux job (2026-09-07)
-
-Phase 12 added `tests/visual/tests/frame-time.spec.ts`, which measures each template's engine CPU
-per frame and asserts the median against the ceiling `benchmarks/baselines.json` records. It ran
-inside `test:visual`, and the first push that carried it turned the `test-visual` job from 3m12s
-green into a 15-minute timeout. What the run measured on GitHub's `ubuntu-latest`:
-
-| Template          | Median | Ceiling | Outcome                             |
-| ----------------- | ------ | ------- | ----------------------------------- |
-| `2d-topdown`      | 2.0 ms | 1.0 ms  | failed, 43.9 s                      |
-| `2d-sidescroller` | 0.7 ms | 1.0 ms  | passed, 39.3 s                      |
-| `3d-third-person` | —      | 2.0 ms  | timed out, 240 s (420 frames unmet) |
-| `3d-first-person` | —      | 2.0 ms  | timed out, 240 s (420 frames unmet) |
-
-The same four take 9.2 s, 7.9 s, 59.3 s and 66 s on the recording machine (macOS 25.5 arm64), all
-inside their ceilings. The runner is slow enough that a 3D template cannot present 420 SwiftShader
-frames inside the per-test timeout at all, and slow enough that a 2D median lands at twice its
-ceiling. Neither number says anything about the engine, which is the same objection the spec's own
-header raises against measuring frames per second.
-
-Decision: `playwright.config.ts` declares two projects. `goldens` (`pnpm test:visual`) is the image
-comparison and stays the required check on `ubuntu-latest` — a golden is reproducible on any
-machine, which is the whole point of pinning SwiftShader. `frame-budget`
-(`pnpm test:frame-budget`) is the measurement, and CI runs it in its own job on `macos-latest`, the
-machine class the ceilings were recorded on. `benchmarks/template-frame-time.test.ts` still holds
-the recorded rows to the coding-standards §7 budget in `test-unit`, on every runner, so
-`CONSTITUTION.md` §6.4 keeps a check that no machine can excuse.
-
-The cost is that macOS minutes bill at ten times the Linux rate on a private repository, which is
-why the job carries the four budget tests and nothing else, and runs on `push`, in the merge queue,
-on `workflow_dispatch`, and on a pull request only with the `visual` label.
-
-Measured on `macos-latest` on 2026-09-07, the first time the job ran:
-
-| Template          | Runner median | Recording machine | Ceiling | Headroom on the runner |
-| ----------------- | ------------- | ----------------- | ------- | ---------------------- |
-| `2d-topdown`      | 0.4 ms        | 0.3 ms            | 1.0 ms  | 2.5x                   |
-| `2d-sidescroller` | 0.4 ms        | 0.3 ms            | 1.0 ms  | 2.5x                   |
-| `3d-third-person` | 1.2 ms        | 0.7 ms            | 2.0 ms  | **1.7x**               |
-| `3d-first-person` | 0.9 ms        | 0.7 ms            | 2.0 ms  | 2.2x                   |
-
-The runner is between 1.3x and 1.7x slower than the machine that recorded the ceilings, which is
-what a shared VM against an Apple Silicon desktop should look like, and every template is inside its
-ceiling. `3d-third-person` has the least room — 1.2 ms against 2.0 ms — so it is the one to watch: a
-noisier-than-usual runner is the likeliest cause of a red `frame-budget` job that no engine change
-explains, and the answer then is to re-measure rather than to raise the ceiling. The job takes about
-7 minutes, most of it the two 3D templates at 2.5 minutes each.
-
-### npm publishing: Trusted Publishing yes, provenance not while the repository is private (2026-09-07)
-
-`release.yml` went from a dry run to a real publish. What was verified rather than assumed:
-
-- **The scope is claimed and nothing is a first publish.** `@ignifx/*` and `ignifx` are held by the
-  `astrumforge` account, and every one of the 13 packages carries a `0.0.0` placeholder published by
-  hand on 2026-09-06. This matters because npm Trusted Publishing cannot create a package that does
-  not exist yet.
-- **changesets shells out to pnpm.** `@changesets/cli` 3.0.2 picks the publish tool from the
-  workspace (`getPublishTool`), so `pnpm release` reaches `pnpm publish`, not `npm publish`. pnpm's
-  OIDC path takes precedence over any static token from 11.0.7, and the 404-on-OIDC regression of
-  pnpm/pnpm#11513 was fixed in 11.1.3 by treating an unresolved `${NODE_AUTH_TOKEN}` placeholder as
-  empty; this repository is on 11.17.0 and `.github/actions/setup` never asks `setup-node` to write
-  such a placeholder.
-- **Provenance is impossible here.** npm has not generated provenance from a private source
-  repository since 2023-07-25, and Trusted Publishing does not change that — it generates an
-  attestation with no flag when it can, and cannot here. `publishConfig.provenance` is therefore
-  `false` in all 13 manifests, which is a deviation from `CONSTITUTION.md` §9.4. Making
-  `astrum-forge/ignifx` public is what restores it; the flip is then those 13 fields and nothing in
-  the workflow. Each manifest also gained the `repository` field npm matches a Trusted Publisher
-  and an attestation against.
-- **A publish is verified, not trusted.** `changeset publish` ships one package at a time, and a
-  Trusted Publisher configured against the wrong workflow file answers E404 for a _scoped_ package
-  (npm/cli#8976) — the shape `@ignifx/*` has. `scripts/verify-published.ts` (`pnpm release:verify`)
-  asks registry.npmjs.org for every version the working tree carries and fails the release job when
-  one is missing, retrying for the CDN lag that makes a fresh version 404 for a few seconds.
-
-### A wall-clock key hold is a frame-rate assumption (2026-09-07)
-
-The first pull request whose `test-visual` job reached the goldens found twelve failures, all in
-`tests/visual/tests/templates.spec.ts`, none of them an image comparison. The four scene goldens and
-the four template goldens passed in 2 to 16 seconds each; what failed was the front end.
-
-| Test                                                     | 2d-topdown      | 2d-sidescroller | 3d-third-person |
-| -------------------------------------------------------- | --------------- | --------------- | --------------- |
-| boots into a title screen                                | pass 5.6 s      | pass 6.3 s      | pass 11.1 s     |
-| the rebinding page lists a binding per control scheme    | pass 7.2 s      | pass 7.4 s      | **fail 43.4 s** |
-| Escape opens the pause menu and the settings screen      | **fail 36.7 s** | **fail 36.4 s** | **fail 41.4 s** |
-| an interactive rebind takes effect and survives a reload | **fail 38.1 s** | **fail 38.0 s** | **fail 44.4 s** |
-| a saved game is offered as Continue after a reload       | **fail 2.0 m**  | **fail 2.0 m**  | **fail 2.0 m**  |
-
-The pattern names the cause. The one test with no key press passes everywhere; the one whose only
-key press is its last step passes on the two 2D templates and fails on the 3D one; the three that
-press a key mid-test fail on all four. The helper they share was
-
-```ts
-await page.keyboard.down(key);
-await page.waitForTimeout(200); // KEY_HOLD_MS
-await page.keyboard.up(key);
-```
-
-and its own comment recorded why a hold is needed at all: `@ignifx/input` drains its queue once per
-`PreUpdate`, so a press and release inside one frame is never `wasPressedThisFrame`. The 200 ms was
-measured on macOS on 2026-09-06. It is a frame-rate assumption in disguise: the `frame-budget` job
-measured this same runner presenting a 3D template at **under two frames a second**, where 200 ms is
-less than half a frame, so the release landed in the same tick as the press and the hold was
-swallowed. Every failure then cost its whole `expect` (30 s) or test (120 s) timeout — about ten
-minutes of waiting, which ran the job past its 15-minute cap and got it **cancelled** rather than
-failed, printing no failure summary and skipping the `if: failure()` artifact upload.
-
-Decision: holds are counted in **frames**. `waitForFrames(page, n)` awaits `n`
-`requestAnimationFrame` callbacks in the page, so it measures the thing the input queue is actually
-drained on and costs whatever that machine's frames cost. `KEY_HOLD_MS` becomes `KEY_HOLD_FRAMES`
-(4), and the `waitForTimeout(250)` in the rebinding test goes the same way. Coding standards §10
-already said no test may sleep on wall-clock time; this is what that rule is for, and Linux is what
-made the cost visible.
-
-Two smaller fixes from the same run: the `docs-harness` job checks out with `fetch-depth: 0`,
-because `api-report-gate` and `freshness` diff against the base commit and a shallow checkout does
-not contain it (both reported "could not diff against <sha>" — that job had never run on a pull
-request before); and `test-visual`'s timeout goes to 25 minutes, so a failing run fails with a
-report instead of being cancelled without one.
-
-### A version bump has to reach the skills too (2026-09-07)
-
-The first "Version Packages" pull request failed `docs-harness` with two checks red, and both had
-the same cause. `changeset version` bumps `packages/*/package.json` and writes changelogs; it knows
-nothing about anything else in the repository that names a version, and two things here do:
-
-- every skill declares the engine version it documents in `metadata.ignifx-version`, and
-  `check-skill-lint.ts` holds it to `@ignifx/core`'s version — ten skills still said
-  `"0.0.0-unreleased"` against a bumped `0.1.0`, which is ten skill-lint problems;
-- `skills/ignifx/references/formats/ignifx.schemas.json` embeds `ignifxVersion`, so a fresh
-  `pnpm docs:schemas` differs from the committed file and `regeneration-diff` goes red.
-
-Neither is a defect in the version PR — it is a step the release never had. Decision: the workflow's
-`version-script` becomes `pnpm version-packages`, which is `changeset version` followed by
-`pnpm skills:version` and `pnpm docs:schemas`. `scripts/sync-skill-versions.ts` writes core's
-version into each skill's frontmatter, and the set of values a skill may declare now lives in
-`scripts/lib/skill-version.ts` and is imported by both the linter that enforces it and the writer
-that repairs it, so the two cannot drift. The placeholder is deliberately preserved while core is
-`0.0.0`: `"0.0.0-unreleased"` says more than a bare `0.0.0`, both are accepted at that version, and
-the writer leaves any already-accepted value alone.
-
-Verified by simulating the release on 2026-09-07 — every package bumped to `0.1.0`,
-`pnpm skills:version && pnpm docs:schemas`, then the full harness: `skill-lint`,
-`regeneration-diff` and the other three checks all green, where the real version branch had two red.
-
-The `api-report-gate` and `freshness` failures reported on the same run were the shallow checkout
-fixed above, and they passed here.
-
-### Visual goldens and frame budgets leave CI (2026-10-03)
-
-Owner decision: `ci.yml` has no `test-visual` or `frame-budget` job and no scheduled trigger. On
-every push to `main` the frame-budget job overran its 45-minute macOS limit and was cancelled, and
-three Linux gameplay goldens failed on runner speed rather than on engine changes. Both suites stay
-in `tests/visual/` and are run locally (`pnpm test:visual`, `pnpm test:frame-budget`), only when a
-change can affect rendering or frame time; the result goes in the pull request. The recorded rows in
-`benchmarks/baselines.json` are still checked in CI by `benchmarks/template-frame-time.test.ts`.
+On Linux the two base flags give an adapter and a device, and the first present to a canvas destroys the device. Adding `--enable-features=Vulkan --use-vulkan=swiftshader --use-angle=swiftshader` keeps it alive, so both configuration files add those flags when `process.platform === "linux"` and keep the base pair elsewhere. Browser tests that never present to a canvas pass on Linux with the base flags alone. (carried over; not re-measured)

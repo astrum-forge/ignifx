@@ -29,8 +29,8 @@ examples/recipes/<name>/
   printed verbatim.
 - These directories are not workspace packages and are not built or served; they are compiled as
   documentation. An example you can run lives in `examples/<name>/` instead.
-- A new recipe needs a row in the table below **and** in
-  `skills/ignifx/references/recipes/README.md`, which `pnpm docs:recipes` enforces.
+- A new recipe needs a row in `skills/ignifx/references/recipes/README.md`, which
+  `pnpm docs:recipes` enforces.
 
 ## The tsconfig, and why it needs `pnpm build`
 
@@ -40,32 +40,16 @@ documentation harness does when it type-checks the generated pages
 `pnpm build` and it is clean; without a build it reports missing modules, which is the honest
 answer — a recipe compiles against the published surface, not against the sources.
 
-It used to point at `packages/*/src/index.ts`, and that could never be clean: every extension
-declares its `app.<service>` through a `declare module "@ignifx/core"` augmentation, so a program
-that holds both core's sources and an extension's sources sees core's own `AppImpl` fail to satisfy
-the widened `App` — six `TS2420`/`TS2322` errors in files no recipe imports. A `.d.ts` carries the
-augmentation without carrying the implementation, which is what a consumer actually sees.
+It points at the built declarations, not at `packages/*/src/index.ts`: every extension declares its
+`app.<service>` through a `declare module "@ignifx/core"` augmentation, so a program that holds both
+core's sources and an extension's sources sees core's own `AppImpl` fail to satisfy the widened
+`App`. A `.d.ts` carries the augmentation without carrying the implementation, which is what a
+consumer sees.
 
 This project is not part of `tsc --build tsconfig.json` or `pnpm typecheck`; it exists so an editor
 and `oxlint --type-aware` resolve these files the same way the harness does.
 
 ## The recipes
 
-| Recipe                                                                     | Task                                                                           |
-| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| [`load-a-model`](load-a-model/main.ts)                                     | Load a `.glb` and show it with a `Model` component                             |
-| [`spawn-a-prefab`](spawn-a-prefab/main.ts)                                 | Load a `.prefab.json` as a `SceneAsset` and stamp copies of it out             |
-| [`spawn-a-prefab-on-click`](spawn-a-prefab-on-click/main.ts)               | Raycast from the camera on a click and instantiate a physics prefab at the hit |
-| [`bind-an-action-and-read-it`](bind-an-action-and-read-it/main.ts)         | Build an action document with two control schemes and read it in `update`      |
-| [`rebind-a-key-at-runtime`](rebind-a-key-at-runtime/main.ts)               | Rebind one binding interactively and persist the overrides in `app.storage`    |
-| [`character-controller-3d`](character-controller-3d/main.ts)               | Walk and jump a `CharacterController` in `fixedUpdate`, with coyote time       |
-| [`raycast-and-trigger-3d`](raycast-and-trigger-3d/main.ts)                 | Poll the physics world with a ray, and react to a trigger volume               |
-| [`third-person-camera`](third-person-camera/main.ts)                       | Follow a character with an orbit rig that avoids walls                         |
-| [`platformer-controller-2d`](platformer-controller-2d/main.ts)             | Run and jump a `CharacterController2D` with autostep and snap-to-ground        |
-| [`animate-a-sprite-from-an-atlas`](animate-a-sprite-from-an-atlas/main.ts) | Play a clip from a `.spriteanim.json` and flip the sprite by direction         |
-| [`load-a-tilemap-with-collision`](load-a-tilemap-with-collision/main.ts)   | Draw a `.tilemap.json` and give its tiles Rapier collision shapes              |
-| [`play-a-one-shot-and-a-loop`](play-a-one-shot-and-a-loop/main.ts)         | Play a positional one-shot on a bus and fade a music loop with a tween         |
-| [`build-a-pause-menu`](build-a-pause-menu/main.ts)                         | Pause the app, swap action maps, and drive a `Dialog` by keyboard and pad      |
-| [`tween-a-transform`](tween-a-transform/main.ts)                           | Chain eased tweens on a transform and cancel them on destroy                   |
-| [`save-and-load-game-state`](save-and-load-game-state/main.ts)             | Write a versioned save slot to `app.storage` from an autosave coroutine        |
-| [`show-diagnostics-in-devtools`](show-diagnostics-in-devtools/main.ts)     | Publish a gameplay counter into `app.diagnostics` and read it back             |
+The index is `skills/ignifx/references/recipes/README.md`, which `pnpm docs:recipes` checks against
+the directories here: every `examples/recipes/<name>/` has a row there.

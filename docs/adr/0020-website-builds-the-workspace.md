@@ -1,8 +1,8 @@
 # ADR-0020 · The site builds the workspace to run the examples
 
-**Status:** Superseded by ADR-0027 (the site moved to its own repository and builds from the published packages) · **Date:** 2026-09-07 · **Deciders:** Astrum Forge Studios (owner), website build coordinator
+**Status:** Superseded in part by ADR-0027 (§1, §6 and the build command: the site moved to its own repository and builds from the published packages; its other decisions here still apply there) · **Date:** 2026-09-07 · **Deciders:** Astrum Forge Studios (owner), website build coordinator
 **Supersedes in part:** ADR-0019 §1 ("imports **no workspace package**"), §2 ("no inline script"), §3's route list, and the "Impossible for now" paragraph of its Consequences. Everything else in ADR-0019 stands.
-**Related:** `CONSTITUTION.md` §9.1 (no third-party requests), §9.2 (the Electron security baseline), §1.5 (the name) · `docs/architecture/16-docs-harness-and-skill.md` §3 · `website/plan/06-engineering.md` §2, `website/plan/08-execution.md` §4
+**Related:** `CONSTITUTION.md` §9.1 (no third-party requests), §9.2 (the Electron security baseline), §1.5 (the name) · `docs/architecture/16-docs-harness-and-skill.md` §3
 
 ---
 
@@ -15,7 +15,7 @@ and at that moment no `@ignifx/*` package has been built. Its Consequences recor
 > **Impossible for now.** Live engine demos on the marketing pages. The site is WebGPU-free by
 > construction… The gallery shows the visual suite's golden captures instead.
 
-The overhaul planned in `website/plan/` reverses that priority. The site's job is to make a developer
+The site's overhaul reverses that priority. The site's job is to make a developer
 want to build on ignifx, and the single most persuasive thing it can do is run the engine in the
 visitor's browser, three.js style, with the source beside it (`01-strategy-and-ia.md` §1). A poster
 cannot do that.
@@ -96,7 +96,7 @@ committed pictures.
 
 Cloudflare Pages applies **every** matching rule and comma-joins a repeated header, and a pattern may
 hold only **one** splat. So a rule that needs a different value detaches the one `/*` set with
-`! Header-Name` first, and the frame policy is matched as `/examples/*run/` rather than the plan's
+`! Header-Name` first, and the frame policy is matched as `/examples/*run/` rather than as
 `/examples/*/run/*`. `website/test/site.test.ts` asserts that no catalogue slug ends in `run`, so the
 pattern cannot catch a viewer page by accident.
 

@@ -1,13 +1,13 @@
 # ignifx Coding Standards
 
-**Updated:** 2026-09-11 · **Applies to:** humans and agents, across the repository
+**Applies to:** humans and agents, across the repository
 
 The [constitution](../../CONSTITUTION.md) takes precedence. These standards explain the daily workflow and coding rules.
 Section numbers are kept stable for existing references. Tool configuration holds exact settings; this document explains their purpose.
 
 ## Development workflow
 
-1. Follow `AGENTS.md`'s reading order. Read the relevant code, tests, and design before editing.
+1. Follow the reading map in `AGENTS.md`. Read the relevant code, tests, and design before editing.
 2. Check the working tree and installed dependencies. Keep other contributors' changes intact.
 3. Make the smallest complete change. Test its behaviour (§10) and update affected docs (§9).
 4. Review the diff for mistakes, unnecessary code, and wordy comments. Run `pnpm check` before opening a PR (§15).
@@ -16,11 +16,11 @@ Section numbers are kept stable for existing references. Tool configuration hold
 
 ## 1. Toolchain
 
-Use Node 24 from [`.nvmrc`](../../.nvmrc); the dependency checker does not support Node 25.
+Use Node 24 from [`.nvmrc`](../../.nvmrc), which CI uses, or Node 26; the dependency checker does not support Node 25.
 [`package.json`](../../package.json) pins pnpm and defines commands. [`pnpm-workspace.yaml`](../../pnpm-workspace.yaml) holds dependency ranges; the lockfile records installed versions.
 
 - TypeScript 7 checks types; the TS6 alias supports compiler-API tools (ADR-0007).
-- Turborepo runs tasks; tsdown builds packages; Vite builds apps and the site.
+- Turborepo runs tasks; tsdown builds packages; Vite builds apps.
 - Vitest and Playwright run tests. Oxlint/tsgolint and ESLint lint code.
 - oxfmt and Prettier format files. API Extractor and TypeDoc produce API reports and docs.
 - Changesets handles releases; Renovate updates dependencies; lefthook runs commit checks.
@@ -34,7 +34,7 @@ Build comes before the steps that read `dist/`, because workspace imports resolv
 - `packages/`: published packages and subsystem skills.
 - `templates/`, `examples/`: playable apps and recipe sources.
 - `benchmarks/`, `tests/visual/`: performance budgets and visual goldens.
-- `docs/`: standards, architecture, ADRs, reviews, and the engineering plan.
+- `docs/`: standards, architecture, ADRs, and the engineering plan (the open-work list).
 - `skills/ignifx/`: engine skill and references.
 - `scripts/`, `.github/workflows/`: generators, checks, and release automation.
 
@@ -55,7 +55,7 @@ Extend [`tsconfig.base.json`](../../tsconfig.base.json). Do not weaken its check
 ## 4. Modules and packages
 
 - Use ESM, `"type": "module"`, and explicit `.js` relative imports. Sandboxed Electron preloads build as CommonJS (ADR-0018).
-- Use one public `src/index.ts` barrel with named re-exports. No `export *` or feature barrels. Subpaths need a tooling/platform purpose: `/main`, `/preload`, `/client`, `/vite`, `/config`, or `./package.json`.
+- Use one public `src/index.ts` barrel with named re-exports. No `export *` or feature barrels. Subpaths need a tooling or platform purpose. The ones in use are `@ignifx/electron/main` and `/preload`, `@ignifx/vite-plugin/client`, `@ignifx/editor-host/vite` and `/client`, `@ignifx/core/prefab`, `@ignifx/cli/tilemap`, and `./package.json` in every package.
 - Default exports are allowed only in configuration files.
 - No import-time side effects (constitution §3.5). Module scope holds declarations and immutable constants, including typed arrays. Create caches and services inside functions. Set `sideEffects: false`.
 - Lite and native/WASM backend imports stay inside each package's `src/lite/**` adapters.
@@ -150,15 +150,15 @@ Run `pnpm lint` after committing. Inline rule overrides need a short reason; the
 - Store bulk data such as sprites, particles, and interpolation poses in separate typed arrays per field.
 - Expose subsystem counters through `app.diagnostics`.
 - Meet template budgets: 60 fps on the reference machine, with engine CPU time at most 2 ms in 2D and 4 ms in 3D. Per-scene and bundle limits live in `benchmarks/baselines.json`.
-- Meet the GPU budget per quality tier. At 1080p, all GI Phase 1 passes together (including the shared geometry pass) and the whole frame must fit:
+- Meet the GPU budget per quality tier. At 1080p, the screen-space lighting and post-processing passes together (the shared geometry pass, ambient occlusion, TAA, contact shadows, SSGI, bloom and tone mapping) and the whole frame must fit:
 
-  | Tier     | Devices                                           | Phase 1 passes                                                                                                | Whole frame |
+  | Tier     | Devices                                           | Those passes                                                                                                  | Whole frame |
   | -------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------- |
   | `low`    | phones, integrated GPUs on battery                | ≤ 1.5 ms on the reference M1: GTAO at half resolution, LDR or HDR bloom, AgX; no TAA, SSGI or contact shadows | ≤ 12 ms     |
   | `medium` | integrated GPUs (reference: Apple M1)             | ≤ 4 ms on the M1: adds HDR, TAA, contact shadows                                                              | ≤ 12 ms     |
   | `high`   | mid-range desktop GPUs (RTX 3060 / RX 6600 class) | ≤ 3 ms: adds SSGI and full-resolution GTAO                                                                    | ≤ 10 ms     |
 
-  GI Phase 2 (baked lighting, `docs/plan/2026-11-gi-phase-2-execution-plan.md`) adds at most 0.5 ms at 1080p on the M1 at `low`, inside the same whole-frame budgets. Light probes (≤ 0.3 ms) and lightmaps (≤ 0.1 ms) run at every tier, since baked lighting is the low-end path. A reflection probe costs nothing between captures; a capture is six scene passes at its face size, which the tier caps at 64 (`low`), 128 (`medium`) or 256 (`high`) pixels, and only `high` lets a probe capture every frame (one such probe: six extra passes a frame). These figures are estimates until `pnpm test:gpu-budget` measures a scene with probes.
+  Baked lighting adds at most 0.5 ms at 1080p on the M1 at `low`, inside the same whole-frame budgets. Light probes (≤ 0.3 ms) and lightmaps (≤ 0.1 ms) run at every tier, since baked lighting is the low-end path. A reflection probe costs nothing between captures; a capture is six scene passes at its face size, which the tier caps at 64 (`low`), 128 (`medium`) or 256 (`high`) pixels, and only `high` lets a probe capture every frame (one such probe: six extra passes a frame). These figures are estimates until `pnpm test:gpu-budget` measures a scene with probes.
 
   `pnpm test:gpu-budget` measures each 3D template's whole-frame GPU time on the host GPU (`renderer.gpuFrameTimeMs`) against the `gpuTime` ceilings in `benchmarks/baselines.json`, and prints each task's median from `renderer.taskTimings()` without asserting it. It needs a real GPU, so it runs locally, never in CI. A PR that adds or changes a rendering pass pastes its result. The `high` rows are Apple M1 numbers: its device class has not been measured yet (`tests/visual/README.md`). `rendering.quality` (`low`, `medium`, `high`, or `custom` for hand-picked effects) selects a tier's effects (`docs/architecture/07-rendering.md` §2.15); `IGNIFX_GPU_QUALITY=<tier> pnpm test:gpu-budget` measures the templates at that tier against `gpuTime.tiers`.
 
@@ -278,7 +278,7 @@ Visual goldens (`pnpm test:visual`), frame budgets (`pnpm test:frame-budget`) an
 [`release.yml`](../../.github/workflows/release.yml) creates the **Version Packages** PR.
 Its `pnpm version-packages` step updates package versions, skill versions, and schemas.
 After merge, CI builds, publishes through npm Trusted Publishing, runs `pnpm release:verify`, and creates tags and GitHub releases.
-Provenance is off while the repository is private (constitution §9.4; ADR-0009).
+Provenance is off: `publishConfig.provenance` is `false` in every package, which deviates from constitution §9.4. Restoring it is open work (`docs/plan/engineering-plan.md`; ADR-0009).
 
 The public site lives in `astrum-forge/ignifx-website`, with its own checks and deploy (ADR-0027).
 

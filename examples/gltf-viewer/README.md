@@ -14,16 +14,10 @@ The fixtures — `Box.glb`, `studio.env`, `brdf-lut.png` — are the repository'
 manifest to `createApp` through `assets: { manifest }`. An asset handle settles at a frame's
 delivery point, so `app.start()` comes **before** the first `loadAsync`, not after it.
 
-`@ignifx/input` arrives in Phase 3; until then `OrbitCamera` listens to pointer events on the canvas
-itself. That is the only part of this example a later phase will replace.
+`OrbitCamera` listens to pointer events on the canvas itself, so the example needs no
+`@ignifx/input`.
 
 ## Query flags
 
 `?static=1` stops time, for the visual golden suite. `?post=1` turns the post-process chain on.
-
-## Known engine defects (2026-09-06)
-
-- **The post-process chain presents a black frame**, which is why it is off by default: its first
-  task samples the swapchain texture, and a WebGPU canvas context is configured without
-  `TEXTURE_BINDING` usage (`lib/engine/surface.js`), so the frame's command buffer is rejected.
-- **Shadows do not appear** — see `examples/hello-cube/README.md`.
+`?hdr=1` turns the HDR path on.

@@ -19,4 +19,4 @@ Option 2. `*.scene.json` and `*.prefab.json` share the `ignifx.scene` format; an
 
 - `world.loadScene` and `world.instantiate` are the two operations; both use the same loader.
 - Variants are scenes that instance another scene at their root with overrides.
-- Live prefab links ("apply to prefab") are editor concerns deferred to post-1.0; the format already supports them.
+- Live prefab links are part of the format: an instance records overrides, and `applyOverridesToAsset` and `revertOverrides` (`@ignifx/core/prefab`) write them back to the prefab or discard them (`docs/architecture/06-serialization-and-scene-format.md`).
