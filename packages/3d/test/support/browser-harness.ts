@@ -14,8 +14,8 @@ import type { App, AssetManifestEntry, ErrorReport, MemorySink, SettingsInput, W
  * else — the state machine, navigation, the controllers, the camera rig — is already covered on the
  * null engine.
  *
- * `msaaSamples: 1` throughout, so a pixel comparison is exact rather than a resolve of four samples
- * (ADR-0002 Validation).
+ * `msaaSamples: 1` throughout, so a pixel comparison is exact rather than a resolve of four
+ * samples.
  */
 
 /** The canvas edge the harness uses when a test names none. Small keeps SwiftShader fast. */

@@ -439,8 +439,7 @@ describe("models", () => {
     const handle = h.app.assets.register(createModelAsset("models/hero.glb", null, null), { type: "model" });
     const model = h.world.createEntity("Hero").addComponent(Model, { model: handle });
     // The system reaches models through `collectCasters`; that it is called at all is the defect
-    // this test pins — before the fix, `#rebuildCasters` walked the world's `MeshRenderer`s only
-    // (ADR-0002, "Still outstanding").
+    // this test pins — before the fix, `#rebuildCasters` walked the world's `MeshRenderer`s only.
     const spy = vi.spyOn(model, "collectCasters");
     h.world.createEntity("Sun").addComponent(Light, { type: "directional" });
     // Two frames: the caster lists are held until the renderable rebuild the light earned has been

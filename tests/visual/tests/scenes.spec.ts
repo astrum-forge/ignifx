@@ -12,8 +12,7 @@ import type { Page } from "playwright/test";
  * The goldens generated on 2026-09-06 showed a scene lit from the wrong direction with no shadow
  * anywhere, and a post-process scene that was uniformly black. Both were engine defects, both are
  * fixed, and every golden here was regenerated afterwards: the hello cube casts a shadow across the
- * floor, and the post-process scene is a real image with a visible bloom. ADR-0002, "Corrections
- * after the visual suite", has the write-ups.
+ * floor, and the post-process scene is a real image with a visible bloom.
  *
  * The glTF viewer's model cast no shadow either — a separate defect, because `Model` declared
  * `castShadows` and nothing ever added its meshes to a generator's caster list (only `MeshRenderer`

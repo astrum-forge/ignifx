@@ -3,8 +3,8 @@ import { DeviceKind, InputDevice } from "./device.js";
 import type { ControlDescriptor } from "./control.js";
 
 /**
- * The synthetic device (`docs/architecture/08-input.md` §8). On-screen controls in `@ignifx/2d` and
- * `@ignifx/ui` feed it, and `<Virtual>/joystick`, `<Virtual>/buttonA` and friends bind to it like
+ * The synthetic device (`docs/architecture/08-input.md` §8). On-screen controls in `@ignifx/ui`
+ * feed it, and `<Virtual>/joystick`, `<Virtual>/buttonA` and friends bind to it like
  * any hardware control.
  *
  * Its control table grows: a control is created the first time a binding names it, or the first

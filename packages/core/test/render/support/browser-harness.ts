@@ -22,7 +22,7 @@ import type { World } from "../../../src/world/world.js";
  * way a game does and read the pixels it presents.
  *
  * `msaaSamples: 1` throughout, so a single-pixel assertion is exact rather than a resolve of four
- * samples (ADR-0002 Validation).
+ * samples.
  */
 
 /** The canvas edge the harness uses when a test names none. Small keeps SwiftShader fast. */

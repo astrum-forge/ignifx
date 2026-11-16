@@ -398,8 +398,8 @@ export function createFileSystemBackend(fs: FileSystemApi, directory: string): S
  *
  * @remarks
  * Node only: the factory loads `node:fs/promises` and rejects on a host that has none. It is what
- * `createApp({ storage: { directory } })` calls, and it is exported so that tooling — `ignifx bake`,
- * a future authoritative server — can build one without an app.
+ * `createApp({ storage: { directory } })` calls, and it is exported so that tooling can build one
+ * without an app.
  *
  * @param options - The root directory.
  * @returns The backend.

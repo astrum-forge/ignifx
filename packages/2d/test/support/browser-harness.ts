@@ -13,7 +13,7 @@ import type { App, AssetManifestEntry, ErrorReport, MemorySink, SettingsInput, W
  * null engine.
  *
  * `msaaSamples: 1` throughout, so a single-pixel assertion is exact rather than a resolve of four
- * samples (ADR-0002 Validation).
+ * samples.
  */
 
 /** The canvas edge the harness uses when a test names none. Small keeps SwiftShader fast. */

@@ -39,7 +39,7 @@ describe("the declared feature set", () => {
   it("names the eight blocks of docs/architecture/07-rendering.md §1.1, plus postProcessing", () => {
     // `postProcessing` is not in §1.1's original list: it was added after the visual suite
     // showed that a chain cannot sample the swapchain, which makes the render path a start-time
-    // decision (ADR-0002, "Corrections after the visual suite").
+    // decision (ADR-0002 Validation).
     expect([...RENDERING_FEATURE_NAMES]).toEqual([
       "shadows",
       "postProcessing",

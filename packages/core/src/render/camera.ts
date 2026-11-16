@@ -40,17 +40,17 @@ import type { Schema } from "../schema/types.js";
  * entity moves the view, with no per-frame copy. Cinemachine-style rigs are scripts in `@ignifx/3d`
  * that drive that transform.
  *
- * ## Decisions the documents left open
+ * ## Decisions
  *
- * - **`clearColor` is optional, not "default from scene settings".** §2.1's table says the default
- *   comes from the scene settings, which a plain colour field cannot express: every colour has a
- *   value. The field is `optional(color())` instead, so `null` means "leave the scene's clear
- *   colour alone" — whatever the `rendering.clearColor` setting or an `Environment` last put there
- *   — and a value means "this camera owns it while it is the main camera". The main camera is
- *   written every frame, so it is the strongest of the three (`RendererImpl.applyClearColor`).
- * - **`cullingMask` is not declared at all.** §2.1 marks it post-1.0 (Lite has no per-camera mesh
- *   list yet) and §8 repeats it. A field that serialises but does nothing is worse than no field:
- *   it would round-trip through save files and quietly stop mattering when the feature lands.
+ * - **`clearColor` is optional (§2.1).** A plain colour field cannot express "default from the
+ *   scene settings": every colour has a value. The field is `optional(color())`, so `null` means
+ *   "leave the scene's clear colour alone" — whatever the `rendering.clearColor` setting or an
+ *   `Environment` last put there — and a value means "this camera owns it while it is the main
+ *   camera". The main camera is written every frame, so it is the strongest of the three
+ *   (`RendererImpl.applyClearColor`).
+ * - **`cullingMask` is not declared at all.** Lite has no per-camera mesh list. A field that
+ *   serialises but does nothing is worse than no field: it would round-trip through save files and
+ *   quietly stop mattering when the feature lands.
  *
  * ## Headless
  *

@@ -7,7 +7,7 @@ import type { ErrorContext } from "@ignifx/core";
  *
  * The `11` range is shared with `@ignifx/physics-2d`, which owns `IGX-1101` (registering both
  * `physics()` and `physics2d()` on one world — `docs/architecture/11-2d-toolkit.md` §8) and the
- * codes from `IGX-1130` up. The 2D toolkit owns `IGX-1102` through `IGX-1129`.
+ * codes from `IGX-1150` up. The 2D toolkit owns `IGX-1102` through `IGX-1149`.
  *
  * The table lives here rather than in `@ignifx/core`'s `CoreErrorCode`: an extension owns its own
  * codes and hands them to the app through `ExtensionContext.registerErrorCodes`

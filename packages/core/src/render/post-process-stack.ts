@@ -28,13 +28,13 @@ import type { Schema } from "../schema/types.js";
  *
  * ## The schema is three records, not a discriminated list
  *
- * §2.7 describes an "ordered list of effects". A list of heterogeneous effect records needs either a
- * `custom()` field with a hand-written codec or a tagged union the schema kinds cannot express, and
- * neither is inspectable without extra tooling. Three optional records with an `order` each is the
- * simplest shape that round-trips through `encodeProps`/`decodeProps` unchanged, shows up in the
- * inspector with real field names and tooltips, and still lets a project reorder the chain. The
- * cost is that a fourth effect would add a fourth record rather than a new list entry; that is a
- * schema addition, which the format already tolerates.
+ * A list of heterogeneous effect records needs either a `custom()` field with a hand-written codec
+ * or a tagged union the schema kinds cannot express, and neither is inspectable without extra
+ * tooling. Three optional records with an `order` each is the simplest shape that round-trips
+ * through `encodeProps`/`decodeProps` unchanged, shows up in the inspector with real field names
+ * and tooltips, and still lets a project reorder the chain. The cost is that a fourth effect would
+ * add a fourth record rather than a new list entry; that is a schema addition, which the format
+ * already tolerates.
  *
  * ## It needs `rendering.features.postProcessing`, declared at app start
  *

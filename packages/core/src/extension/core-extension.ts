@@ -145,7 +145,7 @@ function registerCore(ctx: ExtensionContext): void {
 
 /**
  * Registers the rendering layer: the `rendering` settings section, the service behind
- * `app.renderer`, the five components `docs/architecture/04-extensions.md` §7 lists, the GPU asset
+ * `app.renderer`, the components `docs/architecture/04-extensions.md` §7 lists, the GPU asset
  * loaders, and the `PreRender` system that reconciles them with the Lite scene.
  *
  * @remarks

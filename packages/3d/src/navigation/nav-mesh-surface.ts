@@ -48,10 +48,10 @@ import type { ComponentHooks, LiteSceneNode, MutableVec3, Schema, Vec3Like } fro
  *
  * ## Pre-baked navmeshes
  *
- * `12-3d-toolkit.md` §5 also describes loading a `.navmesh.bin` produced by `ignifx bake navmesh`.
- * Babylon Lite 1.27.0 declares no navmesh serialization at all — there is no `getNavMeshData` and
- * no `buildFromNavMeshData` in `index.d.ts` — so a surface that names one reports `IGX-1210` and
- * bakes at runtime instead. `docs/adr/0017-navigation-wasm.md` records the finding.
+ * A pre-baked `.navmesh.bin` cannot be loaded (`12-3d-toolkit.md` §5). Babylon Lite 1.27.0 declares
+ * no navmesh serialization at all — there is no `getNavMeshData` and no `buildFromNavMeshData` in
+ * `index.d.ts` — so a surface that names one reports `IGX-1210` and bakes at runtime instead.
+ * `docs/adr/0017-navigation-wasm.md` records the finding.
  */
 
 /** Recast's default cell size, in metres. */
