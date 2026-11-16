@@ -36,5 +36,5 @@ Option 1. A tilemap's objects layer is authoring data.
 - The templates' generator stops writing objects layers, so the templates' maps carry tiles only.
 - An object's size and properties do not survive the import as data. The developer turns them into component fields (a trigger's `size`, a sprite's `frameName`) or replaces the entity with a prefab instance.
 - The editor's tilemap painter edits tiles; placing objects is ordinary entity editing in the scene.
-- Follow-up: converting a `.tmj` or `.ldtk` file into a `.tilemap.json` from the command line, as the editor plan's importer row expects, needs `importTiledMap` and `importLdtkLevel` in a module the CLI may depend on. That is a separate decision about the CLI's layering.
+- Converting a `.tmj` or `.ldtk` file into a `.tilemap.json` from the command line is `ignifx import tilemap`. The converter is a pure module inside the CLI (`packages/cli/src/tilemap-source/`, exported as `@ignifx/cli/tilemap`), so the CLI depends on no engine package for it.
 - Revisit if a game needs runtime-only objects that must not appear in the editor. A component that reads `definition.objects` would cover that without a registry in the extension.

@@ -21,5 +21,5 @@ Build on Babylon Lite and target WebGPU exclusively. There is no WebGL fallback 
 
 - Bundle size and performance follow Lite's discipline; ignifx inherits its zero-side-effect rules.
 - Lite's churn is contained by ADR-0002 (adapter boundary) and an exact version pin.
-- Feature gaps (GUI, point-light shadows, particles maturity) are handled by ignifx extensions or upstream contributions; the plan tracks an "upstream" workstream.
+- Feature gaps (GUI, point-light shadows, particles maturity) are handled by ignifx extensions or upstream contributions; the asks to Babylon Lite are listed in `docs/plan/engineering-plan.md`.
 - Firefox on Linux/Android and older devices are unsupported until WebGPU ships there.

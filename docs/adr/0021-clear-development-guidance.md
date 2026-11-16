@@ -1,6 +1,6 @@
 # ADR-0021 · Clear development guidance
 
-**Status:** Proposed · **Date:** 2026-09-11 · **Decider:** Astrum Forge Studios (owner)
+**Status:** Proposed — its amendment text has been in `CONSTITUTION.md` on `main` since 2026-09-11; awaiting ratification · **Date:** 2026-09-11 · **Decider:** Astrum Forge Studios (owner)
 
 ## Context
 
@@ -38,4 +38,4 @@ Contributors have one daily workflow and concrete examples of useful comments an
 Required API details, invariant comments, and test evidence remain; brevity must not hide behaviour or risks.
 Generated prose is fixed at its source. This change does not rewrite published changelogs, generated API docs, or existing source comments.
 
-The amendment remains proposed until the owner approves its constitution PR. No runtime, lint configuration, or release automation changes are required.
+The amendment's text is in `CONSTITUTION.md` on `main`; it remains proposed until the owner approves it. No runtime, lint configuration, or release automation changes are required.

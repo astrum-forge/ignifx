@@ -1,13 +1,13 @@
 # ADR-0019 · The public website: a prerendered static site on Cloudflare Pages
 
-**Status:** Accepted · **Superseded in part by ADR-0020** (§1's "imports no workspace package", §2's "no inline script", §3's route list and the Consequences' "Impossible for now") · **Superseded in part by ADR-0027** (the site's home at `website/`, `website.yml`, and `llms.txt` generated in this repository) · **Date:** 2026-09-06 · **Phase:** 12 · **Supersedes:** none
-**Related:** `CONSTITUTION.md` §9.1 (no telemetry, no third-party requests), §11.1/§11.3 (licensing and attribution) · `docs/architecture/16-docs-harness-and-skill.md` §1 and §3 (the skill is the documentation; `llms.txt`) · `docs/plan/engineering-plan.md` Phase 12 · `website/DESIGN.md`
+**Status:** Accepted · **Superseded in part by ADR-0020** (§1's "imports no workspace package", §2's "no inline script", §3's route list and the Consequences' "Impossible for now") · **Superseded in part by ADR-0027** (the site's home at `website/`, `website.yml`, and `llms.txt` generated in this repository) · **Date:** 2026-09-06 · **Supersedes:** none
+**Related:** `CONSTITUTION.md` §9.1 (no telemetry, no third-party requests), §11.1/§11.3 (licensing and attribution) · `docs/architecture/16-docs-harness-and-skill.md` §1 and §3 (the skill is the documentation; `llms.txt`) · `website/DESIGN.md`
 
 ---
 
 ## Context
 
-Phase 12 replaces the Phase 0 placeholder at `website/` with the real ignifx.com. Three constraints fix
+The real ignifx.com replaces the placeholder at `website/`. Three constraints fix
 almost everything about how it is built.
 
 1. **The host is Cloudflare Pages, connected to this repository** (owner requirement, 2026-09-06).
@@ -107,7 +107,7 @@ per-heading permalink anchors, and its weight is pinned in the test so it cannot
 
 `.github/workflows/website.yml` regenerates `llms.txt` and fails on a diff, typechecks, builds, runs
 the website tests, and uploads `dist` as a workflow artifact. It does **not** deploy: Cloudflare Pages
-does that from `main`. The GitHub Pages job that Phase 0 used as a placeholder is removed.
+does that from `main`. The placeholder GitHub Pages job is removed.
 
 ## Consequences
 
