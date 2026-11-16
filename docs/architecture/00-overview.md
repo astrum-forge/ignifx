@@ -1,8 +1,28 @@
 # 00 · Architecture Overview
 
-**Status:** Design standard (pre-1.0) · **Governs:** every `@ignifx/*` package · **Precedence:** see `CONSTITUTION.md` §10.1
+**Status:** Design standard; describes the engine as built (pre-1.0) · **Governs:** every `@ignifx/*` package · **Precedence:** see `CONSTITUTION.md` §10.1
 
 This document defines the shape of ignifx: the objects a game is made of, how the packages are layered, and the boundary around Babylon Lite. Every other architecture document refines one part of this picture.
+
+**Source map**
+
+- `pnpm-workspace.yaml`: Workspace members and the version catalog, including the exact `@babylonjs/lite` pin.
+- `.dependency-cruiser.cjs`: §2.1 as data (`ALLOWED_IMPORTS`, `TEST_ONLY_IMPORTS`); `pnpm deps` runs it.
+- `tools/eslint-plugin-ignifx/src/rules/no-lite-outside-adapter.ts`: The import rule of §3.
+- `packages/<name>/src/index.ts`, `packages/<name>/api/<name>.api.md`: Each package's public barrel and its generated API report.
+- `packages/core/src/app/app.ts`: `createApp`, the `App`, start-up and disposal.
+- `packages/core/src/lite/`: Core's Lite adapter; `node.ts` holds the `metadata.ignifx` bridge of §5.
+- `packages/core/src/errors/`, `packages/core/src/ids/ulid.ts`, `packages/core/src/diagnostics/`: `IgnifxError` and the code registry, uids, `app.diagnostics`.
+- `packages/ignifx/src/index.ts`: The umbrella's re-exports.
+
+Invariants:
+
+- A package imports only from the layers below it and the peers in its manifest; a change to the layering changes §2.1 and `.dependency-cruiser.cjs` together (§2.1).
+- Only `src/lite/**` imports `@babylonjs/lite`; Lite objects leave a package only through a named `.lite` accessor, and never enter a schema (§3).
+- One Lite `onBeforeRender` callback per world; physics is stepped by ignifx on its own headless scene (§3.1).
+- Public APIs speak metres, seconds and degrees in a left-handed, Y-up space; milliseconds stay inside adapters (§4).
+- A `uid` is stable across save and load; handles are run-time only (§5).
+- Misuse throws `IgnifxError` with a registered `IGX-####` code (§6).
 
 ---
 
@@ -19,7 +39,7 @@ App                         one per game; owns time, services, the extension hos
 ```
 
 - **App** is the root object. `const app = await createApp({ canvas, extensions: [...] })`. There are no globals: everything is reached from the `app`, or from the `entity`/`world` a script belongs to (`CONSTITUTION.md` §3.6).
-- **World** is the running simulation. It owns exactly one Babylon Lite render `SceneContext` and (when physics is registered) one headless simulation `SceneContext` (see `09-physics.md`). MVP supports one world per app; multiple worlds are a post-1.0 topic.
+- **World** is the running simulation. It owns exactly one Babylon Lite render `SceneContext` and (when physics is registered) one headless simulation `SceneContext` (see `09-physics.md`). An app has one world (§7).
 - **Scene** is a file (`*.scene.json`, or `*.prefab.json` as a naming convention for scenes meant to be instanced). A scene is a tree of entities and components. Loading a scene into the world produces a `SceneInstance`; instantiating a scene under an entity is what other engines call a _prefab_ (see `06-serialization-and-scene-format.md`, ADR-0005).
 - **Entity** is the node of the scene tree (Unity `GameObject`, Godot `Node`). It always has a `Transform`, a stable id, a name, tags, a layer, an active flag, and an ordered list of components.
 - **Component** is typed data attached to an entity and owned by a system (e.g. `MeshRenderer`, `Rigidbody`, `AudioSource`). Components declare a serialization schema.
@@ -30,29 +50,27 @@ App                         one per game; owns time, services, the extension hos
 
 ## 2. Package layout
 
-All published packages live under the `@ignifx` npm scope and share one version line (fixed versioning). The names below are final for the MVP.
+All published packages live under the `@ignifx` npm scope (plus the unscoped umbrella `ignifx`) and share one version line (fixed versioning). "Depends on" lists the `@ignifx/*` packages and engine libraries a package builds on; `.dependency-cruiser.cjs` is the enforced list.
 
-| Package                | Role                                                                                                                                                                                                                                                                             | Depends on                                                            |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `@ignifx/core`         | App, World, Entity, Component, Script, Transform, Time, phases, Signal, scene loading, assets, serialization/schemas, extension host, math, the Babylon Lite adapter (engine, render scene, `Camera`, `Light`, `MeshRenderer`, `Model`, `Environment`, materials), headless mode | `@babylonjs/lite`                                                     |
-| `@ignifx/input`        | Action maps, bindings, keyboard/mouse/pointer/gamepad/touch devices, pointer lock, rebinding                                                                                                                                                                                     | core                                                                  |
-| `@ignifx/physics`      | 3D physics on Havok through Lite: `Rigidbody`, colliders, triggers, `CharacterController`, queries, layer matrix, interpolation                                                                                                                                                  | core, `@babylonjs/havok`                                              |
-| `@ignifx/physics-2d`   | 2D physics: `Rigidbody2D`, colliders 2D, `CharacterController2D`, queries (backend per ADR-0006)                                                                                                                                                                                 | core, `@ignifx/2d`                                                    |
-| `@ignifx/audio`        | Audio engine wrapper, bus tree, `AudioSource`, `AudioListener`, `AudioClip` assets, unlock handling                                                                                                                                                                              | core                                                                  |
-| `@ignifx/2d`           | `Camera2D`, `SpriteRenderer`, `SpriteAnimator`, atlases, `Tilemap`, sorting layers, pixel-perfect, parallax                                                                                                                                                                      | core                                                                  |
-| `@ignifx/3d`           | `CharacterController3D` helpers, third-person and first-person rigs, `Animator` state machine, `NavMeshAgent`                                                                                                                                                                    | core, physics                                                         |
-| `@ignifx/ui`           | DOM overlay UI host, input focus routing, world/HUD text components                                                                                                                                                                                                              | core                                                                  |
-| `@ignifx/particles`    | Stateless GPU particles: `ParticleSystem`, `.particles.json` definitions and presets, `app.particles`; built on core's shader, storage-buffer and instancing API with no Lite import (`docs/plan/2026-09-terrain-particles-shaders.md` §4)                                       | core                                                                  |
-| `@ignifx/particles-2d` | `ParticleSystem2D`: the same definitions evaluated on the CPU into a `SpriteBatch`                                                                                                                                                                                               | core, particles, `@ignifx/2d`                                         |
-| `@ignifx/terrain`      | `Terrain` (heightmap or noise, chunked LOD, splat surface shader, queries, sculpting), `TerrainScatter`, `.terrain.json`; physics coupling by data (`colliderInit()`)                                                                                                            | core                                                                  |
-| `@ignifx/electron`     | Main-process window factory with WebGPU flags, typed preload bridge, file-system storage backend                                                                                                                                                                                 | core                                                                  |
-| `@ignifx/devtools`     | Stats overlay, scene tree and component inspector, physics debug view, script hot reload                                                                                                                                                                                         | core                                                                  |
-| `@ignifx/editor-host`  | The ignifx editor's host inside a project: `startEditorHost` for the scene view, the play view's controls behind `virtual:ignifx/editor`, the editor protocol over a `MessagePort`, and a development-only Vite plugin at `@ignifx/editor-host/vite` (`17-editor-host.md`)       | core; vite-plugin for `./vite`                                        |
-| `@ignifx/vite-plugin`  | Asset manifest generation, scene/prefab JSON validation, WASM/asset handling, HMR hooks                                                                                                                                                                                          | —                                                                     |
-| `@ignifx/cli`          | `create-ignifx` scaffolder (templates), asset tooling commands                                                                                                                                                                                                                   | —                                                                     |
-| `ignifx`               | Umbrella: re-exports core and the standard extensions with a one-call `createGame()`; ships the Agent Skill                                                                                                                                                                      | all of the above except electron/devtools/editor-host/vite-plugin/cli |
+- **`@ignifx/core`** (depends on `@babylonjs/lite`): App, World, Entity, Component, Script, Transform, Time, phases, Signal, scene loading, assets, serialization and schemas, the extension host, math, headless mode, and the Babylon Lite adapter (engine, render scene, `Camera`, `Light`, `MeshRenderer`, `Model`, `Environment`, materials, shader materials, surface shaders, post effects, `InstancedMeshRenderer`, `StorageBufferAsset`, baked lighting).
+- **`@ignifx/input`** (core): action maps, bindings, keyboard, mouse, pointer, gamepad and touch devices, pointer lock, rebinding.
+- **`@ignifx/physics`** (core, `@babylonjs/havok`): 3D physics on Havok through Lite: `Rigidbody`, colliders, triggers, `CharacterController`, queries, layer matrix, interpolation.
+- **`@ignifx/physics-2d`** (core, `@ignifx/2d`): 2D physics: `Rigidbody2D`, 2D colliders, `CharacterController2D`, queries (backend per ADR-0006).
+- **`@ignifx/audio`** (core): audio engine wrapper, bus tree, `AudioSource`, `AudioListener`, `AudioClip` assets, unlock handling.
+- **`@ignifx/2d`** (core): `Camera2D`, `SpriteRenderer`, `SpriteAnimator`, `SpriteBatch`, atlases, `Tilemap`, sorting layers, pixel-perfect rendering, parallax.
+- **`@ignifx/3d`** (core, physics, input): `FirstPersonController`, `ThirdPersonController`, `ThirdPersonCamera`, `RigidbodyMover`, the `Animator` state machine, navigation (`NavMeshSurface`, `NavMeshAgent`, `NavMeshObstacle`), `LodGroup`, `Billboard`.
+- **`@ignifx/ui`** (core, input): DOM overlay UI host, input focus routing, widgets, world and HUD text components.
+- **`@ignifx/particles`** (core): stateless GPU particles: `ParticleSystem`, `.particles.json` definitions and presets, `app.particles`; built on core's shader, storage-buffer and instancing API (ADR-0025).
+- **`@ignifx/particles-2d`** (core, particles, `@ignifx/2d`): `ParticleSystem2D`, the same definitions evaluated on the CPU into a `SpriteBatch`.
+- **`@ignifx/terrain`** (core): `Terrain` (heightmap or noise, chunked LOD, splat surface shader, queries, sculpting), `TerrainScatter`, `.terrain.json`; physics coupling by data (`colliderInit()`) (ADR-0026).
+- **`@ignifx/electron`** (core): main-process window factory with WebGPU flags, typed preload bridge, file-system storage backend.
+- **`@ignifx/devtools`** (core, ui, input, audio, physics, physics-2d): stats overlay, scene tree and component inspector, physics debug view, script hot reload.
+- **`@ignifx/editor-host`** (core; vite-plugin for `./vite`): the ignifx editor's host inside a project: `startEditorHost` for the scene view, the play view's controls behind `virtual:ignifx/editor`, the editor protocol over a `MessagePort`, and a development-only Vite plugin at `@ignifx/editor-host/vite` (`17-editor-host.md`).
+- **`@ignifx/vite-plugin`** (no `@ignifx/*` import): asset manifest generation, scene and prefab JSON validation, WASM and asset handling, HMR hooks.
+- **`@ignifx/cli`** (no `@ignifx/*` import): two bins, `create-ignifx` (the scaffolder, which carries the templates) and `ignifx` (asset tooling commands). There is no `create-ignifx` package.
+- **`ignifx`** (every runtime package above, including electron and devtools; not editor-host, vite-plugin or cli): the umbrella. It re-exports core and the extensions from one entry and ships the Agent Skill.
 
-Non-published workspace members: `templates/*` (2d-topdown, 2d-sidescroller, 3d-third-person, 3d-first-person), `examples/*`, `docs/`, `skills/`. The public site is a separate repository, `astrum-forge/ignifx-website`, built from the published packages (ADR-0027).
+Other workspace members, none published: `templates/*` (2d-topdown, 2d-sidescroller, 3d-third-person, 3d-first-person), `examples/*`, `tools/*` (the ESLint plugin), `benchmarks`, `tests/visual`, `tests/templates`. The public site is a separate repository, `astrum-forge/ignifx-website`, built from the published packages (ADR-0027).
 
 ### 2.1 Layering rule
 
@@ -70,7 +88,7 @@ templates, examples            (may use anything)
 @babylonjs/lite (+ @babylonjs/havok, @webgpu/types)
 ```
 
-A package may import only from packages below it and from peers it declares in its `ignifx` manifest (`04-extensions.md`). Circular package dependencies are forbidden and checked in CI.
+A package may import only from packages below it and from peers it declares in its `ignifx` manifest (`04-extensions.md`): `@ignifx/ui` and `@ignifx/3d` declare input, `@ignifx/3d` declares physics, `@ignifx/physics-2d` declares `@ignifx/2d`, and `@ignifx/devtools` declares ui, input, audio and both physics packages. Circular dependencies are forbidden, between modules and between packages. `.dependency-cruiser.cjs` holds the rule as data and CI runs it (`pnpm deps`).
 
 ### 2.2 Package internals
 
@@ -89,29 +107,29 @@ packages/<name>/
 
 ## 3. The Babylon Lite adapter boundary
 
-Babylon Lite (`@babylonjs/lite`, pinned exactly; 1.34.0 at the time of writing) is a plain-data, function-based, tree-shakable WebGPU renderer that ships a new minor version every few days and states that backward compatibility is not a first-class goal. ignifx therefore isolates it (`CONSTITUTION.md` §3.4):
+Babylon Lite (`@babylonjs/lite`, pinned to an exact version in the `pnpm-workspace.yaml` catalog) is a plain-data, function-based, tree-shakable WebGPU renderer that ships a new minor version every few days and states that backward compatibility is not a first-class goal. ignifx therefore isolates it (`CONSTITUTION.md` §3.4):
 
-- **Import rule.** Only files under `src/lite/**` of a package may `import … from "@babylonjs/lite"`. A lint rule enforces this. Math types from Lite are re-exported through `@ignifx/core`'s own math module, not imported directly by feature code.
+- **Import rule.** Only files under `src/lite/**` of a package may `import … from "@babylonjs/lite"`. A lint rule and a dependency-cruiser rule enforce this; the adapter tests under a package's `test/` are the one exception, because they pin Lite behaviour by calling Lite. The same rule covers `@babylonjs/havok` and the 2D physics library. Math types from Lite are re-exported through `@ignifx/core`'s own math module, not imported directly by feature code.
 - **Ownership.** ignifx owns the scene tree; Lite's `SceneContext` owns render data. An ignifx `Transform` wraps a Lite `SceneNode` one-to-one (Lite nodes carry `position`/`rotationQuaternion`/`scaling` as observable values, a lazily computed `worldMatrix`, and a `worldMatrixVersion` counter), so there is no per-frame transform copy. Renderable components (`MeshRenderer`, `Camera`, …) create Lite objects parented under the entity's node and register them with `addToScene`/`removeFromScene`; a `Light` is the exception, posed in world space (§3.1).
 - **Escape hatches.** Where a component wraps a Lite object it exposes it through a single, explicitly named accessor (`meshRenderer.lite`, `world.lite.scene`, `app.lite.engine`). These accessors are typed with Lite's types, documented as _unstable_, and excluded from the stability guarantees of Article IV.
 - **No Lite types in schemas.** Serialized data never contains Lite objects; it contains asset references and plain numbers.
-- **Upgrade procedure.** Bumping the pinned Lite version is its own pull request that (1) re-generates the adapter's compatibility test report, (2) runs the browser visual suite, and (3) updates the pinned version in the workspace catalog and in `SKILL.md`'s environment section.
+- **Upgrade procedure.** Bumping the pinned Lite version is its own pull request (`CONSTITUTION.md` §4.6) that (1) runs the adapter tests under `packages/*/test/lite/`, which pin the Lite behaviour the adapters rely on, (2) runs the headless and browser visual suites, and (3) updates the pinned version in the workspace catalog and in `skills/ignifx/SKILL.md`.
 
-### 3.1 Facts about Lite that shape ignifx (verified against `@babylonjs/lite@1.34.0` `index.d.ts`)
+### 3.1 Facts about Lite that shape ignifx
 
-| Lite fact                                                                                                                                                                                             | Consequence for ignifx                                                                                                                                 |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `createEngine(canvas)` is async and throws when WebGPU is unavailable; there is no fallback                                                                                                           | `createApp` performs a capability check first and rejects with `IgnifxError` code `IGX-0701` (WebGPU unavailable); templates render a friendly message |
-| The render loop is `startEngine(engine)` (rAF) and scene logic runs in `onBeforeRender(scene, cb(deltaMs))`; callbacks registered later run earlier; there is no `onAfterRender`                      | ignifx registers exactly one Lite callback per world and runs its whole frame inside it (`01-lifecycle-and-time.md`)                                   |
-| Headless: `createNullEngine()` + `createSceneContext(engine, { defaultRenderTask: false })` + `stepScene(engine, scene, deltaMs)`                                                                     | ignifx headless mode and all unit tests use this path; `app.step()` is deterministic                                                                   |
-| `createHavokWorld(scene, hknp)` inserts its own step callback at the front of the scene's callback list and performs exactly one `HP_World_Step` per frame at `setPhysicsTimestepMs` (no accumulator) | ignifx hosts the physics world on a separate headless simulation scene and steps it from its own fixed-timestep loop (ADR-0003, `09-physics.md`)       |
-| glTF animation groups attached with `addToScene` are advanced by a hook that runs after user callbacks; `AnimationManager` supports manual advance via `updateAnimationManager(manager, deltaMs)`     | ignifx advances animation itself between `update` and `lateUpdate` so `lateUpdate` sees posed skeletons, matching Unity's order                        |
-| `onPhysicsCollision` events carry both bodies (`collider`, `collidedAgainst`; added in 1.29.0) as well as point/normal/impulse; `onPhysicsTriggerBodies` carries `bodyA`/`bodyB`                      | Collisions and triggers reach both entities with `other` set (`09-physics.md` §4); up to 1.27 this needed a drain (ADR-0013, superseded)               |
-| Meshes removed from their last scene are disposed permanently; hide with `visible`/`setSubtreeVisible` instead                                                                                        | Entity deactivation toggles visibility; only `destroy()` removes from the scene                                                                        |
-| Lights are scene nodes (since 1.30): a light's `direction` is local and is rotated by its `worldMatrix`, and a point or spot light shines from `worldMatrix[12..14]`                                  | `Light` keeps its Lite light unparented and unrotated and writes the entity's world pose into it each frame the entity moved (`src/lite/light.ts`)     |
-| Sprites: `SpriteRenderer` + `Sprite2DLayer` (pixel space, +Y down, per-layer `Sprite2DView` camera, Y-sort, blend modes, picking) and depth-hosted layers for 3D scenes                               | `@ignifx/2d` maps world units (Y up) to layer pixels through pixels-per-unit; `Camera2D` drives `Sprite2DView`                                         |
-| Audio engine is a full port of Babylon's Audio V2 (buses, static/streaming sounds, spatial with `attachedTo`, unlock)                                                                                 | `@ignifx/audio` is a thin layer: bus tree conventions, components, asset integration                                                                   |
-| Error messages are compact codes unless `enableErrorDecoding()` is called                                                                                                                             | Development builds call it at app creation; production builds lazy-load `decodeError` in the global error handler                                      |
+These hold for the pinned Babylon Lite version (`pnpm-workspace.yaml` catalog); re-check them against its `index.d.ts` at every bump.
+
+- **Lite:** `createEngine(canvas)` is async and throws when WebGPU is unavailable; there is no fallback. **ignifx:** `createApp` performs a capability check first and rejects with `IgnifxError` code `IGX-0701` (WebGPU unavailable); templates render a friendly message.
+- **Lite:** The render loop is `startEngine(engine)` (rAF) and scene logic runs in `onBeforeRender(scene, cb(deltaMs))`; callbacks registered later run earlier; there is no `onAfterRender`. **ignifx:** ignifx registers exactly one Lite callback per world and runs its whole frame inside it (`01-lifecycle-and-time.md`).
+- **Lite:** Headless: `createNullEngine()` + `createSceneContext(engine, { defaultRenderTask: false })` + `stepScene(engine, scene, deltaMs)`. **ignifx:** ignifx headless mode and all unit tests use this path; `app.step()` is deterministic.
+- **Lite:** `createHavokWorld(scene, hknp)` inserts its own step callback at the front of the scene's callback list and performs exactly one `HP_World_Step` per frame at `setPhysicsTimestepMs` (no accumulator). **ignifx:** ignifx hosts the physics world on a separate headless simulation scene and steps it from its own fixed-timestep loop (ADR-0003, `09-physics.md`).
+- **Lite:** glTF animation groups attached with `addToScene` are advanced by a hook that runs after user callbacks; `AnimationManager` supports manual advance via `updateAnimationManager(manager, deltaMs)`. **ignifx:** ignifx advances animation itself between `update` and `lateUpdate` so `lateUpdate` sees posed skeletons, matching Unity's order.
+- **Lite:** `onPhysicsCollision` events carry both bodies (`collider`, `collidedAgainst`) as well as point/normal/impulse; `onPhysicsTriggerBodies` carries `bodyA`/`bodyB`. **ignifx:** Collisions and triggers reach both entities with `other` set (`09-physics.md` §4).
+- **Lite:** Meshes removed from their last scene are disposed permanently; hide with `visible`/`setSubtreeVisible` instead. **ignifx:** Entity deactivation toggles visibility; only `destroy()` removes from the scene.
+- **Lite:** Lights are scene nodes: a light's `direction` is local and is rotated by its `worldMatrix`, and a point or spot light shines from `worldMatrix[12..14]`. **ignifx:** `Light` keeps its Lite light unparented and unrotated and writes the entity's world pose into it each frame the entity moved (`src/lite/light.ts`).
+- **Lite:** Sprites: `SpriteRenderer` + `Sprite2DLayer` (pixel space, +Y down, per-layer `Sprite2DView` camera, Y-sort, blend modes, picking) and depth-hosted layers for 3D scenes. **ignifx:** `@ignifx/2d` maps world units (Y up) to layer pixels through pixels-per-unit; `Camera2D` drives `Sprite2DView`.
+- **Lite:** Audio engine is a full port of Babylon's Audio V2 (buses, static/streaming sounds, spatial with `attachedTo`, unlock). **ignifx:** `@ignifx/audio` is a thin layer: bus tree conventions, components, asset integration.
+- **Lite:** Error messages are compact codes unless `enableErrorDecoding()` is called. **ignifx:** Development builds install the decoder at app creation through a dynamic import, so its message table stays out of a production entry chunk; production builds report the compact codes (`07-rendering.md` §5).
 
 ## 4. Coordinate system and units
 
@@ -131,9 +149,9 @@ Babylon Lite (`@babylonjs/lite`, pinned exactly; 1.34.0 at the time of writing) 
 - Misuse throws `IgnifxError` with a stable `code` (`IGX-####`), an actionable message in development, and a compact message in production (`CONSTITUTION.md` §3.9).
 - Every system exposes counters to `app.diagnostics` (frame time, fixed steps per frame, entity/component counts, draw calls and GPU time from Lite). `@ignifx/devtools` renders them.
 
-## 7. What is deliberately out of scope for the MVP
+## 7. What is deliberately out of scope
 
-- A visual editor inside the engine. The editor is a separate product (`astrum-forge/ignifx-editor`) built on the runtime through `@ignifx/editor-host` (`17-editor-host.md`) and developed alongside the engine before 1.0; the engine seams it needs are the asks E0 to E14 in §5 of the editor plan (ADR-E011 of the editor repository). The runtime is editor-ready (schemas, inspector metadata, stable ids, edit mode) and stays editor-free: nothing in a game depends on the editor.
-- Multiple worlds per app, and multiple simultaneous render cameras on screen (multi-viewport). One camera draws the canvas; others can render into textures through Lite render tasks (`07-rendering.md` §2.11, engine ask E8).
+- A visual editor inside the engine. The editor is a separate product (`astrum-forge/ignifx-editor`) built on the runtime through `@ignifx/editor-host` (`17-editor-host.md`) and developed alongside the engine (ADR-0032). The runtime is editor-ready (schemas, inspector metadata, stable ids, edit mode) and stays editor-free: nothing in a game depends on the editor.
+- Multiple worlds per app, and multiple simultaneous render cameras on screen (multi-viewport). One camera draws the canvas; others can render into textures through Lite render tasks (`07-rendering.md` §2.11).
 - Networking. Deterministic fixed-step simulation is designed so that lockstep or server-authoritative networking can be added as an extension later.
-- WebXR (Lite's XR path is not yet runnable in shipping browsers).
+- WebXR.

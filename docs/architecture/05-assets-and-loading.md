@@ -1,6 +1,26 @@
 # 05 · Assets and Loading
 
-**Status:** Design standard (pre-1.0) · **Package:** `@ignifx/core` (service), loaders across extensions · **Related:** `06-serialization-and-scene-format.md`, `04-extensions.md`, Unity Addressables (inspiration)
+**Status:** Design standard; describes the engine as built (pre-1.0) · **Package:** `@ignifx/core` (service), loaders across extensions · **Related:** `06-serialization-and-scene-format.md`, `04-extensions.md`, Unity Addressables (inspiration)
+
+**Source map**
+
+- `packages/core/src/assets/assets-service.ts`, `asset-handle.ts`, `asset-ref.ts`, `address.ts`: `app.assets`, handles, refs, address and fragment parsing (§2 to §4).
+- `packages/core/src/assets/request-queue.ts`, `fetcher.ts`, `delivery-system.ts`: Priority queue and retries, the one `fetch` path, delivery in `PreUpdate` (§4, §9).
+- `packages/core/src/assets/loader-context.ts`, `generic-loaders.ts`, `manifest.ts`: `LoaderContext`, the json/text/binary loaders, the manifest (§5, §7).
+- `packages/core/src/render/loaders/`, `packages/core/src/render/*-asset.ts`: Core's GPU loaders and asset classes (§5).
+- `packages/core/src/render/decoder-urls.ts`, `packages/core/src/lite/gpu/decoders.ts`: Decoder URLs, the left-out mark, the Lite glue (§5, "Compressed textures").
+- `packages/core/decoders/`, `scripts/vendor-decoders.ts`: The vendored decoder files and the script that writes them (`vendored.json` records sources and versions).
+- `packages/vite-plugin/src/manifest.ts`, `extension-assets.ts`, `decoders.ts`, `plugin.ts`: Manifest generation, `ignifx.assets.public`, decoder groups, HMR (§7).
+- `packages/core/src/hot-reload/`: Script hot reload; asset reload is in `assets-service.ts`.
+
+Invariants:
+
+- One handle per `(address, options)`; every `load` is paired with one `release` (§3).
+- While the app runs, a completed load is delivered in `PreUpdate`, never mid-phase; while it is stopped, as soon as it finishes (§4).
+- All asset I/O goes through the app's `fetch`; loaders do not branch on platform (§8).
+- A loader never creates entities and tolerates the null engine (§5, rules).
+- No code is loaded from a network host at run time; a file whose decoder cannot be served locally is refused before anything is fetched (§5, rules).
+- Extension files published through `ignifx.assets.public` are copied unhashed and listed in the manifest at their bare names (§7).
 
 ---
 
@@ -56,8 +76,11 @@ interface Assets {
   gcDelay: number; // seconds a zero-ref asset stays cached; default 5 (0 = immediate)
   resolveUrl(address: string): string;
   registerLoader(loader: AssetLoader): void; // normally via ExtensionContext
+  registerType(type: AssetTypeDefinition): void;
+  register<T>(value: T, options: RegisterAssetOptions): AssetHandle<T>; // publish a value built in code under an address
+  reload(address: string): void; // what hot reload calls
   readonly manifest: AssetManifest;
-  readonly onProgress: SignalLike<{ loaded: number; total: number; bytesLoaded: number; bytesTotal: number }>;
+  readonly onProgress: SignalLike<AssetProgress>; // { loaded, total, bytesLoaded, bytesTotal }
 }
 interface LoadOptions {
   signal?: AbortSignal;
@@ -75,8 +98,8 @@ interface BatchHandle {
 ```
 
 - `load` returns immediately so that scripts can request in `awake` and check `state` later, or `yield handle.promise` in a coroutine.
-- Requests are scheduled through a priority queue with a concurrency limit (default 6 concurrent fetches; configurable per platform). Cancellation via `AbortSignal` aborts the fetch and marks the handle `failed` with `AssetLoadError` code `IGX-0502` (aborted); refcounts still apply.
-- Completed loads are delivered on the main thread in the `PreUpdate` phase of the next frame (never mid-phase), so `state` changes are observable at a consistent point. `promise` resolves at that time. While the app is not running — before `app.start()` and after `app.stop()` — there is no frame to wait for, so a completed load is delivered as soon as it finishes: a game can `await` its preloads and then start, and a headless test can `await` a handle without stepping. Retry backoff before `start()` runs on the wall clock for the same reason. (Amended 2026-09-06: the previous wording made a load awaited before `start()` wait forever.)
+- Requests are scheduled through a priority queue with a concurrency limit (default 6 concurrent fetches; `assets.concurrency` in the project settings). Cancellation via `AbortSignal` aborts the fetch and marks the handle `failed` with `AssetLoadError` code `IGX-0502` (aborted); refcounts still apply.
+- Completed loads are delivered on the main thread in the `PreUpdate` phase of the next frame (never mid-phase), so `state` changes are observable at a consistent point. `promise` resolves at that time. While the app is not running — before `app.start()` and after `app.stop()` — there is no frame to wait for, so a completed load is delivered as soon as it finishes: a game can `await` its preloads and then start, and a headless test can `await` a handle without stepping. Retry backoff before `start()` runs on the wall clock for the same reason.
 
 ## 5. Loaders
 
@@ -94,6 +117,7 @@ interface LoaderContext {
   readonly url: string;
   readonly fragment: string | null;
   readonly type: string;
+  readonly meta: JsonObject | null; // the manifest entry's `meta` (sidecar options, §7)
   readonly app: App;
   readonly signal: AbortSignal;
   fetchBytes(): Promise<ArrayBuffer>;
@@ -107,34 +131,45 @@ interface LoaderContext {
 
 Core loaders (registered by the core extension):
 
-| Type                     | Extensions                                        | Produces                                                                           | Notes                                                                                              |
-| ------------------------ | ------------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `texture`                | `.png .jpg .jpeg .webp .ktx2 .basis`              | `TextureAsset` (wraps Lite `Texture2D`)                                            | Options via sidecar `.meta.json` (sRGB, mipMaps, filtering, premultiply); `.ktx2`/`.basis` below   |
-| `model`                  | `.glb .gltf`                                      | `ModelAsset` (Lite `AssetContainer` template + node/animation/material index)      | `.glb` is fetched as bytes (progress, abort); `.gltf` with external files is passed as URL to Lite |
-| `scene`                  | `.scene.json .prefab.json`                        | `SceneAsset` (validated file + resolved dependency handles)                        | Loads all referenced assets as dependencies                                                        |
-| `material`               | `.material.json`                                  | `MaterialAsset`                                                                    | PBR/Standard/Shader definitions                                                                    |
-| `mesh`                   | `.mesh.json`                                      | `MeshAsset` (one primitive: box, sphere, plane, ground, cylinder, capsule, torus)  | Same path as `MeshAsset.box(app)` and friends, which publish under this type too (ADR-0029)        |
-| `environment`            | `.env .hdr .dds`                                  | `EnvironmentAsset`                                                                 | IBL + optional skybox                                                                              |
-| `font`                   | `.ttf .otf`                                       | `FontAsset` (Lite `Font`)                                                          | For world/HUD text                                                                                 |
-| `json`, `text`, `binary` | `.json`, `.txt .md .csv`, `.bin .wasm`            | parsed JSON / string / `ArrayBuffer`                                               | Generic                                                                                            |
-| `shader`                 | `.wgsl` (`.surface.wgsl`, `.post.wgsl` by pragma) | `ShaderAsset` (WGSL source + the declaration parsed from its `// @ignifx` pragmas) | Hot reload rebuilds the materials built from it (`07-rendering.md` §2.8)                           |
-| `storagebuffer`          | none (`createStorageBufferAsset` only)            | `StorageBufferAsset`                                                               | Read-only in shaders; bytes always come from code                                                  |
+- **`texture`** (`.png .jpg .jpeg .webp .ktx2 .basis`) produces `TextureAsset`, which wraps a Lite `Texture2D`. Options come from the sidecar `.meta.json` (sRGB, mipMaps, filtering, premultiply); `.ktx2` and `.basis` are covered below.
+- **`model`** (`.glb .gltf`) produces `ModelAsset`: a Lite `AssetContainer` template plus a node, animation and material index. A `.glb` is fetched as bytes (progress, abort); a `.gltf` with external files is passed to Lite as a URL.
+- **`scene`** (`.scene.json .prefab.json`) produces `SceneAsset`: the validated file plus resolved dependency handles. It loads every referenced asset as a dependency.
+- **`material`** (`.material.json`) produces `MaterialAsset` (PBR, Standard or Shader definitions).
+- **`mesh`** (`.mesh.json`) produces `MeshAsset`, one primitive (box, sphere, plane, ground, cylinder, capsule, torus). `MeshAsset.box(app)` and friends take the same path and publish under this type too (ADR-0029).
+- **`environment`** (`.env .hdr .dds .environment.json`) produces `EnvironmentAsset`: IBL and an optional skybox.
+- **`font`** (`.ttf .otf`) produces `FontAsset` (Lite `Font`), for world and HUD text.
+- **`shader`** (`.wgsl`; `.surface.wgsl` and `.post.wgsl` by pragma) produces `ShaderAsset`: the WGSL source and the declaration parsed from its `// @ignifx` pragmas. Hot reload rebuilds the materials built from it (`07-rendering.md` §2.8).
+- **`lightprobes`** (`.probes.json`) and **`lightmap`** (`.lightmap.json`) produce the baked-lighting assets of `07-rendering.md` §2.15.
+- **`json`**, **`text`**, **`binary`** (`.json`; `.txt .md .csv`; `.bin .wasm`) produce parsed JSON, a string and an `ArrayBuffer`.
+- **`storagebuffer`** has no file format: `createStorageBufferAsset` builds a `StorageBufferAsset` from bytes in code. It is read-only in shaders.
 
-Extensions add: `audio` (`.mp3 .ogg .wav`; `@ignifx/audio`), `spriteatlas` (`.atlas.json` + image; `@ignifx/2d`), `tilemap` (`.tilemap.json`; Tiled `.tmj` and LDtk `.ldtk` are converted by `ignifx import tilemap` first; `@ignifx/2d`), `inputactions` (`.input.json`; `@ignifx/input`), `animator` (`.animator.json`; `@ignifx/3d`), `particles` (`.particles.json`; `@ignifx/particles`), `terrain` and `heightmap` (`.terrain.json`, `.r16`; `@ignifx/terrain`).
+Extensions add:
 
-### Compressed textures (amended 2026-10-19, engine ask E13)
+- `@ignifx/audio`: `audio` (`.mp3 .ogg .wav .webm .flac`), `audiobuses` (`.audio.json`).
+- `@ignifx/2d`: `spriteatlas` (`.atlas.json` plus its image), `spriteanimation` (`.spriteanim.json`), `tilemap` (`.tilemap.json`; Tiled `.tmj` and LDtk `.ldtk` are converted by `ignifx import tilemap` first).
+- `@ignifx/input`: `inputactions` (`.input.json`).
+- `@ignifx/3d`: `animator` (`.animator.json`).
+- `@ignifx/physics` and `@ignifx/physics-2d`: `physicsmaterial` (`.physicsmaterial.json`).
+- `@ignifx/ui`: `i18n` (`.i18n.json`).
+- `@ignifx/particles`: `particles` (`.particles.json`).
+- `@ignifx/terrain`: `terrain` (`.terrain.json`) and `heightmap` (`.r16`).
 
-One `texture` type covers six extensions, and the loader picks Lite's loader from the address's extension (the URL's when the address has none): `.png .jpg .jpeg .webp` go to `loadTexture2D` and the browser's image decoder, `.ktx2` to `loadKtx2Texture2D` and `.basis` to `loadBasisTexture2D`. Before, all six reached `loadTexture2D`, whose `createImageBitmap` fails on a KTX2 file. The Lite glue for the two compressed paths is in `src/lite/gpu/decoders.ts` and is imported on first use.
+### Compressed textures
+
+One `texture` type covers six extensions, and the loader picks Lite's loader from the address's extension (the URL's when the address has none): `.png .jpg .jpeg .webp` go to `loadTexture2D` and the browser's image decoder, `.ktx2` to `loadKtx2Texture2D` and `.basis` to `loadBasisTexture2D`. The Lite glue for the two compressed paths is in `src/lite/gpu/decoders.ts` and is imported on first use.
 
 - **Transcode targets** are Lite's to choose; its public API has no override. They follow the device features `texture-compression-{astc,bc,etc2}`, which Lite requests whenever the adapter has them. ETC1S becomes ETC2 if `etc2` is present, else BC7 if `bc` is, else RGBA8. UASTC becomes ASTC 4×4 if `astc` is present, else BC7, else ETC2, else RGBA8. A Windows or Linux desktop gets BC7, Apple silicon gets ETC2 (ETC1S) or ASTC (UASTC), and a device without compression gets RGBA8. `.basis` uses Lite's own order: BC7, ASTC, ETC2, BC3, BC1, RGBA8.
 - **Sidecar options.** `srgb` and the sampler (`addressModeU/V`, `minFilter`, `magFilter`) apply to `.ktx2`; `mipMaps` and `premultiplyAlpha` do not, since the file's own mip chain is uploaded as stored.
-- **Orientation: rows as stored.** Block-compressed data cannot be flipped at upload, so `invertY` has no effect on a `.ktx2`: its first row lands at the top of the texture, as for a PNG with `invertY: false`. Lite 1.34 marks the handle `invertY`, but no material reads the flag, and a props-built PBR material ignores `setTextureTransform` (its UV-transform variant is enabled only by the glTF builder). A `.ktx2` meant to draw like its PNG under the default `invertY: true` is therefore **encoded from the vertically flipped image** (Basis `setYFlip(true)`). `packages/core/test/assets/ktx2.browser.test.ts` pins both cases.
-- **Decoders.** Lite injects `babylon.ktx2Decoder.js`, which fetches `msc_basis_transcoder.{js,wasm}` (ETC1S), `uastc_*.wasm` (UASTC) and `zstddec.wasm` (Zstandard), and a glTF with `EXT_meshopt_compression` injects `meshopt_decoder.js`, all from `cdn.babylonjs.com` by default, which a packaged game's `script-src 'self'` refuses. `@ignifx/core` ships these eleven files (740 KB) in `decoders/` and lists them in its `ignifx.assets.public`, so `@ignifx/vite-plugin` serves and copies them like Havok's WASM (§7). Before a KTX2, Basis or glTF load, the loaders call `configureDecoders`, which hands Lite (`setKtx2DecoderUrl`, `setMeshoptBaseUrl`) the URLs of whichever of those files the manifest lists. A manifest without them keeps Lite's defaults; a project that builds without the plugin self-hosts by copying `node_modules/@ignifx/core/decoders/*` next to its assets and adding a manifest entry per file at its bare name. The files are vendored from `babylonjs-ktx2decoder` and `@babylonjs/ktx2decoder` 9.30.0 and `meshoptimizer` 1.3.0 by `pnpm vendor:decoders`, because those packages would pull Babylon.js into every game's install; `THIRD_PARTY_NOTICES.md` lists them. One file is edited on the way in: `msc_basis_transcoder.js` is an embind build that compiles four helpers from strings with `new Function`, which `script-src 'self' 'wasm-unsafe-eval'` refuses (`EvalError`, so no ETC1S texture loads); the script replaces each with an equivalent closure and marks the file as modified. Measured under that policy in headless Chromium: ETC1S to ETC2 and BC7 and UASTC to ASTC decode with no violation. A glTF with `KHR_draco_mesh_compression` injects `draco_decoder.js` and its `draco_decoder_gltf.wasm` from the page's root unless told otherwise; both come from `draco3dgltf` 1.5.7 (Apache-2.0, 245 KB, unmodified) and reach Lite through `setDracoBaseUrl`, and like every decoder they are fetched only by a file that needs them (engine ask E9). The plugin copies every decoder into the build by default; its `decoders` option (`{ draco, meshopt, ktx2 }`, each `true` unless set) leaves a group out of `vite dev` and `dist/` for a game that never loads that kind of file. The plugin still lists a left-out group's files in the manifest, at their local URLs and with `meta.leftOutDecoder` set to the group, so Lite is never pointed at `cdn.babylonjs.com` or the page root for them (a core that predates the mark gets a local 404). The texture loader (for `.ktx2`) and the model loader (for a glTF whose `extensionsUsed` names `KHR_draco_mesh_compression`, `EXT_meshopt_compression` or `KHR_texture_basisu`) read the mark and fail with `IGX-0508` before anything is fetched, naming the option to set back to `true`.
-- **`.basis` still needs the CDN, so ignifx refuses it.** `loadBasisTexture2D` fetches `basis_transcoder.js` and its WASM from `cdn.babylonjs.com/basisTranscoder/1/` and Lite 1.34 has no setter for it (`index.d.ts` has none; `lib/texture/basis-loader.js` hard-codes the URL), so a `.basis` file does not load under `script-src 'self'`. In a project whose manifest lists the KTX2 decoder (every `@ignifx/vite-plugin` build) the texture loader fails a `.basis` load with `IGX-0509` before anything is fetched, so no code comes from a network host; without the plugin Lite still tries the CDN, and the loader turns its "failed to load" into the same `IGX-0509`. The message says to convert the file to `.ktx2`, which carries the same Basis payloads; a setter is an upstream ask.
+- **Orientation: rows as stored.** Block-compressed data cannot be flipped at upload, so `invertY` has no effect on a `.ktx2`: its first row lands at the top of the texture, as for a PNG with `invertY: false`. Lite marks the handle `invertY`, but no material reads the flag, and a props-built PBR material ignores `setTextureTransform` (its UV-transform variant is enabled only by the glTF builder). A `.ktx2` meant to draw like its PNG under the default `invertY: true` is therefore **encoded from the vertically flipped image** (Basis `setYFlip(true)`). `packages/core/test/assets/ktx2.browser.test.ts` pins both cases.
+- **Decoders are served from the game's own origin.** Lite injects `babylon.ktx2Decoder.js`, which fetches `msc_basis_transcoder.{js,wasm}` (ETC1S), `uastc_*.wasm` (UASTC) and `zstddec.wasm` (Zstandard); a glTF with `EXT_meshopt_compression` injects `meshopt_decoder.js`; a glTF with `KHR_draco_mesh_compression` injects `draco_decoder.js` and `draco_decoder_gltf.wasm`. Lite's defaults are `cdn.babylonjs.com` (the page's root for Draco), which a packaged game's `script-src 'self'` refuses. `@ignifx/core` ships these files in `decoders/` and lists them in its `ignifx.assets.public`, so `@ignifx/vite-plugin` serves and copies them like Havok's WASM (§7). Each decoder is fetched only by a file that needs it.
+  - Before a KTX2, Basis or glTF load, the loaders call `configureDecoders`, which hands Lite (`setKtx2DecoderUrl`, `setMeshoptBaseUrl`, `setDracoBaseUrl`) the URLs of whichever of those files the manifest lists. A manifest without them keeps Lite's defaults; a project that builds without the plugin self-hosts by copying `node_modules/@ignifx/core/decoders/*` next to its assets and adding a manifest entry per file at its bare name.
+  - The files are vendored by `pnpm vendor:decoders` (`scripts/vendor-decoders.ts`), because the packages they come from would pull Babylon.js into every game's install; `packages/core/decoders/vendored.json` records each source and version, and `THIRD_PARTY_NOTICES.md` lists them. One file is edited on the way in: `msc_basis_transcoder.js` is an embind build that compiles four helpers from strings with `new Function`, which `script-src 'self' 'wasm-unsafe-eval'` refuses (`EvalError`, so no ETC1S texture would load); the script replaces each with an equivalent closure and marks the file as modified.
+  - The plugin copies every decoder into the build by default. Its `decoders` option (`{ draco, meshopt, ktx2 }`, each `true` unless set) leaves a group out of `vite dev` and `dist/` for a game that never loads that kind of file. A left-out group's files are still listed in the manifest, at their local URLs and with `meta.leftOutDecoder` set to the group, so Lite is never pointed at `cdn.babylonjs.com` or the page root for them. The texture loader (for `.ktx2`) and the model loader (for a glTF whose `extensionsUsed` names `KHR_draco_mesh_compression`, `EXT_meshopt_compression` or `KHR_texture_basisu`) read the mark and fail with `IGX-0508` before anything is fetched, naming the option to set back to `true`.
+- **`.basis` still needs the CDN, so ignifx refuses it.** `loadBasisTexture2D` fetches `basis_transcoder.js` and its WASM from `cdn.babylonjs.com/basisTranscoder/1/` and the pinned Lite has no setter for it (the URL is hard-coded in `lib/texture/basis-loader.js`), so a `.basis` file does not load under `script-src 'self'`. In a project whose manifest lists the KTX2 decoder (every `@ignifx/vite-plugin` build) the texture loader fails a `.basis` load with `IGX-0509` before anything is fetched, so no code comes from a network host; without the plugin Lite still tries the CDN, and the loader turns its "failed to load" into the same `IGX-0509`. The message says to convert the file to `.ktx2`, which carries the same Basis payloads; a setter is an upstream ask (`07-rendering.md` §8, "Basis transcoder URL setter").
 
 Rules for loaders:
 
-- **No code from a network host at run time.** A loader, a decoder or a transcoder never makes the engine load or run code (a script, WebAssembly, a worker) from a network host while a game or the editor runs: everything it needs is served from the game's or the editor's own origin, as the decoders above are. When a dependency cannot be served locally, the loader refuses the file with a clear error before anything is fetched rather than falling back to a CDN. `.basis` is the standing example: Lite 1.34 hard-codes the transcoder's CDN URL, so the texture loader fails it with `IGX-0509` and asks for `.ktx2` instead; the refusal comes before anything is fetched only in a project that serves its own decoders (every `@ignifx/vite-plugin` build), while without them Lite still tries the CDN first and the loader turns that failure into the same error. This rule is stricter than `CONSTITUTION.md` §9, which §10.1 allows; a §9 clause saying the same for the engine, its packages and the editor is proposed in engine #157 and needs the owner's approval through a `constitution:` pull request with an ADR (§10.2).
+- **No code from a network host at run time.** A loader, a decoder or a transcoder never makes the engine load or run code (a script, WebAssembly, a worker) from a network host while a game or the editor runs: everything it needs is served from the game's or the editor's own origin, as the decoders above are. When a dependency cannot be served locally, the loader refuses the file with a clear error before anything is fetched rather than falling back to a CDN. `.basis` is the standing example: Lite hard-codes the transcoder's CDN URL, so the texture loader fails it with `IGX-0509` and asks for `.ktx2` instead; the refusal comes before anything is fetched only in a project that serves its own decoders (every `@ignifx/vite-plugin` build), while without them Lite still tries the CDN first and the loader turns that failure into the same error. This rule is stricter than `CONSTITUTION.md` §9, which has no such clause; §10.1 allows an architecture document to be stricter.
 - Loaders are pure with respect to the world: they produce values, never create entities.
 - GPU uploads happen inside `load` using the Lite engine; a loader must tolerate the null engine (return CPU-only data with `gpu: null`).
 - Dependencies are loaded through `loadDependency` so that refcounts and progress propagate.
@@ -150,21 +185,21 @@ Rules for loaders:
 
 `@ignifx/vite-plugin`:
 
-- Scans the asset root, emits `assets.manifest.json` with `{ address, url, bytes, hash, type, groups }`, fingerprints files, and copies them to `dist/assets/`.
-- Reads `.meta.json` sidecars for per-asset import options and group membership (`{ "groups": ["level1"], "texture": { "srgb": true } }`). Every other key reaches the entry's `meta` unchanged, except two kinds (amended 2026-10-19): `"publish": false` leaves the asset out of the manifest, `dist/` and validation, in dev and in a build — an editor source whose imported output ships instead; and the editor-owned keys `guid`, `importer`, `source`, `outputs` and `options` (`EDITOR_SIDECAR_KEYS`), which describe an import rather than a load, never reach `meta`.
+- Scans the asset root, emits `assets.manifest.json` with `{ address, url, bytes, hash, type, groups, meta }` per entry, fingerprints files, and copies them to `dist/assets/`.
+- Reads `.meta.json` sidecars for per-asset import options and group membership (`{ "groups": ["level1"], "texture": { "srgb": true } }`). Every other key reaches the entry's `meta` unchanged, except two kinds: `"publish": false` leaves the asset out of the manifest, `dist/` and validation, in dev and in a build — an editor source whose imported output ships instead; and the editor-owned keys `guid`, `importer`, `source`, `outputs` and `options` (`EDITOR_SIDECAR_KEYS`), which describe an import rather than a load, never reach `meta`.
 - Validates scene/prefab/material/atlas JSON against the generated JSON Schemas at build time (see `06-serialization-and-scene-format.md` §8).
-- In development, watches the asset root and sends `ignifx:asset-changed` over Vite HMR; the assets service reloads affected handles and fires `onReplaced`. A change that arrives while a handle is still reloading runs one more reload after it, however many changes arrive meanwhile, and only the newest value is delivered (amended 2026-10-19: such a change used to be dropped). A failed reload keeps the value the handle had and reports an `IGX-0505` `AssetLoadError` with the address through `app.onError`.
-- Handles WASM binaries listed by extensions (`ignifx.assets.public`) so Havok, Recast and, from `@ignifx/core`, Babylon Lite's KTX2, meshopt and Draco decoders (§5, "Compressed textures") are served as static files and located via `resolveUrl`. Each one is copied **unhashed** and is also written into the manifest, at its bare file name, with the served URL and `base` applied (amended 2026-09-08): without an entry `resolveUrl` falls back to a page-relative `<assetRoot>/<address>`, which is right only when the document sits directly above the asset root and is `IGX-0903` anywhere else. A project asset whose address equals a published file name is `IGX-0552`. If the bundler emits its own byte-identical copy — `@babylonjs/havok`'s ESM build carries a dead `new URL("HavokPhysics.wasm", import.meta.url)` that Rollup resolves — the plugin repoints that reference at its own copy and drops the bundler's, so exactly one file ships. Discovery reads the packages installed **directly** in each `node_modules` from the Vite root upwards, so an extension reached only through the `ignifx` umbrella publishes nothing until the project depends on it by name.
+- In development, watches the asset root and sends `ignifx:asset-changed` over Vite HMR; the assets service reloads affected handles and fires `onReplaced`. A change that arrives while a handle is still reloading runs one more reload after it, however many changes arrive meanwhile, and only the newest value is delivered. A failed reload keeps the value the handle had and reports an `IGX-0505` `AssetLoadError` with the address through `app.onError`.
+- Handles WASM binaries listed by extensions (`ignifx.assets.public`) so Havok and, from `@ignifx/core`, Babylon Lite's KTX2, meshopt and Draco decoders (§5, "Compressed textures") are served as static files and located via `resolveUrl`. Each one is copied **unhashed** and is also written into the manifest, at its bare file name, with the served URL and `base` applied: without an entry `resolveUrl` falls back to a page-relative `<assetRoot>/<address>`, which is right only when the document sits directly above the asset root and is `IGX-0903` anywhere else. A project asset whose address equals a published file name is `IGX-0552`. If the bundler emits its own byte-identical copy — `@babylonjs/havok`'s ESM build carries a dead `new URL("HavokPhysics.wasm", import.meta.url)` that Rollup resolves — the plugin repoints that reference at its own copy and drops the bundler's, so exactly one file ships. Discovery reads the packages installed **directly** in each `node_modules` from the Vite root upwards, so an extension reached only through the `ignifx` umbrella publishes nothing until the project depends on it by name.
 
-Bundling many small files into packs (`.igxpack`) is a post-1.0 optimization; the manifest format reserves a `pack` field for it.
+Bundling many small files into packs is out of scope: the manifest has one entry per file.
 
 ## 8. Platform notes
 
 - **Browser:** addresses resolve under the app's base URL; production URLs are content-hashed and immutable-cacheable.
-- **Electron:** the same manifest is used; files are read from the packaged app directory through the same `fetch` path (`file://` or a custom `ignifx://` protocol registered by `@ignifx/electron`), so loaders do not branch on platform.
+- **Electron:** the same manifest is used; files are read from the packaged app directory through the same `fetch` path (the `ignifx://` protocol `@ignifx/electron` registers serves a packaged app), so loaders do not branch on platform.
 - **Headless:** `fetch` is the only I/O path (a Node app passes a `fetch` that maps addresses to files); GPU-dependent loaders return CPU-side data.
 
 ## 9. Errors and diagnostics
 
 - `AssetLoadError` carries `code` (`IGX-05xx`), `address`, `url`, `cause`. Network failures retry with exponential backoff (default 2 retries) unless aborted. Pending promises of an app that is disposed reject with `IGX-0503`.
-- `app.diagnostics.assets` reports loaded count, bytes, in-flight requests, cache size, and zero-ref candidates.
+- The `assets` diagnostics group reports `loaded`, `inFlight`, `queued`, `bytesLoaded`, `failed` and `zeroRefCandidates`.

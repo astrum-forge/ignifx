@@ -1,8 +1,26 @@
 # 04 · Extensions
 
-**Status:** Design standard (pre-1.0) · **Package:** `@ignifx/core` · **Related:** `03-scripting-and-components.md` §6–7, `05-assets-and-loading.md`, `CONSTITUTION.md` Article VIII
+**Status:** Design standard; describes the engine as built (pre-1.0) · **Package:** `@ignifx/core` · **Related:** `03-scripting-and-components.md` §6–7, `05-assets-and-loading.md`, `CONSTITUTION.md` Article VIII
 
 An extension is the unit of optional functionality. Input, physics, audio, the 2D and 3D toolkits, UI, Electron support, and devtools are all extensions; a game's own code can be one too. The design borrows Bevy's `Plugin::build(app)` (one registration entry point), Godot's add-on manifest (`plugin.cfg` → `package.json#ignifx`), and Unity's package layout (`Runtime/`, `Samples~/`, `Documentation~/` → `src/`, `examples/`, `skills/`).
+
+**Source map**
+
+- `packages/core/src/extension/host.ts`: Sorting, validation, the engine-range check, `register`/`onStart`/`onStop`/`dispose` order (§2).
+- `packages/core/src/extension/extension-context.ts`, `define-extension.ts`, `service-registry.ts`: `ExtensionContext`, `defineExtension`, services (§1).
+- `packages/core/src/extension/core-extension.ts`: What core registers through the same contract (§7).
+- `packages/core/src/settings/`: The settings store, validation in the settings form, `describeSettings`, `settingsJsonSchema` (§5).
+- `packages/vite-plugin/src/ignifx-config.ts`, `extension-assets.ts`: `ignifx.config.ts` and `ignifx.settings.json` to `import.meta.env.IGNIFX_CONFIG`; `ignifx.assets.public` (§4, §5).
+- `packages/physics/src/extension.ts`: The extension §1 abridges.
+- `packages/<name>/package.json` → `ignifx`: The manifest of §4.
+
+Invariants:
+
+- Nothing runs at module import; an extension acts only inside `register` and `onStart` (§2).
+- `register` runs in dependency order, `onStop` and `dispose` in reverse; core is always first and never named in `requires` (§2).
+- An extension object belongs to one app at a time (§2).
+- Settings are validated against the registering extension's schema and frozen before the engine exists; vectors are `{ x, y, z }` and colours `{ r, g, b, a }` there (§5).
+- An extension cannot add a phase, register a Lite frame callback or replace a core service (§3).
 
 ---
 
@@ -28,12 +46,13 @@ interface ExtensionContext {
 
   registerComponent(type: ConcreteComponentType, options?: { typeId?: string }): void; // constructible classes only
   registerComponents(types: readonly ConcreteComponentType[]): void;
-  registerSystem(system: System, options: { phase: Phase; order?: number }): void;
+  registerSystem(system: System, options: { phase: Phase; order?: number; editMode?: "run" | "hold" | "skip" }): void; // 03 §6
   registerService<T>(key: ServiceKey<T>, instance: T): void;
   defineAppProperty(name: string, getter: () => unknown): void; // pairs with module augmentation of App
   registerAssetType(type: AssetTypeDefinition): void;
   registerAssetLoader(loader: AssetLoader): void;
-  registerSettings<S>(section: string, schema: Schema<S>, defaults: S): void; // project settings section
+  registerSettings<S>(section: string, schema: Schema, defaults: S): void; // project settings section
+  requireRenderingFeature(feature: RenderingFeature): void; // 07 §1.1
   registerErrorCodes(codes: Record<string, string>): void; // IGX-#### → message template
   onDispose(callback: () => void): void;
 
@@ -53,46 +72,50 @@ type PhysicsCallbackName =
 function defineExtension<O = void>(factory: (options: O | undefined) => Extension): (options?: O) => Extension;
 ```
 
-Usage:
+Usage, abridged from `packages/physics/src/extension.ts`:
 
 ```ts
-// @ignifx/physics/src/index.ts
-export const physics = defineExtension<PhysicsOptions>((options = {}) => ({
-  name: "@ignifx/physics",
-  version: PKG_VERSION,
-  engine: ">=0.1.0 <1.0.0",
-  requires: ["@ignifx/core"],
-  register(ctx) {
-    ctx.registerSettings("physics", PhysicsSettingsSchema, defaultPhysicsSettings);
-    ctx.registerComponents([
-      Rigidbody,
-      BoxCollider,
-      SphereCollider,
-      CapsuleCollider,
-      MeshCollider,
-      CharacterController,
-    ]);
-    const service = new PhysicsService(ctx.app, { ...ctx.settings("physics"), ...options });
-    ctx.registerService(PhysicsService, service);
-    ctx.defineAppProperty("physics", () => service);
-    ctx.registerSystem(service.restorePosesSystem, { phase: Phase.FixedUpdate, order: -100 });
-    ctx.registerSystem(service.stepSystem, { phase: Phase.FixedUpdate, order: 100 });
-    ctx.registerSystem(service.interpolationSystem, { phase: Phase.PreRender, order: -500 });
-  },
-  async onStart(app) {
-    await service.loadHavok();
-  },
-  dispose(app) {
-    service.dispose();
-  },
-}));
-
-// game code
-const app = await createApp({
-  canvas,
-  extensions: [input(), physics({ gravity: { x: 0, y: -9.81, z: 0 } }), audio(), threeD()],
+export const physics = defineExtension<PhysicsOptions>((options = {}) => {
+  const host = new PhysicsHost();
+  let context: ExtensionContext | null = null;
+  let service: PhysicsService | null = null;
+  return {
+    name: "@ignifx/physics",
+    version: "0.0.0",
+    engine: ">=0.0.0 <1.0.0",
+    requires: [], // core is implicit (§2)
+    optional: ["@ignifx/devtools"],
+    register(ctx) {
+      context = ctx;
+      ctx.registerErrorCodes(PHYSICS_ERROR_MESSAGES);
+      ctx.registerSettings<PhysicsSettings>("physics", physicsSettingsSchema(), defaultPhysicsSettings());
+      ctx.registerComponents(PHYSICS_COMPONENTS); // Rigidbody, the colliders, CharacterController, …
+      ctx.registerAssetLoader(createPhysicsMaterialLoader());
+      service = new PhysicsService(ctx.app, host, ctx.settings<PhysicsSettings>("physics"));
+      ctx.registerService(PhysicsService, service);
+      ctx.defineAppProperty("physics", () => service);
+      ctx.registerSystem(new PhysicsRestoreSystem(host), { phase: Phase.FixedUpdate, order: -100, editMode: "skip" });
+      ctx.registerSystem(new PhysicsStepSystem(host), { phase: Phase.FixedUpdate, order: 100, editMode: "skip" });
+      // Update, not PreRender: 01-lifecycle-and-time.md §3.
+      ctx.registerSystem(new PhysicsInterpolationSystem(host), { phase: Phase.Update, order: -900, editMode: "skip" });
+    },
+    async onStart(app) {
+      // Loads Havok (`options.havok`, `options.wasmBinary`, or the URL in the settings), creates the
+      // simulation scene and the world with `settings.gravity`, then publishes the scene:
+      // context.setSimulationScene(simulation.scene);
+    },
+    dispose() {
+      context?.setSimulationScene(null);
+      service?.dispose();
+    },
+  };
 });
+
+// Game code. Gravity is a project setting (§5), not a factory option.
+const app = await createApp({ canvas, extensions: [input(), physics(), audio(), threeD()] });
 ```
+
+First-party extensions write `engine: ">=0.0.0 <1.0.0"` and their package's build-stamped `VERSION` (`src/version.ts`) as `version`; `physics` and `physics-2d` write the literal `"0.0.0"`. They ship on core's version line, and a core run from source reports `0.0.0`, so the range only has to admit every `0.x` core.
 
 ## 2. Registration order and validation
 
@@ -128,27 +151,26 @@ Published extensions declare an `ignifx` block in `package.json`:
 ```json
 {
   "name": "@ignifx/physics",
-  "version": "0.4.0",
   "type": "module",
   "sideEffects": false,
   "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
-  "peerDependencies": { "@ignifx/core": "0.4.0", "@babylonjs/havok": "^1.3.0" },
+  "peerDependencies": { "@ignifx/core": "workspace:*", "@babylonjs/havok": "catalog:", "@babylonjs/lite": "catalog:" },
   "keywords": ["ignifx", "ignifx-extension"],
   "ignifx": {
     "extension": true,
-    "engine": ">=0.4.0 <1.0.0",
+    "engine": ">=0.0.0 <1.0.0",
     "requires": [],
     "optional": ["@ignifx/devtools"],
-    "capabilities": ["components", "systems", "services", "settings"],
+    "capabilities": [],
     "skill": "./skills/physics/SKILL.md",
-    "assets": { "public": ["./wasm/HavokPhysics.wasm"] }
+    "assets": { "public": ["node_modules/@babylonjs/havok/lib/esm/HavokPhysics.wasm"] }
   }
 }
 ```
 
-- `engine`/`requires`/`optional` mirror the runtime `Extension` fields; the CLI validates that the two agree.
-- `assets.public` lists files the Vite plugin must copy into the app's public directory (WASM binaries, default fonts).
-- `skill` points at the extension's Agent Skill; the umbrella skill links to it and the docs harness type-checks its examples.
+- `engine`/`requires`/`optional` mirror the runtime `Extension` fields. No tool checks that the two agree; keep them equal by hand.
+- `assets.public` lists files the Vite plugin copies, unhashed, next to the app's assets (WASM binaries, decoders); paths are relative to the package.
+- `skill` points at the extension's Agent Skill; the docs harness finds the skill through this entry and type-checks its examples (`scripts/lib/skill-files.ts`).
 - First-party packages ship one version line; third-party extensions pin `@ignifx/core` with a caret range and set `engine` accordingly.
 
 ## 5. Project settings
@@ -162,16 +184,16 @@ export default defineConfig({
   sortingLayers: ["Background", "Default", "Foreground", "UI"],
   time: { fixedDeltaTime: 1 / 60, maximumDeltaTime: 0.1 },
   physics: {
-    gravity: [0, -9.81, 0],
+    gravity: { x: 0, y: -9.81, z: 0 },
     collisionMatrix: { Player: ["Ground", "Enemy"], Projectile: ["Enemy", "Ground"] },
   },
-  input: { actions: "./input/default.input.json" },
-  assets: { root: "./assets", preload: ["boot"] },
+  input: { actions: "input/default.input.json" },
+  assets: { root: "assets", preload: ["boot"] },
 });
 ```
 
 - The Vite plugin resolves the config at build time and injects it as `import.meta.env.IGNIFX_CONFIG`; `createApp` also accepts `settings` directly (tests, Electron main-process tooling).
-- Each section is validated against the schema the owning extension registered. Unknown sections are an error in development (`IGX-0407`); a bad value or key is `IGX-0408`.
+- Each top-level key is a section, an object validated against the schema the owning extension registered. A section whose schema declares exactly one field of a non-object kind may be written as that field's value: `layers: [...]` is short for `layers: { layers: [...] }`. Unknown sections are an error in development (`IGX-0407`); a bad value or key is `IGX-0408`.
 
 **Settings as data.** The same object may live in `ignifx.settings.json` at the Vite root, which is the form a tool writes (the ignifx editor's Settings panel). The plugin reads both files and merges them a section at a time: **`ignifx.config.ts` wins a section both define, whole**, nothing of the JSON section is merged into it, and the plugin warns when the two differ. A project that keeps its settings as data needs no config file; one that wants both spreads the JSON in code (`defineConfig({ ...settings, time: { … } })`). Editing either file restarts the dev server, because the settings are a `define` that only the plugin's `config` hook computes.
 
@@ -188,4 +210,11 @@ export default defineConfig({
 
 ## 7. The core extension
 
-`@ignifx/core` registers itself through the same contract as everything else (`coreExtension`): `Transform`, `Camera`, `Light`, `MeshRenderer`, `Model`, `Environment`, `Material` assets, the scene/asset/time/scheduler services, the core asset loaders (texture, model, scene, material, json, text, binary, environment, font), and the core settings sections (`layers`, `sortingLayers`, `time`, `assets`, `rendering`). This keeps one code path and one set of guarantees.
+`@ignifx/core` registers itself through the same contract as everything else (`packages/core/src/extension/core-extension.ts`):
+
+- **Components:** `Transform`, `Camera`, `Light`, `MeshRenderer`, `InstancedMeshRenderer`, `Model`, `Environment`, `PostProcessStack`, `ReflectionProbe`, `LightProbeVolume`.
+- **Asset loaders:** the generic ones (json, text, binary) and scene, texture, model, material, environment, font, shader, mesh, light probes, lightmap; the storage-buffer type is registered for code-built buffers and has no file format (`05-assets-and-loading.md` §5).
+- **Settings sections:** `layers`, `sortingLayers`, `time`, `assets`, `rendering`.
+- **Systems and services:** the renderer service, asset delivery in `PreUpdate`, tweens in `PostUpdate`, the shader-uniform and render-sync systems in `PreRender`.
+
+This keeps one code path and one set of guarantees.

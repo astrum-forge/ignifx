@@ -1,24 +1,40 @@
 # 01 · Lifecycle and Time
 
-**Status:** Design standard (pre-1.0) · **Package:** `@ignifx/core` · **Related:** ADR-0003, `03-scripting-and-components.md`, `09-physics.md`
+**Status:** Design standard; describes the engine as built (pre-1.0) · **Package:** `@ignifx/core` · **Related:** ADR-0003, `03-scripting-and-components.md`, `09-physics.md`
 
 This document is the single definition of _when things happen_. Extensions plug into the phases defined here; they never invent their own loop (`CONSTITUTION.md` §3.2).
+
+**Source map** (paths under `packages/core/src/`)
+
+- `scheduler/scheduler.ts`: The frame function: the steps of §3 in order, the fixed loop and its accumulator.
+- `scheduler/deferred-queue.ts`, `lifecycle/lifecycle-queue.ts`: Deferred work; the `awake`/`onEnable`/`start` flushes and the destroy flush.
+- `lifecycle/callbacks.ts`, `lifecycle/script-list.ts`, `lifecycle/pause-filter.ts`: The one call site for script callbacks, script ordering, the pause and edit-mode filters.
+- `time/time.ts`, `time/clock.ts`: `app.time` (§2); the wall clock and the manual clock.
+- `coroutine/coroutine-host.ts`, `script/wait.ts`: Coroutines and the wait instructions (§5).
+- `app/app.ts`: `start`, `stop`, `step`, `pause`, focus and visibility listeners, disposal.
+- `lite/loop.ts`: The one Lite before-render callback, `startEngine`/`stopEngine`.
+
+Invariants:
+
+- One Lite before-render callback per world; nothing else registers one (§1).
+- The steps of §3 run in that order in every mode; headless `app.step` runs the same function (§3, §8).
+- Physics writes the display pose in `Update` at a negative order and restores the authoritative pose in `FixedUpdate` at a negative order, so scripts and the solver never see each other's pose (§3 notes).
+- Destroy is flushed before render; `isDestroyed` is true from the call (§3, §6).
+- Frame deltas come from Lite or from `app.step`, never from the clock (§8).
+- Systems are not filtered by pause; a system that animates checks `time.paused` (§7).
 
 ---
 
 ## 1. Who drives the loop
 
-| Mode                             | Driver                                                          | How a frame starts                                                                                                                                                                 |
-| -------------------------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Browser / Electron               | Babylon Lite's `startEngine(engine)` requestAnimationFrame loop | Lite calls the one `onBeforeRender(renderScene, cb)` callback ignifx registered; `cb(deltaMs)` runs the whole ignifx frame, then returns so Lite records and submits the GPU frame |
-| Headless (tests, servers, tools) | `app.step(deltaSeconds)` called by user code                    | ignifx runs the same frame function; Lite's null engine and `stepScene` are used only for the physics simulation scene                                                             |
-| Worker (post-MVP)                | Same as browser with an `OffscreenCanvas`                       | unchanged                                                                                                                                                                          |
+- **Browser and Electron.** Babylon Lite's `startEngine(engine)` requestAnimationFrame loop drives the frame. Lite calls the one `onBeforeRender(renderScene, cb)` callback ignifx registered; `cb(deltaMs)` runs the whole ignifx frame, then returns so Lite records and submits the GPU frame.
+- **Headless (tests, servers, tools).** User code calls `app.step(deltaSeconds)`. ignifx runs the same frame function; Lite's null engine and `stepScene` are used only for the physics simulation scene.
 
 Rules:
 
 - ignifx registers **exactly one** Lite before-render callback on the render scene per world. All ignifx work happens inside it, in the order of §3. Extensions never call `onBeforeRender` themselves. (The physics simulation scene carries Lite's own Havok step callback, which ignifx _drives_ through `stepScene` and never registers; see `09-physics.md` §1.)
-- Because Lite runs callbacks registered _later_ first, the world registers its callback after every extension has finished `register()` and before `startEngine`; the adapter asserts this in development builds.
-- `app.start()` applies rendering feature opt-ins, runs extension `onStart` hooks, then awaits `registerScene(renderScene)` (or `registerSceneWithShadowSupport`) and `startEngine(engine)`; `app.stop()` calls `stopEngine`. A `start()` while running is a no-op; a `start()` after `stop()` restarts the loop without running `onStart` or registering the scene again. `app.dispose()` follows the order in `07-rendering.md` §7 (physics before scene, audio independently).
+- Because Lite runs callbacks registered _later_ first, the world registers its callback in `app.start()`, after every extension has finished `register()` and immediately before `startEngine`.
+- `app.start()` runs extension `onStart` hooks, applies rendering feature opt-ins, awaits `registerScene(renderScene)` (or `registerSceneWithShadowSupport`), registers the frame callback and calls `startEngine(engine)`; `app.stop()` calls `stopEngine` and runs `onStop` in reverse order. A `start()` while running is a no-op; a `start()` after `stop()` restarts the loop without running `onStart` or registering the scene again. `app.dispose()` follows the order in `07-rendering.md` §7 (physics before scene, audio independently).
 
 ## 2. The `Time` service (`app.time`)
 
@@ -94,8 +110,8 @@ RETURN to Lite → frame graph executes and the frame is presented (no render in
 Notes:
 
 - **Why physics is split around `fixedUpdate`.** Scripts write forces, velocities, and `CharacterController.move()` requests in `fixedUpdate`; the physics system then steps once with `fixedDeltaTime`; collision and trigger callbacks fire immediately after that step, still inside the fixed loop, so a script can react in the same step.
-- **Why physics interpolation writes the display pose at the top of `Update`.** (Moved there from `PreRender` on 2026-09-08.) `fixedStepAlpha` is final the moment the fixed loop ends, and everything downstream of that point must agree on one pose. A camera rig, an attachment, or any script that reads a transform in `update`/`lateUpdate` has to see the pose the frame will present, not the pose the last fixed step left behind — otherwise the character is drawn at `lerp(prev, cur, alpha)` while the camera frames it up to one whole fixed step away, and the two judder against each other at every refresh rate. Writing the display pose in `Systems(Update, order < 0)` puts it in front of `scripts.update`, animation, `lateUpdate`, and the render sync, which is Unity's model. The simulation is unaffected: physics restores the authoritative pose in `Systems(FixedUpdate, order < 0)`, which runs before `scripts.fixedUpdate`, so `fixedUpdate` and the solver never see a display pose. A system that must read an authoritative pose outside the fixed loop registers at `Phase.Update` with an order below the physics one (`−900`).
-- **Why animation sits between `update` and `lateUpdate`.** `lateUpdate` is where camera follow logic and bone-relative attachments read final poses. This matches Unity. Babylon Lite would otherwise advance glTF animation _after_ our callback; the adapter therefore detaches animation groups from Lite's scene-owned ticking and advances them itself (`12-3d-toolkit.md` §Animator).
+- **Why physics interpolation writes the display pose at the top of `Update`.** `fixedStepAlpha` is final the moment the fixed loop ends, and everything downstream of that point must agree on one pose. A camera rig, an attachment, or any script that reads a transform in `update`/`lateUpdate` has to see the pose the frame will present, not the pose the last fixed step left behind — otherwise the character is drawn at `lerp(prev, cur, alpha)` while the camera frames it up to one whole fixed step away, and the two judder against each other at every refresh rate. Writing the display pose in `Systems(Update, order < 0)` puts it in front of `scripts.update`, animation, `lateUpdate`, and the render sync, which is Unity's model. The simulation is unaffected: physics restores the authoritative pose in `Systems(FixedUpdate, order < 0)`, which runs before `scripts.fixedUpdate`, so `fixedUpdate` and the solver never see a display pose. A system that must read an authoritative pose outside the fixed loop registers at `Phase.Update` with an order below the physics one (`−900`).
+- **Why animation sits between `update` and `lateUpdate`.** `lateUpdate` is where camera follow logic and bone-relative attachments read final poses. This matches Unity. Babylon Lite would otherwise advance glTF animation _after_ our callback; the adapter therefore detaches animation groups from Lite's scene-owned ticking and advances them itself (`12-3d-toolkit.md` §3).
 - **Destroy before render** matches Unity: an entity destroyed during frame N is not drawn in frame N.
 - The fixed loop is bounded by `maximumDeltaTime`; with defaults, at most six fixed steps run per frame. Dropped time is reported in diagnostics.
 - **Edit mode** (`createApp({ editMode: true })`, ADR-0028) runs the same steps with three differences: step 4 does not run at all, a script receives a callback in any step only if its class sets `static runInEditMode = true`, and each system runs, runs with `dt = 0`, or is skipped as it declared at registration (`03-scripting-and-components.md` §10).
@@ -103,20 +119,22 @@ Notes:
 
 ## 4. Script callbacks
 
-| Callback                                | When                                                                                                                                                                                                                                                                                                                                        | Runs how often     |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| `awake()`                               | Right after the component is attached to an entity that is active in the hierarchy inside a loaded world. During scene load, after **all** entities and components of that scene instance are constructed and deserialized, in tree order (parents before children, siblings in file order). Scene-load references are guaranteed resolved. | Once per component |
-| `onEnable()`                            | After `awake`, and whenever the component becomes effectively enabled (`component.enabled && entity.activeInHierarchy`)                                                                                                                                                                                                                     | Every transition   |
-| `start()`                               | In the first frame in which the component is effectively enabled, in flush B (after the fixed loop, before `update`)                                                                                                                                                                                                                        | Once per component |
-| `fixedUpdate(dt)`                       | Each fixed step, `dt === time.fixedDeltaTime`                                                                                                                                                                                                                                                                                               | 0…N per frame      |
-| `update(dt)`                            | Each frame, `dt === time.deltaTime`                                                                                                                                                                                                                                                                                                         | Once per frame     |
-| `lateUpdate(dt)`                        | Each frame after animation                                                                                                                                                                                                                                                                                                                  | Once per frame     |
-| `onDisable()`                           | When the component stops being effectively enabled, including just before destruction and when the app stops                                                                                                                                                                                                                                | Every transition   |
-| `onDestroy()`                           | In the destroy flush of the frame in which `destroy()` was called (or immediately for `destroyImmediate`)                                                                                                                                                                                                                                   | Once               |
-| `onCollisionEnter/Stay/Exit(collision)` | Inside the fixed loop after the physics step, on scripts attached to either entity involved                                                                                                                                                                                                                                                 | Per contact event  |
-| `onTriggerEnter/Exit(other)`            | Same timing, for trigger shapes                                                                                                                                                                                                                                                                                                             | Per overlap event  |
-| `onApplicationPause(paused)`            | When the document becomes hidden/visible (browser) or the window is minimized/restored (Electron)                                                                                                                                                                                                                                           | Per transition     |
-| `onApplicationFocus(focused)`           | On window focus change                                                                                                                                                                                                                                                                                                                      | Per transition     |
+| Callback                                | When                                                                                                                             | Runs how often     |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| `awake()`                               | Right after the component is attached to an entity that is active in the hierarchy inside a loaded world (scene load: see below) | Once per component |
+| `onEnable()`                            | After `awake`, and whenever the component becomes effectively enabled (`component.enabled && entity.activeInHierarchy`)          | Every transition   |
+| `start()`                               | In the first frame in which the component is effectively enabled, in flush B (after the fixed loop, before `update`)             | Once per component |
+| `fixedUpdate(dt)`                       | Each fixed step, `dt === time.fixedDeltaTime`                                                                                    | 0…N per frame      |
+| `update(dt)`                            | Each frame, `dt === time.deltaTime`                                                                                              | Once per frame     |
+| `lateUpdate(dt)`                        | Each frame after animation                                                                                                       | Once per frame     |
+| `onDisable()`                           | When the component stops being effectively enabled, including just before destruction and when the app stops                     | Every transition   |
+| `onDestroy()`                           | In the destroy flush of the frame in which `destroy()` was called (or immediately for `destroyImmediate`)                        | Once               |
+| `onCollisionEnter/Stay/Exit(collision)` | Inside the fixed loop after the physics step, on scripts attached to either entity involved                                      | Per contact event  |
+| `onTriggerEnter/Exit(other)`            | Same timing, for trigger shapes                                                                                                  | Per overlap event  |
+| `onApplicationPause(paused)`            | When the document becomes hidden or visible                                                                                      | Per transition     |
+| `onApplicationFocus(focused)`           | On window focus change                                                                                                           | Per transition     |
+
+During scene load, `awake` runs after **all** entities and components of that scene instance are constructed and deserialized, in tree order (parents before children, siblings in file order), so scene-load references are resolved when it runs.
 
 Guarantees and constraints:
 
@@ -161,9 +179,9 @@ class Door extends Script {
 
 ## 7. Pausing and focus
 
-- `app.pause()` sets `time.paused = true`; `app.resume()` clears it. While paused, scripts with `static updateWhenPaused = true` still receive `update`/`lateUpdate` (menus, pause screens); fixed steps and physics do not run; animation does not advance unless the `Animator` is marked `updateWhenPaused`. Systems are not filtered: every registered system still runs while paused and receives the scaled `dt` (it is not zeroed), so a system that animates checks `time.paused` itself — the tween, 2D animation, and 3D animation systems do. (Clarified 2026-09-06.)
+- `app.pause()` sets `time.paused = true`; `app.resume()` clears it. While paused, scripts with `static updateWhenPaused = true` still receive `update`/`lateUpdate` (menus, pause screens); fixed steps and physics do not run; animation does not advance unless the `Animator` is marked `updateWhenPaused`. Systems are not filtered: every registered system still runs while paused and receives the scaled `dt` (it is not zeroed), so a system that animates checks `time.paused` itself — the tween, 2D animation, and 3D animation systems do.
 - Browsers throttle or stop `requestAnimationFrame` in background tabs; the `maximumDeltaTime` clamp guarantees the simulation does not try to catch up when the tab returns. `onApplicationPause(true)` is delivered when the document becomes hidden, and templates pause by default.
-- Electron windows behave like browser tabs; the Electron extension forwards minimize/restore to the same callbacks.
+- In an Electron window the page receives no focus, blur or visibility event of its own. The Electron extension forwards window focus and blur to `onApplicationFocus`. Minimise and restore do not reach `onApplicationPause`, because core has no way for an extension to dispatch it; a desktop game listens to `app.desktop.onWindowEvent` for them (`14-platform-electron.md`, ADR-0018).
 
 ## 8. Headless stepping
 
@@ -175,7 +193,7 @@ for (let i = 0; i < 600; i++) app.step(1 / 60); // deterministic: rawDelta = 1/6
 
 - `app.step(dt)` runs §3 with `rawDelta = dt` and no render. Because of the accumulator snapping rule (§3 notes), a fixed `dt` equal to `fixedDeltaTime` runs exactly one fixed step per call.
 - Headless mode uses Lite's null engine for the render scene as well, so components that wrap Lite objects still construct (meshes without GPU geometry are skipped by the adapter with a diagnostic, never an error).
-- Tests must not depend on wall-clock time; `Time` is injected with a fake clock in headless mode.
+- Tests must not depend on wall-clock time. Frame deltas come from `app.step(dt)`, never from a clock; only `time.realtimeSinceStartup` and the development phase timings read the clock, and a test that needs those passes a manual one: `createApp({ headless: true, clock: createManualClock() })`.
 
 ## 9. Diagnostics emitted by the loop
 
