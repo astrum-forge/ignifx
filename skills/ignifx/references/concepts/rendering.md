@@ -15,17 +15,17 @@ Entity ──▶ Camera | Light | MeshRenderer | InstancedMeshRenderer | Model |
 Exact fields and defaults are in [`../formats/components.md`](../formats/components.md); this is
 what they mean.
 
-| Component               | What it adds                                                                                               | Notes                                                                                                                                                                 |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Camera`                | A view. The **entity's transform is the view**; no follow logic                                            | `projection`, `fov` (degrees), `orthographicSize`, `near`/`far`, `viewport`, `clearColor`, `priority`                                                                 |
-| `Light`                 | `"directional" \| "point" \| "spot" \| "hemispheric"`                                                      | `shadows` is a sub-record; only directional and spot lights can cast (`IGX-0703`); `bakeMode` (`@beta`) `"realtime"`, `"mixed"` or `"baked"` (not drawn)              |
-| `MeshRenderer`          | One clone of a `MeshAsset`, drawn with a `MaterialAsset`                                                   | `allowMultiple`; several renderers per entity are fine; `lightmap` samples a baked `.lightmap.json` on a static entity (`@beta`)                                      |
-| `InstancedMeshRenderer` | One mesh drawn many times from a caller-owned matrix slab                                                  | `setMatrices(slab, count)`, `setColors`, `setCount`, `markDirty(range)`; `capacity`, `gpuCulling` and `lod` are fixed before `app.start()` (`IGX-0717`)               |
-| `Model`                 | One instance of a loaded glTF, cloned under the entity's node                                              | `nodes`, `attachToNode(name, entity)`, `materialOverrides`; `animations`/`skeletons` are `@beta`                                                                      |
-| `Environment`           | Image-based lighting, skybox, fog, image processing, clear colour                                          | **One per world**; a second enabled one logs `IGX-0705` and the most recent wins. Assign a different **loaded** handle to `environment` to switch lighting at runtime |
-| `PostProcessStack`      | `bloom`, `smaa`, `imageProcessing`, as one frame-graph chain; `contactShadows`, `ssgi` before it           | Needs `features.postProcessing`, or it logs `IGX-0710` and does nothing (§3)                                                                                          |
-| `ReflectionProbe`       | A cube map of the scene around the entity that nearby shiny PBR materials reflect (`@beta`)                | `size`, `refreshMode` (`once`/`onDemand`/`everyFrame`), `boxProjection`, `blendDistance`, `cullingMask`, `refresh()`; needs a loaded `Environment` and a canvas       |
-| `LightProbeVolume`      | Lights PBR materials with a baked `.probes.json` grid instead of the environment's diffuse light (`@beta`) | `probes` (a `LightProbeAsset`), `intensity`; needs a loaded `Environment` and a canvas; the most recent enabled volume wins                                           |
+| Component | What it adds | Notes |
+| --- | --- | --- |
+| `Camera` | A view. The **entity's transform is the view**; no follow logic | `projection`, `fov` (degrees), `orthographicSize`, `near`/`far`, `viewport`, `clearColor`, `priority` |
+| `Light` | `"directional" \| "point" \| "spot" \| "hemispheric"` | `shadows` is a sub-record; only directional and spot lights can cast (`IGX-0703`); `bakeMode` (`@beta`) `"realtime"`, `"mixed"` or `"baked"` (not drawn) |
+| `MeshRenderer` | One clone of a `MeshAsset`, drawn with a `MaterialAsset` | `allowMultiple`; several renderers per entity are fine; `lightmap` samples a baked `.lightmap.json` on a static entity (`@beta`) |
+| `InstancedMeshRenderer` | One mesh drawn many times from a caller-owned matrix slab | `setMatrices(slab, count)`, `setColors`, `setCount`, `markDirty(range)`; `capacity`, `gpuCulling` and `lod` are fixed before `app.start()` (`IGX-0717`) |
+| `Model` | One instance of a loaded glTF, cloned under the entity's node | `nodes`, `attachToNode(name, entity)`, `materialOverrides`; `animations`/`skeletons` are `@beta` |
+| `Environment` | Image-based lighting, skybox, fog, image processing, clear colour | **One per world**; a second enabled one logs `IGX-0705` and the most recent wins. Assign a different **loaded** handle to `environment` to switch lighting at runtime |
+| `PostProcessStack` | `bloom`, `smaa`, `imageProcessing`, as one frame-graph chain; `contactShadows`, `ssgi` before it | Needs `features.postProcessing`, or it logs `IGX-0710` and does nothing (§3) |
+| `ReflectionProbe` | A cube map of the scene around the entity that nearby shiny PBR materials reflect (`@beta`) | `size`, `refreshMode` (`once`/`onDemand`/`everyFrame`), `boxProjection`, `blendDistance`, `cullingMask`, `refresh()`; needs a loaded `Environment` and a canvas |
+| `LightProbeVolume` | Lights PBR materials with a baked `.probes.json` grid instead of the environment's diffuse light (`@beta`) | `probes` (a `LightProbeAsset`), `intensity`; needs a loaded `Environment` and a canvas; the most recent enabled volume wins |
 
 - `Camera` also answers geometry questions: `screenToRay(x, y)`, `worldToScreen(point, out)`,
   `screenToWorldPoint(x, y, distance, out)`, `viewportToWorldPoint(u, v, distance, out)`,
@@ -250,19 +250,19 @@ node, so an entity that moved is already where it should be.
 
 ## 3. `app.renderer`
 
-| Member                          | Purpose                                                                                       |
-| ------------------------------- | --------------------------------------------------------------------------------------------- |
-| `pixelRatio`, `resolutionScale` | DPR clamp (`0` does not clamp) and a `0.25…1` downscale                                       |
-| `setSize(width, height)`        | `OffscreenCanvas` only; a laid-out DOM canvas re-reads its layout size every frame            |
-| `features`                      | The resolved `RenderingFeatureSettings`, read-only after `app.start()`                        |
-| `requireFeature(feature)`       | Turns a feature on **before** start; afterwards it throws `IGX-0704`                          |
-| `warmUp(materials)`             | Compiles a material family now instead of on the frame a mesh first appears                   |
-| `pickAsync(x, y, options?)`     | GPU pick → `RenderPick \| null`; resolves to `null` headless                                  |
-| `captureScreenshot()`           | `RenderCapture`; rejects with `IGX-0707` when no render loop is running                       |
-| `drawCalls`, `gpuFrameTimeMs`   | Per-frame counters, mirrored in the `render` diagnostics group                                |
-| `profileTasks`, `taskTimings()` | Per-task GPU timings; `status` is `"unsupported"` headless                                    |
-| `openOverlay()` (`@beta`)       | A Lite scene drawn over the frame, for editor gizmos; `IGX-0728` headless or before `start()` |
-| `animateMaterialsInEditMode`    | Edit mode only: `false` holds the shader clock of materials and post effects; default `true`  |
+| Member | Purpose |
+| --- | --- |
+| `pixelRatio`, `resolutionScale` | DPR clamp (`0` does not clamp) and a `0.25…1` downscale |
+| `setSize(width, height)` | `OffscreenCanvas` only; a laid-out DOM canvas re-reads its layout size every frame |
+| `features` | The resolved `RenderingFeatureSettings`, read-only after `app.start()` |
+| `requireFeature(feature)` | Turns a feature on **before** start; afterwards it throws `IGX-0704` |
+| `warmUp(materials)` | Compiles a material family now instead of on the frame a mesh first appears |
+| `pickAsync(x, y, options?)` | GPU pick → `RenderPick \| null`; resolves to `null` headless |
+| `captureScreenshot()` | `RenderCapture`; rejects with `IGX-0707` when no render loop is running |
+| `drawCalls`, `gpuFrameTimeMs` | Per-frame counters, mirrored in the `render` diagnostics group |
+| `profileTasks`, `taskTimings()` | Per-task GPU timings; `status` is `"unsupported"` headless |
+| `openOverlay()` (`@beta`) | A Lite scene drawn over the frame, for editor gizmos; `IGX-0728` headless or before `start()` |
+| `animateMaterialsInEditMode` | Edit mode only: `false` holds the shader clock of materials and post effects; default `true` |
 
 **A second camera into a texture** (`@beta`): `createRenderTexture(width, height)` (sides 1 to 4096,
 else `IGX-0730`) makes an offscreen target; `renderToTexture(camera, texture)` fills it once on the
@@ -429,11 +429,11 @@ Three forms, all authored as `.wgsl` files whose `// @ignifx` comment lines **ar
 The full grammar is [`../formats/wgsl.md`](../formats/wgsl.md); this is what each form is for and
 what the WGSL has to obey.
 
-| Form              | What it is                                           | Lighting                                | Recipe                                                                 |
-| ----------------- | ---------------------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------- |
-| `@ignifx shader`  | A whole material family: you write both stages       | None. Unlit, casts no ESM shadow        | [`write-a-custom-shader`](../recipes/write-a-custom-shader.md)         |
-| `@ignifx surface` | Up to three hooks inside the engine's PBR shader     | The engine's: lights, shadows, IBL, fog | [`add-a-surface-shader`](../recipes/add-a-surface-shader.md)           |
-| `@ignifx post`    | One full-screen pass in the `PostProcessStack` chain | Not applicable                          | [`add-a-custom-post-process`](../recipes/add-a-custom-post-process.md) |
+| Form | What it is | Lighting | Recipe |
+| --- | --- | --- | --- |
+| `@ignifx shader` | A whole material family: you write both stages | None. Unlit, casts no ESM shadow | [`write-a-custom-shader`](../recipes/write-a-custom-shader.md) |
+| `@ignifx surface` | Up to three hooks inside the engine's PBR shader | The engine's: lights, shadows, IBL, fog | [`add-a-surface-shader`](../recipes/add-a-surface-shader.md) |
+| `@ignifx post` | One full-screen pass in the `PostProcessStack` chain | Not applicable | [`add-a-custom-post-process`](../recipes/add-a-custom-post-process.md) |
 
 Pick by what you need to keep. A surface shader is the answer whenever the object should still be
 lit like everything else; a shader material is the answer when you want the whole pixel, or a vertex
@@ -441,16 +441,16 @@ stage that moves with the clock.
 
 ### The pragmas, in one table
 
-| Pragma                                                                                | Declares                                                    |
-| ------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `@ignifx shader` \| `surface` \| `post`                                               | Which form the file is                                      |
-| `@ignifx attributes position, normal, uv, …`                                          | The Babylon Lite attributes `VertexInput` carries           |
-| `@ignifx system worldViewProjection, time, …`                                         | Engine uniforms: Lite's, plus ignifx's clock and main light |
-| `@ignifx uniform name: type = default [range(a, b)] [step(s)] [color] [tooltip("…")]` | A settable uniform, with the inspector hints                |
-| `@ignifx texture name [srgb] [normal] [default white\|black\|transparent] [array]`    | A sampler pair, with the 1×1 texture it falls back to       |
-| `@ignifx storage name: array<T>`                                                      | A read-only storage buffer                                  |
-| `@ignifx define NAME = true`                                                          | A `const` a material may override                           |
-| `@ignifx blend … cull … depthWrite … depthTest … transmissive instancing …`           | Pipeline state                                              |
+| Pragma | Declares |
+| --- | --- |
+| `@ignifx shader` \| `surface` \| `post` | Which form the file is |
+| `@ignifx attributes position, normal, uv, …` | The Babylon Lite attributes `VertexInput` carries |
+| `@ignifx system worldViewProjection, time, …` | Engine uniforms: Lite's, plus ignifx's clock and main light |
+| `@ignifx uniform name: type = default [range(a, b)] [step(s)] [color] [tooltip("…")]` | A settable uniform, with the inspector hints |
+| `@ignifx texture name [srgb] [normal] [default white\|black\|transparent] [array]` | A sampler pair, with the 1×1 texture it falls back to |
+| `@ignifx storage name: array<T>` | A read-only storage buffer |
+| `@ignifx define NAME = true` | A `const` a material may override |
+| `@ignifx blend … cull … depthWrite … depthTest … transmissive instancing …` | Pipeline state |
 
 ### The names Babylon Lite gives you
 
@@ -471,23 +471,23 @@ own, generated in front of your source, and are used **verbatim**:
 
 The ignifx uniforms, uploaded once per frame per material that declares one:
 
-| Uniform                             | Type        | Value                                                                   |
-| ----------------------------------- | ----------- | ----------------------------------------------------------------------- |
-| `time`, `unscaledTime`, `deltaTime` | `f32`       | `app.time`'s scaled clock, its unscaled clock, and the frame delta      |
-| `mainLightDirection`                | `vec3<f32>` | World-space unit direction of the brightest enabled directional `Light` |
-| `mainLightColor`                    | `vec3<f32>` | That light's linear colour times its intensity                          |
-| `ambientColor`                      | `vec3<f32>` | The environment's spherical-harmonic ambient term                       |
+| Uniform | Type | Value |
+| --- | --- | --- |
+| `time`, `unscaledTime`, `deltaTime` | `f32` | `app.time`'s scaled clock, its unscaled clock, and the frame delta |
+| `mainLightDirection` | `vec3<f32>` | World-space unit direction of the brightest enabled directional `Light` |
+| `mainLightColor` | `vec3<f32>` | That light's linear colour times its intensity |
+| `ambientColor` | `vec3<f32>` | The environment's spherical-harmonic ambient term |
 
 `time` is the **scaled** clock, so `app.pause()` freezes every shader that reads it. Declaring a
 light uniform in a world with no directional light uploads zeros and logs `IGX-0714` once.
 
 ### Surface-shader hooks
 
-| Hook                                                         | Reads                                                                             | Writes                                                  |
-| ------------------------------------------------------------ | --------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| `displace(in: DisplaceInput) -> vec3<f32>`                   | `in.position`, `in.normal`, `in.uv`, `in.color`, `in.world` — and nothing else    | A world-space offset; the shadow-caster pass follows it |
-| `surface(in: SurfaceInput, s: ptr<function, Surface>)`       | `in.uv`, `in.worldPosition`, `in.geometricNormal`, `in.viewDirection`, `in.color` | `(*s).baseColor`, `.alpha`, `.emissive`, `.normal`      |
-| `composite(in: SurfaceInput, color: vec3<f32>) -> vec3<f32>` | The same input, plus the lit linear colour, before fog and tone mapping           | The returned colour — rim light, hit flash, toon steps  |
+| Hook | Reads | Writes |
+| --- | --- | --- |
+| `displace(in: DisplaceInput) -> vec3<f32>` | `in.position`, `in.normal`, `in.uv`, `in.color`, `in.world` — and nothing else | A world-space offset; the shadow-caster pass follows it |
+| `surface(in: SurfaceInput, s: ptr<function, Surface>)` | `in.uv`, `in.worldPosition`, `in.geometricNormal`, `in.viewDirection`, `in.color` | `(*s).baseColor`, `.alpha`, `.emissive`, `.normal` |
+| `composite(in: SurfaceInput, color: vec3<f32>) -> vec3<f32>` | The same input, plus the lit linear colour, before fog and tone mapping | The returned colour — rim light, hit flash, toon steps |
 
 `roughness` and `metallic` are readable and ignored on write, because Lite's PBR template declares
 them `let`. `displace` runs in the vertex stage, where Lite exposes **no** plugin uniform, texture or
@@ -601,10 +601,10 @@ screen is the unit square, so a centre-screen click is
 With `features.deviceLostRecovery` on, Babylon Lite rebuilds its resources after the WebGPU device
 is lost. The three signals are on `app.events`:
 
-| Signal                   | Payload                          | Meaning                                       |
-| ------------------------ | -------------------------------- | --------------------------------------------- |
-| `onDeviceLost`           | `{ reason, message }`            | Rendering is suspended while Lite rebuilds    |
-| `onDeviceRecovered`      | —                                | The device and its resources are back         |
+| Signal | Payload | Meaning |
+| --- | --- | --- |
+| `onDeviceLost` | `{ reason, message }` | Rendering is suspended while Lite rebuilds |
+| `onDeviceRecovered` | — | The device and its resources are back |
 | `onDeviceRecoveryFailed` | whatever the recovery path threw | Unrecoverable; offer the player a page reload |
 
 Lite cannot recover PCF/CSM shadow generators or glTF `EXT_lights_image_based` environments, so a

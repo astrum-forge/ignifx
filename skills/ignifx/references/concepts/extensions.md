@@ -50,36 +50,36 @@ export const weather: (options?: void) => Extension = defineExtension<void>(() =
 });
 ```
 
-| Member                         | Required | Meaning                                                                         |
-| ------------------------------ | -------- | ------------------------------------------------------------------------------- |
-| `name`                         | yes      | Unique; the npm package name, or `game/<name>` for an in-game extension         |
-| `version`                      | yes      | Semver of the extension itself                                                  |
-| `engine`                       | no       | Semver range of `@ignifx/core` it supports; checked at registration             |
-| `requires` / `optional`        | no       | Extension names that must / may register before it                              |
-| `register(ctx)`                | yes      | Declare everything here; may be `async`, but keep it cheap and side-effect free |
-| `onStart(app)`                 | no       | After every `register`, during the first `app.start()`; may be `async`          |
-| `onStop(app)` / `dispose(app)` | no       | Run in reverse registration order                                               |
+| Member | Required | Meaning |
+| --- | --- | --- |
+| `name` | yes | Unique; the npm package name, or `game/<name>` for an in-game extension |
+| `version` | yes | Semver of the extension itself |
+| `engine` | no | Semver range of `@ignifx/core` it supports; checked at registration |
+| `requires` / `optional` | no | Extension names that must / may register before it |
+| `register(ctx)` | yes | Declare everything here; may be `async`, but keep it cheap and side-effect free |
+| `onStart(app)` | no | After every `register`, during the first `app.start()`; may be `async` |
+| `onStop(app)` / `dispose(app)` | no | Run in reverse registration order |
 
 `defineExtension(factory)` wraps a factory so a game writes `weather()` in the `extensions` array.
 Nothing runs at module import time (`CONSTITUTION.md` §3.5).
 
 ## 2. `ExtensionContext`
 
-| Member                                                              | Purpose                                                                      |
-| ------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `app`, `log`                                                        | The app being built and a logger scoped to the extension                     |
-| `registerComponent(type, { typeId? })`, `registerComponents(types)` | Make component classes known to the registry                                 |
-| `registerSystem(system, { phase, order? })`                         | `Phase.EndOfFrame`…`Phase.PreRender`; ascending `order` within a phase       |
-| `registerService(key, instance)`                                    | Key is a class or a `createServiceKey<T>(name)` token                        |
-| `defineAppProperty(name, getter)`                                   | Pairs with the `declare module` block; a second definition throws `IGX-0401` |
-| `registerSettings(section, schema, defaults)`                       | Declares one project-settings section                                        |
-| `settings<S>(section)`                                              | The resolved section, readable inside the same `register` call               |
-| `require(key)` / `tryGet(key)`                                      | A service an earlier extension registered; `require` throws `IGX-0405`       |
-| `registerAssetType({ type, extensions })`                           | Claims an asset type name and the extensions that imply it                   |
-| `registerAssetLoader(loader)`                                       | The `AssetLoader` for that type; a second one is `IGX-0506`                  |
-| `requireRenderingFeature(feature)`                                  | Declares a Babylon Lite opt-in the extension needs; too late is `IGX-0704`   |
-| `registerErrorCodes(codes)`                                         | `IGX-####` → message template, in the extension's own range                  |
-| `onDispose(callback)`                                               | Teardown hook run with the app                                               |
+| Member | Purpose |
+| --- | --- |
+| `app`, `log` | The app being built and a logger scoped to the extension |
+| `registerComponent(type, { typeId? })`, `registerComponents(types)` | Make component classes known to the registry |
+| `registerSystem(system, { phase, order? })` | `Phase.EndOfFrame`…`Phase.PreRender`; ascending `order` within a phase |
+| `registerService(key, instance)` | Key is a class or a `createServiceKey<T>(name)` token |
+| `defineAppProperty(name, getter)` | Pairs with the `declare module` block; a second definition throws `IGX-0401` |
+| `registerSettings(section, schema, defaults)` | Declares one project-settings section |
+| `settings<S>(section)` | The resolved section, readable inside the same `register` call |
+| `require(key)` / `tryGet(key)` | A service an earlier extension registered; `require` throws `IGX-0405` |
+| `registerAssetType({ type, extensions })` | Claims an asset type name and the extensions that imply it |
+| `registerAssetLoader(loader)` | The `AssetLoader` for that type; a second one is `IGX-0506` |
+| `requireRenderingFeature(feature)` | Declares a Babylon Lite opt-in the extension needs; too late is `IGX-0704` |
+| `registerErrorCodes(codes)` | `IGX-####` → message template, in the extension's own range |
+| `onDispose(callback)` | Teardown hook run with the app |
 
 `requireRenderingFeature` works because registration happens **before** `app.start()` applies the
 opt-ins and registers the render scene; the same call afterwards throws `IGX-0704`. The features are
@@ -105,13 +105,13 @@ service; cross-extension work goes through services and signals.
 with `ignifx.config.ts` (code), **the config file winning a section both define, whole**. Either
 file may be absent. The kernel registers five sections:
 
-| Section         | Shape                                                                | Defaults                                                       |
-| --------------- | -------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `layers`        | `{ layers: string[] }`                                               | `["Default", "TransparentFX", "IgnoreRaycast", "Water", "UI"]` |
-| `sortingLayers` | `{ sortingLayers: string[] }`                                        | `["Default"]`                                                  |
-| `time`          | `{ fixedDeltaTime?, maximumDeltaTime?, timeScale? }`                 | `1/60`, `0.1`, `1`                                             |
-| `assets`        | `{ root, preload, concurrency, gcDelay, retries }`                   | `"assets"`, `[]`, `6`, `5`, `2`                                |
-| `rendering`     | `{ features, msaaSamples, alphaMode, srgb, clearColor, brdfLut, … }` | see [`rendering.md`](rendering.md) §4                          |
+| Section | Shape | Defaults |
+| --- | --- | --- |
+| `layers` | `{ layers: string[] }` | `["Default", "TransparentFX", "IgnoreRaycast", "Water", "UI"]` |
+| `sortingLayers` | `{ sortingLayers: string[] }` | `["Default"]` |
+| `time` | `{ fixedDeltaTime?, maximumDeltaTime?, timeScale? }` | `1/60`, `0.1`, `1` |
+| `assets` | `{ root, preload, concurrency, gcDelay, retries }` | `"assets"`, `[]`, `6`, `5`, `2` |
+| `rendering` | `{ features, msaaSamples, alphaMode, srgb, clearColor, brdfLut, … }` | see [`rendering.md`](rendering.md) §4 |
 
 A section whose schema has exactly one field may be written as that field's value, so
 `layers: ["Default", "Player"]` and `layers: { layers: ["Default", "Player"] }` are the same. A

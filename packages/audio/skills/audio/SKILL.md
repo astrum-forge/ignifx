@@ -41,14 +41,14 @@ if (canvas instanceof HTMLCanvasElement) {
 
 `ignifx.config.ts` carries the same settings under `audio`:
 
-| Setting            | Default                                 | Meaning                                                      |
-| ------------------ | --------------------------------------- | ------------------------------------------------------------ |
-| `buses`            | `""`                                    | Address of the `.audio.json` bus tree; empty builds defaults |
-| `defaultBuses`     | `["Master","Music","SFX","UI","Voice"]` | Tree built when no file is named; the first name is the root |
-| `pausableBuses`    | `["Master","Music","SFX","Voice"]`      | Which buses `app.pause()` pauses                             |
-| `masterVolume`     | `1`                                     | Master output gain the app starts at                         |
-| `queueWhileLocked` | `true`                                  | Whether plays made before the unlock are held                |
-| `pauseWithApp`     | `true`                                  | Whether `app.pause()` pauses audio at all                    |
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `buses` | `""` | Address of the `.audio.json` bus tree; empty builds defaults |
+| `defaultBuses` | `["Master","Music","SFX","UI","Voice"]` | Tree built when no file is named; the first name is the root |
+| `pausableBuses` | `["Master","Music","SFX","Voice"]` | Which buses `app.pause()` pauses |
+| `masterVolume` | `1` | Master output gain the app starts at |
+| `queueWhileLocked` | `true` | Whether plays made before the unlock are held |
+| `pauseWithApp` | `true` | Whether `app.pause()` pauses audio at all |
 
 ## Mental model
 
@@ -107,32 +107,32 @@ speaker.addComponent(Beeper).beep();
 
 ### `app.audio`
 
-| Member                       | Meaning                                                                    |
-| ---------------------------- | -------------------------------------------------------------------------- |
-| `state`                      | `"locked"` before the first unlock, then `"running"`/`"suspended"`/…       |
-| `unlock()`                   | Resumes the context; call it from a real click handler                     |
-| `masterVolume`               | Master output gain, applied after every bus                                |
-| `buses`                      | `ReadonlyMap<string, AudioBus>`, in declaration order                      |
-| `bus(name)` / `tryBus(name)` | Throws `IGX-1001` / answers `null`                                         |
-| `createBus(name, options)`   | Adds a bus at run time                                                     |
+| Member | Meaning |
+| --- | --- |
+| `state` | `"locked"` before the first unlock, then `"running"`/`"suspended"`/… |
+| `unlock()` | Resumes the context; call it from a real click handler |
+| `masterVolume` | Master output gain, applied after every bus |
+| `buses` | `ReadonlyMap<string, AudioBus>`, in declaration order |
+| `bus(name)` / `tryBus(name)` | Throws `IGX-1001` / answers `null` |
+| `createBus(name, options)` | Adds a bus at run time |
 | `playOneShot(clip, options)` | Fire-and-forget; `OneShotOptions` is `bus` (default `SFX`) + `PlayOptions` |
-| `listener`                   | The active `AudioListener`, or `null`                                      |
-| `lite.engine`                | Lite's `AudioEngine`, or `null` headless — unstable escape hatch           |
+| `listener` | The active `AudioListener`, or `null` |
+| `lite.engine` | Lite's `AudioEngine`, or `null` headless — unstable escape hatch |
 
 ### `AudioSource`
 
-| Field                                    | Default               | Applied                |
-| ---------------------------------------- | --------------------- | ---------------------- |
-| `clip`                                   | `null`                | rebuilds the voice     |
-| `bus`                                    | `"SFX"`               | rebuilds the voice     |
-| `volume`                                 | `1`                   | live                   |
-| `pitch`                                  | `1`                   | on the next `play()`   |
-| `loop`, `maxInstances`, `spatial`        | `false`, `8`, `false` | rebuilds the voice     |
-| `playOnAwake`                            | `false`               | at `awake`             |
-| `minDistance`, `maxDistance`, `rolloff`  | `1`, `50`, `1`        | rebuilds the voice     |
-| `distanceModel`                          | `"inverse"`           | rebuilds the voice     |
-| `cone.innerAngle/outerAngle/outerVolume` | `360`, `360`, `0`     | rebuilds the voice     |
-| `pan`                                    | `0`                   | live, non-spatial only |
+| Field | Default | Applied |
+| --- | --- | --- |
+| `clip` | `null` | rebuilds the voice |
+| `bus` | `"SFX"` | rebuilds the voice |
+| `volume` | `1` | live |
+| `pitch` | `1` | on the next `play()` |
+| `loop`, `maxInstances`, `spatial` | `false`, `8`, `false` | rebuilds the voice |
+| `playOnAwake` | `false` | at `awake` |
+| `minDistance`, `maxDistance`, `rolloff` | `1`, `50`, `1` | rebuilds the voice |
+| `distanceModel` | `"inverse"` | rebuilds the voice |
+| `cone.innerAngle/outerAngle/outerVolume` | `360`, `360`, `0` | rebuilds the voice |
+| `pan` | `0` | live, non-spatial only |
 
 Methods: `play(options?)`, `playOneShot(clip, options?)`, `stop(fadeSeconds?)`, `pause()`,
 `resume()`, and the reads `isPlaying`, `instanceCount`, `instance`, `onEnded`.

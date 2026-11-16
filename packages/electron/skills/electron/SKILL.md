@@ -14,11 +14,11 @@ The Electron half of ignifx. It turns a game that already runs in a browser into
 
 Three entry points, one per Electron process:
 
-| Import                     | Runs in  | Gives you                                                                       |
-| -------------------------- | -------- | ------------------------------------------------------------------------------- |
-| `@ignifx/electron`         | renderer | the `electron()` extension and `app.desktop`                                    |
-| `@ignifx/electron/main`    | main     | `createGameWindow`, the `ignifx://` protocol, the WebGPU switches, IPC handlers |
-| `@ignifx/electron/preload` | preload  | `exposeIgnifxHost()` — the one call the preload script makes                    |
+| Import | Runs in | Gives you |
+| --- | --- | --- |
+| `@ignifx/electron` | renderer | the `electron()` extension and `app.desktop` |
+| `@ignifx/electron/main` | main | `createGameWindow`, the `ignifx://` protocol, the WebGPU switches, IPC handlers |
+| `@ignifx/electron/preload` | preload | `exposeIgnifxHost()` — the one call the preload script makes |
 
 Use it when you are packaging a game, or debugging one that behaves differently on the desktop.
 
@@ -135,33 +135,33 @@ Register `electron()` **unconditionally**. Without a preload bridge it logs one 
 
 ### `app.desktop`
 
-| Member                                 | Does                                                                                                 |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `isElectron`                           | The only member that answers in a browser build. Branch on it.                                       |
-| `versions`                             | `{ electron, chrome, node }`, or `null` in a browser build.                                          |
-| `onWindowEvent`                        | `Signal<"minimize" \| "restore" \| "focus" \| "blur" \| "enter-full-screen" \| "leave-full-screen">` |
-| `paths()`                              | `{ userData, appData, temp, home, downloads, documents, appPath }`                                   |
-| `setFullscreen(on)` / `isFullscreen()` | Full screen.                                                                                         |
-| `setWindowTitle(title)`                | The window title.                                                                                    |
-| `quit()`                               | Closes the window and quits.                                                                         |
-| `showOpenDialog(options?)`             | `{ canceled, paths }`. Options are booleans, not Electron's `properties`.                            |
-| `openExternal(url)`                    | `https:` and `mailto:` only; anything else rejects with `IGX-1464`.                                  |
+| Member | Does |
+| --- | --- |
+| `isElectron` | The only member that answers in a browser build. Branch on it. |
+| `versions` | `{ electron, chrome, node }`, or `null` in a browser build. |
+| `onWindowEvent` | `Signal<"minimize" \| "restore" \| "focus" \| "blur" \| "enter-full-screen" \| "leave-full-screen">` |
+| `paths()` | `{ userData, appData, temp, home, downloads, documents, appPath }` |
+| `setFullscreen(on)` / `isFullscreen()` | Full screen. |
+| `setWindowTitle(title)` | The window title. |
+| `quit()` | Closes the window and quits. |
+| `showOpenDialog(options?)` | `{ canceled, paths }`. Options are booleans, not Electron's `properties`. |
+| `openExternal(url)` | `https:` and `mailto:` only; anything else rejects with `IGX-1464`. |
 
 Everything but `isElectron` and `versions` rejects with `IGX-1462` in a browser build.
 
 ### `@ignifx/electron/main`
 
-| Symbol                                    | Does                                                                                     |
-| ----------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `applyWebGpuSwitches()`                   | `enable-unsafe-webgpu`, plus `enable-features=Vulkan` on Linux. **Before `whenReady`.**  |
-| `registerIgnifxScheme()`                  | `ignifx://` as standard + secure + fetchable + streamable. **Before `whenReady`.**       |
-| `serveIgnifxProtocol(dir)`                | Serves a directory; returns a function that stops it. **After `whenReady`.**             |
-| `createGameWindow(options)`               | The window, hardened. Returns a `BrowserWindow`.                                         |
-| `installHostHandlers({ window, entry })`  | The IPC handlers; returns a function that removes them. Pass the same `entry`.           |
-| `windowOptionsFor(options)` / `cspFor()`  | Pure builders, so a test can assert the security options.                                |
-| `installCspHeader(session, csp, scope?)`  | The CSP header; `scope` (an origin or a URL predicate) limits it to the app's responses. |
-| `lockNavigation(contents, origin, opts?)` | Main frame on `origin`; sub-frames only to `opts.frameOrigins` (list or function).       |
-| `FileStorage`                             | The file-system store, in `@ignifx/core`'s own on-disk layout.                           |
+| Symbol | Does |
+| --- | --- |
+| `applyWebGpuSwitches()` | `enable-unsafe-webgpu`, plus `enable-features=Vulkan` on Linux. **Before `whenReady`.** |
+| `registerIgnifxScheme()` | `ignifx://` as standard + secure + fetchable + streamable. **Before `whenReady`.** |
+| `serveIgnifxProtocol(dir)` | Serves a directory; returns a function that stops it. **After `whenReady`.** |
+| `createGameWindow(options)` | The window, hardened. Returns a `BrowserWindow`. |
+| `installHostHandlers({ window, entry })` | The IPC handlers; returns a function that removes them. Pass the same `entry`. |
+| `windowOptionsFor(options)` / `cspFor()` | Pure builders, so a test can assert the security options. |
+| `installCspHeader(session, csp, scope?)` | The CSP header; `scope` (an origin or a URL predicate) limits it to the app's responses. |
+| `lockNavigation(contents, origin, opts?)` | Main frame on `origin`; sub-frames only to `opts.frameOrigins` (list or function). |
+| `FileStorage` | The file-system store, in `@ignifx/core`'s own on-disk layout. |
 
 The main entry never imports `@ignifx/core`; it throws `ElectronMainError` (same `IGX-####` codes; test `error.code`, not `isIgnifxError`).
 
@@ -169,16 +169,16 @@ The main entry never imports `@ignifx/core`; it throws `ElectronMainError` (same
 
 `createGameWindow` and `installHostHandlers` harden the window for you. None of it is a flag you pass; deviating means an ADR (`CONSTITUTION.md` §9.2). What the package enforces:
 
-| Layer                   | What it does                                                                                                                                                                                                                                                                                                                                                         |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `webPreferences`        | `contextIsolation: true`, `sandbox: true`, `nodeIntegration` / `nodeIntegrationInWorker` / `nodeIntegrationInSubFrames` off, `webSecurity: true`, `allowRunningInsecureContent: false`, `experimentalFeatures: false`, `enableBlinkFeatures: ""`, `enableWebSQL: false`, `webviewTag: false`. Written **after** your options are spread, so they cannot be weakened. |
-| Content-Security-Policy | A response header on every document and subresource of the window's own origin: `default-src 'none'`, `script-src 'self' 'wasm-unsafe-eval'`, `object-src`/`base-uri`/`form-action`/`frame-ancestors`/`frame-src` `'none'`. Never `'unsafe-inline'` or `'unsafe-eval'` on scripts.                                                                                   |
-| Navigation              | `window.open` denied; `will-navigate`, `will-redirect` and `will-frame-navigate` blocked off the window's own origin (sub-frames: off `frameOrigins`, which defaults to that origin); `will-attach-webview` refused.                                                                                                                                                 |
-| Permissions             | Only `pointerLock`, `fullscreen` and `automatic-fullscreen` are granted. Camera, microphone, geolocation, notifications, USB, HID and Serial are denied on the prompt path, the silent-check path, and the per-device grant.                                                                                                                                         |
-| `ignifx://`             | One authority (`app`) and one directory. A path that resolves outside it, carries a NUL byte, or names another authority is refused with `IGX-1465` and answered `403`.                                                                                                                                                                                              |
-| IPC                     | Every handler refuses anything that is not the game window's own **top-level** document on an allowed origin, with `IGX-1467`, before it reads an argument.                                                                                                                                                                                                          |
-| `openExternal`          | `https:` and `mailto:` only. `file:`, `javascript:`, plain `http:` and every custom scheme reject with `IGX-1464`.                                                                                                                                                                                                                                                   |
-| Packaging               | `electron-builder.yml` flips the Electron Fuses that disable `ELECTRON_RUN_AS_NODE`, `NODE_OPTIONS`, `--inspect` and `file://` extra privileges, and loads the app from `app.asar` only.                                                                                                                                                                             |
+| Layer | What it does |
+| --- | --- |
+| `webPreferences` | `contextIsolation: true`, `sandbox: true`, `nodeIntegration` / `nodeIntegrationInWorker` / `nodeIntegrationInSubFrames` off, `webSecurity: true`, `allowRunningInsecureContent: false`, `experimentalFeatures: false`, `enableBlinkFeatures: ""`, `enableWebSQL: false`, `webviewTag: false`. Written **after** your options are spread, so they cannot be weakened. |
+| Content-Security-Policy | A response header on every document and subresource of the window's own origin: `default-src 'none'`, `script-src 'self' 'wasm-unsafe-eval'`, `object-src`/`base-uri`/`form-action`/`frame-ancestors`/`frame-src` `'none'`. Never `'unsafe-inline'` or `'unsafe-eval'` on scripts. |
+| Navigation | `window.open` denied; `will-navigate`, `will-redirect` and `will-frame-navigate` blocked off the window's own origin (sub-frames: off `frameOrigins`, which defaults to that origin); `will-attach-webview` refused. |
+| Permissions | Only `pointerLock`, `fullscreen` and `automatic-fullscreen` are granted. Camera, microphone, geolocation, notifications, USB, HID and Serial are denied on the prompt path, the silent-check path, and the per-device grant. |
+| `ignifx://` | One authority (`app`) and one directory. A path that resolves outside it, carries a NUL byte, or names another authority is refused with `IGX-1465` and answered `403`. |
+| IPC | Every handler refuses anything that is not the game window's own **top-level** document on an allowed origin, with `IGX-1467`, before it reads an argument. |
+| `openExternal` | `https:` and `mailto:` only. `file:`, `javascript:`, plain `http:` and every custom scheme reject with `IGX-1464`. |
+| Packaging | `electron-builder.yml` flips the Electron Fuses that disable `ELECTRON_RUN_AS_NODE`, `NODE_OPTIONS`, `--inspect` and `file://` extra privileges, and loads the app from `app.asar` only. |
 
 What a **game** still has to do:
 
@@ -197,11 +197,11 @@ Unchanged API, different backend: `userData/<namespace>/<encoded key>.json` (or 
 
 ### Building and shipping
 
-| Command              | Does                                                                                                                                     |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm dev:desktop`   | `install-electron && electron-vite dev` — the game in a window, hot reload in the renderer. The first run downloads the Electron binary. |
-| `pnpm build:desktop` | `electron-vite build` — `out/{main,preload,renderer}`.                                                                                   |
-| `pnpm dist:desktop`  | `electron-builder --dir` — an unpacked, **unsigned** app in `release/`.                                                                  |
+| Command | Does |
+| --- | --- |
+| `pnpm dev:desktop` | `install-electron && electron-vite dev` — the game in a window, hot reload in the renderer. The first run downloads the Electron binary. |
+| `pnpm build:desktop` | `electron-vite build` — `out/{main,preload,renderer}`. |
+| `pnpm dist:desktop` | `electron-builder --dir` — an unpacked, **unsigned** app in `release/`. |
 
 Add `--mac`, `--win`, or `--linux` to `electron-builder` for a real installer, on a runner of that platform: cross-compilation is not available for most targets. Code signing, notarization, and auto-update are documented after 1.0.
 
@@ -213,16 +213,16 @@ None of its own. It serves whatever `@ignifx/vite-plugin` built — the manifest
 
 ## Gotchas
 
-| Trap                                                                                                                                                                                                           | Use instead                                                                                                                           |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Building the preload script as an ES module. Under `sandbox: true` — which `CONSTITUTION.md` §9.2 fixes — `window.ignifxHost` is silently `undefined`, with no error anywhere.                                 | Build `desktop/preload.ts` with `format: "cjs"` and the file name `index.cjs`. The templates' `electron.vite.config.ts` already does. |
-| Calling `applyWebGpuSwitches()` or `registerIgnifxScheme()` after `app.whenReady()`. Both are inert, and the symptom is no `navigator.gpu`.                                                                    | Call both at the top of `desktop/main.ts`, before the `whenReady` await.                                                              |
-| Loading the packaged renderer over `file://`. Opaque origin: no secure context, so no WebGPU; `'self'` matches nothing; relative `fetch` fails.                                                                | `serveIgnifxProtocol(dir)` and `entry: "index.html"`.                                                                                 |
-| Expecting `onApplicationPause` when the window is minimised. An Electron renderer receives **no** DOM lifecycle events — no `visibilitychange`, no window `focus`/`blur`, and `document.hidden` never changes. | `onApplicationFocus` works (`electron()` forwards it). For minimise, subscribe to `app.desktop.onWindowEvent`.                        |
-| Expecting device-loss recovery with PCF or spot-light shadows. Babylon Lite 1.34.0 rebuilds **only** ESM and CSM directional shadow generators; anything else fails recovery and the frame loop stops.         | `light.shadows.technique = "csm"` (or `"esm"`) on a game that must survive a lost device.                                             |
-| Importing `@ignifx/electron/main` from the renderer. It pulls `electron` and Node built-ins into a bundle that has neither.                                                                                    | Import the root `@ignifx/electron` in the renderer; `/main` and `/preload` belong to their own processes.                             |
-| Expecting `webContents.getWebPreferences()`. It does not exist in Electron 44.                                                                                                                                 | `getLastWebPreferences()` exists at runtime (though not in `electron.d.ts`), or assert `windowOptionsFor(...)` — it is pure.          |
-| Scaffolding with `--desktop` you did not want. The three Electron build tools are large binary downloads.                                                                                                      | Leave `--desktop` off; the scaffold stays browser-only and `electron()` is still there, inert.                                        |
+| Trap | Use instead |
+| --- | --- |
+| Building the preload script as an ES module. Under `sandbox: true` — which `CONSTITUTION.md` §9.2 fixes — `window.ignifxHost` is silently `undefined`, with no error anywhere. | Build `desktop/preload.ts` with `format: "cjs"` and the file name `index.cjs`. The templates' `electron.vite.config.ts` already does. |
+| Calling `applyWebGpuSwitches()` or `registerIgnifxScheme()` after `app.whenReady()`. Both are inert, and the symptom is no `navigator.gpu`. | Call both at the top of `desktop/main.ts`, before the `whenReady` await. |
+| Loading the packaged renderer over `file://`. Opaque origin: no secure context, so no WebGPU; `'self'` matches nothing; relative `fetch` fails. | `serveIgnifxProtocol(dir)` and `entry: "index.html"`. |
+| Expecting `onApplicationPause` when the window is minimised. An Electron renderer receives **no** DOM lifecycle events — no `visibilitychange`, no window `focus`/`blur`, and `document.hidden` never changes. | `onApplicationFocus` works (`electron()` forwards it). For minimise, subscribe to `app.desktop.onWindowEvent`. |
+| Expecting device-loss recovery with PCF or spot-light shadows. Babylon Lite 1.34.0 rebuilds **only** ESM and CSM directional shadow generators; anything else fails recovery and the frame loop stops. | `light.shadows.technique = "csm"` (or `"esm"`) on a game that must survive a lost device. |
+| Importing `@ignifx/electron/main` from the renderer. It pulls `electron` and Node built-ins into a bundle that has neither. | Import the root `@ignifx/electron` in the renderer; `/main` and `/preload` belong to their own processes. |
+| Expecting `webContents.getWebPreferences()`. It does not exist in Electron 44. | `getLastWebPreferences()` exists at runtime (though not in `electron.d.ts`), or assert `windowOptionsFor(...)` — it is pure. |
+| Scaffolding with `--desktop` you did not want. The three Electron build tools are large binary downloads. | Leave `--desktop` off; the scaffold stays browser-only and `electron()` is still there, inert. |
 
 ## Deprecated (current window)
 

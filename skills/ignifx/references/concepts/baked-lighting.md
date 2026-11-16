@@ -10,13 +10,13 @@ the per-component prose is in [`rendering.md`](rendering.md) §1. Rationale in
 
 ## 1. Which one to use
 
-| Need                                                   | Use                                    | Costs                                                  | Data                              |
-| ------------------------------------------------------ | -------------------------------------- | ------------------------------------------------------ | --------------------------------- |
-| Mirrors, metal and wet floors that show the room       | `ReflectionProbe`                      | Six scene passes per capture, nothing between captures | None: captured at run time        |
-| Coloured, directional indirect light on moving objects | `LightProbeVolume`                     | Eight texel fetches per pixel (≤ 0.3 ms estimated)     | A `.probes.json` grid             |
-| Soft baked shadows and bounce on static level geometry | `MeshRenderer.lightmap`                | One texture fetch per pixel (≤ 0.1 ms estimated)       | A `.lightmap.json` plus a texture |
-| One bounce of the lit scene that follows the frame     | `PostProcessStack.ssgi` (screen space) | Desktop `"high"` tier only; misses what is off screen  | None                              |
-| Contact darkening in creases                           | `rendering.ambientOcclusion` (GTAO)    | Half resolution from `"low"`, full at `"high"`         | None                              |
+| Need | Use | Costs | Data |
+| --- | --- | --- | --- |
+| Mirrors, metal and wet floors that show the room | `ReflectionProbe` | Six scene passes per capture, nothing between captures | None: captured at run time |
+| Coloured, directional indirect light on moving objects | `LightProbeVolume` | Eight texel fetches per pixel (≤ 0.3 ms estimated) | A `.probes.json` grid |
+| Soft baked shadows and bounce on static level geometry | `MeshRenderer.lightmap` | One texture fetch per pixel (≤ 0.1 ms estimated) | A `.lightmap.json` plus a texture |
+| One bounce of the lit scene that follows the frame | `PostProcessStack.ssgi` (screen space) | Desktop `"high"` tier only; misses what is off screen | None |
+| Contact darkening in creases | `rendering.ambientOcclusion` (GTAO) | Half resolution from `"low"`, full at `"high"` | None |
 
 They combine. A typical level uses a lightmap on its static walls and floors, one light-probe volume
 so characters walking through match them, and a reflection probe per room with `boxProjection` set
@@ -70,11 +70,11 @@ enabled the one created last wins; `intensity` scales the probes' light without 
 The file (`format: "ignifx-probes"`, `formatVersion: 1`; generated table:
 [`../formats/ignifx-probes.md`](../formats/ignifx-probes.md)):
 
-| Field          | Meaning                                                                                                                            |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `origin`       | World position of probe `(0, 0, 0)`                                                                                                |
-| `cellSize`     | Metres between neighbouring probes per axis; positive                                                                              |
-| `counts`       | Probes per axis, whole numbers; `counts.x` ≤ 1024 and `counts.y × counts.z` ≤ 4096                                                 |
+| Field | Meaning |
+| --- | --- |
+| `origin` | World position of probe `(0, 0, 0)` |
+| `cellSize` | Metres between neighbouring probes per axis; positive |
+| `counts` | Probes per axis, whole numbers; `counts.x` ≤ 1024 and `counts.y × counts.z` ≤ 4096 |
 | `coefficients` | 12 linear-RGB floats per probe, `c0, c1, c2, c3`, X fastest then Y then Z; light for normal `n` is `c0 + c1·n.y + c2·n.z + c3·n.x` |
 
 Load it with `app.assets.loadAsync<LightProbeAsset>("lighting/hall.probes.json")`, or publish a grid
@@ -129,11 +129,11 @@ world **once**, when it starts:
 - **Direct light, per light: `Light.bakeMode`.** Whether a probe also stores the light it receives
   straight from a light depends on who draws that light at run time:
 
-  | `bakeMode`             | Drawn at run time | Bake stores its bounce | Bake stores its direct light       |
-  | ---------------------- | ----------------- | ---------------------- | ---------------------------------- |
-  | `"realtime"` (default) | yes               | yes                    | only with `directLight: "include"` |
-  | `"mixed"`              | yes               | yes                    | never                              |
-  | `"baked"`              | no (dimmed to 0)  | yes                    | always                             |
+  | `bakeMode` | Drawn at run time | Bake stores its bounce | Bake stores its direct light |
+  | --- | --- | --- | --- |
+  | `"realtime"` (default) | yes | yes | only with `directLight: "include"` |
+  | `"mixed"` | yes | yes | never |
+  | `"baked"` | no (dimmed to 0) | yes | always |
 
   A hemispheric light's direct light is what a probe sees of its sky and ground colours, so it
   follows the same rule. Before 0.20.0 the bake always stored it while the light kept drawing,
@@ -199,12 +199,12 @@ engine (§8).
 `rendering.quality` caps reflection probes only; light probes and lightmaps run unchanged at every
 tier, because baked lighting is the low-end path.
 
-| Tier       | Reflection probe `size` | `"everyFrame"`                    | Light probes, lightmaps | SSGI    | GTAO   |
-| ---------- | ----------------------- | --------------------------------- | ----------------------- | ------- | ------ |
-| `"low"`    | clamped to ≤ 64         | captures as `"once"`, one warning | on                      | off     | half   |
-| `"medium"` | clamped to ≤ 128        | captures as `"once"`, one warning | on                      | off     | half   |
-| `"high"`   | clamped to ≤ 256        | allowed                           | on                      | allowed | full   |
-| `"custom"` | 16–1024, as authored    | allowed                           | on                      | as set  | as set |
+| Tier | Reflection probe `size` | `"everyFrame"` | Light probes, lightmaps | SSGI | GTAO |
+| --- | --- | --- | --- | --- | --- |
+| `"low"` | clamped to ≤ 64 | captures as `"once"`, one warning | on | off | half |
+| `"medium"` | clamped to ≤ 128 | captures as `"once"`, one warning | on | off | half |
+| `"high"` | clamped to ≤ 256 | allowed | on | allowed | full |
+| `"custom"` | 16–1024, as authored | allowed | on | as set | as set |
 
 The tier is read every frame: `size` is clamped to 16 and the tier's maximum, then rounded down to
 a power of two.

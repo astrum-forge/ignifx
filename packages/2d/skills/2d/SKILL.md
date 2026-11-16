@@ -43,11 +43,11 @@ if (canvas instanceof HTMLCanvasElement) {
 `ignifx.config.ts` carries the same settings under `twoD`, and a scene file's `settings.twoD` block
 overrides them for that scene:
 
-| Setting         | Default    | Meaning                                                             |
-| --------------- | ---------- | ------------------------------------------------------------------- |
-| `mode`          | `"sprite"` | `"sprite"` clears the frame; `"mixed"` composites over the 3D scene |
-| `pixelsPerUnit` | `100`      | How many pixels one world metre spans                               |
-| `ySort`         | `{}`       | Which sorting layers draw back-to-front by world Y                  |
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `mode` | `"sprite"` | `"sprite"` clears the frame; `"mixed"` composites over the 3D scene |
+| `pixelsPerUnit` | `100` | How many pixels one world metre spans |
+| `ySort` | `{}` | Which sorting layers draw back-to-front by world Y |
 
 Sorting layers themselves live in the **core** `sortingLayers` section, back to front, and the colour
 a `"sprite"`-mode frame is cleared to is the core `rendering.clearColor` setting — see the Gotchas.
@@ -111,31 +111,31 @@ Full signatures: `skills/ignifx/references/api/2d.md`.
 
 ### `app.twoD` — `TwoDService`
 
-| Member                                | Meaning                                                    |
-| ------------------------------------- | ---------------------------------------------------------- |
-| `pixelsPerUnit` · `mode` · `settings` | The resolved `twoD` section, after any scene override      |
-| `mainCamera`                          | The highest-priority enabled `Camera2D`, or `null`         |
-| `pickAt(xPx, yPx, options?)`          | Topmost `SpriteRenderer` under a viewport pixel, or `null` |
-| `pickAllAt(xPx, yPx, options?)`       | Every `SpriteRenderer` under the pixel, topmost first      |
-| `screenToWorld` · `worldToScreen`     | Through the active camera                                  |
-| `visibleWorldBounds(out)`             | The world rectangle the camera sees (parallax not applied) |
-| `layers`                              | Diagnostics: every Lite layer in draw order                |
-| `syncedLastFrame` · `spriteCount`     | How many sprites the last frame actually wrote             |
-| `createSpriteBatch(options)`          | A fixed-capacity crowd of entity-less sprites (`@beta`)    |
-| `lite.renderer`                       | The Lite `SpriteRenderer`, or `null` headless              |
+| Member | Meaning |
+| --- | --- |
+| `pixelsPerUnit` · `mode` · `settings` | The resolved `twoD` section, after any scene override |
+| `mainCamera` | The highest-priority enabled `Camera2D`, or `null` |
+| `pickAt(xPx, yPx, options?)` | Topmost `SpriteRenderer` under a viewport pixel, or `null` |
+| `pickAllAt(xPx, yPx, options?)` | Every `SpriteRenderer` under the pixel, topmost first |
+| `screenToWorld` · `worldToScreen` | Through the active camera |
+| `visibleWorldBounds(out)` | The world rectangle the camera sees (parallax not applied) |
+| `layers` | Diagnostics: every Lite layer in draw order |
+| `syncedLastFrame` · `spriteCount` | How many sprites the last frame actually wrote |
+| `createSpriteBatch(options)` | A fixed-capacity crowd of entity-less sprites (`@beta`) |
+| `lite.renderer` | The Lite `SpriteRenderer`, or `null` headless |
 
 ### Components
 
-| Component (`typeId`)                             | Key fields                                                                                                                                            |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Camera2D` (`ignifx/Camera2D`)                   | `orthographicSize`, `pixelPerfect`, `referenceResolution`, `boundsMin`/`boundsMax`, `follow`, `deadZone`, `priority`                                  |
-| `SpriteRenderer` (`ignifx/SpriteRenderer`)       | `sprite`, `frameName`, `color`, `flipX`/`flipY`, `sortingLayer`, `orderInLayer`, `blend`, `pivotOverride`, `screenSpace`, `pickable`; runtime `frame` |
-| `SpriteAnimator` (`ignifx/SpriteAnimator`)       | `animations`, `defaultClip`, `playOnAwake`, `speed`; `play`/`stop`/`pause`/`resume`/`sample`/`sampleTime`, `onClipEnded`, `onEvent`                   |
-| `Tilemap` (`ignifx/Tilemap`)                     | `map`, `chunkSize`; `getTile`/`setTile`/`setCells`, `worldToCell`/`cellToWorld`, `collisionData`, `onTileChanged`                                     |
-| `TilemapRenderer` (`ignifx/TilemapRenderer`)     | `atlas`, `sortingLayer`, `cullChunks`                                                                                                                 |
-| `ParallaxLayer` (`ignifx/ParallaxLayer`)         | `sortingLayer`, `factor`, `repeatX`/`repeatY`, `repeatWidth`/`repeatHeight`                                                                           |
-| `SpriteLayerEffect` (`ignifx/SpriteLayerEffect`) | `sortingLayer`, `kind`, `tint`, `params`, `shader`                                                                                                    |
-| `Camera2DFollow` (`ignifx/Camera2DFollow`)       | A `Script`; reads `Camera2D`'s follow fields in `lateUpdate`                                                                                          |
+| Component (`typeId`) | Key fields |
+| --- | --- |
+| `Camera2D` (`ignifx/Camera2D`) | `orthographicSize`, `pixelPerfect`, `referenceResolution`, `boundsMin`/`boundsMax`, `follow`, `deadZone`, `priority` |
+| `SpriteRenderer` (`ignifx/SpriteRenderer`) | `sprite`, `frameName`, `color`, `flipX`/`flipY`, `sortingLayer`, `orderInLayer`, `blend`, `pivotOverride`, `screenSpace`, `pickable`; runtime `frame` |
+| `SpriteAnimator` (`ignifx/SpriteAnimator`) | `animations`, `defaultClip`, `playOnAwake`, `speed`; `play`/`stop`/`pause`/`resume`/`sample`/`sampleTime`, `onClipEnded`, `onEvent` |
+| `Tilemap` (`ignifx/Tilemap`) | `map`, `chunkSize`; `getTile`/`setTile`/`setCells`, `worldToCell`/`cellToWorld`, `collisionData`, `onTileChanged` |
+| `TilemapRenderer` (`ignifx/TilemapRenderer`) | `atlas`, `sortingLayer`, `cullChunks` |
+| `ParallaxLayer` (`ignifx/ParallaxLayer`) | `sortingLayer`, `factor`, `repeatX`/`repeatY`, `repeatWidth`/`repeatHeight` |
+| `SpriteLayerEffect` (`ignifx/SpriteLayerEffect`) | `sortingLayer`, `kind`, `tint`, `params`, `shader` |
+| `Camera2DFollow` (`ignifx/Camera2DFollow`) | A `Script`; reads `Camera2D`'s follow fields in `lateUpdate` |
 
 ### `SpriteBatch` — sprites without entities (`@beta`)
 
@@ -145,14 +145,14 @@ sprites are not _things_ — bullets, sparks, debris, 2D particles — and one e
 more than the drawing does. Use `SpriteRenderer` for anything with a transform, a pick or a place in
 a scene file.
 
-| Member                                                                  | Meaning                                                            |
-| ----------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `capacity`                                                              | The slots claimed; fixed for the batch's life                      |
-| `count`                                                                 | How many leading slots draw; slots at `count` and above are hidden |
-| `write(index, x, y, w, h, frame, rotation, r, g, b, a, flipX?, flipY?)` | One slot, in world metres, +Y up, and degrees counter-clockwise    |
-| `hide(index)`                                                           | Hides one slot until it is written again                           |
-| `dispose()`                                                             | Gives the slots back; also runs at the end of a `using` block      |
-| `lite.handles`                                                          | The Lite `Sprite2DHandle` per slot — unstable escape hatch         |
+| Member | Meaning |
+| --- | --- |
+| `capacity` | The slots claimed; fixed for the batch's life |
+| `count` | How many leading slots draw; slots at `count` and above are hidden |
+| `write(index, x, y, w, h, frame, rotation, r, g, b, a, flipX?, flipY?)` | One slot, in world metres, +Y up, and degrees counter-clockwise |
+| `hide(index)` | Hides one slot until it is written again |
+| `dispose()` | Gives the slots back; also runs at the end of a `using` block |
+| `lite.handles` | The Lite `Sprite2DHandle` per slot — unstable escape hatch |
 
 ```ts
 import { createApp } from "ignifx";

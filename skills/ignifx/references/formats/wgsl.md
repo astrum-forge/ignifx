@@ -16,11 +16,11 @@ How the three forms behave, and the WGSL rules that trip agents up, are in
 
 ## The three forms
 
-| First pragma      | The file is                                       | It provides                                                                | Lit by the engine                    |
-| ----------------- | ------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------ |
-| `@ignifx shader`  | A whole material family (`type: "shader"`)        | `@vertex fn mainVertex`, `@fragment fn mainFragment`                       | No — you own every pixel             |
-| `@ignifx surface` | A layer on a **PBR** material (`.surface.wgsl`)   | any of `fn displace`, `fn surface`, `fn composite`                         | Yes — shadows, IBL, fog, tone mapping |
-| `@ignifx post`    | One full-screen pass (`.post.wgsl`)               | `fn mainFragment(in: PostInput) -> vec4<f32>`                              | Not applicable                       |
+| First pragma | The file is | It provides | Lit by the engine |
+| --- | --- | --- | --- |
+| `@ignifx shader` | A whole material family (`type: "shader"`) | `@vertex fn mainVertex`, `@fragment fn mainFragment` | No — you own every pixel |
+| `@ignifx surface` | A layer on a **PBR** material (`.surface.wgsl`) | any of `fn displace`, `fn surface`, `fn composite` | Yes — shadows, IBL, fog, tone mapping |
+| `@ignifx post` | One full-screen pass (`.post.wgsl`) | `fn mainFragment(in: PostInput) -> vec4<f32>` | Not applicable |
 
 Exactly one form line per file. The suffix is a convention for people; the pragma is what decides.
 
@@ -29,17 +29,17 @@ Exactly one form line per file. The suffix is a convention for people; the pragm
 One directive per line, anywhere in the file, in any order. A name may be claimed once: a uniform, a
 texture (which also claims `<name>Sampler`), a storage buffer and a define share one namespace.
 
-| Directive                                                                                                 | Example                                                             | Meaning                                                                                                                                                |
-| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@ignifx shader` \| `surface` \| `post`                                                                   | `// @ignifx shader`                                                 | The form. Takes no arguments; a second one is `IGX-0719`                                                                                               |
-| `@ignifx attributes a, b, …`                                                                              | `// @ignifx attributes position, normal, uv`                        | The Babylon Lite attributes `VertexInput` carries: `position normal uv uv2 tangent color joints weights joints1 weights1`. A `shader` file must include `position` |
-| `@ignifx system u, v, …`                                                                                  | `// @ignifx system worldViewProjection, time`                       | Engine uniforms. Lite's are `world view projection viewProjection worldView worldViewProjection cameraPosition screenSize alphaCutoff`; ignifx adds `time unscaledTime deltaTime mainLightDirection mainLightColor ambientColor` |
-| `@ignifx uniform name: type [= default] [modifiers]`                                                      | `// @ignifx uniform tint: vec3<f32> = color(1, 0.4, 0.1)`           | A settable uniform. Types: `f32 u32 i32 vec2<f32> vec3<f32> vec4<f32> mat4x4<f32>`. Modifiers: `range(a, b)`, `step(s)`, `color`, `tooltip("…")`      |
-| `@ignifx texture name [srgb] [normal] [default white\|black\|transparent] [array]`                        | `// @ignifx texture albedo srgb default white`                      | A `texture_2d<f32>` and its `<name>Sampler`. `default` binds a 1×1 texel while nothing is bound; `array` declares `texture_2d_array<f32>`              |
-| `@ignifx storage name: array<T>`                                                                          | `// @ignifx storage particles: array<Particle>`                     | A read-only storage buffer, bound with `material.setStorageBuffer(name, buffer)`                                                                        |
-| `@ignifx define NAME = true \| false \| number`                                                           | `// @ignifx define SOFT_EDGE = true`                                | A WGSL `const`; a material may override it with `setDefine`, which recompiles                                                                           |
-| `@ignifx blend … cull … depthWrite … depthTest … transmissive instancing …`                               | `// @ignifx blend additive cull none depthWrite off`                | Pipeline state, several keywords per line or one line each                                                                                              |
-| `@ignifx displace metres`                                                                                 | `// @ignifx displace 0.3`                                           | The furthest the vertex stage moves a vertex, in world metres. Renderers widen their bounds by it, so shadow maps and GPU culling see the moved shape. `shader` and `surface` files only |
+| Directive | Example | Meaning |
+| --- | --- | --- |
+| `@ignifx shader` \| `surface` \| `post` | `// @ignifx shader` | The form. Takes no arguments; a second one is `IGX-0719` |
+| `@ignifx attributes a, b, …` | `// @ignifx attributes position, normal, uv` | The Babylon Lite attributes `VertexInput` carries: `position normal uv uv2 tangent color joints weights joints1 weights1`. A `shader` file must include `position` |
+| `@ignifx system u, v, …` | `// @ignifx system worldViewProjection, time` | Engine uniforms. Lite's are `world view projection viewProjection worldView worldViewProjection cameraPosition screenSize alphaCutoff`; ignifx adds `time unscaledTime deltaTime mainLightDirection mainLightColor ambientColor` |
+| `@ignifx uniform name: type [= default] [modifiers]` | `// @ignifx uniform tint: vec3<f32> = color(1, 0.4, 0.1)` | A settable uniform. Types: `f32 u32 i32 vec2<f32> vec3<f32> vec4<f32> mat4x4<f32>`. Modifiers: `range(a, b)`, `step(s)`, `color`, `tooltip("…")` |
+| `@ignifx texture name [srgb] [normal] [default white\|black\|transparent] [array]` | `// @ignifx texture albedo srgb default white` | A `texture_2d<f32>` and its `<name>Sampler`. `default` binds a 1×1 texel while nothing is bound; `array` declares `texture_2d_array<f32>` |
+| `@ignifx storage name: array<T>` | `// @ignifx storage particles: array<Particle>` | A read-only storage buffer, bound with `material.setStorageBuffer(name, buffer)` |
+| `@ignifx define NAME = true \| false \| number` | `// @ignifx define SOFT_EDGE = true` | A WGSL `const`; a material may override it with `setDefine`, which recompiles |
+| `@ignifx blend … cull … depthWrite … depthTest … transmissive instancing …` | `// @ignifx blend additive cull none depthWrite off` | Pipeline state, several keywords per line or one line each |
+| `@ignifx displace metres` | `// @ignifx displace 0.3` | The furthest the vertex stage moves a vertex, in world metres. Renderers widen their bounds by it, so shadow maps and GPU culling see the moved shape. `shader` and `surface` files only |
 
 Pipeline keywords and their values: `blend opaque|alpha|additive|premultiplied`,
 `cull back|none`, `depthWrite on|off`, `depthTest on|off`, `transmissive` (no value, and it needs a
@@ -47,17 +47,17 @@ blended surface), `instancing none|matrices|matrices-colors`.
 
 What an omitted directive means:
 
-| Omitted           | Effective value                                                                     |
-| ----------------- | ----------------------------------------------------------------------------------- |
-| `attributes`      | `position` for a `shader` file, nothing for `surface` and `post`                    |
-| `blend`           | `opaque`                                                                            |
-| `cull`            | `back`. Babylon Lite 1.27.0 has no front-face culling: `cull front` is `IGX-0719`   |
-| `depthWrite`      | On for `opaque`, off for every blended mode — Lite's own rule                       |
-| `depthTest`       | On                                                                                  |
-| `instancing`      | `none`                                                                              |
-| `displace`        | `0`: the vertex stage stays inside the mesh's own bounds                            |
-| A uniform default | `0` (or the identity, for `mat4x4<f32>`)                                            |
-| A texture default | Nothing is bound until the material binds it                                        |
+| Omitted | Effective value |
+| --- | --- |
+| `attributes` | `position` for a `shader` file, nothing for `surface` and `post` |
+| `blend` | `opaque` |
+| `cull` | `back`. Babylon Lite 1.27.0 has no front-face culling: `cull front` is `IGX-0719` |
+| `depthWrite` | On for `opaque`, off for every blended mode — Lite's own rule |
+| `depthTest` | On |
+| `instancing` | `none` |
+| `displace` | `0`: the vertex stage stays inside the mesh's own bounds |
+| A uniform default | `0` (or the identity, for `mat4x4<f32>`) |
+| A texture default | Nothing is bound until the material binds it |
 
 A `color(r, g, b[, a])` default — and the bare `color` modifier — marks the uniform **sRGB**: the
 numbers stay as authored in the file and in `.material.json`, and are uploaded linear.
@@ -119,11 +119,11 @@ A surface shader writes plain functions; `SurfaceInput`, `Surface` and `Displace
 for it, and its own uniforms are read from `surfaceUniforms`, which the compiler rewrites into the
 host material's uniform block so two shaders on one material never collide.
 
-| Hook                                                   | Runs                                | Reads                                                                     | Writes                                                                     |
-| ------------------------------------------------------ | ----------------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `displace(in: DisplaceInput) -> vec3<f32>`             | Vertex stage, per vertex            | `in.position`, `in.normal`, `in.uv`, `in.color`, `in.world` — nothing else | A **world-space offset**; the shadow pass follows it                        |
-| `surface(in: SurfaceInput, s: ptr<function, Surface>)` | Fragment, before lighting           | `in.uv`, `in.worldPosition`, `in.geometricNormal`, `in.viewDirection`, `in.color` | `(*s).baseColor`, `.alpha`, `.emissive`, `.normal`                  |
-| `composite(in: SurfaceInput, color: vec3<f32>) -> vec3<f32>` | Fragment, after lighting, before fog and tone mapping | the same `SurfaceInput`, plus the lit linear colour           | The returned colour                                                        |
+| Hook | Runs | Reads | Writes |
+| --- | --- | --- | --- |
+| `displace(in: DisplaceInput) -> vec3<f32>` | Vertex stage, per vertex | `in.position`, `in.normal`, `in.uv`, `in.color`, `in.world` — nothing else | A **world-space offset**; the shadow pass follows it |
+| `surface(in: SurfaceInput, s: ptr<function, Surface>)` | Fragment, before lighting | `in.uv`, `in.worldPosition`, `in.geometricNormal`, `in.viewDirection`, `in.color` | `(*s).baseColor`, `.alpha`, `.emissive`, `.normal` |
+| `composite(in: SurfaceInput, color: vec3<f32>) -> vec3<f32>` | Fragment, after lighting, before fog and tone mapping | the same `SurfaceInput`, plus the lit linear colour | The returned colour |
 
 - `(*s).roughness` and `(*s).metallic` are readable and **ignored on write**: Babylon Lite's PBR
   template declares them `let`.
@@ -162,12 +162,12 @@ post file declares no attributes and no `@ignifx system` line. Effects are attac
 
 ## What is checked, and when
 
-| When                     | Checked by                       | Reports                                                                                                                                                                                                       |
-| ------------------------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| When | Checked by | Reports |
+| --- | --- | --- |
 | `vite dev` / `vite build` | `@ignifx/vite-plugin`, with file and line | `IGX-0654` — the file does not parse as WGSL. `IGX-0655` — it parses but breaks the contract: no form line or two of them, a missing entry point for the declared form, a `shaderUniforms.x`/`surfaceUniforms.x` or texture that is not declared, a hand-declared `@group`/`@binding`, or a `textureSample` outside the fragment stage |
-| Load                     | The pragma parser                | `IGX-0719`, with the line: an unknown or malformed directive, a duplicate name, a type Babylon Lite does not have, or a combination it cannot express                                                          |
-| Material build           | `MaterialAsset`                  | `IGX-0712` (a name the file never declared), `IGX-0713` (right name, wrong shape), `IGX-0716` (a surface shader without `rendering.features.materialPlugins`), `IGX-0723` (a Standard host, or no hook at all) |
-| First draw               | The browser's WGSL compiler      | `IGX-0715` on `app.onError`, carrying Babylon Lite's message; the last good material keeps drawing                                                                                                             |
+| Load | The pragma parser | `IGX-0719`, with the line: an unknown or malformed directive, a duplicate name, a type Babylon Lite does not have, or a combination it cannot express |
+| Material build | `MaterialAsset` | `IGX-0712` (a name the file never declared), `IGX-0713` (right name, wrong shape), `IGX-0716` (a surface shader without `rendering.features.materialPlugins`), `IGX-0723` (a Standard host, or no hook at all) |
+| First draw | The browser's WGSL compiler | `IGX-0715` on `app.onError`, carrying Babylon Lite's message; the last good material keeps drawing |
 
 Full type checking stays with the browser: the build-time rules exist to give a failure a file and a
 line, because the compiler sees Lite's generated module — your source with a scene UBO,

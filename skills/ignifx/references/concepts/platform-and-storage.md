@@ -7,15 +7,15 @@ and input rebindings. Rationale in `docs/architecture/14-platform-electron.md` �
 
 Populated once, during `createApp`. Read it; never write it.
 
-| Field                            | Value                                                                      |
-| -------------------------------- | -------------------------------------------------------------------------- |
-| `kind`                           | `"browser"`, `"electron"` (set by the Electron extension), or `"node"`     |
-| `os`                             | `"macos" \| "windows" \| "linux" \| "ios" \| "android" \| "unknown"`       |
-| `isMobile`                       | `true` on a phone or a tablet; an iPad reports `os: "ios"`                 |
-| `hasPointerLock` / `hasGamepads` | Capability probes, `false` headless                                        |
-| `webgpu`                         | `{ adapterInfo, features, limits }`, or `null` headless and without WebGPU |
-| `locale`                         | BCP 47 tag, `"en-AU"`                                                      |
-| `reducedMotion`                  | `true` when the operating system asks for reduced motion                   |
+| Field | Value |
+| --- | --- |
+| `kind` | `"browser"`, `"electron"` (set by the Electron extension), or `"node"` |
+| `os` | `"macos" \| "windows" \| "linux" \| "ios" \| "android" \| "unknown"` |
+| `isMobile` | `true` on a phone or a tablet; an iPad reports `os: "ios"` |
+| `hasPointerLock` / `hasGamepads` | Capability probes, `false` headless |
+| `webgpu` | `{ adapterInfo, features, limits }`, or `null` headless and without WebGPU |
+| `locale` | BCP 47 tag, `"en-AU"` |
+| `reducedMotion` | `true` when the operating system asks for reduced motion |
 
 ```ts run
 import { createApp } from "@ignifx/core";
@@ -91,12 +91,12 @@ make that a throw instead.
 
 ## 4. Backends
 
-| Backend                    | Default for               | Where it puts things                                |
-| -------------------------- | ------------------------- | --------------------------------------------------- |
-| `IndexedDbStorageBackend`  | browser, Electron         | One `ignifx` database, one `values` store           |
-| `MemoryStorageBackend`     | Node, tests               | Nothing; it disappears with the app                 |
-| `createFileStorageBackend` | `{ directory }` opt-in    | `<directory>/<namespace>/<key>.json` or `.bin`      |
-| `@ignifx/electron`'s       | installed by `electron()` | `userData/<namespace>/…` through the preload bridge |
+| Backend | Default for | Where it puts things |
+| --- | --- | --- |
+| `IndexedDbStorageBackend` | browser, Electron | One `ignifx` database, one `values` store |
+| `MemoryStorageBackend` | Node, tests | Nothing; it disappears with the app |
+| `createFileStorageBackend` | `{ directory }` opt-in | `<directory>/<namespace>/<key>.json` or `.bin` |
+| `@ignifx/electron`'s | installed by `electron()` | `userData/<namespace>/…` through the preload bridge |
 
 Override the default with `createApp({ storage })`, which takes either a backend or `{ directory }`.
 

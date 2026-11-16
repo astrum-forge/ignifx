@@ -45,12 +45,12 @@ if (canvas instanceof HTMLCanvasElement) {
 
 `ignifx.config.ts` carries the same settings under `ui`:
 
-| Setting               | Default                      | Meaning                                 |
-| --------------------- | ---------------------------- | --------------------------------------- |
-| `scaling`             | `"css"`                      | `"css"`, `"fit"` or `"dpi"` — see below |
-| `referenceResolution` | `[1920, 1080]`               | The `[w, h]` `"fit"` scales to          |
-| `layers`              | `["hud", "menu", "overlay"]` | Created up front, back to front         |
-| `visible`             | `true`                       | Whether the overlay is shown            |
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `scaling` | `"css"` | `"css"`, `"fit"` or `"dpi"` — see below |
+| `referenceResolution` | `[1920, 1080]` | The `[w, h]` `"fit"` scales to |
+| `layers` | `["hud", "menu", "overlay"]` | Created up front, back to front |
+| `visible` | `true` | Whether the overlay is shown |
 
 `ui()` also takes `strings` (a `.i18n.json` address to load at start-up) and `locale`.
 
@@ -77,11 +77,11 @@ DOM.
 `HudText`, and `captureScreenshot()` all work in **backing-store** pixels; a DOM element is placed in
 **UI units**. The scaling mode decides what a UI unit is:
 
-| Mode    | One UI unit is      | Use it for                                             |
-| ------- | ------------------- | ------------------------------------------------------ |
-| `"css"` | one CSS pixel       | responsive HTML menus (the browser default)            |
+| Mode | One UI unit is | Use it for |
+| --- | --- | --- |
+| `"css"` | one CSS pixel | responsive HTML menus (the browser default) |
 | `"fit"` | one reference pixel | a HUD authored once at a fixed resolution, letterboxed |
-| `"dpi"` | one backing pixel   | a pixel HUD that must line up with a screenshot        |
+| `"dpi"` | one backing pixel | a pixel HUD that must line up with a screenshot |
 
 `app.ui.pixelMapping` converts between them, and `WorldAnchor` already does it for you.
 
@@ -147,15 +147,15 @@ wrap, text })`, then `setRows`, `refresh()`, `show()`/`hide()`, `moveSelection(�
 `rows`, `selected`, `selectedIndex`, `isVisible`, `cancelable`, `keyboardEnabled`, and the signals
 `onSelectionChanged`, `onActivated`, `onBack`.
 
-| Row `kind`    | What it declares, on top of `id`, `label` and `enabled?`      |
-| ------------- | ------------------------------------------------------------- |
-| `"action"`    | `activate?()`, and an optional right-hand `value`             |
-| `"toggle"`    | `get`/`set` a boolean; drawn with the menu's `text.on`/`.off` |
-| `"slider"`    | `min`/`max`/`step` plus `get`/`set`, and an optional `format` |
-| `"choice"`    | `values` plus `get`/`set` a string, and an optional `format`  |
-| `"binding"`   | `path()` and `rebind?()`, and an optional `listening()`       |
-| `"heading"`   | a label that groups the rows under it; never selected         |
-| `"separator"` | a rule; never selected                                        |
+| Row `kind` | What it declares, on top of `id`, `label` and `enabled?` |
+| --- | --- |
+| `"action"` | `activate?()`, and an optional right-hand `value` |
+| `"toggle"` | `get`/`set` a boolean; drawn with the menu's `text.on`/`.off` |
+| `"slider"` | `min`/`max`/`step` plus `get`/`set`, and an optional `format` |
+| `"choice"` | `values` plus `get`/`set` a string, and an optional `format` |
+| `"binding"` | `path()` and `rebind?()`, and an optional `listening()` |
+| `"heading"` | a label that groups the rows under it; never selected |
+| `"separator"` | a rule; never selected |
 
 `label` (and `title`, `subtitle`, `text.*`) is a string **or** a function, re-read on every
 `refresh()` — which is what makes a menu localizable.

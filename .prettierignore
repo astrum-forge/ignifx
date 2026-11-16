@@ -8,12 +8,13 @@ coverage/
 # Agent worktrees are whole checkouts of their own (`.git/info/exclude`); they lint themselves.
 .claude/
 # Generated Markdown is never hand-formatted (standards §15).
-# Pack-time copy of the entry skill inside the umbrella package (packages/ignifx/.gitignore).
-packages/ignifx/skills/
 packages/*/api/*.api.md
-skills/ignifx/references/api/
-skills/ignifx/references/formats/
-skills/ignifx/references/recipes/
+# Skill pages, generated and hand-written. Agents load them on every task, and Prettier pads each
+# table column to its widest cell (40% of the entry skill's bytes), so their tables are written with
+# single-space cells and left alone. `packages/*/skills/` also covers the pack-time copy of the entry
+# skill inside the umbrella package (packages/ignifx/.gitignore).
+skills/ignifx/
+packages/*/skills/
 **/CHANGELOG.md
 .changeset/*.md
 # Electron desktop build output (see .oxfmtignore).

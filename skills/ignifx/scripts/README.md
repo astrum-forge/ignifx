@@ -4,10 +4,10 @@ Plain Node ESM helpers that ship with the skill. No dependencies beyond the Node
 no build step; run them with Node 24 from anywhere in a project. Both accept `--help` and print
 their usage.
 
-| Script             | Command                                                   | What it does                                                                                                                                                                                                                                                                  |
-| ------------------ | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `check-webgpu.mjs` | `node check-webgpu.mjs`                                   | Reports whether the current runtime exposes WebGPU, then prints the supported browser matrix and the Chromium flags headless WebGPU tests need. Informational: it always exits 0. Under Node the answer is always "no" — that is what `createApp({ headless: true })` is for. |
-| `new-script.mjs`   | `node new-script.mjs <Name> [--namespace ns] [--dir dir]` | Scaffolds `<dir>/<kebab-name>.ts` with a `Script.define({ speed: f32(1) })` class, `static typeId = "<namespace>/<Name>"`, and an `update(dt)` stub. Defaults: `--namespace mygame`, `--dir src/scripts`. Refuses to overwrite an existing file (exit 1).                     |
+| Script | Command | What it does |
+| --- | --- | --- |
+| `check-webgpu.mjs` | `node check-webgpu.mjs` | Reports whether the current runtime exposes WebGPU, then prints the supported browser matrix and the Chromium flags headless WebGPU tests need. Informational: it always exits 0. Under Node the answer is always "no" — that is what `createApp({ headless: true })` is for. |
+| `new-script.mjs` | `node new-script.mjs <Name> [--namespace ns] [--dir dir]` | Scaffolds `<dir>/<kebab-name>.ts` with a `Script.define({ speed: f32(1) })` class, `static typeId = "<namespace>/<Name>"`, and an `update(dt)` stub. Defaults: `--namespace mygame`, `--dir src/scripts`. Refuses to overwrite an existing file (exit 1). |
 
 Example:
 

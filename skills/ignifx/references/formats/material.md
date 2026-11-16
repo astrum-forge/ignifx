@@ -54,14 +54,14 @@ Texture slots (`STANDARD_TEXTURE_SLOTS`): `diffuseTexture`, `specularTexture`, `
 
 ## Rules
 
-| Rule                | Detail                                                                                          |
-| ------------------- | ------------------------------------------------------------------------------------------------ |
-| `type`              | `MATERIAL_KINDS` is `"pbr" \| "standard" \| "shader"`; a `"shader"` file names a `.wgsl` (see [`wgsl.md`](wgsl.md)); a PBR file may carry `surfaces`     |
-| Unknown family      | `IGX-0708` — the file names a family this build cannot construct                                 |
-| Wrong header        | `IGX-0709` — the file is not the ignifx description format it claims                             |
-| `alphaMode`         | `MATERIAL_ALPHA_MODES` is `"opaque" \| "mask" \| "blend"`; `"mask"` uses `alphaCutoff`      |
-| Omitted fields      | Take the schema defaults, so a file only states what differs                                     |
-| Sharing             | One asset, many renderers. `materialAsset.clone(app)` makes a per-object copy in the same family |
+| Rule | Detail |
+| --- | --- |
+| `type` | `MATERIAL_KINDS` is `"pbr" \| "standard" \| "shader"`; a `"shader"` file names a `.wgsl` (see [`wgsl.md`](wgsl.md)); a PBR file may carry `surfaces` |
+| Unknown family | `IGX-0708` — the file names a family this build cannot construct |
+| Wrong header | `IGX-0709` — the file is not the ignifx description format it claims |
+| `alphaMode` | `MATERIAL_ALPHA_MODES` is `"opaque" \| "mask" \| "blend"`; `"mask"` uses `alphaCutoff` |
+| Omitted fields | Take the schema defaults, so a file only states what differs |
+| Sharing | One asset, many renderers. `materialAsset.clone(app)` makes a per-object copy in the same family |
 
 ## The same material in code
 

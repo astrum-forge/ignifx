@@ -37,14 +37,14 @@ await app.start();
 
 `ignifx.config.ts` carries the settings under `physics`:
 
-| Setting           | Default                | Meaning                                                            |
-| ----------------- | ---------------------- | ------------------------------------------------------------------ |
-| `gravity`         | `{x:0,y:-9.81,z:0}`    | World gravity, m/s²                                                |
-| `collisionMatrix` | `{}`                   | `{ layerName: [layerNames] }`; an unlisted layer collides with all |
-| `defaultMaterial` | friction `0.6`         | The surface a collider with no material of its own uses            |
-| `velocityLimits`  | `{linear:0,angular:0}` | World speed clamps; `0` leaves Havok's own defaults                |
-| `interpolation`   | `true`                 | Whether dynamic bodies interpolate between fixed steps             |
-| `havokWasm`       | `"auto"`               | `"auto"` resolves through the asset manifest, or give a URL        |
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `gravity` | `{x:0,y:-9.81,z:0}` | World gravity, m/s² |
+| `collisionMatrix` | `{}` | `{ layerName: [layerNames] }`; an unlisted layer collides with all |
+| `defaultMaterial` | friction `0.6` | The surface a collider with no material of its own uses |
+| `velocityLimits` | `{linear:0,angular:0}` | World speed clamps; `0` leaves Havok's own defaults |
+| `interpolation` | `true` | Whether dynamic bodies interpolate between fixed steps |
+| `havokWasm` | `"auto"` | `"auto"` resolves through the asset manifest, or give a URL |
 
 `fixedDeltaTime` is **not** here: the step comes from the core `time` section and `app.time`.
 
@@ -100,16 +100,16 @@ app.log.info("crate at y:", crate.transform.position.y);
 
 ### `app.physics`
 
-| Member                                                      | What it does                                                                                                                                                                   |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `gravity`                                                   | World gravity; assigning it takes effect on the next step                                                                                                                      |
-| `raycast(origin, direction, maxDistance?, options?)`        | First entity along a ray, with point, normal, and distance                                                                                                                     |
-| `shapeCast(shape, from, to, options?)`                      | Sweeps a sphere/box/capsule and reports the first contact; `options.ignore` names one entity the sweep passes through — the caller's own body, when the sweep starts inside it |
-| `overlap(shape, position, rotation?, options?)`             | Entities whose world bounds the shape touches (array is reused)                                                                                                                |
-| `distanceToNearest(shape, position, maxDistance, options?)` | Distance to the closest body, or `Infinity`                                                                                                                                    |
-| `debugViewer.enabled`                                       | Lite's wireframe overlay on the render scene (needs a GPU)                                                                                                                     |
-| `colliderOutlines(entity)`                                  | Each enabled collider's outline as world-space line segments (`Float32Array`, six numbers a segment) and `isTrigger`: an editor's collider gizmos; works headless              |
-| `lite`                                                      | Unstable escape hatch: the Havok world and the simulation scene                                                                                                                |
+| Member | What it does |
+| --- | --- |
+| `gravity` | World gravity; assigning it takes effect on the next step |
+| `raycast(origin, direction, maxDistance?, options?)` | First entity along a ray, with point, normal, and distance |
+| `shapeCast(shape, from, to, options?)` | Sweeps a sphere/box/capsule and reports the first contact; `options.ignore` names one entity the sweep passes through — the caller's own body, when the sweep starts inside it |
+| `overlap(shape, position, rotation?, options?)` | Entities whose world bounds the shape touches (array is reused) |
+| `distanceToNearest(shape, position, maxDistance, options?)` | Distance to the closest body, or `Infinity` |
+| `debugViewer.enabled` | Lite's wireframe overlay on the render scene (needs a GPU) |
+| `colliderOutlines(entity)` | Each enabled collider's outline as world-space line segments (`Float32Array`, six numbers a segment) and `isTrigger`: an editor's collider gizmos; works headless |
+| `lite` | Unstable escape hatch: the Havok world and the simulation scene |
 
 Every query needs at least one completed fixed step — Havok builds its broadphase there — and
 reports `IGX-0902` before that, except in an edit-mode app (below).
@@ -121,18 +121,18 @@ cannot be layer-filtered, and reports `entity: null` — use `options.ignore` to
 
 ### `Rigidbody`
 
-| Field / member                                  | Default         | Meaning                                             |
-| ----------------------------------------------- | --------------- | --------------------------------------------------- |
-| `bodyType`                                      | `"dynamic"`     | `"dynamic"`, `"kinematic"`, or `"static"`           |
-| `mass`                                          | `1`             | Kilograms; dynamic bodies only                      |
-| `startAsleep`                                   | `false`         | Whether Havok starts it asleep                      |
-| `freezeRotation`                                | all `false`     | Locks rotation about X, Y, or Z                     |
-| `interpolation`                                 | `"interpolate"` | `"none"` pins the display pose to the last step     |
-| `collisionEvents`                               | `"auto"`        | `"auto"` follows the scripts on the entity          |
-| `kinematicSync`                                 | `"teleport"`    | `"velocity"` drags resting bodies along instead     |
-| `linearVelocity` / `angularVelocity`            | —               | Read and write; `…ToRef` variants allocate nothing  |
-| `addForce(f, point?)` / `addImpulse(i, point?)` | —               | Call from `fixedUpdate`                             |
-| `teleport(position, rotation?)`                 | —               | Moves without integrating, and resets interpolation |
+| Field / member | Default | Meaning |
+| --- | --- | --- |
+| `bodyType` | `"dynamic"` | `"dynamic"`, `"kinematic"`, or `"static"` |
+| `mass` | `1` | Kilograms; dynamic bodies only |
+| `startAsleep` | `false` | Whether Havok starts it asleep |
+| `freezeRotation` | all `false` | Locks rotation about X, Y, or Z |
+| `interpolation` | `"interpolate"` | `"none"` pins the display pose to the last step |
+| `collisionEvents` | `"auto"` | `"auto"` follows the scripts on the entity |
+| `kinematicSync` | `"teleport"` | `"velocity"` drags resting bodies along instead |
+| `linearVelocity` / `angularVelocity` | — | Read and write; `…ToRef` variants allocate nothing |
+| `addForce(f, point?)` / `addImpulse(i, point?)` | — | Call from `fixedUpdate` |
+| `teleport(position, rotation?)` | — | Moves without integrating, and resets interpolation |
 
 ### Colliders
 

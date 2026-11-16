@@ -45,14 +45,14 @@ if (canvas instanceof HTMLCanvasElement) {
 
 `ignifx.config.ts` carries the same settings under `devtools`:
 
-| Setting        | Default            | Meaning                                                 |
-| -------------- | ------------------ | ------------------------------------------------------- |
-| `toggleKey`    | `"Backquote"`      | A `KeyboardEvent.code`; a raw `keydown` on the document |
-| `openOnStart`  | `false`            | Open the overlay as soon as the app starts              |
-| `reloadScenes` | `false`            | Re-instantiate a scene instance when its file changes   |
-| `panels`       | all nine, in order | The tab order — and, by omission, a filter              |
-| `position`     | `"right"`          | `"right"`, `"left"`, `"top"` or `"bottom"`              |
-| `opacity`      | `0.92`             | The overlay's background opacity                        |
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `toggleKey` | `"Backquote"` | A `KeyboardEvent.code`; a raw `keydown` on the document |
+| `openOnStart` | `false` | Open the overlay as soon as the app starts |
+| `reloadScenes` | `false` | Re-instantiate a scene instance when its file changes |
+| `panels` | all nine, in order | The tab order — and, by omission, a filter |
+| `position` | `"right"` | `"right"`, `"left"`, `"top"` or `"bottom"` |
+| `opacity` | `0.92` | The overlay's background opacity |
 
 `devtools()` also takes `logSink` to share the Console panel's sink with something else (a `tee` to the browser console, a bigger buffer); by default the extension creates one and adds it to `app.log`.
 
@@ -121,19 +121,19 @@ app.dispose();
 
 `skills/ignifx/references/api/devtools.md` has the generated surface. The parts a developer touches:
 
-| Member                             | What it does                                                        |
-| ---------------------------------- | ------------------------------------------------------------------- |
-| `devtools(options?)`               | The extension factory; pass it to `createApp({ extensions })`       |
-| `app.devtools.open/close/toggle()` | Builds or disposes the overlay; `open()` is a no-op with no canvas  |
-| `app.devtools.isOpen`              | Whether the overlay is up                                           |
-| `app.devtools.position`            | The edge it docks to: the resolved `position`, read-only            |
-| `app.devtools.panel(name)`         | `{ name, title, visible, show(), hide() }`; `IGX-1552` if unknown   |
-| `app.devtools.panels`              | Every panel this build carries, in tab order                        |
-| `app.devtools.select(entity)`      | What the Inspector shows; `null` clears it                          |
-| `app.devtools.reloadScenes`        | Runtime scene reload — see **Gotchas**                              |
-| `app.devtools.onOpened/onClosed`   | Signals, for a game that pauses itself while the overlay is up      |
-| `createDevtoolsLogSink(options?)`  | The Console panel's sink; the game installs it on `createApp`       |
-| `DEVTOOLS_PANEL_NAMES`             | `stats scene inspector assets input audio physics console timeline` |
+| Member | What it does |
+| --- | --- |
+| `devtools(options?)` | The extension factory; pass it to `createApp({ extensions })` |
+| `app.devtools.open/close/toggle()` | Builds or disposes the overlay; `open()` is a no-op with no canvas |
+| `app.devtools.isOpen` | Whether the overlay is up |
+| `app.devtools.position` | The edge it docks to: the resolved `position`, read-only |
+| `app.devtools.panel(name)` | `{ name, title, visible, show(), hide() }`; `IGX-1552` if unknown |
+| `app.devtools.panels` | Every panel this build carries, in tab order |
+| `app.devtools.select(entity)` | What the Inspector shows; `null` clears it |
+| `app.devtools.reloadScenes` | Runtime scene reload — see **Gotchas** |
+| `app.devtools.onOpened/onClosed` | Signals, for a game that pauses itself while the overlay is up |
+| `createDevtoolsLogSink(options?)` | The Console panel's sink; the game installs it on `createApp` |
+| `DEVTOOLS_PANEL_NAMES` | `stats scene inspector assets input audio physics console timeline` |
 
 Panel names are exactly those nine strings; `panels` in the settings is a re-ordering and a filter
 over them.

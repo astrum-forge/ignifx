@@ -41,13 +41,13 @@ await app.start();
 
 `ignifx.config.ts` carries the settings under `physics2d`:
 
-| Setting              | Default         | Meaning                                                            |
-| -------------------- | --------------- | ------------------------------------------------------------------ |
-| `gravity`            | `{x:0,y:-9.81}` | World gravity, m/s²; +Y is up                                      |
-| `collisionMatrix`    | `{}`            | `{ layerName: [layerNames] }`; an unlisted layer collides with all |
-| `defaultMaterial`    | friction `0.6`  | The surface a collider with no material of its own uses            |
-| `velocityIterations` | `0`             | Rapier solver iterations; `0` leaves Rapier's own default of 4     |
-| `interpolation`      | `true`          | Whether dynamic bodies interpolate between fixed steps             |
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `gravity` | `{x:0,y:-9.81}` | World gravity, m/s²; +Y is up |
+| `collisionMatrix` | `{}` | `{ layerName: [layerNames] }`; an unlisted layer collides with all |
+| `defaultMaterial` | friction `0.6` | The surface a collider with no material of its own uses |
+| `velocityIterations` | `0` | Rapier solver iterations; `0` leaves Rapier's own default of 4 |
+| `interpolation` | `true` | Whether dynamic bodies interpolate between fixed steps |
 
 `fixedDeltaTime` is **not** here: the step comes from the core `time` section and `app.time`.
 
@@ -117,13 +117,13 @@ means "weigh the colliders at 1 kg/m²"), `gravityScale`, `linearDamping`, `angu
 Colliders share `offset`, `isTrigger`, `material` (a `.physicsmaterial.json` asset), the
 `inlineMaterial` fallback, `frictionCombine` / `restitutionCombine`, `oneWay`, and `layerOverride`:
 
-| Collider            | Geometry                                                      |
-| ------------------- | ------------------------------------------------------------- |
-| `BoxCollider2D`     | `size` — an axis-aligned rectangle                            |
-| `CircleCollider2D`  | `radius`; the larger scale axis wins                          |
-| `CapsuleCollider2D` | `radius`, `height` (tip to tip), `direction` (`"x" \| "y"`)   |
-| `PolygonCollider2D` | `points` → the **convex hull** of the list                    |
-| `EdgeCollider2D`    | `points` → an open chain; infinitely thin                     |
+| Collider | Geometry |
+| --- | --- |
+| `BoxCollider2D` | `size` — an axis-aligned rectangle |
+| `CircleCollider2D` | `radius`; the larger scale axis wins |
+| `CapsuleCollider2D` | `radius`, `height` (tip to tip), `direction` (`"x" \| "y"`) |
+| `PolygonCollider2D` | `points` → the **convex hull** of the list |
+| `EdgeCollider2D` | `points` → an open chain; infinitely thin |
 | `TilemapCollider2D` | the `Tilemap` on the same entity, or assigned `collisionData` |
 
 `CharacterController2D` — `shape` (`"capsule" | "box"`), `radius`, `height`, `offset`, `slopeLimit`
