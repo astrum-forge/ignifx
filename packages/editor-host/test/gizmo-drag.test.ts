@@ -10,7 +10,7 @@ import { GizmoDragRelay } from "../src/scene/gizmo-drag.js";
 import type { App } from "@ignifx/core";
 
 /**
- * A gizmo drag's notifications (editor E9b): every drag opens with a `transformDragging` and closes
+ * A gizmo drag's notifications: every drag opens with a `transformDragging` and closes
  * with a `transformDragged`, even one that ends where it started, so the editor can hold its undo
  * from pointer-down to pointer-up.
  */

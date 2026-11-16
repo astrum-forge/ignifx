@@ -344,7 +344,7 @@ describe("describeRegisteredSchemas", () => {
     expect(described["acme/Beacon"]).not.toHaveProperty("requires");
   });
 
-  it("writes null, not the parent's id, for a required subclass that is not registered (E33b)", () => {
+  it("writes null, not the parent's id, for a required subclass that is not registered", () => {
     // The subclass inherits Beacon's typeId; naming Beacon would tell an editor the requirement is
     // met by a Beacon, while addComponent adds the subclass next to it.
     class Brighter extends Beacon {}
