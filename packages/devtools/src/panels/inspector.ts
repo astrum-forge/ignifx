@@ -46,9 +46,9 @@ const TRANSFORM_DECIMALS = 4;
  * schema-driven editor has no declaration on the class to build from; core's `transformSchema()`
  * describes the file's local values for tools outside the engine. It is also the one component
  * every entity has and the first thing anyone opens the inspector to change, so the panel builds it
- * by hand and writes through the documented accessors: `transform.localPosition` and friends are
- * *live views over the Lite node*, which is why an edit moves the entity in the same frame rather
- * than at the next sync.
+ * by hand and writes through the documented accessors: `transform.localPosition` and friends are *live
+ * views over the Lite node*, which is why an edit moves the entity in the same frame rather than at
+ * the next sync.
  *
  * `localEulerAngles` is a computed value rather than a live view, so its row assigns the whole
  * vector; the other two are mutated in place.

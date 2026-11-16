@@ -21,9 +21,9 @@ import type { Storage } from "../../src/storage/storage.js";
 import type { TestWorld } from "../support/create-test-world.js";
 
 /**
- * A save game travels out through `serializeScene`, through `app.storage`, and back into a
- * *different* world, byte for byte — including an instanced prefab whose root carries overrides —
- * and a save whose prefab has changed since it was written behaves the way
+ * A save game travels out through `serializeScene`, through `app.storage`, and back into a *different*
+ * world, byte for byte — including an instanced prefab whose root carries overrides — and a save
+ * whose prefab has changed since it was written behaves the way
  * `06-serialization-and-scene-format.md` §2 says it does.
  */
 
