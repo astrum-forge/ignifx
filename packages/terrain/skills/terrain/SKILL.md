@@ -296,7 +296,9 @@ ignifx import heightmap island.png island.r16
 ```
 
 An 8-bit source converts, and the command says on stderr that the heights are already terraced
-(`IGX-1406`). Loading one warns with `IGX-1603`.
+(`IGX-1406`). Loading one warns with `IGX-1603`. The `ignifx` command is an executable of `@ignifx/cli`, which the templates do not install: add
+`@ignifx/cli` to the project's dev dependencies and run `pnpm exec ignifx …`, or run it once with
+`npx --package=@ignifx/cli ignifx …`.
 
 ## File formats
 

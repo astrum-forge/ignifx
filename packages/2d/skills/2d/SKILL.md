@@ -226,7 +226,9 @@ if (canvas instanceof HTMLCanvasElement) {
 A level kept in a scene file gets its objects once, as entities, from the command line. Each
 becomes an entity named after the object and tagged with its type, at the object's centre, and the
 map's `objects` field is deleted. Add the components each type needs afterwards; the command prints
-every object's size and properties for that.
+every object's size and properties for that. The `ignifx` command is an executable of `@ignifx/cli`, which the templates do not install: add
+`@ignifx/cli` to the project's dev dependencies and run `pnpm exec ignifx …`, or run it once with
+`npx --package=@ignifx/cli ignifx …`.
 
 ```sh
 ignifx import tilemap assets/level.tilemap.json assets/scenes/main.scene.json --parent Level
