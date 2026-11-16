@@ -4,9 +4,8 @@ import type { ConcreteComponentType, Extension, SettingsInput } from "@ignifx/co
 import type { EditorHost } from "@ignifx/editor-host";
 
 /**
- * The ignifx editor's scene view over a template, headless (ignifx-editor plan asks E16 and E22):
- * a host built from the template's own extensions, settings and scripts, and the editor's end of
- * its port.
+ * The ignifx editor's scene view over a template, headless: a host built from the template's own
+ * extensions, settings and scripts, and the editor's end of its port.
  */
 
 /** The origin the test editor is served from. */

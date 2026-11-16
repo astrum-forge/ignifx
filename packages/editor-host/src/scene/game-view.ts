@@ -1,8 +1,8 @@
 /**
- * The Game panel's view (engine ask E8): the open scene through its own main camera, rendered into
- * a render texture beside the editor camera's frame (`setGameView`, `gameViewFrame`). A 2D scene's
- * `Camera2D` is drawn by a second sprite pass instead (`../lite/sprite-game-view.ts`). Neither waits
- * on an animation frame for long: a hidden host gets none, so the renderer draws the frame itself.
+ * The Game panel's view: the open scene through its own main camera, rendered into a render texture
+ * beside the editor camera's frame (`setGameView`, `gameViewFrame`). A 2D scene's `Camera2D` is
+ * drawn by a second sprite pass instead (`../lite/sprite-game-view.ts`). Neither waits on an
+ * animation frame for long: a hidden host gets none, so the renderer draws the frame itself.
  */
 
 import { Camera, RENDERING_SETTINGS_SECTION } from "@ignifx/core";

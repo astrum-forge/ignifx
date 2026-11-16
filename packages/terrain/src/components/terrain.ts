@@ -71,7 +71,7 @@ const SPLAT_PRIORITY = 500;
 
 /**
  * What a `HeightfieldCollider` needs, by data: `@ignifx/terrain` never imports `@ignifx/physics`
- * (plan §5.4), so this is the shape rather than the type.
+ * (ADR-0026), so this is the shape rather than the type.
  *
  * @public
  */

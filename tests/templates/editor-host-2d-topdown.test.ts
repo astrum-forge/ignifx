@@ -8,9 +8,9 @@ import { TOPDOWN, topdownScripts } from "./topdown-app.js";
 import type { SceneFile } from "@ignifx/core";
 
 /**
- * The ignifx editor's scene view over `templates/2d-topdown` (ignifx-editor plan ask E22): the host
- * built from the template's own extensions, settings and scripts reports the level as 2D, from the
- * project's `twoD.mode: "sprite"`, so the editor need not guess it from the level's cameras.
+ * The ignifx editor's scene view over `templates/2d-topdown`: the host built from the template's
+ * own extensions, settings and scripts reports the level as 2D, from the project's
+ * `twoD.mode: "sprite"`, so the editor need not guess it from the level's cameras.
  */
 
 /** The level's address. */

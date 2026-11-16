@@ -252,7 +252,7 @@ class StandInSpriteAnimator extends Component.define({}) {
   }
 }
 
-describe("sampleSpriteAnimation through a live headless host (engine ask E51)", () => {
+describe("sampleSpriteAnimation through a live headless host", () => {
   let live: LiveHost | null = null;
 
   afterEach(async () => {

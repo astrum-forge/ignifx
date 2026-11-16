@@ -27,7 +27,7 @@ export class Follow extends Component.define({ target: entityRef<Entity>() }) {
   static typeId = "game/Follow";
 }
 
-/** The fixture's `game/Regen`, whose schema description lists `requires` (engine ask E33). */
+/** The fixture's `game/Regen`, whose schema description lists `requires`. */
 export class Regen extends Component.define({ perSecond: f32(1) }) {
   static typeId = "game/Regen";
 
@@ -36,8 +36,7 @@ export class Regen extends Component.define({ perSecond: f32(1) }) {
 
 /**
  * A subclass of the fixture's `game/Health`: the engine counts it as the `Health` that
- * {@link Regen} requires, and its schema description lists `game/Health` in `extends` (engine ask
- * E44).
+ * {@link Regen} requires, and its schema description lists `game/Health` in `extends`.
  */
 export class ArmoredHealth extends Health {
   static override typeId = "game/ArmoredHealth";

@@ -1,5 +1,5 @@
 /**
- * The scene view's grid (engine ask E31), drawn with Babylon Lite's `createGridMaterial`. Every Lite
+ * The scene view's grid, drawn with Babylon Lite's `createGridMaterial`. Every Lite
  * claim here was read from the pinned `@babylonjs/lite` 1.34 `index.d.ts` and
  * `lib/material/grid/grid-material.js`.
  *

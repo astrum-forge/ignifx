@@ -33,7 +33,7 @@ import type { JsonObject } from "../../src/schema/json.js";
 import type { FieldOptions } from "../../src/schema/types.js";
 
 /**
- * Engine ask E19: the descriptions `describeSchema`, `describeRegisteredSchemas` and `toJsonSchema`
+ * The descriptions `describeSchema`, `describeRegisteredSchemas` and `toJsonSchema`
  * publish carry every piece of inspector metadata the declarations hold, so an inspector outside
  * the engine (the ignifx editor) can honour it.
  */
@@ -331,7 +331,7 @@ describe("describeRegisteredSchemas", () => {
   });
 
   it("lists what a class requires, as type ids, and nothing for a class that requires nothing", () => {
-    // Engine ask E33 (audit defect B2): the editor adds required components itself, so it has to see them.
+    // The editor adds required components itself, so it has to see them.
     class Anonymous extends Component {}
     class Needy extends Component {
       static typeId = "mygame/Needy";

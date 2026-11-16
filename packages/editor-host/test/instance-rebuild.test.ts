@@ -31,7 +31,7 @@ import type {
 
 /**
  * Rebuilding a prefab instance in a headless scene view, from the override list the document
- * holds: after the prefab changes on disk (engine ask E23), and for `setOverride`, whose `index` is
+ * holds: after the prefab changes on disk, and for `setOverride`, whose `index` is
  * relative to the document's order. A build problem met on the way (a stale override, a reference
  * that does not resolve) reaches the editor as a `log` warning, as a reopen's would, and in the
  * `warnings` of the `applyOps` answer whose op met it.
@@ -263,7 +263,7 @@ async function postInstance(): Promise<unknown> {
   return read.entities[0]?.instance;
 }
 
-describe("an asset reload of a prefab, headless (E23)", () => {
+describe("an asset reload of a prefab, headless", () => {
   it("rebuilds the instance from the document's override list, at the new prefab", async () => {
     // The bulb's override equals the prefab's value, so a list the serializer recomputes would
     // drop it and the bulb would follow the edited prefab.

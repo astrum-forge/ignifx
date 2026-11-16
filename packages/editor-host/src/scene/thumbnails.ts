@@ -1,7 +1,7 @@
 /**
- * `renderThumbnail` (engine ask E8): a model, prefab or material rendered on its own, in a second
- * app the host keeps for the purpose, through `app.renderer.renderToTexture`; a sprite atlas or an
- * image drawn from its decoded image, fitted in the square on a transparent background.
+ * `renderThumbnail`: a model, prefab or material rendered on its own, in a second app the host
+ * keeps for the purpose, through `app.renderer.renderToTexture`; a sprite atlas or an image drawn
+ * from its decoded image, fitted in the square on a transparent background.
  *
  * The stage is a separate app on a 1x1 `OffscreenCanvas`, built from the project's own options, so
  * a thumbnail never shows the open document, never lights it, and is never lit by it. It is

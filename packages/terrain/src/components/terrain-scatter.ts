@@ -42,7 +42,7 @@ const HEIGHT_LIMIT = 1e9;
 const LOD_BAND = 6;
 
 /**
- * Builds the `TerrainScatter` field declarations (plan §5.5).
+ * Builds the `TerrainScatter` field declarations.
  *
  * @returns The schema.
  */

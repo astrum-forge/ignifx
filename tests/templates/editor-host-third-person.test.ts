@@ -10,9 +10,9 @@ import type { SceneFile } from "@ignifx/core";
 import type { EditorHost } from "@ignifx/editor-host";
 
 /**
- * The ignifx editor's scene view over `templates/3d-third-person` (ignifx-editor plan ask E16): the
- * host built from the template's own extensions, settings and scripts opens the level from the
- * object the editor sends, and reads every record back as the file has it.
+ * The ignifx editor's scene view over `templates/3d-third-person`: the host built from the
+ * template's own extensions, settings and scripts opens the level from the object the editor sends,
+ * and reads every record back as the file has it.
  */
 
 /** The level's address. */
@@ -46,7 +46,7 @@ describe("the editor's scene view over 3d-third-person", () => {
     const { host, editor } = await sceneView();
 
     const opened = await editor.request("openScene", { file: FILE, address: MAIN_SCENE });
-    // A 3D level: the host says so (engine ask E22).
+    // A 3D level: the host says so.
     expect(opened).toEqual({ entityCount: 49, warnings: [], viewMode: "3d" });
     const sceneOpened = await editor.take((message) => message["method"] === "sceneOpened");
     expect(sceneOpened["params"]).toEqual({

@@ -50,8 +50,8 @@ export function viewSurfaceOf(surface: HTMLCanvasElement | OffscreenCanvas): Vie
 
 /**
  * Converts a `pick` point to the backing-store pixels `app.renderer.pickAsync` takes (protocol 0.3,
- * "The pick unit rule"; engine ask E3). This is the host's one conversion: the renderer converts
- * on to the CSS pixels Lite's picker wants.
+ * "The pick unit rule"). This is the host's one conversion: the renderer converts on to the CSS
+ * pixels Lite's picker wants.
  *
  * @param params - The point and its unit.
  * @param surface - The canvas's sizes.

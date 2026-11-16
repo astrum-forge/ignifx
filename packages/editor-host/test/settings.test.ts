@@ -15,7 +15,7 @@ import { settingsSet } from "../src/scene/settings.js";
 import type { App, Extension } from "@ignifx/core";
 
 /**
- * Engine ask E21: `describeSettings` hands the editor core's `describeSettings(app)`, each section's
+ * `describeSettings` hands the editor core's `describeSettings(app)`, each section's
  * JSON Schema, and the values the app resolved, in the settings form.
  */
 

@@ -1,6 +1,6 @@
 /**
- * The play view's `sendInput` (engine ask E49): synthetic key and pointer events queued into the
- * game's own `app.input`, the way headless tests drive the engine. The host does not depend on
+ * The play view's `sendInput`: synthetic key and pointer events queued into the game's own
+ * `app.input`, the way headless tests drive the engine. The host does not depend on
  * `@ignifx/input`: it finds `app.input` by name and calls `simulateEvent` by shape, as it reaches
  * `app.twoD` (`./scene/view-2d.ts`). Nothing here dispatches a DOM event or touches the editor.
  */

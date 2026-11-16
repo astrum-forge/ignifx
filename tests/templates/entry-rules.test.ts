@@ -4,9 +4,9 @@ import { describe, expect, it } from "vitest";
 import { templatePaths } from "./headless-app.js";
 
 /**
- * The entry rules every editor-ready template keeps (ignifx-editor plan, engine ask E2): the level
- * is a scene file rather than `src/level.ts`, the extension list is `src/extensions.ts`, and nothing
- * the entry imports reaches a script at run time except through `virtual:ignifx/scripts`.
+ * The entry rules every editor-ready template keeps: the level is a scene file rather than
+ * `src/level.ts`, the extension list is `src/extensions.ts`, and nothing the entry imports reaches
+ * a script at run time except through `virtual:ignifx/scripts`.
  */
 
 /** The editor-ready templates. */
@@ -79,9 +79,9 @@ describe.each(TEMPLATES)("%s's entry", (name) => {
 describe.each(TEMPLATES)("%s's scene", (name) => {
   const { sourceDir } = templatePaths(name);
 
-  // ignifx-editor plan, engine ask E15: the editor's scene view loads the scene with no game code
-  // before it, so nothing under `src/` may publish an asset the scene names; a primitive mesh is a
-  // `.mesh.json` file rather than something `main.ts` publishes with `assets.register`.
+  // The editor's scene view loads the scene with no game code before it, so nothing under `src/`
+  // may publish an asset the scene names; a primitive mesh is a `.mesh.json` file rather than
+  // something `main.ts` publishes with `assets.register`.
   it("needs no asset published in code", () => {
     expect(existsSync(join(sourceDir, "level-meshes.ts"))).toBe(false);
     const publishers = sources(sourceDir).filter((file) => /\bassets\.register\(/u.test(readFileSync(file, "utf8")));

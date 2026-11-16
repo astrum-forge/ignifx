@@ -9,10 +9,10 @@ import type { EditorPeer } from "./support/editor.js";
 import type { ConcreteComponentType, FetchLike, SceneFile, SceneFileOverride } from "@ignifx/core";
 
 /**
- * A script's hot reload that changes a field's default, in a headless scene view (engine ask E25):
- * the document's omitted fields follow the new default, the fields it sets and the overrides it
- * holds do not, a prefab instance nested in another keeps its own overrides, and nothing is rebuilt
- * when no default changed or no document is open. The browser suite runs the same on a canvas.
+ * A script's hot reload that changes a field's default, in a headless scene view: the document's
+ * omitted fields follow the new default, the fields it sets and the overrides it holds do not, a
+ * prefab instance nested in another keeps its own overrides, and nothing is rebuilt when no default
+ * changed or no document is open. The browser suite runs the same on a canvas.
  */
 
 /** A type the host has never seen, for a hot reload that registers it. */
@@ -184,7 +184,7 @@ async function reload(running: EditorHost, types: readonly ConcreteComponentType
   await call("getSchemas");
 }
 
-describe("changed defaults after a script's hot reload, headless (E25)", () => {
+describe("changed defaults after a script's hot reload, headless", () => {
   it("follows the document's omitted fields, and keeps what it sets and overrides", async () => {
     const running = await sceneView(nestedStreet);
     await call("applyOps", {

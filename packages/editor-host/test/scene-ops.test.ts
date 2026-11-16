@@ -412,7 +412,7 @@ describe("applyOps on a live world", () => {
 });
 
 describe("readBack on a live world", () => {
-  it("shows a change made outside an op, after an earlier readBack (E40)", async () => {
+  it("shows a change made outside an op, after an earlier readBack", async () => {
     const { app, peer } = await opened();
     expect((await readAll(peer)).byUid.get("A")?.components?.[0]?.props).toEqual({ max: 10, regenPerSecond: 0 });
     // What a "run" system or a `runInEditMode` script does between two requests.

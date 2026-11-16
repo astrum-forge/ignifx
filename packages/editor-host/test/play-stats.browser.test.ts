@@ -6,9 +6,9 @@ import { connect, EDITOR_ORIGIN } from "./support/editor.js";
 import type { PlayStats } from "../src/protocol/index.js";
 
 /**
- * `playStats` on a game that renders to a real WebGPU canvas (engine ask E25): the rate and the
- * frame time come from the frames the render loop recorded in `app.diagnostics`, whether or not game
- * time is paused, and stop with the loop; the entity count is the world's.
+ * `playStats` on a game that renders to a real WebGPU canvas: the rate and the frame time come from
+ * the frames the render loop recorded in `app.diagnostics`, whether or not game time is paused, and
+ * stop with the loop; the entity count is the world's.
  */
 
 const cleanups: (() => void)[] = [];
@@ -35,7 +35,7 @@ async function frames(count: number): Promise<void> {
   }
 }
 
-describe("playStats in a rendering game (E25)", () => {
+describe("playStats in a rendering game", () => {
   it("reports the render loop's rate and the world's entities, and no rate once stopped", async () => {
     const canvas = document.createElement("canvas");
     canvas.width = 64;

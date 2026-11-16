@@ -1,7 +1,7 @@
 /**
  * Which frame of a sprite clip shows at a given time: the same rule `SpriteAnimator` plays by, as a
- * pure function, so an editor can scrub a clip by time (engine ask E51) and a test can check the
- * mapping without an app.
+ * pure function, so an editor can scrub a clip by time and a test can check the mapping without an
+ * app.
  */
 
 /**

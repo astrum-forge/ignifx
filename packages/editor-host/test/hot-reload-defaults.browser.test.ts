@@ -9,9 +9,9 @@ import type { EditorPeer } from "./support/editor.js";
 import type { FetchLike } from "@ignifx/core";
 
 /**
- * A script's hot reload that changes a field's default, in a scene view on a real WebGPU canvas
- * (engine ask E25): every field the document leaves out takes the new default in the live world,
- * a field it sets keeps its value, and a prefab instance keeps its prefab's values and its overrides.
+ * A script's hot reload that changes a field's default, in a scene view on a real WebGPU canvas:
+ * every field the document leaves out takes the new default in the live world, a field it sets
+ * keeps its value, and a prefab instance keeps its prefab's values and its overrides.
  */
 
 /** The canvas size, in pixels. */
@@ -120,7 +120,7 @@ async function reloadBrighter(running: EditorHost): Promise<void> {
   await call("readBack", { entities: [] });
 }
 
-describe("changed defaults after a script's hot reload (E25)", () => {
+describe("changed defaults after a script's hot reload", () => {
   it("gives the fields the document leaves out the new default, and keeps the ones it sets", async () => {
     const running = await sceneView();
     expect(brightness(running, "OMITS-LAMP")).toBe(1);

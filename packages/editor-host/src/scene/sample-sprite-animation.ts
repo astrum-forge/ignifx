@@ -1,6 +1,6 @@
 /**
- * `sampleSpriteAnimation`: the scene view shows one frame of a clip on an entity's `SpriteAnimator`
- * (engine ask E51), through `@ignifx/2d`'s `SpriteAnimator.sample` and `sampleTime`. The host
+ * `sampleSpriteAnimation`: the scene view shows one frame of a clip on an entity's
+ * `SpriteAnimator`, through `@ignifx/2d`'s `SpriteAnimator.sample` and `sampleTime`. The host
  * depends on core only, so it finds the `SpriteAnimator` by its type id and calls them by shape.
  */
 

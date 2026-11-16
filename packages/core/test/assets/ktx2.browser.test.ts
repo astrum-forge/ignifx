@@ -16,7 +16,7 @@ import type { TextureAsset } from "../../src/render/texture-asset.js";
 import type { BrowserApp } from "../render/support/browser-harness.js";
 
 /**
- * KTX2 textures through `app.assets`, on a real device (engine ask E13).
+ * KTX2 textures through `app.assets`, on a real device.
  *
  * The fixture is one 32×32 image with four solid quadrants, as a PNG and as three `.ktx2` files from
  * the editor's importer (`tests/fixtures/assets/ATTRIBUTION.md`): ETC1S and Zstandard UASTC

@@ -7,7 +7,7 @@ import { createSidescrollerApp, SIDESCROLLER } from "./sidescroller-app.js";
 import type { App, Entity, MemorySink } from "@ignifx/core";
 
 /**
- * `templates/2d-sidescroller` is editor-ready (ignifx-editor plan, engine ask E2): its level is
+ * `templates/2d-sidescroller` is editor-ready: its level is
  * `assets/scenes/main.scene.json`, loaded by a boilerplate `main.ts`. `entry-rules.test.ts` checks
  * the entry's imports for all four templates.
  */

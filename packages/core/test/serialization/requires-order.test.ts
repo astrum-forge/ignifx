@@ -9,8 +9,8 @@ import type { SceneFileComponent } from "../../src/serialization/scene-file.js";
 import type { TestWorld } from "../support/create-test-world.js";
 
 /**
- * Audit defect B2 (engine ask E33): a file may list a component before the component its class
- * `requires`. Loading it must attach the file's own record, not a second, auto-added instance.
+ * A file may list a component before the component its class `requires`. Loading it must attach the
+ * file's own record, not a second, auto-added instance.
  */
 
 /** A single-instance component other classes require, with a prop the file sets. */

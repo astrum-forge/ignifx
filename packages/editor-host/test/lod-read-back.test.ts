@@ -11,10 +11,10 @@ import type { SceneOp } from "../src/protocol/index.js";
 import type { App, SceneFile, SceneFileEntity, Vec3Like } from "@ignifx/core";
 
 /**
- * A `LodGroup` in the scene view (engine ADR-0028; editor audit defect B1, E41): in a game the LOD
- * switch writes `MeshRenderer.enabled`, which scene files save, so in the scene view it is
- * display-only. The editor camera's distance picks the one level drawn, `readBack` does not change
- * as the camera moves, and removing the group neither switches its levels off nor leaves any hidden.
+ * A `LodGroup` in the scene view (ADR-0028): in a game the LOD switch writes
+ * `MeshRenderer.enabled`, which scene files save, so in the scene view it is display-only. The
+ * editor camera's distance picks the one level drawn, `readBack` does not change as the camera
+ * moves, and removing the group neither switches its levels off nor leaves any hidden.
  */
 
 let live: LiveHost | null = null;

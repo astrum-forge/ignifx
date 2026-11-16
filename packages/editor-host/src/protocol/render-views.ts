@@ -1,9 +1,9 @@
 // A copy of `packages/editor-protocol/src/render-views.ts` from `astrum-forge/ignifx-editor` (protocol 0.3).
 // Below this comment it is byte-identical to that file, but for the link rule in `./index.ts`.
 /**
- * Protocol 0.3, additive (engine ask E8): the scene host's second views, rendered through the
- * engine's render textures. The Game panel's view is the document's own camera rendered beside the
- * editor camera (`setGameView`, `gameViewFrame`); a thumbnail is an asset rendered on its own
+ * Protocol 0.3, additive: the scene host's second views, rendered through the engine's render
+ * textures. The Game panel's view is the document's own camera rendered beside the editor camera
+ * (`setGameView`, `gameViewFrame`); a thumbnail is an asset rendered on its own
  * (`renderThumbnail`). Both answer images in the shape of `screenshot`'s.
  */
 import { isRecord } from "./rpc.js";

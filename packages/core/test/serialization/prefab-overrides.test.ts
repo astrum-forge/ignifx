@@ -11,7 +11,7 @@ import type { Entity } from "../../src/entity/entity.js";
 import type { SceneFile, SceneFileInstance, SceneFileOverride } from "../../src/serialization/scene-file.js";
 import type { TestWorld } from "../support/create-test-world.js";
 
-/** Prefab apply and revert (`02-scene-graph.md` §6, editor ask E7). */
+/** Prefab apply and revert (`02-scene-graph.md` §6). */
 
 const PREFAB = "prefabs/enemy.prefab.json";
 

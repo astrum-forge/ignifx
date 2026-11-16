@@ -13,7 +13,7 @@ import {
 import type { BrowserApp } from "../render/support/browser-harness.js";
 
 /**
- * Compressed glTF through `app.assets`, on a real device (engine ask E9).
+ * Compressed glTF through `app.assets`, on a real device.
  *
  * The fixtures are `Box.glb` compressed with `KHR_draco_mesh_compression` and with
  * `EXT_meshopt_compression` (`tests/fixtures/assets/ATTRIBUTION.md`). The manifest lists the

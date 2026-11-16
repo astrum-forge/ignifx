@@ -20,8 +20,8 @@ import { createAssetHarness } from "./support/harness.js";
 import type { AssetHarness } from "./support/harness.js";
 
 /**
- * How the texture loader picks Lite's loader for a file, and where it points Lite's decoders
- * (engine ask E13). The GPU half is `ktx2.browser.test.ts`.
+ * How the texture loader picks Lite's loader for a file, and where it points Lite's decoders.
+ * The GPU half is `ktx2.browser.test.ts`.
  */
 
 describe("textureContainerOf", () => {

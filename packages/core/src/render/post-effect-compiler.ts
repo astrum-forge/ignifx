@@ -183,7 +183,7 @@ interface UniformLayout {
  * The rules are the WGSL specification's: a member's offset is its predecessor's end rounded up to
  * the member's alignment, and the struct's size is the last member's end rounded up to the struct's
  * alignment — the largest member alignment, and in the **uniform** address space never less than
- * 16. `vec3<f32>` is the one that catches people out: 16-aligned, 12 wide (plan §3.4).
+ * 16. `vec3<f32>` is the one that catches people out: 16-aligned, 12 wide.
  *
  * @param members - The members, in declaration order.
  * @returns The layout.
