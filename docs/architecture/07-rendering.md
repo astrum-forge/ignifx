@@ -423,16 +423,16 @@ What ignifx would ask Babylon Lite for, each checked against the pinned version'
 
 Rendering:
 
-- **Linear HDR output.** A scene or material switch that leaves PBR output linear and unclamped, so one final pass tone maps. Today: the save-and-restore plugins of §2.7.
-- **Single post-composition plugin point.** `CUSTOM_FRAGMENT_BEFORE_FINALCOLORCOMPOSITION` is injected at both `AI` and `NI`; a single point after all composition and before fog, or documentation of the double injection. Today: plugins guard against running twice (§2.7).
-- **Vertex-data plugin bridge.** A bridge for `enablePbrMaterialPluginVertexData` that keeps the `AI` injection, so a plugin can have vertex-visible uniforms, samplers and helpers without breaking the others. Today: static `displace`, WGSL constants for lightmap placement (§2.8, §2.15).
-- **Geometry attachments as `Texture2D`.** `createGeometryRendererTask` exposes its attachments as `RenderTarget`s only, which compute and effect bindings cannot take. Today: two full-screen copies per frame (§2.12).
-- **Velocity for moving PBR meshes.** The PBR geometry view writes camera motion only. Today: TAA relies on its clamp for a moving PBR mesh (§2.12, §2.13).
-- **TAA with reprojection.** `createTaaPostProcessTask` resets on camera motion and reads no velocity. Today: ignifx's own TAA (§2.13).
+- **Linear HDR output.** A scene or material switch that leaves PBR output linear and unclamped, so one final pass tone maps. Workaround: the save-and-restore plugins of §2.7.
+- **Single post-composition plugin point.** `CUSTOM_FRAGMENT_BEFORE_FINALCOLORCOMPOSITION` is injected at both `AI` and `NI`; a single point after all composition and before fog, or documentation of the double injection. Workaround: each plugin guards against running twice (§2.7).
+- **Vertex-data plugin bridge.** A bridge for `enablePbrMaterialPluginVertexData` that keeps the `AI` injection, so a plugin can have vertex-visible uniforms, samplers and helpers without breaking the others. Workaround: static `displace`, WGSL constants for lightmap placement (§2.8, §2.15).
+- **Geometry attachments as `Texture2D`.** `createGeometryRendererTask` exposes its attachments as `RenderTarget`s only, which compute and effect bindings cannot take. Workaround: two full-screen copies per frame (§2.12).
+- **Velocity for moving PBR meshes.** The PBR geometry view writes camera motion only. Workaround: TAA relies on its clamp for a moving PBR mesh (§2.12, §2.13).
+- **TAA with reprojection.** `createTaaPostProcessTask` resets on camera motion and reads no velocity. Workaround: ignifx's own TAA (§2.13).
 - **Soft shadows.** A PCSS or contact-hardening option; cascaded shadows filter with a fixed PCF kernel.
 - **Area lights** and **point-light shadows.** Neither exists; the schema rejects both (§2.2).
-- **Probe-set dispose.** `createPbrLocalEnvironmentProbeSet` has no dispose. Today: the runtime destroys a replaced set's private GPU objects (§2.15).
-- **Light and shadow bindings for shader materials**, and a **`time` system uniform**. Today: shader materials are unlit and ignifx uploads `time` itself (§2.8).
+- **Probe-set dispose.** `createPbrLocalEnvironmentProbeSet` has no dispose. Workaround: the runtime destroys a replaced set's private GPU objects (§2.15).
+- **Light and shadow bindings for shader materials**, and a **`time` system uniform**. Workaround: shader materials are unlit and ignifx uploads `time` itself (§2.8).
 - **Device-loss recovery of PCF shadows and glTF image-based lights** (§4).
 - **Mesh removal without disposal.** A mesh leaving its last scene is disposed for good (§2.3).
 - **Basis transcoder URL setter.** `loadBasisTexture2D` hard-codes a CDN URL, so ignifx refuses `.basis` (`05-assets-and-loading.md` §5).
@@ -440,5 +440,5 @@ Rendering:
 Loop and physics:
 
 - **`onBeforeRender` disposer.** `onBeforeRender` returns nothing; ignifx guards its callback with a flag (ADR-0003).
-- **Public physics step.** A step function that does not go through a scene's callback list. Today: a headless simulation scene stepped with `stepScene` (`09-physics.md` §1, ADR-0003).
+- **Public physics step.** A step function that does not go through a scene's callback list. Workaround: a headless simulation scene stepped with `stepScene` (`09-physics.md` §1, ADR-0003).
 - **Per-body damping, gravity factor, sleep thresholds and wake-up.** Lite exposes none of them, so `Rigidbody` has no such fields (`09-physics.md` §2).

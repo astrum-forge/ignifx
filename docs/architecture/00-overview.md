@@ -154,4 +154,4 @@ These hold for the pinned Babylon Lite version (`pnpm-workspace.yaml` catalog); 
 - A visual editor inside the engine. The editor is a separate product (`astrum-forge/ignifx-editor`) built on the runtime through `@ignifx/editor-host` (`17-editor-host.md`) and developed alongside the engine (ADR-0032). The runtime is editor-ready (schemas, inspector metadata, stable ids, edit mode) and stays editor-free: nothing in a game depends on the editor.
 - Multiple worlds per app, and multiple simultaneous render cameras on screen (multi-viewport). One camera draws the canvas; others can render into textures through Lite render tasks (`07-rendering.md` §2.11).
 - Networking. Deterministic fixed-step simulation is designed so that lockstep or server-authoritative networking can be added as an extension later.
-- WebXR (Lite's XR path is not yet runnable in shipping browsers).
+- WebXR.
