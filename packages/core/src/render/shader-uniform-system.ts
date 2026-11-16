@@ -126,9 +126,8 @@ export class ShaderUniformSystem implements System {
    * @remarks
    * The direction is the entity's world forward axis, read out of the world matrix's third column —
    * the same axis `Light` itself writes onto the Lite light
-   * (`docs/architecture/07-rendering.md` §2.2) — and normalised, which the plan's §3.1 promises and
-   * a scaled light entity would otherwise break. Lite's own PBR normalises in WGSL, so the two
-   * agree.
+   * (`docs/architecture/07-rendering.md` §2.2) — and normalised, which a scaled light entity would
+   * otherwise break. Lite's own PBR normalises in WGSL, so the two agree.
    *
    * @param world - The world being rendered.
    * @returns `true` when a light supplied the values; `false` after zeroing them.
@@ -161,7 +160,7 @@ export class ShaderUniformSystem implements System {
     const x = matrix[FORWARD_COLUMN] ?? 0;
     const y = matrix[FORWARD_COLUMN + 1] ?? 0;
     const z = matrix[FORWARD_COLUMN + 2] ?? 1;
-    // The plan promises a unit vector, and a scaled light entity leaves the column scaled.
+    // The uniform is a unit vector, and a scaled light entity leaves the column scaled.
     const length = Math.sqrt(x * x + y * y + z * z);
     const scale = length > 0 ? 1 / length : 0;
     frame[DIRECTION_OFFSET] = x * scale;

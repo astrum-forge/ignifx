@@ -15,7 +15,7 @@
       "meanMs": 0.1624,
       "rmePercent": 0.53
     },
-    "note": "`hello-cube` and `thousand-entities` are the headless `vitest bench` scenes: ops/sec on one machine, reported and not asserted. `templates` is the Phase 12 gate and IS asserted, in two places: `tests/visual/tests/frame-time.spec.ts` measures each template in Chromium on SwiftShader at 1280x720 and compares the median against `budgetMs`, and `benchmarks/template-frame-time.test.ts` asserts every recorded row against the coding-standards §7 budget. The live half is the Playwright `frame-budget` project (`pnpm test:frame-budget`), and CI runs it on `macos-latest`: these ceilings were recorded on that machine class, and GitHub's `ubuntu-latest` measures the runner rather than the engine -- 2.0 ms against a 1.0 ms ceiling for 2d-topdown, and neither 3D template able to finish 420 frames inside the 240 s per-test timeout (ADR-0009, 2026-09-07). The data half runs on every runner. First measured on `macos-latest` 2026-09-07: medians of 0.4, 0.4, 1.2 and 0.9 ms against ceilings of 1.0, 1.0, 2.0 and 2.0 -- the runner is 1.3x to 1.7x slower than the recording machine, and 3d-third-person has the least headroom at 1.7x, so it is the row to re-measure rather than relax if that job goes red with no engine change behind it.",
+    "note": "`hello-cube` and `thousand-entities` are the headless `vitest bench` scenes: ops/sec on one machine, reported and not asserted. `templates` is the template frame-time gate and IS asserted, in two places: `tests/visual/tests/frame-time.spec.ts` measures each template in Chromium on SwiftShader at 1280x720 and compares the median against `budgetMs`, and `benchmarks/template-frame-time.test.ts` asserts every recorded row against the coding-standards §7 budget. The live half is the Playwright `frame-budget` project (`pnpm test:frame-budget`), run locally and not in CI (coding standards §12): GitHub's `ubuntu-latest` measures the runner rather than the engine -- 2.0 ms against a 1.0 ms ceiling for 2d-topdown, and neither 3D template able to finish 420 frames inside the 240 s per-test timeout (measured 2026-09-07). The data half runs on every runner. Measured on `macos-latest` on 2026-09-07: medians of 0.4, 0.4, 1.2 and 0.9 ms against ceilings of 1.0, 1.0, 2.0 and 2.0 -- that runner is 1.3x to 1.7x slower than the recording machine, and 3d-third-person has the least headroom at 1.7x, so it is the row to re-measure rather than relax if the project goes red with no engine change behind it.",
     "swiftShaderFactor": 1,
     "templates": {
       "2d-topdown": {
@@ -69,7 +69,7 @@
       "medianMs": 0.0314,
       "p95Ms": 0.0359,
       "budgetMs": 0.5,
-      "note": "Headless CPU per frame for one ParticleSystem holding 10,000 live particles at 2,000 emitted per second, 600 measured frames after 600 warm-up (macOS 25.5 arm64, Node 25.2.1). The plan's §6.3 budget is 0.5 ms and the median is 0.031 ms, about 16x inside it. Headless there is no device, so this is the CPU half the design is about: 34 records written into the ring per frame plus one census walk of the live tail. The upload itself is one updateStorageBuffer of 34 x 48 bytes, measured at about 0.1 ms per KB in spike S0.1. Reported, not asserted; the asserted half is the heap row below."
+      "note": "Headless CPU per frame for one ParticleSystem holding 10,000 live particles at 2,000 emitted per second, 600 measured frames after 600 warm-up (macOS 25.5 arm64, Node 25.2.1). The budget is 0.5 ms and the median is 0.031 ms, about 16x inside it. Headless there is no device, so this is the CPU half the design is about: 34 records written into the ring per frame plus one census walk of the live tail. The upload itself is one updateStorageBuffer of 34 x 48 bytes, measured at about 0.1 ms per KB (ADR-0025). Reported, not asserted; the asserted half is the heap row below."
     }
   },
   "heap": {
@@ -101,7 +101,7 @@
       "steps": 600,
       "measuredBytes": -9032,
       "ceilingBytes": 131072,
-      "note": "A 513x513 field cut into 64 chunks of 64 m, each with four levels of detail. Three runs on 2026-09-14 (macOS 25.5 arm64, Node 25.2.1) measured -9680, -9032 and -9680 bytes after a 600-step warm-up; every reading is negative, so the row records the largest. The ceiling is 128 KiB, the same as instancing-20k: a frame is 64 distance tests, 64 frustum tests and one visibility write per chunk, all over pre-allocated typed arrays. The plan's other two terrain-512 numbers are timings rather than heap, so they are recorded here rather than asserted by alloc.test.ts: `benchmarks/scenes/terrain-512.ts` exports measureTerrain512(), and on the same machine it measured a LOD pass of 0.0095-0.0107 ms per frame (plan target 0.05 ms), 10,000 world-space Terrain.heightAt calls in 0.87-0.92 ms (target 1 ms), and a load-time build of 64 chunks x 4 LODs with skirts in 29.3-30.4 ms (spike S0.3 recorded about 40 ms). packages/terrain/test/performance.test.ts asserts the first two with 10x runner headroom."
+      "note": "A 513x513 field cut into 64 chunks of 64 m, each with four levels of detail. Three runs on 2026-09-14 (macOS 25.5 arm64, Node 25.2.1) measured -9680, -9032 and -9680 bytes after a 600-step warm-up; every reading is negative, so the row records the largest. The ceiling is 128 KiB, the same as instancing-20k: a frame is 64 distance tests, 64 frustum tests and one visibility write per chunk, all over pre-allocated typed arrays. The other two terrain-512 numbers are timings rather than heap, so they are recorded here rather than asserted by alloc.test.ts: `benchmarks/scenes/terrain-512.ts` exports measureTerrain512(), and on the same machine it measured a LOD pass of 0.0095-0.0107 ms per frame (target 0.05 ms), 10,000 world-space Terrain.heightAt calls in 0.87-0.92 ms (target 1 ms), and a load-time build of 64 chunks x 4 LODs with skirts in 29.3-30.4 ms (ADR-0026 records about 40 ms). packages/terrain/test/performance.test.ts asserts the first two with 10x runner headroom."
     }
   },
   "bundles": {
@@ -111,7 +111,7 @@
       "totalGzipBytes": 514697,
       "rawTotalBytes": 1650922,
       "chunkCount": 296,
-      "note": "gzipBytes is the entry chunk, which is what a first load actually fetches; totalGzipBytes sums all 294 emitted chunks, almost all of them dynamically imported Lite features this scene never reaches. The ceiling is the measurement x 1.1. Re-measured 2026-09-06 alongside the Phase 12 template re-record: the entry chunk moved from 270551 to 284142 bytes, +13600, from engine work in Phases 10 and 11 rather than from anything in this example -- its source did not change. The plan's Phase 2 target of 250 KB gzipped is still NOT met: the entry chunk is 284142 bytes, 34142 over. Phase 12 did not chase it; that is a packages/** job. Re-measured 2026-09-07: 284142 -> 268634 bytes; Lite's error-message table and glTF parser now load through dynamic imports (hardening, 2026-09-07); the Phase 2 target of 250000 bytes is still missed by 18634 bytes."
+      "note": "gzipBytes is the entry chunk, which is what a first load actually fetches; totalGzipBytes sums all 294 emitted chunks, almost all of them dynamically imported Lite features this scene never reaches. The ceiling is the measurement x 1.1. Re-measured 2026-09-06 alongside the template re-record: the entry chunk moved from 270551 to 284142 bytes, +13600, from engine work rather than from anything in this example -- its source did not change. The target of 250 KB gzipped (`docs/plan/engineering-plan.md`) is still NOT met: the entry chunk is 284142 bytes, 34142 over. That re-record did not chase it; it is a packages/** job. Re-measured 2026-09-07: 284142 -> 268634 bytes; Lite's error-message table and glTF parser now load through dynamic imports (hardening, 2026-09-07); the target of 250000 bytes is still missed by 18634 bytes."
     },
     "templates/2d-topdown": {
       "gzipBytes": 1181179,
@@ -119,7 +119,7 @@
       "totalGzipBytes": 1428276,
       "rawTotalBytes": 4152411,
       "chunkCount": 297,
-      "note": "Re-measured 2026-09-06 after Phase 12's polish. The entry chunk grew from 1177376 to 1194522 bytes, +17154: a title screen, a pause menu, a settings screen with sliders, an interactive rebinding page, a save file and a localisation document, minus the Dialog-based pause menu they replaced. The ceiling is the new measurement x 1.1. 797097 of those bytes are still @dimforge/rapier2d-compat's dist/rapier.mjs, which inlines its WebAssembly as base64 and is statically imported by @ignifx/physics-2d; the non-Rapier remainder is about 397 KB. The Phase 2 target of 250 KB gzipped does not apply to a template that ships a physics engine. Re-measured 2026-09-07: 1194522 -> 1181179 bytes; the templates' menu front end moved into @ignifx/ui's Menu/MenuStack and core lazy-loads Lite's error table and glTF parser (hardening, 2026-09-07)."
+      "note": "Re-measured 2026-09-06 after the templates gained their front end. The entry chunk grew from 1177376 to 1194522 bytes, +17154: a title screen, a pause menu, a settings screen with sliders, an interactive rebinding page, a save file and a localisation document, minus the Dialog-based pause menu they replaced. The ceiling is the new measurement x 1.1. 797097 of those bytes are still @dimforge/rapier2d-compat's dist/rapier.mjs, which inlines its WebAssembly as base64 and is statically imported by @ignifx/physics-2d; the non-Rapier remainder is about 397 KB. The 250 KB gzipped target does not apply to a template that ships a physics engine. Re-measured 2026-09-07: 1194522 -> 1181179 bytes; the templates' menu front end moved into @ignifx/ui's Menu/MenuStack and core lazy-loads Lite's error table and glTF parser (hardening, 2026-09-07)."
     },
     "templates/2d-sidescroller": {
       "gzipBytes": 1181820,
@@ -135,7 +135,7 @@
       "totalGzipBytes": 1106159,
       "rawTotalBytes": 3635544,
       "chunkCount": 296,
-      "note": "Re-measured 2026-09-06 after Phase 12's polish: 406181 -> 423698 bytes, +17451, which is the front end (title, pause, settings, rebinding, save) plus the PostProcessStack the graphics section switches. The ceiling is the new measurement x 1.1. The entry chunk is a third of a 2D template's because Havok's WebAssembly is NOT inlined: @ignifx/physics declares HavokPhysics.wasm in ignifx.assets.public and @ignifx/vite-plugin copies it into dist/assets/ unhashed (1.4 MB raw, not JavaScript, so it is in neither number here), where Rapier's rapier2d-compat inlines 797 KB of base64 straight into the 2D templates' entry. The second cost of a 3D template is Recast: recast-navigation-*.js gzips to about 453 KB and inlines its own wasm as a data: URL, but it is a separate chunk that Babylon Lite import()s only when a NavMeshSurface bakes, so it is in totalGzipBytes and not in the first-load entry. Re-measured 2026-09-07: 423698 -> 410195 bytes; the templates' menu front end moved into @ignifx/ui's Menu/MenuStack and core lazy-loads Lite's error table and glTF parser (hardening, 2026-09-07)."
+      "note": "Re-measured 2026-09-06 after the templates gained their front end: 406181 -> 423698 bytes, +17451, which is the front end (title, pause, settings, rebinding, save) plus the PostProcessStack the graphics section switches. The ceiling is the new measurement x 1.1. The entry chunk is a third of a 2D template's because Havok's WebAssembly is NOT inlined: @ignifx/physics declares HavokPhysics.wasm in ignifx.assets.public and @ignifx/vite-plugin copies it into dist/assets/ unhashed (1.4 MB raw, not JavaScript, so it is in neither number here), where Rapier's rapier2d-compat inlines 797 KB of base64 straight into the 2D templates' entry. The second cost of a 3D template is Recast: recast-navigation-*.js gzips to about 453 KB and inlines its own wasm as a data: URL, but it is a separate chunk that Babylon Lite import()s only when a NavMeshSurface bakes, so it is in totalGzipBytes and not in the first-load entry. Re-measured 2026-09-07: 423698 -> 410195 bytes; the templates' menu front end moved into @ignifx/ui's Menu/MenuStack and core lazy-loads Lite's error table and glTF parser (hardening, 2026-09-07)."
     },
     "templates/3d-first-person": {
       "gzipBytes": 409182,
@@ -149,7 +149,7 @@
   "twoD": {
     "machine": "macOS 25.5 arm64 (Apple Silicon), Node 24.20.0, Vitest 5.0.0, @babylonjs/lite 1.27.0, Chromium (Playwright) + SwiftShader",
     "recordedOn": "2026-09-06",
-    "note": "S6.1. CPU milliseconds per frame with the render loop stopped (app.step), so no presented frame and no SwiftShader rasterisation is in the sample. `loaded` dirties all 1000 movers each frame; `idle` moves nothing. Reported, not asserted, except that `loadedMedianMs` must stay under the 2 ms coding-standards §7 budget and `syncedWhileIdle` must be 0. Chromium quantises performance.now() to 0.1 ms, so the browser medians are coarse.",
+    "note": "Sprite sync at scale. CPU milliseconds per frame with the render loop stopped (app.step), so no presented frame and no SwiftShader rasterisation is in the sample. `loaded` dirties all 1000 movers each frame; `idle` moves nothing. Reported, not asserted, except that `loadedMedianMs` must stay under the 2 ms coding-standards §7 budget and `syncedWhileIdle` must be 0. Chromium quantises performance.now() to 0.1 ms, so the browser medians are coarse.",
     "spriteSyncAtScale": {
       "movers": 1000,
       "tiles": 10000,
@@ -173,7 +173,7 @@
       }
     },
     "pixelPerfect": {
-      "note": "S6.3. Blended pixels in a full-canvas readback of a 16x16 one-pixel checkerboard: 0 means every pixel is pure magenta or pure black.",
+      "note": "Pixel-perfect rendering. Blended pixels in a full-canvas readback of a 16x16 one-pixel checkerboard: 0 means every pixel is pure magenta or pure black.",
       "blendedPixelsAtDpr1": 0,
       "blendedPixelsAtDpr1_5": 0,
       "blendedPixelsAtDpr2": 0,
@@ -184,7 +184,7 @@
   "devtools": {
     "machine": "macOS 25.5 arm64 (Apple Silicon), Node 24.20.0, Vitest 5.0.0, @babylonjs/lite 1.27.0",
     "recordedOn": "2026-09-06",
-    "note": "Phase 10's zero-cost-when-closed exit criterion. The 1,002-entity headless scene is built four times -- plain, devtools, devtools, plain, one app alive at a time -- warmed for 120 frames and then stepped 600 times per block, and each variant's median is taken over its 1,200 samples. Five consecutive runs on 2026-09-06 measured differences of 0.0000, 0.0006, -0.0001, 0.0005 and 0.0036 ms; the row below is the fourth. An earlier two-app design is recorded in the test's header for the record: it read +0.007/+0.000/+0.016 ms with the plain app built first and -0.007/-0.004/-0.008 ms with the devtools app built first, which is construction order rather than devtools, and is why the measurement runs one app at a time.",
+    "note": "Devtools must cost nothing while closed. The 1,002-entity headless scene is built four times -- plain, devtools, devtools, plain, one app alive at a time -- warmed for 120 frames and then stepped 600 times per block, and each variant's median is taken over its 1,200 samples. Five consecutive runs on 2026-09-06 measured differences of 0.0000, 0.0006, -0.0001, 0.0005 and 0.0036 ms; the row below is the fourth. An earlier two-app design is recorded in the test's header for the record: it read +0.007/+0.000/+0.016 ms with the plain app built first and -0.007/-0.004/-0.008 ms with the devtools app built first, which is construction order rather than devtools, and is why the measurement runs one app at a time.",
     "closedOverlay": {
       "entities": 1002,
       "steps": 600,

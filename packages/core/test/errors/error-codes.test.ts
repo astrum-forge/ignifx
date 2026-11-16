@@ -42,7 +42,7 @@ describe("error code table", () => {
     expect(new Set(codes).size).toBe(codes.length);
   });
 
-  it("re-homes the phase zero webgpu code into the rendering range", () => {
+  it("keeps the WebGPU and runtime codes in the rendering range", () => {
     expect(CoreErrorCode.webGpuUnavailable).toBe("IGX-0701");
     expect(CoreErrorCode.invalidRuntime).toBe("IGX-0702");
   });

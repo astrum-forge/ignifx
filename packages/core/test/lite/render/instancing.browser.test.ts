@@ -12,7 +12,8 @@ import type { MaterialAsset } from "../../../src/render/material-asset.js";
 import type { BrowserApp } from "../../render/support/browser-harness.js";
 
 /**
- * `InstancedMeshRenderer` on a real WebGPU device (the plan's §3.5, §6.3's `instancing-20k` row).
+ * `InstancedMeshRenderer` on a real WebGPU device (`07-rendering.md` §2.9; the `instancing-20k`
+ * benchmark row).
  *
  * Only a device can show that twenty thousand instances are one draw call, that `setCount` changes
  * what is drawn, that GPU culling changes nothing but cost, that a LOD partner swaps geometry at its

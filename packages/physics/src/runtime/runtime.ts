@@ -196,7 +196,7 @@ interface MutableCollision {
 }
 
 /**
- * The counters `09-physics.md` §9 and the plan's diagnostics deliverable name.
+ * The counters `09-physics.md` §9 names.
  *
  * @public
  */

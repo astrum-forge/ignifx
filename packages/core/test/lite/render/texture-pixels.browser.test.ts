@@ -10,7 +10,8 @@ import type { PixelRgba } from "../../../src/lite/screenshot.js";
 import type { BrowserApp } from "../../render/support/browser-harness.js";
 
 /**
- * `TextureAsset.fromPixels` and `TextureAsset.update` on a real WebGPU device (the plan's §2.2).
+ * `TextureAsset.fromPixels` and `TextureAsset.update` on a real WebGPU device (`07-rendering.md`
+ * §2.9).
  *
  * A 2×2 texture on an unlit quad that covers the frame is the smallest arrangement in which each
  * texel owns a known quadrant of the canvas, so `nearest` filtering is provable by reading four

@@ -15,8 +15,8 @@ import type { App, Extension, ExtensionContext } from "@ignifx/core";
  * surface shader needs — Babylon Lite installs the plugin bridges once, before the scene is
  * registered, so that declaration has to happen at extension registration.
  *
- * The package contributes no service and no settings section: the plan defines neither, and the one
- * project-wide knob a quality slider wants is `Terrain.lodBias`, which differs per terrain.
+ * The package contributes no service and no settings section: the one project-wide knob a quality
+ * slider wants is `Terrain.lodBias`, which differs per terrain.
  */
 
 /**

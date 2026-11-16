@@ -117,8 +117,8 @@ export interface InstanceRange {
 }
 
 /**
- * Draws one mesh many times from a caller-owned matrix slab, in a single draw call (the plan's
- * §3.5).
+ * Draws one mesh many times from a caller-owned matrix slab, in a single draw call
+ * (`docs/architecture/07-rendering.md` §2.9).
  *
  * @example
  * ```ts

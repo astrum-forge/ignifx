@@ -1,11 +1,11 @@
 /**
  * The foliage shader: a full `ShaderMaterial` with vertex wind, Lambert lighting, and an alpha test.
  *
- * The plan wanted wind as a `displace` surface hook, which Babylon Lite 1.27.0 cannot do: plugin
- * uniforms are fragment-stage only, so the hook has no clock, and the composer runs the plugin's
- * vertex code before the thin-instance fragment that builds `finalWorld`, which discards the offset
- * on every instanced mesh. So foliage owns its whole vertex stage. The price is a shader material's:
- * no image-based lighting, no fog, and no shadow reception; it does cast, as a solid card.
+ * Wind cannot be a `displace` surface hook in Babylon Lite 1.27.0: plugin uniforms are
+ * fragment-stage only, so the hook has no clock, and the composer runs the plugin's vertex code
+ * before the thin-instance fragment that builds `finalWorld`, which discards the offset on every
+ * instanced mesh. So foliage owns its whole vertex stage. The price is a shader material's: no
+ * image-based lighting, no fog, and no shadow reception; it does cast, as a solid card.
  *
  * Two variants exist because `instancing matrices` adds `world0..world3` to `VertexInput`, and a
  * shader that reads them will not compile on a mesh without thin instances.

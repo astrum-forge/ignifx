@@ -35,11 +35,11 @@ import type { Page } from "playwright/test";
  *
  * ## Where this runs
  *
- * As the Playwright `frame-budget` project, on its own: `pnpm test:frame-budget` locally, and the
- * `frame-budget` CI job on `macos-latest`. A ceiling is only a ceiling against a machine comparable
+ * As the Playwright `frame-budget` project, on its own: `pnpm test:frame-budget`, locally and not
+ * in CI (coding standards §12). A ceiling is only a ceiling against a machine comparable
  * to the one that recorded it, and GitHub's `ubuntu-latest` is not — it measured 2.0 ms against a
  * 1.0 ms ceiling for `2d-topdown` and could not finish either 3D template's 420 frames inside the
- * timeout below (ADR-0009, "Frame budgets need a comparable machine").
+ * timeout below.
  *
  * ## Determinism
  *
