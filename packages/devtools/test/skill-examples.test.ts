@@ -7,10 +7,9 @@ import { createDevtoolsLogSink, devtools } from "../src/index.js";
  * `packages/devtools/skills/devtools/SKILL.md`.
  *
  * The skill's examples are shipped as documentation, not run by the docs harness, so this file is
- * what makes the claim "these compile and work" true rather than hopeful (`p2-common.md`: run your
- * skill examples once before shipping them). Each block below is the example verbatim, with
- * `console.log` turned into an assertion and the umbrella import rewritten to the source paths the
- * suite can resolve.
+ * what makes the claim "these compile and work" true rather than hopeful. Each block below is the
+ * example verbatim, with `console.log` turned into an assertion and the umbrella import rewritten
+ * to the source paths the suite can resolve.
  */
 
 /** The `Mover` from the skill's **First app**. */

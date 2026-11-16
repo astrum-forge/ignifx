@@ -5,8 +5,7 @@ import type { AnchorInput } from "../../src/world/anchor-math.js";
 
 /**
  * `WorldAnchor` placement (`docs/architecture/13-ui.md` §2). Pure arithmetic driven by a fake
- * camera, exactly as the brief asks; the Chromium suite then proves the same numbers land on the
- * same pixels.
+ * camera; the Chromium suite then proves the same numbers land on the same pixels.
  */
 
 /** A one-to-one render-target-pixel to UI-unit mapping. */
