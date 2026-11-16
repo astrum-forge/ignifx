@@ -1,17 +1,62 @@
 # ignifx documentation
 
-Start with [CONTRIBUTING.md](../CONTRIBUTING.md) for setup and the development workflow.
+The index of the repository's documents. [AGENTS.md](../AGENTS.md) maps a kind of task to the one document to read for it; [CONTRIBUTING.md](../CONTRIBUTING.md) covers setup and the development workflow.
 
-| Need                                          | Read                                                                      |
-| --------------------------------------------- | ------------------------------------------------------------------------- |
-| Project rules and priorities                  | [Constitution](../CONSTITUTION.md)                                        |
-| Code, tests, comments, and release-note rules | [Coding standards](standards/coding-standards.md)                         |
-| Engine structure and subsystem designs        | [Architecture overview](architecture/00-overview.md)                      |
-| Reasons behind design decisions               | [ADRs](adr/); use the [template](adr/0000-template.md) for a new decision |
-| Current work and scope                        | [Engineering plan](plan/engineering-plan.md)                              |
-| How to use the engine                         | [Engine skill](../skills/ignifx/SKILL.md)                                 |
-| How to write an upcoming release entry        | [Changeset guide](../.changeset/README.md)                                |
+| Need                                                  | Read                                                                                                 |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Project rules, priorities and document precedence     | [Constitution](../CONSTITUTION.md) (§10.1 for precedence)                                            |
+| Code, tests, comments, and release-note rules         | [Coding standards](standards/coding-standards.md)                                                    |
+| Engine structure and subsystem designs                | [Architecture overview](architecture/00-overview.md), then the area's document                       |
+| Why a design is the way it is                         | The ADR index below; use the [template](adr/0000-template.md) for a new decision                     |
+| Open work, 1.0 gates, decisions waiting for the owner | [Engineering plan](plan/engineering-plan.md)                                                         |
+| How to use the engine                                 | [Engine skill](../skills/ignifx/SKILL.md) and each package's `skills/<name>/SKILL.md`                |
+| How to write a release entry                          | [Changeset guide](../.changeset/README.md)                                                           |
+| Reporting a vulnerability; the dependency audit       | [Security policy](../SECURITY.md)                                                                    |
+| Scripts, the check runner and the docs harness        | [scripts/README.md](../scripts/README.md)                                                            |
+| Benchmarks, visual goldens and frame budgets          | [benchmarks/README.md](../benchmarks/README.md), [tests/visual/README.md](../tests/visual/README.md) |
+| The repository's lint rules                           | [tools/eslint-plugin-ignifx/README.md](../tools/eslint-plugin-ignifx/README.md)                      |
 
-When documents disagree, use constitution §10.1:
-constitution → standards → architecture → ADRs → plan → skill → code comments.
-Do not write migration documents under `docs/migrations/` before 1.0.
+[`migrations/`](migrations/README.md) stays empty before 1.0 (constitution §4.2).
+
+## ADR index
+
+An **Accepted** ADR binds. **Proposed** means the owner has not ratified it: where the table says "implemented", the code follows it anyway; where it says "not built", nothing does. Numbers 0015, 0016, 0022 and 0023 were never used.
+
+| ADR                                                     | Title                                        | Status                                  | Decision                                                                                                                    |
+| ------------------------------------------------------- | -------------------------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| [0001](adr/0001-babylon-lite-webgpu-only.md)            | Babylon Lite as the renderer; WebGPU only    | Accepted                                | Build on Babylon Lite, pinned exactly; no WebGL fallback                                                                    |
+| [0002](adr/0002-adapter-boundary.md)                    | Adapter boundary around Babylon Lite         | Accepted                                | Only `src/lite/**` imports Lite; public APIs use ignifx types; Lite objects only through `.lite` hatches                    |
+| [0003](adr/0003-ignifx-owns-the-loop.md)                | ignifx owns the frame loop                   | Accepted                                | Fixed-step physics on a separate simulation scene; ignifx advances animation; one loop definition                           |
+| [0004](adr/0004-schema-serialization-no-decorators.md)  | Schema-driven serialization                  | Accepted                                | Fields are declared once through `Component.define`; no decorators; explicit namespaced `typeId`                            |
+| [0005](adr/0005-scenes-are-prefabs.md)                  | Scenes are prefabs                           | Accepted                                | One file format and one loader for scenes and prefabs; variants instance another scene with overrides                       |
+| [0006](adr/0006-2d-physics-backend.md)                  | 2D physics backend                           | Accepted                                | Rapier 2D, the `-compat` build, behind `@ignifx/physics-2d`; locally deterministic only                                     |
+| [0007](adr/0007-typescript-7-with-ts6-shim.md)          | TypeScript 7 with a TypeScript 6 alias       | Accepted                                | TypeScript 7 compiles; `typescript` resolves to TypeScript 6 for tools that need the compiler API                           |
+| [0008](adr/0008-dom-ui-layer.md)                        | Game UI is HTML over the canvas              | Accepted                                | `@ignifx/ui` is a DOM overlay with focus routing and anchors; world text uses Lite text; no canvas GUI                      |
+| [0009](adr/0009-monorepo-tooling.md)                    | Monorepo tooling                             | Accepted                                | pnpm, Turborepo, tsdown, Vitest, Oxlint, Changesets, Trusted Publishing; visual and budget suites run locally               |
+| [0010](adr/0010-coroutines-are-generators.md)           | Coroutines are generators                    | Accepted                                | Frame-sequenced logic uses generator coroutines; `async` lifecycle callbacks are lint errors                                |
+| [0011](adr/0011-coordinate-system-and-units.md)         | Coordinate system and units                  | Accepted                                | Left-handed, Y up, +Z forward; metres, seconds, degrees; `Ms`, `Px`, `Rad` suffixes mark exceptions                         |
+| [0012](adr/0012-entity-component-script-vocabulary.md)  | Vocabulary                                   | Accepted                                | App, World, Scene, Entity, Component, Script, System, Extension; no pure ECS in core                                        |
+| [0013](adr/0013-collision-identity-drain-waiver.md)     | Waiver: Havok collision-event drain          | Superseded (2026-10-15)                 | The waiver is lifted: Lite reports both bodies of a collision, and the internal drain is deleted                            |
+| [0014](adr/0014-material-warm-up.md)                    | Material families are warmed up              | Proposed; implemented, start-up differs | Hidden probe meshes build each material family before `registerScene`; `app.renderer.warmUp` for later materials            |
+| [0017](adr/0017-navigation-wasm.md)                     | Navigation WebAssembly                       | Accepted                                | Recast loads lazily from Lite's inlined binary with no configuration; `navigationWasmUrl` overrides it                      |
+| [0018](adr/0018-electron-tooling.md)                    | Electron, electron-vite, electron-builder    | Accepted                                | Electron as an optional peer, bumped quarterly; CommonJS preload; unsigned `--dir` builds; NSIS on Windows                  |
+| [0019](adr/0019-website-static-site.md)                 | The public website is a prerendered site     | Superseded in part by 0020, 0027        | Concerns `ignifx-website`: a static site on Cloudflare Pages with no third-party requests                                   |
+| [0020](adr/0020-website-builds-the-workspace.md)        | The website builds the workspace             | Superseded in part by 0027              | Concerns `ignifx-website`: frame CSP, one hashed inline script, generated headers; the build half is superseded             |
+| [0021](adr/0021-clear-development-guidance.md)          | Clear development guidance                   | Proposed; text in force                 | Amends constitution §5.8, §6.6 and §9.4                                                                                     |
+| [0024](adr/0024-custom-shader-authoring.md)             | Custom shader authoring                      | Proposed; implemented                   | WGSL files declare their parameters; shader materials, surface shaders on PBR, post effects, material plugins               |
+| [0025](adr/0025-stateless-gpu-particles.md)             | Stateless GPU particles                      | Proposed; implemented                   | A particle is a pure function of its spawn record and age, evaluated in the vertex shader; no simulation state              |
+| [0026](adr/0026-terrain-chunked-geomipmapping.md)       | Terrain: chunked geomipmapping               | Proposed; implemented                   | One mesh per chunk per LOD with skirts; up to eight splat layers; height queries read the source field                      |
+| [0027](adr/0027-website-own-repository.md)              | The website moves to its own repository      | Accepted                                | The site lives in `astrum-forge/ignifx-website` and builds from the published packages                                      |
+| [0028](adr/0028-edit-mode.md)                           | Edit mode                                    | Accepted; 2026-10-29 amendment proposed | `createApp({ editMode: true })`: scripts are inert, simulation is skipped, display systems run or hold                      |
+| [0029](adr/0029-mesh-asset-files.md)                    | Mesh asset files                             | Accepted                                | A primitive mesh is a `.mesh.json` file addressed by its full file name                                                     |
+| [0030](adr/0030-tile-objects-are-authoring-data.md)     | Tile objects are authoring data              | Accepted                                | The runtime never spawns tile objects; `ignifx import tilemap` moves them into a scene file                                 |
+| [0031](adr/0031-render-overlay.md)                      | A render overlay over the finished frame     | Accepted                                | `app.renderer.openOverlay()` (`@beta`) gives a second Lite scene drawn over the frame, for editor gizmos                    |
+| [0032](adr/0032-editor-alongside-the-engine.md)         | The editor is developed alongside the engine | Accepted                                | A separate product, before and after 1.0; neither blocks the other; the runtime stays editor-free                           |
+| [0033](adr/0033-optional-asset-references.md)           | Optional asset references                    | Proposed; not built                     | An asset field declared `optional` tolerates a failed load                                                                  |
+| [0034](adr/0034-project-documents-before-scene-load.md) | Project documents before scene load          | Proposed; not built                     | A document named in project settings is installed before any scene is built                                                 |
+| [0035](adr/0035-scene-number-precision.md)              | Scene numbers keep six decimals              | Proposed; no code change                | Keep six-decimal rounding and document the difference it makes                                                              |
+| [0036](adr/0036-canonical-scene-text.md)                | Canonical scene text                         | Proposed; not built                     | A fixed scene text style that formatters leave alone; `engineVersion` only on request                                       |
+| [0037](adr/0037-uid-collisions-on-load.md)              | Uid collisions on load                       | Proposed; not built                     | A colliding entity and its components are remapped together and reported; `strictUids` makes it an error                    |
+| [0038](adr/0038-per-renderer-materials.md)              | A renderer can own a copy of its material    | Proposed; not built                     | `MeshRenderer.uniqueMaterial: true` gives a renderer its own material copy                                                  |
+| [0039](adr/0039-attach-to-a-model-node.md)              | Attaching an entity to a model's node        | Proposed; not built                     | A `ModelNodeAttachment` component attaches an entity to a model node, in games and in edit mode                             |
+| [0040](adr/0040-lighting-strategy.md)                   | Lighting strategy                            | Accepted                                | Foundations first; dynamic GI is a desktop tier for static geometry and is not committed; the lightmap baker is editor work |

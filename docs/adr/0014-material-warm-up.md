@@ -1,6 +1,6 @@
 # ADR-0014 · Material families are warmed up before the scene is registered
 
-**Status:** Proposed · **Date:** 2026-09-05 · **Deciders:** David Arayan
+**Status:** Proposed — implemented on `main`, with the start-up policy of "As implemented" below in place of Decision item 1; awaiting ratification · **Date:** 2026-09-05 · **Deciders:** David Arayan
 
 ## Context
 
@@ -11,7 +11,7 @@ Babylon Lite compiles a scene's shader permutations and records its frame graph 
 
 "Material family" is coarser than it sounds, and that is the decisive fact: `createPbrMaterial` stamps every PBR material in the process with the **same** `_buildGroup` singleton, and so do the Standard and Shader factories (`lib/material/pbr/pbr-material.js`, `lib/material/standard/create-standard-material.js`, `lib/material/shader/shader-material.js`). Only node materials get a builder per material. So there are four families to worry about, not one per asset.
 
-Spike S2.2 measured the difference on Chromium with the SwiftShader adapter, a 48×48 canvas, MSAA 1, three runs, subtracting the cost of one `captureScreenshot` round trip (ADR-0002, Validation):
+A spike measured the difference on Chromium with the SwiftShader adapter, a 48×48 canvas, MSAA 1, three runs, subtracting the cost of one `captureScreenshot` round trip (the measurement is pinned by `packages/core/test/lite/render/warm-up.browser.test.ts`):
 
 | Case                                                        | Extra frames before the mesh is visible |
 | ----------------------------------------------------------- | --------------------------------------- |
@@ -32,7 +32,7 @@ Constraints that shape the answer: `CONSTITUTION.md` §3.5 (no import-time side 
 1. **Do nothing; document the pop.** Pros: no code. Cons: every spawn-heavy game hits it, the failure is intermittent and looks like a bug in ignifx, and the PBR path makes it worse the more materials the scene has.
 2. **Add every asset's material to the scene before `registerScene`, permanently.** Pros: trivially correct. Cons: a scene that preloads fifty materials pays for fifty renderables it never draws, and the boot group is not the whole game anyway.
 3. **Hidden probe meshes, one per material, added before `registerScene`.** A probe is a degenerate triangle with `visible = false`. `addToScene` puts it in its family's group, `registerScene` builds the group, and every later mesh of that family takes the synchronous path. Hiding is enough because `visible` is read when a renderable is drawn, not when it is built (`lib/scene/visibility.js`). Pros: measured to work; costs three vertices per material and nothing per frame. Cons: a Lite-shaped workaround that a future Lite release could make unnecessary.
-4. **Wait for an upstream precompile API.** Pros: the right long-term shape. Cons: does not exist, and Phase 2 cannot block on it.
+4. **Wait for an upstream precompile API.** Pros: the right long-term shape. Cons: does not exist, and the renderer cannot block on it.
 
 ## Decision
 
@@ -42,6 +42,10 @@ Option 3, with the timing fixed by policy rather than left to the caller.
 2. `app.renderer.warmUp(materials)` exposes the same call for spawn-heavy games that load a material later and want to pay the cost at a moment of their choosing. Called after the scene is registered it still helps — it runs the cold path once, on a mesh nobody can see, instead of on the one the player is looking at.
 3. Probes are **kept**, not discarded, for the life of the app. Removing the last mesh of a family does not remove its group from the scene, so discarding would probably be safe; keeping them makes the guarantee independent of Lite's internals for the price of one degenerate triangle per material. `discardMaterialWarmUp` exists for tests and for an app that wants the memory back.
 4. One probe per **material**, not per family, even though the family is what Lite keys on. It costs almost nothing, it is exact about which feature permutations get compiled at registration, and it keeps ignifx from depending on a Lite implementation detail that is documented nowhere.
+
+### As implemented
+
+Decision item 1 is not what `app.start()` does, and no amendment has been ratified for the difference. A preloaded asset's handle settles at the `PreUpdate` delivery point of a frame, and `start()` runs before the first frame, so awaiting the `boot` group there would deadlock. `Renderer.warmUpAtStart()` (`packages/core/src/render/renderer.ts`) instead warms the two families core can produce (PBR and Standard) plus any material already in the asset cache, which reaches the same outcome because Lite keys on the family. It skips the warm-up in a headless app and in a scene with no lights: a probe registered into a lightless scene leaves every later mesh of that family undrawn.
 
 ## Consequences
 

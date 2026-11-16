@@ -4,9 +4,9 @@
 
 ## Context
 
-`CONSTITUTION.md` §1.3 said a visual editor "may follow 1.0", and the engineering plan's risk R-12 called the editor "explicitly post-1.0". Both were written when the editor was an idea for after the engine.
+`CONSTITUTION.md` §1.3 said a visual editor "may follow 1.0", and the engineering plan called the editor "explicitly post-1.0". Both were written when the editor was an idea for after the engine.
 
-That is no longer how the work runs. The editor is a separate product, `astrum-forge/ignifx-editor`, built on the runtime through `@ignifx/editor-host` (`17-editor-host.md`). Its engine seams land here as public features (asks E0 to E14 in §5 of the editor plan, ADR-E011 of the editor repository), and engine 1.0 is some way off. PR #41 already moved `00-overview.md` §7 and the plan's 1.0 scope to say the editor is developed alongside the engine before 1.0. The constitution, which wins over both (§10.1), still said otherwise. §10.2 requires an ADR for the amendment.
+That is no longer how the work runs. The editor is a separate product, `astrum-forge/ignifx-editor`, built on the runtime through `@ignifx/editor-host` (`17-editor-host.md`). Its engine seams land here as public features (ADR-E011 of the editor repository), and engine 1.0 is some way off. PR #41 already moved `00-overview.md` §7 and the engineering plan's 1.0 scope to say the editor is developed alongside the engine before 1.0. The constitution, which wins over both (§10.1), still said otherwise. §10.2 requires an ADR for the amendment.
 
 ## Options considered
 
@@ -26,7 +26,7 @@ The commitments that §1.3 and `00-overview.md` §7 already made stay:
 
 ## Consequences
 
-- `CONSTITUTION.md` §1.3 and the engineering plan's R-12 and §8 now match `00-overview.md` §7.
+- `CONSTITUTION.md` §1.3 and the engineering plan now match `00-overview.md` §7.
 - The §4.3 criteria for engine 1.0 are unchanged and do not mention the editor.
-- Editor-driven engine work competes with other engine work for the one human approver (§7.4); the plan's ordering, not the editor's, decides engine priorities.
+- Editor-driven engine work competes with other engine work for the one human approver (§7.4); the engineering plan, not the editor, decides engine priorities.
 - Revisit if the editor needs a seam that cannot be made editor-free.

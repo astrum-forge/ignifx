@@ -1,12 +1,12 @@
 # ADR-0017 · How the Recast navigation WebAssembly is loaded
 
-**Status:** Accepted · **Date:** 2026-09-06 · **Revisit:** Phase 12 (the bundle-size pass), and on every `@babylonjs/lite` bump
+**Status:** Accepted · **Date:** 2026-09-06 · **Revisit:** on every `@babylonjs/lite` bump
 
 ## Context
 
-`@ignifx/3d`'s navigation (`docs/architecture/12-3d-toolkit.md` §5) is Recast, reached through Babylon Lite's `createNavigationPluginAsync` (`index.d.ts` 2736). Recast is a WebAssembly module, and Phase 4 had already taught the project that a WebAssembly dependency is a _deployment_ decision as much as a runtime one: `@babylonjs/havok` cannot `fetch` a `file:` URL, so `@ignifx/physics` copies `HavokPhysics.wasm` through the Vite plugin's `ignifx.assets.public` and resolves it through the asset manifest (`09-physics.md` §7, spike S4.1).
+`@ignifx/3d`'s navigation (`docs/architecture/12-3d-toolkit.md` §5) is Recast, reached through Babylon Lite's `createNavigationPluginAsync`. Recast is a WebAssembly module, and the Havok integration had already shown that a WebAssembly dependency is a _deployment_ decision as much as a runtime one: `@babylonjs/havok` cannot `fetch` a `file:` URL, so `@ignifx/physics` copies `HavokPhysics.wasm` through the Vite plugin's `ignifx.assets.public` and resolves it through the asset manifest (`09-physics.md` §7).
 
-Spike S7.2 asked whether navigation needs the same machinery, whether it can run at all in a plain Node process (which is what a headless test and a server-side simulation are), and what a game pays for it in a production bundle.
+The question was whether navigation needs the same machinery, whether it can run at all in a plain Node process (which is what a headless test and a server-side simulation are), and what a game pays for it in a production bundle.
 
 ## Decision
 
@@ -44,13 +44,13 @@ The chunk stays a **separate, dynamically imported** chunk — Lite's own `impor
 
 - **Zero configuration is the default, and that is the point.** A game that adds `threeD()` and a `NavMeshSurface` works in `pnpm dev`, in a production build, in an Electron app, and in a Node test, with nothing copied anywhere. Navigation is the _only_ WebAssembly dependency in the engine that behaves this way; physics does not, and the asymmetry is deliberate rather than an oversight.
 - **190 KB brotli is real, and it is deferred.** A game that never bakes a navmesh never fetches it.
-- **Phase 12 follow-up.** If the bundle-size pass decides the base64 inflation is worth removing, the mechanism already exists: teach `@ignifx/vite-plugin` to copy `recast-navigation.wasm` into `ignifx.assets.public` the way it copies Havok's, and set `threeD({ navigationWasmUrl: app.assets.resolveUrl("recast-navigation.wasm") })`. That trades roughly 190 KB brotli for roughly 165 KB of raw `.wasm` plus one more request, and costs the "no configuration" property above. It is not obviously a win, which is why it is a follow-up and not this ADR.
+- **Optional follow-up.** If a bundle-size pass decides the base64 inflation is worth removing, the mechanism already exists: teach `@ignifx/vite-plugin` to copy `recast-navigation.wasm` into `ignifx.assets.public` the way it copies Havok's, and set `threeD({ navigationWasmUrl: app.assets.resolveUrl("recast-navigation.wasm") })`. That trades roughly 190 KB brotli for roughly 165 KB of raw `.wasm` plus one more request, and costs the "no configuration" property above. It is not obviously a win, which is why it is a follow-up and not this ADR.
 
-## What Babylon Lite 1.27.0 does **not** offer
+## What Babylon Lite does **not** offer
 
 Two absences found while writing the surface, both recorded here because they change what `12-3d-toolkit.md` §5 can promise:
 
-- **There is no navmesh serialization.** `index.d.ts` declares no `getNavMeshData`, no `buildFromNavMeshData`, and nothing else that turns a baked navmesh into bytes or back. The `.navmesh.bin` asset and the `ignifx bake navmesh` CLI command of §5 are therefore **not implementable** against this version. `NavMeshSurface.prebaked` exists as a field so a project can record its intent, but naming one logs a warning and the surface bakes at runtime instead. `@ignifx/cli`'s `bake navmesh` stays a stub.
-- **There is no `removeAgent`.** `addAgent` (`index.d.ts` 15) hands out an index for the crowd's lifetime. A destroyed `NavMeshAgent` parks its agent rather than freeing the slot, so `NavMeshSurface.maxAgents` counts every agent that has ever joined; a level that spawns and kills agents indefinitely re-bakes its surface, which builds a fresh crowd.
+- **There is no navmesh serialization.** `index.d.ts` declares no `getNavMeshData`, no `buildFromNavMeshData`, and nothing else that turns a baked navmesh into bytes or back. A `.navmesh.bin` asset and an `ignifx bake navmesh` CLI command are therefore **not implementable**. `NavMeshSurface.prebaked` exists as a field so a project can record its intent, but naming one logs a warning and the surface bakes at runtime instead.
+- **There is no `removeAgent`.** `addAgent` hands out an index for the crowd's lifetime. A destroyed `NavMeshAgent` parks its agent rather than freeing the slot, so `NavMeshSurface.maxAgents` counts every agent that has ever joined; a level that spawns and kills agents indefinitely re-bakes its surface, which builds a fresh crowd.
 
-Both are worth re-checking on the next Lite bump.
+Both were still absent from the pinned Babylon Lite version's `index.d.ts` on 2026-11-16, and are worth re-checking on each Lite bump.

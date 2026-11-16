@@ -15,10 +15,10 @@ are involved. Regenerate them with:
 node tests/fixtures/assets/2d/make-fixtures.mjs
 ```
 
-| File          | Bytes | Size  | Content                                                                             | SHA-256                                                            |
-| ------------- | ----- | ----- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `hero.png`    | 164   | 64×64 | A 2×2 grid of 32×32 flat-colour frames in reading order: red, green, blue, yellow.  | `31bc38311fa995f1be86562d2497e4829433f05020633d5d24aa4a9728d37ee7` |
-| `checker.png` | 91    | 16×16 | A one-pixel magenta/black checkerboard; the S6.3 pixel-perfect spike reads it back. | `b40f3079967758c2c0b11091bc2bb7ee3d351cb964fbb950d1ea90e26e069b18` |
+| File          | Bytes | Size  | Content                                                                               | SHA-256                                                            |
+| ------------- | ----- | ----- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `hero.png`    | 164   | 64×64 | A 2×2 grid of 32×32 flat-colour frames in reading order: red, green, blue, yellow.    | `31bc38311fa995f1be86562d2497e4829433f05020633d5d24aa4a9728d37ee7` |
+| `checker.png` | 91    | 16×16 | A one-pixel magenta/black checkerboard; the pixel-perfect browser test reads it back. | `b40f3079967758c2c0b11091bc2bb7ee3d351cb964fbb950d1ea90e26e069b18` |
 
 The frame colours are far apart in every channel so a screenshot assertion can identify a frame
 from a single texel, and each frame is a flat colour so its own one-pixel border is identical to
@@ -55,6 +55,6 @@ Both editor formats are documentation, not code: reading a published format spec
 writing a conforming document by hand creates no derivative work of either editor.
 
 `checker.atlas.json` and `checker-linear.atlas.json` are the same one-frame document over
-`checker.png`, differing only in `sampling` (`nearest` and `linear`). Spike S6.3 renders both: the
+`checker.png`, differing only in `sampling` (`nearest` and `linear`). The pixel-perfect browser test renders both: the
 `nearest` one through a pixel-perfect camera to prove the checker stays crisp, and the `linear` one
 at a deliberately fractional zoom as the counter-example that shows what the flag prevents.
