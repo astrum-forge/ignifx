@@ -7,7 +7,7 @@
 - `packages/core/src/platform/` — `platform.ts` (detection as a pure function of a host scrape), `webgpu.ts`, `web/adapter-probe.ts` (`app.platform`, §1).
 - `packages/core/src/storage/` — `storage.ts` (`app.storage`), `backend.ts` (the `StorageBackend` contract), `names.ts` and `values.ts` (validation, canonical JSON, bytes), `file-names.ts` (key encoding), `memory-backend.ts`, `web/indexeddb-backend.ts`, `node/file-backend.ts` (§2).
 - `packages/electron/src/main/` — `window.ts` (`createGameWindow`, `ENFORCED_WEB_PREFERENCES`, navigation lock, permissions), `csp.ts`, `protocol.ts` (`ignifx://`), `ipc.ts` (`installHostHandlers`, the sender check), `origin.ts`, `switches.ts`, `storage-fs.ts`.
-- `packages/electron/src/preload/bridge.ts` — `exposeIgnifxHost`; `host-contract.ts` — the versioned IPC surface both sides share.
+- `packages/electron/src/preload/bridge.ts` — `exposeIgnifxHost`; `packages/electron/src/host-contract.ts` — the versioned IPC surface both sides share.
 - `packages/electron/src/renderer/` — `extension.ts` (`electron()`), `desktop.ts` (`app.desktop`), `storage-backend.ts`, `host.ts`.
 - Packaging and fuses: `templates/*/electron-builder.yml`; the desktop variant of a template is its `desktop/` directory and `electron.vite.config.ts`.
 - Error codes: `IGX-1420`–`IGX-1426` (storage, core), `IGX-1460`–`IGX-1467` (`packages/electron/src/error-codes.ts`).

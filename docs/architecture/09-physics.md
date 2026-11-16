@@ -23,7 +23,7 @@ Invariants to keep:
 - Records are kept in creation order, which fixes Havok's ordering; no wall-clock reads (§8).
 - An edit-mode app keeps bodies and never steps them (§11).
 
-Not built: colliders on child entities joining an ancestor's body, per-body damping, gravity factor, sleep control and velocity limits (§2.1, §2.2).
+Not built: colliders on child entities joining an ancestor's body, per-body damping, gravity factor, sleep control and per-body velocity limits (§2.1, §2.2).
 
 ---
 
@@ -120,7 +120,7 @@ class CharacterController extends Component.define({
 - The controller owns the entity's world position: after each step it writes `getPosition()` into the transform. Rotation stays user-controlled. With `interpolation: "interpolate"` (the default) the controller keeps the previous and current step positions and the `Update −900` system writes the interpolated position exactly as for `Rigidbody`, restoring the authoritative position at the start of each fixed step, so player characters do not judder above the fixed rate — and a camera rig in `lateUpdate` reads the same interpolated position the renderer draws.
 - `pushStrength` **scales** Lite's `characterStrength`, whose default is `1e38` — effectively infinite — so `pushStrength: 1` means "Lite's default", not "one newton".
 - `supportState` comes from a `checkSupport` probe the step system runs once per step with a **unit** gravity direction (handing Lite the full 9.81 m/s² vector makes the probe overshoot). Lite's `PhysicsCharacterController.staticFriction` defaults to `0`, so a bare controller pressed against _any_ incline keeps a residual down-slope velocity and the probe classifies it as `sliding`; `slopeLimit` still decides what the character can climb. The toolkit controllers add the friction and gravity handling that make `supportState` read the way Unity's does.
-- Step offset (stairs) is not a Lite feature; the 3D toolkit's `ThirdPersonController`/`FirstPersonController` implement a step probe with `shapeCast` (`stepHeight`).
+- Step offset (stairs) is not a Lite feature; the 3D toolkit's `ThirdPersonController` implements a step probe with `shapeCast` (`stepHeight`).
 - Gravity is applied by the toolkit controllers through `checkSupport` + `integrate`, so a bare `CharacterController` is purely kinematic.
 
 ### 2.4 `PhysicsMaterial` asset
