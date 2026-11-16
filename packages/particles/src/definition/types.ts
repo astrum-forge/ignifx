@@ -1,8 +1,7 @@
 import type { ColorLike, CurveValue, Vec2Like, Vec3Like } from "@ignifx/core";
 
-// The `ignifx.particles` document (`docs/plan/2026-09-terrain-particles-shaders.md` §4.2) as
-// `defineParticles` hands it back: every module present, every default filled in, every curve and
-// gradient baked. It is pure data, and both evaluators read it.
+// The `ignifx.particles` document as `defineParticles` hands it back: every module present, every
+// default filled in, every curve and gradient baked. It is pure data, and both evaluators read it.
 
 /**
  * The `format` discriminator every `.particles.json` document carries.

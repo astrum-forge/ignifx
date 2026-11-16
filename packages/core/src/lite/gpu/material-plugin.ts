@@ -11,7 +11,7 @@ import type {
 
 /**
  * The Babylon Lite half of surface shaders and raw material plugins
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.2). Everything here is `@internal`.
+ * (ADR-0024). Everything here is `@internal`.
  *
  * A `MaterialPlugin` is plain data with function members, so nothing here needs a device, but the
  * `materialPlugins` rendering feature must have installed the bridges before the scene was

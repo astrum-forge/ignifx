@@ -15,8 +15,8 @@ import { noise3 } from "./noise.js";
 import type { LookupRow, ParticleDefinition } from "../definition/types.js";
 
 // The CPU evaluator: one spawn record and a clock in, the particle's whole state out
-// (`docs/plan/2026-09-terrain-particles-shaders.md` §4.1). The WGSL in `src/gpu/wgsl.ts` computes
-// exactly this from the same bytes; `test/gpu/conformance.browser.test.ts` holds the two together.
+// (ADR-0025). The WGSL in `src/gpu/wgsl.ts` computes exactly this from the same bytes;
+// `test/gpu/conformance.browser.test.ts` holds the two together.
 
 /** Degrees to radians. */
 const DEG_TO_RAD = Math.PI / 180;

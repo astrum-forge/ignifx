@@ -5,7 +5,7 @@ import type { ShaderTextureDeclaration, ShaderUniformDeclaration, ShaderUniformT
 
 /**
  * The raw Babylon Lite material-plugin points, as a `@beta` escape hatch
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.2, ADR-0024).
+ * (ADR-0024).
  *
  * `@beta` because the meaning of each point is whatever the surrounding Lite template declares at
  * that line; ignifx's stable contract is the three hooks of `./surface-shader.ts`. Four rules read

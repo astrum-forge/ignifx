@@ -23,7 +23,7 @@ import type { SurfaceShaderInit } from "../surface-shader.js";
 
 /**
  * The device-only half of surface shaders: the Lite plugin a compiled `.surface.wgsl` becomes, and
- * the host-material writes that follow it (`docs/plan/2026-09-terrain-particles-shaders.md` §3.2).
+ * the host-material writes that follow it (ADR-0024).
  *
  * Each entry point takes the app or the host as a nullable and returns early when it is `null`, so
  * `../surface-shader.ts` keeps no headless branch of its own.

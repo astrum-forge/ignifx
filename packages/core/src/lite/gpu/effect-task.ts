@@ -18,8 +18,7 @@ import type {
 } from "@babylonjs/lite";
 
 /**
- * The Babylon Lite half of custom post effects (`docs/plan/2026-09-terrain-particles-shaders.md`
- * §3.3).
+ * The Babylon Lite half of custom post effects (ADR-0024).
  *
  * Everything here is `@internal` and every entry point needs a device.
  *

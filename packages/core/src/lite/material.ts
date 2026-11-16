@@ -46,7 +46,7 @@ import type { Material, PbrMaterialProps, SceneContext, StandardMaterialProps, T
  * this module is statically reachable from every app through the material asset layer, and Babylon
  * Lite exports one barrel, so a static import of the shader factory would put Lite's whole
  * shader-material pipeline in every entry chunk. That module is reached through a dynamic
- * `import()` instead (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1, "Bundle cost").
+ * `import()` instead (`docs/architecture/07-rendering.md` §2.8, "Bundle cost").
  */
 
 /**

@@ -1,4 +1,4 @@
-// A full ShaderMaterial, copied from docs/plan/2026-09-terrain-particles-shaders.md §3.1.
+// A full ShaderMaterial.
 // @ignifx shader
 // @ignifx attributes position, normal, uv
 // @ignifx system world, viewProjection, time

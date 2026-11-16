@@ -421,8 +421,7 @@ export class TwoDService {
   }
 
   /**
-   * Claims a fixed-capacity crowd of sprites that no entity owns
-   * (`docs/plan/2026-09-terrain-particles-shaders.md` §2.2).
+   * Claims a fixed-capacity crowd of sprites that no entity owns.
    *
    * @remarks
    * Use it when the sprites are not *things* — bullets, sparks, debris, 2D particles — and the

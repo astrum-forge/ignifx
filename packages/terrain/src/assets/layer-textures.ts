@@ -6,7 +6,7 @@ import type { App, AssetHandle } from "@ignifx/core";
 
 /**
  * A terrain's layer images and the `texture_2d_array` handles built from them
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §5.2).
+ * (ADR-0026).
  *
  * Eight layers cost two samplers instead of sixteen, which is what keeps the splat inside the
  * plugin sampler budget. Headless the arrays are not uploaded, but the size check still runs, so a

@@ -4,8 +4,7 @@ import type { DiagnosticsGroup, Vec3Like } from "@ignifx/core";
 import type { ParticlesService } from "@ignifx/particles";
 
 /**
- * What the two frame systems walk, and the one place 2D particles meet the shared budget
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §4.3).
+ * What the two frame systems walk, and the one place 2D particles meet the shared budget.
  *
  * It owns no budget: `maxParticles`, `qualityScale` and `gravity` all live on `app.particles`, so
  * both dimensions draw from one pool. Only the counters are separate, because

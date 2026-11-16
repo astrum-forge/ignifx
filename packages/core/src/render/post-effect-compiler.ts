@@ -13,7 +13,7 @@ import type { ShaderUniformType } from "./shader-declaration.js";
 
 /**
  * Turns a `// @ignifx post` file into the fragment module and uniform layout Babylon Lite's
- * fullscreen-effect path needs (`docs/plan/2026-09-terrain-particles-shaders.md` §3.3).
+ * fullscreen-effect path needs (ADR-0024).
  *
  * `mainFragment` is a plain function, not an entry point: Lite hard-codes the entry-point names
  * `effectFullscreenVertex` and `effectFragment` (`lib/effect/effect-renderer.js` 7, 258-260), so the

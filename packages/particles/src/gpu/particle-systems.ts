@@ -1,8 +1,8 @@
 import type { ParticlesService } from "../service/particles-service.js";
 import type { System, SystemContext } from "@ignifx/core";
 
-// The two frame systems that drive every `ParticleSystem`
-// (`docs/plan/2026-09-terrain-particles-shaders.md` §4.3). Both walk the service's live list rather
+// The two frame systems that drive every `ParticleSystem`.
+// Both walk the service's live list rather
 // than the world's components, so the order is attach order and a detached system is already gone.
 
 /** The counter indices, resolved once. */

@@ -609,7 +609,7 @@ export {
 } from "@ignifx/core";
 
 // Custom shaders, surface shaders, custom post effects and instancing
-// (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1-§3.5).
+// (ADR-0024).
 export {
   createShaderLoader,
   createStorageBufferAsset,
@@ -1388,8 +1388,8 @@ export {
   type ThreeDSettings,
 } from "@ignifx/3d";
 
-// Stateless GPU particles (`docs/plan/2026-09-terrain-particles-shaders.md` §4).
-// `VERSION` and `describeSchemas` are deliberately absent: those names belong to @ignifx/core here.
+// Stateless GPU particles (ADR-0025). `VERSION` and `describeSchemas` are deliberately absent:
+// those names belong to @ignifx/core here.
 export {
   bakeCurve,
   bakeGradient,
@@ -1534,8 +1534,8 @@ export {
 } from "@ignifx/particles-2d";
 export type { Particles2DErrorOptions } from "@ignifx/particles-2d";
 
-// Heightmap and procedural terrain (`docs/plan/2026-09-terrain-particles-shaders.md` §5).
-// `VERSION` and `describeSchemas` are deliberately absent: those names belong to @ignifx/core here.
+// Heightmap and procedural terrain (ADR-0026). `VERSION` and `describeSchemas` are deliberately
+// absent: those names belong to @ignifx/core here.
 export {
   buildChunkGeometry,
   chunkBounds,

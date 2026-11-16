@@ -10,7 +10,7 @@ import type { World } from "../world/world.js";
 
 /**
  * The `PreRender` system that writes the ignifx-provided uniforms of every live shader material
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1).
+ * (ADR-0024).
  *
  * Lite's shader materials get transforms, the camera position, the screen size and the alpha cutoff
  * for free and nothing else — no clock, no lights, no shadows (`index.d.ts` 11432) — so a file that

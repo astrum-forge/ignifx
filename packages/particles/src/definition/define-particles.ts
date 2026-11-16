@@ -33,8 +33,8 @@ import type {
 } from "./types.js";
 import type { ColorLike, CurveKey, CurveValue, IgnifxError, Vec2Like, Vec3Like } from "@ignifx/core";
 
-// The one place a `.particles.json` is validated, defaulted and baked
-// (`docs/plan/2026-09-terrain-particles-shaders.md` §4.2). The checks are hand-written so a failure
+// The one place a `.particles.json` is validated, defaulted and baked.
+// The checks are hand-written so a failure
 // names the exact path it broke; `src/file-schemas.ts` is the declarative copy, for documentation.
 
 /** The largest capacity one definition may ask for; the budget in `app.particles` is what really limits it. */

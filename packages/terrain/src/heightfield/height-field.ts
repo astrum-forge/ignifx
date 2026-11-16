@@ -5,7 +5,7 @@ import type { MutableVec3, Ray } from "@ignifx/core";
 
 /**
  * `HeightField`: the CPU height grid every terrain query reads
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §5.3).
+ * (ADR-0026).
  *
  * The field is stated in the terrain's **local** frame and centred on the entity's origin: X spans
  * `-width/2 .. +width/2`, Z spans `-depth/2 .. +depth/2`, heights run `0 .. height`. World-space

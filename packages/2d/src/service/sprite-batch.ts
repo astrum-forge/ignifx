@@ -16,8 +16,7 @@ import type { LiteSprite2DHandle, LiteSprite2DLayer } from "../lite/types.js";
 import type { AssetHandle, MutableVec2 } from "@ignifx/core";
 
 /**
- * `app.twoD.createSpriteBatch` (`docs/plan/2026-09-terrain-particles-shaders.md` §2.2): a
- * fixed-capacity crowd of sprites that no entity owns.
+ * `app.twoD.createSpriteBatch`: a fixed-capacity crowd of sprites that no entity owns.
  *
  * A `SpriteRenderer` is the right tool for a sprite that is a *thing* in the world — it has a
  * transform, it can be picked, it serializes. It is the wrong tool for ten thousand bullets, sparks

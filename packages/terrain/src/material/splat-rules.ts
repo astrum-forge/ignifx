@@ -3,7 +3,7 @@ import type { HeightField } from "../heightfield/height-field.js";
 
 /**
  * Control maps: where each layer of the splat appears
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §5.1–5.2).
+ * (ADR-0026).
  *
  * A control map is an RGBA8 image with one texel per quad of the field, its channels the weights of
  * four layers; layers 5–8 live in a second map. Generated weights feather each height and slope

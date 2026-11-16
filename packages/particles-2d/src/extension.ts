@@ -19,7 +19,7 @@ import type { Extension, ExtensionContext, SortingLayersSettings } from "@ignifx
 
 /**
  * The `@ignifx/particles-2d` extension (`docs/architecture/04-extensions.md` §1,
- * `docs/plan/2026-09-terrain-particles-shaders.md` §4).
+ * ADR-0025).
  *
  * Registering it is the whole installation: `particles2D()` gives a game the `ParticleSystem2D`
  * component, the `particles-2d` diagnostics group, and the two systems that drive every effect —

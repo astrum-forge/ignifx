@@ -13,7 +13,7 @@ import type { BenchScene } from "./types.ts";
 
 /**
  * Twenty thousand instances of one box through a single `InstancedMeshRenderer`, plus a static slab
- * under a static camera — the plan's §6.3 `instancing-20k` row.
+ * under a static camera: the `instancing-20k` row of `benchmarks/baselines.json`.
  *
  * The invariant it pins: a frame in which nothing moved costs nothing per instance. The slab is
  * written once, before `app.start()`, and never touched again, so what a frame costs is the

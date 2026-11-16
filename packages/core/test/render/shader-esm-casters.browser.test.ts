@@ -14,7 +14,7 @@ import type { BrowserApp } from "./support/browser-harness.js";
 import type { ShadowTechniqueName } from "../../src/render/light.js";
 
 /**
- * Shader-material meshes and shadow techniques (`docs/adr/0021-custom-shader-authoring.md`,
+ * Shader-material meshes and shadow techniques (`docs/adr/0024-custom-shader-authoring.md`,
  * validation): a shader material casts a PCF shadow with no flag, but Babylon Lite 1.27.0 has no
  * ESM view for the shader family and would write the fragment colour into the map, so the render
  * sync system leaves such a mesh out of every ESM generator's caster list and says so once

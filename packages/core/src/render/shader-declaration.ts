@@ -1,7 +1,7 @@
 /**
  * The vocabulary a `// @ignifx` pragma declares: the three authoring forms, the WGSL types and
  * attribute names Babylon Lite accepts, the uniforms ignifx supplies, and the parsed declaration
- * itself (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1).
+ * itself (ADR-0024).
  *
  * Split from `./shader-pragma.ts` so these few hundred bytes can stay in the barrel while the parser
  * lives in a chunk only the `.wgsl` loader fetches (`./shader-support.ts`).
@@ -103,8 +103,8 @@ export type LiteSystemUniformName = (typeof LITE_SYSTEM_UNIFORM_NAMES)[number];
 
 /**
  * The uniforms **ignifx** fills in every frame, read in WGSL as `shaderUniforms.<name>`
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1). Babylon Lite has no clock and no light
- * bindings for a shader material, so these are the engine's own addition.
+ * (ADR-0024). Babylon Lite has no clock and no light bindings for a shader material, so these are
+ * the engine's own addition.
  *
  * @public
  */

@@ -73,8 +73,7 @@ const ALLOWED_IMPORTS = {
 
 /**
  * Extra imports a package's `test/` may make that its `src/` may not. Integration tests that check a
- * by-data coupling end to end (plan `2026-09-terrain-particles-shaders.md` §5.4) live here so the
- * runtime layering above stays exact.
+ * by-data coupling end to end (ADR-0026) live here so the runtime layering above stays exact.
  */
 const TEST_ONLY_IMPORTS = {
   // packages/physics/test/terrain-heightfield.test.ts drives a HeightfieldCollider from Terrain.colliderInit().

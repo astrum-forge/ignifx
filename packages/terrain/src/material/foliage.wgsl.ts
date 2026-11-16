@@ -1,6 +1,5 @@
 /**
- * The foliage shader: a full `ShaderMaterial` with vertex wind, Lambert lighting, and an alpha test
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §5.5).
+ * The foliage shader: a full `ShaderMaterial` with vertex wind, Lambert lighting, and an alpha test.
  *
  * The plan wanted wind as a `displace` surface hook, which Babylon Lite 1.27.0 cannot do: plugin
  * uniforms are fragment-stage only, so the hook has no clock, and the composer runs the plugin's

@@ -3,7 +3,7 @@ import type { EngineContext, StorageBuffer } from "@babylonjs/lite";
 
 /**
  * The read-only storage buffer half of the Babylon Lite adapter
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §2.2). Everything here is `@internal` and needs
+ * (`docs/architecture/07-rendering.md` §2.9). Everything here is `@internal` and needs
  * a device.
  *
  * It is a separate module from `./shader-material.ts`, which a custom WGSL material binds these

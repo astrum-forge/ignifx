@@ -21,9 +21,9 @@ import type {
 } from "@ignifx/particles";
 
 /**
- * `ParticleSystem2D` (`docs/plan/2026-09-terrain-particles-shaders.md` §4.3): the 3D
- * `ParticleSystem` with its GPU half replaced by a `SpriteBatch`, sharing the emitter core and the
- * evaluator so both put the same document's particles in the same places.
+ * `ParticleSystem2D` (ADR-0025): the 3D `ParticleSystem` with its GPU half replaced by a
+ * `SpriteBatch`, sharing the emitter core and the evaluator so both put the same document's
+ * particles in the same places.
  *
  * Records are aged at `Math.fround(core.time)` because `spawnTime` is an `f32` and the 3D shader
  * reads `clock` as one: at `f64` precision a particle spawned on the current frame rounds a

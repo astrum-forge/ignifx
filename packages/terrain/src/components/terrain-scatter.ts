@@ -22,7 +22,7 @@ import type { AssetHandle, ComponentHooks, MutableVec3, Schema, Vec2Like } from 
 
 /**
  * `TerrainScatter`: seeded, rule-based foliage on one `InstancedMeshRenderer`
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §5.5).
+ * (ADR-0026).
  *
  * Placement is generated once and is a pure function of the seed, the terrain, and the rules, so a
  * headless test asserts the same instances a device draws. Change a rule and call

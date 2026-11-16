@@ -11,8 +11,7 @@ import { sparklePresetInput } from "./sparkle.js";
 import { sparksPresetInput } from "./sparks.js";
 import type { ParticleDefinition, ParticleDefinitionInput } from "../types.js";
 
-// The nine shipped presets (`docs/plan/2026-09-terrain-particles-shaders.md` §4.3): complete
-// documents a fresh project can play with no asset file at all.
+// The nine shipped presets: complete documents a fresh project can play with no asset file at all.
 
 /**
  * Every preset name, in the order the documentation lists them.

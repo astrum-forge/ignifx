@@ -10,7 +10,7 @@ import type { EngineContext, Material, Mesh, SceneContext, SceneNode } from "@ba
 
 /**
  * The chunk-mesh half of the terrain's Babylon Lite adapter
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §5.2, `docs/architecture/07-rendering.md` §2.3).
+ * (ADR-0026, `docs/architecture/07-rendering.md` §2.3).
  *
  * Terrain chunks are renderables that are not entities, so they cannot go through `MeshRenderer`;
  * this is the only file that touches Lite for them. Two facts drive the shapes below, both verified

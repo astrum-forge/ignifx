@@ -7,7 +7,7 @@ import type { LiteStorageBuffer } from "../lite/gpu/storage-buffer.js";
 import type { LiteEngine } from "../lite/scene.js";
 
 /**
- * `StorageBufferAsset` (`docs/plan/2026-09-terrain-particles-shaders.md` §2.2): a read-only GPU
+ * `StorageBufferAsset` (`docs/architecture/07-rendering.md` §2.9): a read-only GPU
  * buffer a custom WGSL shader indexes, addressed and reference-counted like any other asset.
  *
  * Babylon Lite 1.27.0 binds storage buffers as `var<storage,read>` and exposes no compute dispatch,
@@ -44,7 +44,7 @@ export interface StorageBufferAssetLiteHandles {
 
 /**
  * A read-only GPU buffer a custom shader indexes
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §2.2).
+ * (`docs/architecture/07-rendering.md` §2.9).
  *
  * @remarks
  * Bind it to a material with `MaterialAsset.setStorageBuffer(name, handle)`, where `name` is a

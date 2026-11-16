@@ -1,5 +1,5 @@
 /**
- * A view frustum for CPU culling (`docs/plan/2026-09-terrain-particles-shaders.md` §5.2).
+ * A view frustum for CPU culling (ADR-0026).
  *
  * Babylon Lite does not frustum-cull plain meshes, so a chunked terrain culls its own chunks:
  * six planes are extracted from the camera's view-projection matrix (Gribb & Hartmann 2001) for

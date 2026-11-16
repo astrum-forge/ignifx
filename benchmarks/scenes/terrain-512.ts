@@ -5,8 +5,8 @@ import type { App, AssetHandle } from "@ignifx/core";
 import type { TerrainAsset } from "@ignifx/terrain";
 
 /**
- * A 512 m terrain of 64 chunks, each carrying four levels of detail — the plan's §6.3 `terrain-512`
- * row.
+ * A 512 m terrain of 64 chunks, each carrying four levels of detail: the `terrain-512` row of
+ * `benchmarks/baselines.json`.
  *
  * ## What it is measuring
  *
@@ -16,8 +16,7 @@ import type { TerrainAsset } from "@ignifx/terrain";
  * (`docs/architecture/07-rendering.md` §6), which is exactly the CPU half this gate is about; the
  * draw is asserted in `packages/terrain/test/terrain.browser.test.ts`.
  *
- * {@link measureTerrain512} reports the three numbers the plan asks for; `baselines.json` records
- * them.
+ * {@link measureTerrain512} reports the scene's three numbers; `baselines.json` records them.
  */
 
 /** Samples per side: `2^9 + 1`. */
@@ -106,7 +105,7 @@ export interface Terrain512Measurement {
   readonly chunkBuildMs: number;
 }
 
-/** How many height queries the plan's budget counts. */
+/** How many height queries one measurement times. */
 const HEIGHT_QUERY_COUNT = 10_000;
 
 /** How many frames each timing averages over, so one slow frame does not decide it. */
@@ -133,7 +132,7 @@ function frameCost(scene: BenchScene): number {
 }
 
 /**
- * Measures the three numbers `docs/plan/2026-09-terrain-particles-shaders.md` §6.3 asks for.
+ * Measures the scene's three numbers: the LOD pass, the height queries and the chunk build.
  *
  * @remarks
  * The LOD pass is the difference between a frame with the terrain enabled and one without it, so
