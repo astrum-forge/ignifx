@@ -1,6 +1,6 @@
 # ADR-0006 · 2D physics backend
 
-**Status:** Accepted · **Date:** 2026-09-05 · **Validated:** 2026-09-06 (Phase 6 spike S6.2), amended 2026-09-08 (sensor filtering, see Validation below)
+**Status:** Accepted · **Date:** 2026-09-05 · **Validated:** 2026-09-06, amended 2026-09-08 (sensor filtering, see Validation below)
 
 ## Context
 
@@ -9,46 +9,32 @@ Lite ships Havok (3D). 2D games (platformers, top-down) need 2D bodies, one-way 
 ## Options considered
 
 1. **Havok 3D constrained to a plane** — one physics engine. Cons: no linear-axis locks in Lite's API, drift correction hacks, no 2D-specific features (one-way platforms, edge chains), heavier.
-2. **Rapier 2D (`@dimforge/rapier2d-compat` 0.20, Apache-2.0)** — deterministic across platforms, WASM, TypeScript bindings, built-in kinematic character controller (autostep, slopes, snap-to-ground), sensors, joints, active community.
+2. **Rapier 2D (`@dimforge/rapier2d-compat` 0.20, Apache-2.0)** — locally deterministic (cross-platform determinism needs the separate `-deterministic` build; see Validation), WASM, TypeScript bindings, built-in kinematic character controller (autostep, slopes, snap-to-ground), sensors, joints, active community.
 3. **Box2D v3 WASM (`box2d3-wasm` 5.x, MIT)** — excellent solver. Cons: thinner TS bindings, no built-in character controller, single-maintainer port.
 4. **Custom AABB/tile collision only** — tiny. Cons: no rigid bodies; users outgrow it quickly.
 
 ## Decision
 
-Rapier 2D behind `@ignifx/physics-2d`, following the stepping model of `docs/architecture/09-physics.md` §1. The Phase 6 spike validates bundle size (inline-WASM `-compat` vs. Vite-served `.wasm`), determinism, and controller behaviour before the API is frozen.
+Rapier 2D behind `@ignifx/physics-2d`, following the stepping model of `docs/architecture/09-physics.md` §1. Bundle size (inline-WASM `-compat` against a Vite-served `.wasm`), determinism and controller behaviour were measured before the API was settled; see Validation.
 
 ## Consequences
 
 - Two physics WASM modules exist in the ecosystem, but a given game loads only one.
 - Both extensions expose the same component vocabulary (`Rigidbody`/`Rigidbody2D`, colliders, `CharacterController`/`CharacterController2D`), so the Agent Skill can document them side by side.
-- If the spike fails, option 3 is the fallback with the same public API.
+- Option 3 was the fallback, with the same public API; the validation did not need it.
 
 ## Validation (2026-09-06)
 
-Phase 6 spike S6.2, measured against `@dimforge/rapier2d-compat@0.20.0` on macOS arm64, Node 24.
+Measured against `@dimforge/rapier2d-compat@0.20.0` on macOS arm64, Node 24.
 **The decision stands: Rapier 2D, on the `-compat` build.** Box2D v3 is not needed.
 
 ### Bundle size — `-compat` (inline WebAssembly) stays the default
 
-A Vite 8 production build of a two-line fixture app, once without Rapier and once with it, minified
-with oxc:
-
-| Build                                 | Raw             | Gzipped       |
-| ------------------------------------- | --------------- | ------------- |
-| Fixture alone                         | 85 B            | 111 B         |
-| Fixture + `@dimforge/rapier2d-compat` | 2,115,219 B     | 794,615 B     |
-| **Contribution of `-compat`**         | **2,115,134 B** | **794,504 B** |
-
-The served-`.wasm` variant, estimated from the registry tarball of `@dimforge/rapier2d@0.20.0`
-(`npm view @dimforge/rapier2d dist.tarball`): the binary is the same 1,486,188 B file, 554,508 B
-gzipped, and the JavaScript glue is 673,586 B raw / 88,508 B gzipped unminified — so about
-643 KB gzipped in total, split into a small chunk plus a `.wasm` fetched in parallel.
-
-`-compat` therefore costs roughly **148 KB gzipped** more than serving the binary. That is well
-inside the 300 KB threshold the plan set for switching, so the package ships `-compat`: one
-dependency, no public-asset plumbing, and the same code path in Node, the browser, and Electron.
-Serving the `.wasm` through the Vite plugin's extension public assets remains a Phase 12 option if
-the number moves.
+In a minified production build `@dimforge/rapier2d-compat` adds about 795 KB gzipped. Serving the binary as a
+separate `.wasm` file would come to about 643 KB gzipped, so `-compat` costs roughly **148 KB gzipped** more.
+The threshold set for switching was 300 KB, so the package ships `-compat`: one dependency, no public-asset
+plumbing, and the same code path in Node, the browser, and Electron. Serving the `.wasm` through the Vite
+plugin's extension public assets remains an option if the number moves.
 
 ### Determinism — locally yes, cross-platform **no**
 
@@ -56,14 +42,11 @@ Two worlds built from the same scene and stepped 600 times are bit-identical, an
 determinism suite reproduces a committed FNV-1a hash of twelve settled bodies (`5718c5f0`) across
 two apps in one process, interleaved or not, and across separate process runs.
 
-The context section's claim that Rapier 2D is "deterministic across platforms" is **wrong for this
-package**. `@dimforge/rapier2d-compat` is Rapier's _main_ build; its README states that it "does
-**not** guarantee cross-platform determinism of the physics simulation (but it is still locally
-deterministic, on the same machine)". The `enhanced-determinism` feature ships as a separate npm
-package, `@dimforge/rapier2d-deterministic` / `-deterministic-compat`, described as "a less
-optimized build but with a guarantee of a cross-platform deterministic execution". Switching is a
-one-line dependency change with no API change, and is the answer if lockstep networking ever needs
-it. `docs/architecture/11-2d-toolkit.md` §8 has been corrected to match.
+That is local determinism only. `@dimforge/rapier2d-compat` is Rapier's _main_ build; its README states that it
+"does **not** guarantee cross-platform determinism of the physics simulation (but it is still locally
+deterministic, on the same machine)". The `enhanced-determinism` feature ships as a separate npm package,
+`@dimforge/rapier2d-deterministic` / `-deterministic-compat`. Switching is a one-line dependency change with no
+API change, and is the answer if lockstep networking ever needs it (`docs/architecture/11-2d-toolkit.md` §8).
 
 ### Character controller — everything works, with one measured limit
 

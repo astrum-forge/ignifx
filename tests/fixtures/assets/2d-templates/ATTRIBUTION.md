@@ -62,7 +62,7 @@ resolves it through the asset manifest (`packages/2d/src/atlas/loader.ts`, `reso
 so a production build that content-hashes the asset root still finds the sheet.
 
 Until 2026-09-08 the sheets sat in each template's `public/` directory and the documents named them
-root-relatively as `/tiles.png`. That was a workaround for a Phase 6 loader that resolved the
+root-relatively as `/tiles.png`. That was a workaround for a loader that resolved the
 reference against the document's own **URL**, which a hashed build breaks: `assets/tiles.<hash>.atlas.json`
 looked for `assets/tiles.png`, a name that no longer exists, and the load failed with `IGX-0505`.
 The workaround only ever resolved at a site's root, so a template deployed under a sub-path — the

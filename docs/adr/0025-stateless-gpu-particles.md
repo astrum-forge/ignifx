@@ -1,12 +1,12 @@
 # ADR-0025 · Particles are stateless: closed-form evaluation on the GPU from CPU-written spawn records
 
-**Status:** Proposed · **Date:** 2026-09-08 · **Deciders:** Astrum Forge Studios
+**Status:** Proposed — implemented on `main`; awaiting ratification · **Date:** 2026-09-08 · **Deciders:** Astrum Forge Studios
 
 ## Context
 
-A particle system is the most-requested missing feature (`website/plan/07-wishlist.md` W-R22). Babylon Lite 1.27.0 has no compute API and exposes no `GPUDevice` (`index.d.ts`; `EngineContext` at 4676), its own node-particle runtime is a CPU structure-of-arrays stepped by JavaScript closures and advanced from Lite's own frame hook (`ParticleSystem` 8034, `registerNodeParticleSet` 9504; its documentation states "Simulation is CPU-only"), and the one upstream pull request heading toward compute (#583) had that half split out at review. What Lite does offer: custom WGSL materials with read-only storage buffers (`createStorageBuffer` 3211, `updateStorageBuffer` 13373, `setShaderStorageBuffer` 10929) and thin instances.
+A particle system was the most-requested missing feature. Babylon Lite 1.27.0 has no compute API and exposes no `GPUDevice` (`index.d.ts`; `EngineContext` at 4676), its own node-particle runtime is a CPU structure-of-arrays stepped by JavaScript closures and advanced from Lite's own frame hook (`ParticleSystem` 8034, `registerNodeParticleSet` 9504; its documentation states "Simulation is CPU-only"), and the one upstream pull request heading toward compute (#583) had that half split out at review. What Lite does offer: custom WGSL materials with read-only storage buffers (`createStorageBuffer` 3211, `updateStorageBuffer` 13373, `setShaderStorageBuffer` 10929) and thin instances.
 
-`CONSTITUTION.md` §2.1 requires reproducible simulation under a fixed timestep, §3.8 a headless mode, §2.4 frame and allocation budgets, and `01-lifecycle-and-time.md` §7 exact pause behaviour. The survey (plan §9.1) found that PlayCanvas's "GPU particles" are a ping-pong render-to-texture Euler simulation whose depth sort silently falls back to the CPU, and that Godot's parallel CPU and GPU implementations lost feature parity.
+`CONSTITUTION.md` §2.1 requires reproducible simulation under a fixed timestep, §3.8 a headless mode, §2.4 frame and allocation budgets, and `01-lifecycle-and-time.md` §7 exact pause behaviour. A survey found that PlayCanvas's "GPU particles" are a ping-pong render-to-texture Euler simulation whose depth sort silently falls back to the CPU, and that Godot's parallel CPU and GPU implementations lost feature parity.
 
 ## Options considered
 
@@ -32,5 +32,5 @@ Option 3, with these rules:
 
 - Ten thousand live particles cost the CPU one small buffer upload per frame; headless tests assert the records; determinism follows from the seed.
 - Documented limits: no collisions, no sub-emitters, no per-particle sorting, no soft particles in v1 (needs a depth grab). Trails are a v1.1 module.
-- If Lite ships compute, a compute evaluator can replace the vertex evaluator behind the same `.particles.json` and `ParticleSystem` API.
-- Validation (spike S0.1, 2026-09-08, Apple M1 Metal, 64×64 target, GPU time as `onSubmittedWorkDone` wall time because `gpuFrameTimeMs` reads 0 on Metal): 10,000 instances ≈ 1.1 ms alive / 0.7 ms dead; 100,000 ≈ 2.6 / 2.4 ms; 1,000,000 ≈ 18.8 / 5.2 ms — dead instances are not free, hence the live-tail draw count and the 1,000 default capacity. A 1 KB `updateStorageBuffer` per frame costs about 0.1 ms CPU. Chromium's SwiftShader (CI) needs 150–185 ms per frame at 10,000 instances, so browser tests stay at or below 1,000. The conformance test results are appended when wave 1b lands.
+- If Lite ships compute, a compute evaluator can replace the vertex evaluator behind the same `.particles.json` and `ParticleSystem` API. The pinned Lite version has compute (`createComputeShader`); whether to revisit is an owner decision (`docs/plan/engineering-plan.md`).
+- Validation (2026-09-08, Apple M1 Metal, Lite 1.27.0, 64×64 target, GPU time as `onSubmittedWorkDone` wall time): 10,000 instances ≈ 1.1 ms alive / 0.7 ms dead; 100,000 ≈ 2.6 / 2.4 ms; 1,000,000 ≈ 18.8 / 5.2 ms — dead instances are not free, hence the live-tail draw count and the 1,000 default capacity. A 1 KB `updateStorageBuffer` per frame costs about 0.1 ms CPU. Chromium's SwiftShader (CI) needs 150–185 ms per frame at 10,000 instances, so browser tests stay at or below 1,000. `packages/particles/test/gpu/particles.browser.test.ts` is the conformance test.

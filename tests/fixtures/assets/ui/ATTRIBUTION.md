@@ -5,7 +5,7 @@ under the licence recorded below with the copyright line its upstream project re
 (`CONSTITUTION.md` §11.3), and one original document. Nothing here is published in an `@ignifx/*`
 package.
 
-Downloaded 2026-09-06 for Phase 8. Re-download with the command in [Provenance](#provenance) and
+Downloaded 2026-09-06. Re-download with the command in [Provenance](#provenance) and
 compare the SHA-256 digest before replacing the file.
 
 ---

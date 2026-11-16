@@ -20,11 +20,3 @@ throws `IGX-0704`.
 
 `?static=1` stops time and pins the cube's angle; `?ortho=1` switches the camera to an orthographic
 projection. Both exist for the visual golden suite in `tests/visual/`.
-
-## Known engine defect (2026-09-06)
-
-**The shadow is missing and the cube is lit from the wrong side.** A shadow-casting `Light` writes
-its entity's _world-space_ forward onto a Lite light that is _parented_ under that same entity, and
-Lite composes the parent's rotation over it again (`lib/light/directional-light.js`), so the shading
-direction is rotated twice. The code here is what a game should write; the picture is wrong until
-`packages/core/src/render/light.ts` is fixed. See `tests/visual/README.md`.
