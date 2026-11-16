@@ -1,7 +1,7 @@
 # Lifecycle and time
 
 When things happen in a frame, which callbacks a `Script` may implement, and how a headless app is
-stepped. Rationale in `docs/architecture/01-lifecycle-and-time.md`.
+stepped.
 
 ## 1. Frame order
 
@@ -18,7 +18,7 @@ ascending, creation order ascending)`.
 5. **Fixed loop** — while the accumulator holds a whole step: `Phase.FixedUpdate` systems with `order < 0`, `fixedUpdate(fixedDeltaTime)` on scripts, `Phase.FixedUpdate` systems with `order >= 0`, then coroutines waiting on `waitFixedUpdate()`. Skipped entirely while `time.paused` is `true`.
 6. **Lifecycle flush B** — `start()` for effectively enabled scripts that have never started.
 7. **Update** — `Phase.Update` systems with `order < 0`, `update(deltaTime)` on scripts, coroutine resumes (`yield`, `waitSeconds`, `waitUntil`, `waitWhile`, settled promises), then `Phase.Update` systems with `order >= 0`.
-8. **PostUpdate** — `Phase.PostUpdate` systems (animation lands here in a later phase).
+8. **PostUpdate** — `Phase.PostUpdate` systems: tweens, and the animators of `@ignifx/3d` and `@ignifx/2d`.
 9. **LateUpdate** — `lateUpdate(deltaTime)` on scripts.
 10. **Destroy flush** — tracked `entityRef`/`componentRef` fields pointing at doomed objects are nulled, then `onDisable()` and `onDestroy()` run for everything queued this frame, children before parents and, within an entity, components in attach order.
 11. **PreRender** — `Phase.PreRender` systems, ending with `ignifx/render-sync` (order 900), which
@@ -45,7 +45,7 @@ optional and only turns on signature checking.
 
 `onApplicationPause(paused)`/`onApplicationFocus(focused)` fire per document-visibility or focus
 transition; `onCollisionEnter/Stay/Exit` and `onTriggerEnter/Exit` are declared on `ScriptCallbacks`
-now and delivered by `@ignifx/physics` in a later phase. Rules the kernel enforces:
+and delivered after the fixed step by `@ignifx/physics` and `@ignifx/physics-2d`. Rules the kernel enforces:
 
 - A component added with `enabled = false` receives **no** `awake` until it is first enabled.
 - `start` never runs twice, even after a disable/enable cycle; a script destroyed during `update` does not receive `lateUpdate` that frame.
@@ -156,7 +156,7 @@ app.dispose();
 ## 8. Edit mode
 
 `createApp({ editMode: true })` builds an app for an editor's scene view: the scene shows, nothing
-plays (ADR-0028). `app.isEditMode` reports it; it never changes for the app's life.
+plays. `app.isEditMode` reports it; it never changes for the app's life.
 
 - **Scripts are inert unless they opt in.** A script gets no callback at all — not `awake`, not
   `update`, not `onDestroy`, from no path — unless its class sets `static runInEditMode = true`.

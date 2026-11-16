@@ -51,7 +51,7 @@ What an omitted directive means:
 | --- | --- |
 | `attributes` | `position` for a `shader` file, nothing for `surface` and `post` |
 | `blend` | `opaque` |
-| `cull` | `back`. Babylon Lite 1.27.0 has no front-face culling: `cull front` is `IGX-0719` |
+| `cull` | `back`. Babylon Lite has no front-face culling: `cull front` is `IGX-0719` |
 | `depthWrite` | On for `opaque`, off for every blended mode — Lite's own rule |
 | `depthTest` | On |
 | `instancing` | `none` |

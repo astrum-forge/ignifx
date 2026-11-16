@@ -1,8 +1,7 @@
 # Material files (`.material.json`)
 
 Hand-written companion to the generated field table in
-[`ignifx.material.md`](ignifx.material.md). Rationale in
-`docs/architecture/07-rendering.md` §2.6 and `06-serialization-and-scene-format.md` §6.
+[`ignifx.material.md`](ignifx.material.md).
 
 A material file loads as a `MaterialAsset`, which a `MeshRenderer.materials` entry or a
 `Model.materialOverrides` entry points at. `MATERIAL_FILE_FORMAT` is `"ignifx.material"`,

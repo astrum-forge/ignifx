@@ -1,8 +1,7 @@
 # Assets
 
 Everything a game loads — textures, models, scenes and prefabs, materials, environments, fonts,
-JSON, text, bytes — is addressed, typed, reference-counted, and asynchronous. Rationale in
-`docs/architecture/05-assets-and-loading.md`.
+JSON, text, bytes — is addressed, typed, reference-counted, and asynchronous.
 
 ```
 address ──▶ manifest ──▶ url ──▶ loader ──▶ value
@@ -150,7 +149,8 @@ progress propagate), `reportProgress(fraction)`, `meta` (the `.meta.json` sideca
 
 The core extension registers: `texture` (`.png .jpg .jpeg .webp .ktx2 .basis`), `shader` (`.wgsl`), `model`
 (`.glb .gltf`), `scene` (`.scene.json .prefab.json`), `material` (`.material.json`), `mesh`
-(`.mesh.json`), `environment` (`.env .hdr .dds`), `font` (`.ttf .otf`), and the generic
+(`.mesh.json`), `environment` (`.env .hdr .dds .environment.json`), `lightprobes` (`.probes.json`),
+`lightmap` (`.lightmap.json`), `font` (`.ttf .otf`), and the generic
 `jsonAssetLoader`, `textAssetLoader`, and `binaryAssetLoader`.
 
 ### Compressed textures (`.ktx2`)
@@ -170,8 +170,8 @@ silicon and mobile, RGBA8 without compression support — so it stays compressed
   `@ignifx/core` directly (the scaffolded templates do). Without the plugin, copy
   `node_modules/@ignifx/core/decoders/*` beside the assets and list each file in the manifest at
   its bare name.
-- `.basis` is not supported in a project that serves its own decoders (the Vite plugin's): Lite
-  1.34 loads its transcoder only from `cdn.babylonjs.com`, with no setter, so the load fails with
+- `.basis` is not supported in a project that serves its own decoders (the Vite plugin's): Babylon
+  Lite loads its transcoder only from `cdn.babylonjs.com`, with no setter, so the load fails with
   `IGX-0509` before anything is fetched. Without the plugin Lite still tries the CDN, and a strict
   CSP's refusal becomes the same `IGX-0509`. Convert `.basis` files to `.ktx2`.
 

@@ -1,8 +1,9 @@
 # Gotchas
 
 Traps in the engine as it stands (rendering, shaders, particles, terrain and assets included), each
-with its replacement and, where one exists, the error code you will see. The twenty-one most common
-are repeated in `../SKILL.md`.
+with its replacement and, where one exists, the error code you will see. The most common are
+repeated in `../SKILL.md`; each extension's own are in the Gotchas section of its skill
+(`skills/<name>/SKILL.md` in the `@ignifx/<name>` package).
 
 ## App and platform
 
@@ -115,10 +116,10 @@ are repeated in `../SKILL.md`.
     with `ctx.requireRenderingFeature(name)`; afterwards it throws `IGX-0704`. A light with
     `shadows.enabled = true` and no `shadows` feature simply gets no shadow pass.
 35. **Do not expect a mesh spawned at runtime to be visible on the next frame.** A material family
-    that did not exist when the scene was registered takes Lite's runtime build path: spike S2.2
-    measured **3 extra frames** before the mesh appeared, against 0–2 when the family had been warmed
+    that did not exist when the scene was registered takes Lite's runtime build path: about
+    **3 extra frames** before the mesh appears, against 0–2 when the family had been warmed
     and 0 when a mesh of that family was already drawn. `app.start()` warms the `boot` preload group;
-    call `app.renderer.warmUp(materials)` for anything you load later (ADR-0014).
+    call `app.renderer.warmUp(materials)` for anything you load later.
 36. **Do not put two `Environment` components in one world**, and do not expect its `skybox` record
     to change the background. The one enabled last wins and the world logs `IGX-0705` once; there is
     one image-based lighting setup per world. Babylon Lite builds the background inside
@@ -142,9 +143,9 @@ are repeated in `../SKILL.md`.
     same render sync, so a camera-less test prints the warning too; it is harmless there. Add a
     `Camera` entity, or pass `createApp({ headless: true, logLevel: "error" })` (or `"silent"`) to
     keep test output clean.
-39. **Do not expect `MeshRenderer.materials[1]` to draw.** This Lite version has one material per
+39. **Do not expect `MeshRenderer.materials[1]` to draw.** Babylon Lite has one material per
     mesh: index 0 is used, later entries are accepted and ignored, and an empty array draws with the
-    default material. The array shape is kept so files survive submesh support landing.
+    default material.
 40. **Do not `await app.renderer.captureScreenshot()` without a running render loop.** A frame has
     to be presented, so a headless app — or a stopped one — rejects with `IGX-0707`.
 41. **Do not write a colour as a hex string in settings or a file.** `"#101014"` is only ever a
@@ -164,8 +165,9 @@ are repeated in `../SKILL.md`.
     rewrites its pose from the entity every frame the entity moves, so anything you write onto
     `light.lite.light.direction` is overwritten.
 44. **Do not assume device loss is recoverable.** Even with `features.deviceLostRecovery` on, Lite
-    cannot rebuild PCF/CSM shadow generators or glTF `EXT_lights_image_based` environments, so a
-    scene using either reaches `app.events.onDeviceRecoveryFailed`. Offer a page reload.
+    rebuilds only ESM and CSM directional shadow generators: a PCF shadow generator (the default
+    `shadows.technique`) or a glTF `EXT_lights_image_based` environment sends the scene to
+    `app.events.onDeviceRecoveryFailed`. Use `"csm"` or `"esm"`, and offer a page reload on failure.
 45. **Do not move a shadow caster's vertices outside its own bounds without `// @ignifx displace`,
     or from a storage buffer alone.** Shadows of skinned models follow their pose under every
     technique, and a shader material's shadow follows its vertex stage under PCF and CSM: the map
@@ -205,7 +207,7 @@ Each of these comes from a subsystem's own page; the link is where the detail li
     hook because Lite's template declares them `let`.
 52. **Do not read a uniform, a texture or the clock in a `displace` hook.** Lite's plugin uniforms
     and samplers are fragment-stage only, so the hook is refused. Static displacement is a hook;
-    wind is a shader material (`packages/terrain/skills/terrain/SKILL.md`).
+    wind is a shader material (the `@ignifx/terrain` skill).
 53. **Do not change `capacity`, `gpuCulling` or `lod` on an `InstancedMeshRenderer` after
     `app.start()`.** Lite fixes the instance buffer and the culling setup before the scene is
     registered, so it is refused with `IGX-0717`. `setCount` is the runtime knob. And keep
@@ -214,7 +216,7 @@ Each of these comes from a subsystem's own page; the link is where the detail li
 54. **Do not expect particles to collide, sort against each other, or spawn more particles.** None
     of those is a function of a particle's age, and the simulation is stateless by design. Order
     whole systems with `main.renderOrder`, and use `additive` where order must not matter
-    (`packages/particles/skills/particles/SKILL.md`).
+    (the `@ignifx/particles` skill).
 55. **Do not size a particle `capacity` below `rateOverTime × the longest lifetime`.** The ring
     overwrites the oldest live particle instead of growing, the effect visibly thins, and
     `droppedCount` counts each one. `app.particles.maxParticles` clamps the whole budget and logs
@@ -225,13 +227,13 @@ Each of these comes from a subsystem's own page; the link is where the detail li
 57. **Do not give a 2D particle system an unloaded atlas or an undeclared sorting layer.** The first
     reports `IGX-1754` once and draws nothing, the second falls back to `"Default"` with
     `IGX-1756`. Particles are never pickable and never carry a pivot
-    (`packages/particles-2d/skills/particles-2d/SKILL.md`).
+    (the `@ignifx/particles-2d` skill).
 58. **Do not ship an 8-bit heightmap.** 256 steps over an 80 m range is a 31 cm stair on every
     slope; loading one warns with `IGX-1603`. `.r16` is canonical, 16-bit PNG loads through the
     package's own decoder, and `ignifx import heightmap in.png out.r16` converts a source.
 59. **Do not rotate a terrain's entity** (`IGX-1604`: queries honour translation and scale only),
     and do not expect chunks to cast shadows — they are renderables, not components, so a hill does
-    not shadow the valley beside it (`packages/terrain/skills/terrain/SKILL.md`).
+    not shadow the valley beside it (the `@ignifx/terrain` skill).
 60. **Do not query a terrain before its document arrives** (`IGX-1609`), and do not expect a
     `TerrainScatter` to follow a changed rule on its own: placement runs once, and `regenerate()` is
     how a density or seed change lands.

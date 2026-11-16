@@ -1,7 +1,7 @@
 # Platform and storage
 
 `app.platform` says where the game is running; `app.storage` is where it keeps settings, save games,
-and input rebindings. Rationale in `docs/architecture/14-platform-electron.md` §1, §2, §5.
+and input rebindings.
 
 ## 1. `app.platform`
 

@@ -1,11 +1,12 @@
 # Rendering
 
-ignifx does not render; Babylon Lite does. Seven components describe what a frame contains, one
+ignifx does not render; Babylon Lite does. Nine components describe what a frame contains, one
 `PreRender` system reconciles them with the Lite scene, and `app.renderer` owns everything that is
-not attached to an entity. Rationale in `docs/architecture/07-rendering.md`.
+not attached to an entity.
 
 ```
 Entity ──▶ Camera | Light | MeshRenderer | InstancedMeshRenderer | Model | Environment | PostProcessStack
+           | ReflectionProbe | LightProbeVolume
                      │
        PreRender ──▶ render-sync (order 900) ──▶ Lite scene ──▶ frame
 ```
@@ -32,7 +33,7 @@ what they mean.
   `getViewMatrix(out)`, `getProjectionMatrix(out)`.
 - The enabled camera with the highest `priority` becomes `world.mainCamera` and renders; ties break
   on creation order. A world with **no** enabled camera renders nothing and logs `IGX-0706` once.
-- `MeshRenderer.materials` keeps its array shape, but this Babylon Lite version has one material per
+- `MeshRenderer.materials` keeps its array shape, but Babylon Lite has one material per
   mesh: index 0 is used, the rest are accepted and ignored, and an empty array draws with the
   renderer's neutral default material.
 - `Light.includeOnly` and `exclude` are entity lists, matched on the entity uid Lite carries as the
@@ -115,123 +116,10 @@ what they mean.
   no shadow until it is enabled again. It stays in the scene at intensity `0`, so toggling it costs
   no material rebuild (dropping its shadow generator still does, as `shadows.enabled = false` does).
 
-Which of the three to use, their file formats, the bake, the quality tiers and the known gaps are
-on [`baked-lighting.md`](baked-lighting.md); the bullets below are each component's contract.
-
-- A `ReflectionProbe` captures six views from its entity's position into a cube map, then every
-  lit PBR material reflects the nearest probe instead of the `Environment`: a probe whose
-  `boxProjection` box (full size in metres, centred on the probe) holds the mesh wins, then the
-  closest. `boxProjection` also makes reflections line up with the room's walls (parallax); `null`
-  makes them look infinitely far away. A material shared by several meshes follows the first. With
-  two or more box probes and a `blendDistance` above 0 on one, every lit PBR material blends them per
-  pixel instead (at most four overlapping at a point). Use
-  `refreshMode: "once"` (default) and call `probe.refresh()` after the static scene changes;
-  `"everyFrame"` costs six extra scene passes a frame: use it for one probe, on desktop at the
-  `high` quality tier only. Diffuse light still comes from the
-  `Environment`, rough materials look blurrier than with an `.env`, and the probe's GPU code loads
-  only once a world has one. Headless, a probe captures nothing.
-
-  ```ts
-  import type { World } from "@ignifx/core";
-  import { ReflectionProbe } from "@ignifx/core";
-
-  export function addRoomProbe(world: World): ReflectionProbe {
-    const entity = world.createEntity("Room probe", { position: { x: 0, y: 1.5, z: 0 } });
-    return entity.addComponent(ReflectionProbe, { size: 128, boxProjection: { x: 8, y: 3, z: 8 } });
-  }
-  ```
-
-- A `LightProbeVolume` replaces the `Environment`'s diffuse light with a baked grid of light probes:
-  every lit PBR material blends the eight probes around each pixel, so moving objects are lit by the
-  room they are in. Reflections still come from the `Environment` or a `ReflectionProbe`. With a
-  `PostProcessStack`'s `ssgi` on, which removes `1 − environmentDiffuse` of the environment's
-  diffuse light, the diffuse term becomes `P − (1 − environmentDiffuse)·E` (`P − 0.5·E` at the
-  default) plus the screen-space bounce: the probes are not discounted, so a dim volume under a
-  bright environment can read darker than the environment alone. A grid is a
-  `.probes.json` (`format: "ignifx-probes"`): `origin`, `cellSize`, `counts`, and 12 linear-RGB
-  floats per probe, `c0, c1, c2, c3`, so a white surface with normal `n` receives
-  `c0 + c1·n.y + c2·n.z + c3·n.x` (X fastest, then Y, then Z). Load it with
-  `app.assets.loadAsync<LightProbeAsset>(address)`, or publish one built in code with
-  `createLightProbeAsset(app, data)`; `sampleLightProbes(data, x, y, z, normal)` reads it on the CPU
-  the way the shader does. Its GPU code loads only once a world has a volume; headless it does
-  nothing.
-
-  ```ts
-  import type { App, World } from "@ignifx/core";
-  import { createLightProbeAsset, LightProbeVolume } from "@ignifx/core";
-
-  export function addWarmRoom(app: App, world: World): LightProbeVolume {
-    const warm = [1, 0.8, 0.6, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    const probes = createLightProbeAsset(app, {
-      origin: { x: -4, y: 0, z: -4 },
-      cellSize: { x: 8, y: 3, z: 8 },
-      counts: { x: 2, y: 2, z: 2 },
-      coefficients: Array.from({ length: 8 }, () => warm).flat(),
-    });
-    return world.createEntity("Room probes").addComponent(LightProbeVolume, { probes });
-  }
-  ```
-
-- `await bakeLightProbes(world, { origin, cellSize, counts, rays?, maxDistance?, sky?, directLight?,
-signal?, onProgress? })` bakes a grid on the CPU, headless included, yielding to the host about every 8 ms: one bounce, from the world's lights and the triangles of every
-  enabled `MeshRenderer` (data or primitives) and of every `Model` a headless app loaded; what it
-  cannot read is listed in `result.skips`. `sky` is a linear colour, a gradient or SH9 harmonics
-  for rays that hit nothing. Every light bounces; a probe also stores a light's direct light only
-  when its `Light.bakeMode` is `"baked"` (such a light no longer draws at run time), or when it is
-  `"realtime"` and `directLight` is `"include"`, so a light that keeps drawing is never counted
-  twice — hemispheric lights included. Save `result.data` with
-  `writeLightProbeFile` or use it at once with `createLightProbeAsset`. It costs probes × rays ×
-  triangles, so bake small scenes, in a tool or at load, never per frame. A bad grid, `rays` outside
-  1–4096 or a non-finite `maxDistance` is `IGX-0734` before any tracing; an aborted `signal` rejects
-  with its reason between probes.
-
-  ```ts
-  import type { App, World } from "@ignifx/core";
-  import { bakeLightProbes, createLightProbeAsset, LightProbeVolume } from "@ignifx/core";
-
-  export async function bakeRoom(app: App, world: World): Promise<LightProbeVolume> {
-    const baked = await bakeLightProbes(world, {
-      origin: { x: -4, y: 0.5, z: -4 },
-      cellSize: { x: 4, y: 2, z: 4 },
-      counts: { x: 3, y: 2, z: 3 },
-      rays: 64,
-    });
-    const probes = createLightProbeAsset(app, baked.data);
-    return world.createEntity("Baked probes").addComponent(LightProbeVolume, { probes });
-  }
-  ```
-
-- A `MeshRenderer`'s `lightmap` record (`@beta`) samples a baked lightmap through the mesh's
-  second UV set (`uvs2`; `uv2: false` uses the first): `asset` (a `LightmapAsset`), `mode`
-  (`"add"` adds the baked light to the shading, `"shadowmap"` multiplies the shading by it),
-  `level`, and `gamma` (decode an sRGB texture that was not decoded on load). Only a renderer on a
-  static entity (`entity.isStatic`, set before `awake` or in the file) with a PBR material samples
-  it; anything else draws without it and logs `IGX-0735` once. Such a renderer draws with its own
-  copy of its material, so later edits of the shared `MaterialAsset` do not reach it, and it shows
-  the lightmap one frame after the copy is made. A `.lightmap.json` (`format: "ignifx-lightmap"`)
-  names the `texture` by asset address and may give per-entity-uid `entries` of
-  `{ scale: { x, y }, offset: { x, y } }` for an atlas: the renderer samples it at
-  `uv2 · scale + offset`, which needs `uv2: true` and a mesh with `uvs2` (otherwise `IGX-0735` and
-  the whole texture), one pipeline variant per distinct placement. `createLightmapAsset(app, texture)` publishes one built in code. The GPU code loads only
-  once a renderer samples a lightmap; `rendering.features.lightmaps` is not needed. ignifx bakes no
-  lightmaps yet: the editor's baker will write them.
-
-  ```ts
-  import type { App, AssetHandle, MeshAsset, World } from "@ignifx/core";
-  import { createLightmapAsset, MeshRenderer, TextureAsset } from "@ignifx/core";
-
-  export function addShadowedFloor(app: App, world: World, mesh: AssetHandle<MeshAsset>): MeshRenderer {
-    // 2×1 texels: the left half of the floor's UV2 square in shadow, the right half lit.
-    const pixels = Uint8Array.of(40, 40, 40, 255, 255, 255, 255, 255);
-    const lightmap = createLightmapAsset(app, TextureAsset.fromPixels(app, "floor-lightmap", pixels, 2, 1));
-    const floor = world.createEntity("Floor");
-    floor.isStatic = true;
-    return floor.addComponent(MeshRenderer, {
-      mesh,
-      lightmap: { asset: lightmap, mode: "shadowmap", level: 1, gamma: false, uv2: true },
-    });
-  }
-  ```
+`ReflectionProbe`, `LightProbeVolume` and a `MeshRenderer`'s `lightmap` record light a scene from
+data prepared ahead of time. Their contracts, file formats, the light-probe bake
+(`bakeLightProbes`), the quality tiers and the known gaps are on
+[`baked-lighting.md`](baked-lighting.md).
 
 ## 2. The `PreRender` sync
 
@@ -394,10 +282,10 @@ Fields: `blend` (weight of the current frame, default 0.1), `sharpness` (0–1, 
 (default `true`) and `cutDistance` (a camera jump in world units that drops the history, default
 10; a turn over 60° in one frame does too). Call `app.renderer.resetTemporalHistory()` on a cut the
 engine cannot see, such as a switch to another camera nearby. Picking and `Camera.worldToScreen`
-use the unjittered camera. A PBR mesh moving under a still camera has no motion vectors yet, so it
+use the unjittered camera. A PBR mesh moving under a still camera has no motion vectors, so it
 relies on the clip and may soften while it moves.
 
-`rendering.quality` picks a tier that fits the GPU budget (coding standards §7): `"custom"` (the
+`rendering.quality` picks a tier that fits the GPU budget: `"custom"` (the
 default) leaves everything as written; `"low"` turns on GTAO at half resolution only; `"medium"`
 adds `hdr` and `taa` and lets a `PostProcessStack` run contact shadows; `"high"` makes GTAO full
 resolution and lets a stack run SSGI. A tier fills `hdr`, `taa.enabled`, `ambientOcclusion.enabled`
@@ -414,10 +302,10 @@ downsample/upsample glow on the linear colour, before tone mapping, tuned by `bl
 cut-off). `order`, `weight`, `kernel`, `threshold`, `exposure` and `scale` are the LDR bloom's
 fields and do nothing under HDR; the three HDR fields do nothing without it.
 
-## 5. Material warm-up (ADR-0014)
+## 5. Material warm-up
 
 A mesh whose material family did not exist when the scene was registered takes Babylon Lite's
-runtime build path, and the spike measured **3 extra frames before it is visible** — against 0–2
+runtime build path, which costs about **3 extra frames before it is visible** — against 0–2
 when the family was warmed, and 0 when a mesh of that family was already being drawn. So
 `app.start()` warms every material in the `boot` preload group before registering the scene, and
 `app.renderer.warmUp(materials)` does the same for anything loaded later, at a moment the game
@@ -523,7 +411,7 @@ order, enabled })`, ordered against the built-ins — and `imageProcessing` stil
   multiply in the shader — mixing the two is what dark or glowing fringes are.
 - **Do not write `enable f16;`.** The extension compiles only on a device created with the
   `shader-f16` feature ([WGSL § f16 extension](https://www.w3.org/TR/WGSL/#extension-f16)), and
-  Babylon Lite 1.27.0's engine options carry `requiredLimits` but no optional **features**, so no
+  the `rendering` settings carry `requiredLimits` but no optional device **features**, so no
   ignifx app can ask for it. Everything is `f32`.
 
 ### Two Babylon Lite traps
@@ -551,7 +439,7 @@ material that compiled keeps drawing — which is also what makes `.wgsl` hot re
   `meshName` says which part of the file was hit. `point` is set on every GPU hit, `normal` only by
   a raycast.
 - `ignore` takes entities, components and earlier hits. Passing the hits so far walks through what
-  is under one pixel, front to back. Lite 1.34 keeps one ignore entry per mesh, so instances of one
+  is under one pixel, front to back. Babylon Lite keeps one ignore entry per mesh, so instances of one
   `InstancedMeshRenderer` that are not contiguous are not all skipped and a hit can come back again:
   stop when one repeats.
 
@@ -581,8 +469,8 @@ material that compiled keeps drawing — which is also what makes `.wgsl` hot re
 - `world.raycastRender(ray, { filter, ignore })` — the synchronous CPU path, against renderable
   meshes; it skips an ignored instance's whole mesh. Build the ray with `camera.screenToRay(x, y)`
   or `createRay()`.
-- Both skip a renderer whose `pickable` is `false`. Physics raycasts are a different thing and
-  arrive with `@ignifx/physics`.
+- Both skip a renderer whose `pickable` is `false`. Physics raycasts are a different thing:
+  `app.physics.raycast` from `@ignifx/physics`.
 
 ## 8. Headless
 
@@ -607,6 +495,7 @@ is lost. The three signals are on `app.events`:
 | `onDeviceRecovered` | — | The device and its resources are back |
 | `onDeviceRecoveryFailed` | whatever the recovery path threw | Unrecoverable; offer the player a page reload |
 
-Lite cannot recover PCF/CSM shadow generators or glTF `EXT_lights_image_based` environments, so a
-scene using either is expected to reach `onDeviceRecoveryFailed`. Connect with `{ owner: this }`
-from a script, as with any signal.
+Babylon Lite rebuilds ESM and CSM directional shadow generators after a loss. It cannot recover PCF
+shadow generators or glTF `EXT_lights_image_based` environments, so a scene using either is expected
+to reach `onDeviceRecoveryFailed`: give a light that must survive `shadows.technique` `"csm"` or
+`"esm"`. Connect with `{ owner: this }` from a script, as with any signal.

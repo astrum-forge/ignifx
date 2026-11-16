@@ -1,8 +1,7 @@
 # Extensions
 
 An extension is the unit of optional functionality: it registers components, systems, services,
-settings, and error codes with one app. Core features are extensions too. Rationale in
-`docs/architecture/04-extensions.md`.
+settings, and error codes with one app. Core features are extensions too.
 
 ## 1. The contract
 
@@ -61,7 +60,7 @@ export const weather: (options?: void) => Extension = defineExtension<void>(() =
 | `onStop(app)` / `dispose(app)` | no | Run in reverse registration order |
 
 `defineExtension(factory)` wraps a factory so a game writes `weather()` in the `extensions` array.
-Nothing runs at module import time (`CONSTITUTION.md` §3.5).
+Nothing runs at module import time.
 
 ## 2. `ExtensionContext`
 
@@ -163,8 +162,9 @@ Game code that must work whether or not the extension is installed uses the unty
 ## 6. What the core extension contributes
 
 `coreExtension()` registers the five settings sections above; the components `Transform`, `Camera`,
-`Light`, `MeshRenderer`, `Model`, `Environment`, and `PostProcessStack`; the `app.renderer` service;
-the core asset loaders (texture, model, scene, material, environment, font, json, text, binary); the
+`Light`, `MeshRenderer`, `InstancedMeshRenderer`, `Model`, `Environment`, `PostProcessStack`,
+`ReflectionProbe` and `LightProbeVolume`; the `app.renderer` service; the core asset loaders (listed
+in [`assets.md`](assets.md) §5); the
 `ignifx/asset-delivery` system in `PreUpdate` and the `ignifx/render-sync` system in `PreRender`; and
 it starts the manifest groups listed in `assets.preload` during `app.start()`. Its error codes are
 pre-loaded into the registry rather than registered, so registering `CORE_ERROR_MESSAGES` a second

@@ -2,7 +2,7 @@
 
 Hand-written companion to the generated field table in
 [`ignifx.inputactions.md`](ignifx.inputactions.md). One format, `ignifx.inputactions`, version 1,
-owned by `@ignifx/input`. Rationale in `docs/architecture/08-input.md`.
+owned by `@ignifx/input`.
 
 Loaded with `app.assets.load<InputActionsAsset>(address)` and installed with
 `app.input.loadActions(asset)`, or pointed at once in `ignifx.config.ts` as
@@ -83,8 +83,8 @@ Action names are unique inside one map (`IGX-0810`); two maps may declare the sa
 | `<Keyboard>` | Physical `KeyboardEvent.code` in camelCase, `Key`/`Digit` dropped: `w`, `1`, `space`, `enter`, `shiftLeft`, `arrowUp`, `numpad0`, plus `anyKey` |
 | `<Mouse>` | `leftButton`, `rightButton`, `middleButton`, `position`, `delta`, `scroll` |
 | `<Pointer>` | `press`, `position`, `delta` — mouse, pen, or the primary touch, whichever acted last |
-| `<Touch>` | `primaryTouch/press`, `primaryTouch/position`, `primaryTouch/delta`, `touch0…touch9/press|position|delta`, `touchCount` |
-| `<Gamepad>` | `leftStick`, `rightStick`, `dpad`, `dpad/up|down|left|right`, `buttonSouth|East|West|North`, `leftShoulder`, `rightShoulder`, `leftTrigger`, `rightTrigger`, `start`, `select`, `leftStickPress`, `rightStickPress` |
+| `<Touch>` | `primaryTouch/press`, `primaryTouch/position`, `primaryTouch/delta`, `touch0…touch9/press\|position\|delta`, `touchCount` |
+| `<Gamepad>` | `leftStick`, `rightStick`, `dpad`, `dpad/up\|down\|left\|right`, `buttonSouth\|East\|West\|North`, `leftShoulder`, `rightShoulder`, `leftTrigger`, `rightTrigger`, `start`, `select`, `leftStickPress`, `rightStickPress` |
 | `<Virtual>` | Any name; the control is created the first time a binding or an on-screen widget names it |
 
 Only `<Gamepad>` has more than one device, and its slots are `0` to `3`. `<Gamepad>` and

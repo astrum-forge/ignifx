@@ -1,7 +1,7 @@
 # Scene graph
 
-`World`, `SceneInstance`, `Entity`, `Transform`, tags, layers, signals, and — since Phase 2 — scene
-files, prefabs, and instancing. Rationale in `docs/architecture/02-scene-graph.md`.
+`World`, `SceneInstance`, `Entity`, `Transform`, tags, layers, signals, scene files, prefabs, and
+instancing.
 
 ```
 World ──▶ SceneInstance ──▶ Entity (roots) ──▶ Entity (children) ──▶ Component
@@ -37,7 +37,7 @@ Every app starts with one implicit, **persistent** `SceneInstance` named `"defau
 
 ## 2. Scenes, prefabs, and instancing
 
-A scene file and a prefab file are the same format, `ignifx.scene` (ADR-0005): `.scene.json` is a
+A scene file and a prefab file are the same format, `ignifx.scene`: `.scene.json` is a
 level, `.prefab.json` is a thing you stamp out. Fields in
 [`../formats/ignifx.scene.md`](../formats/ignifx.scene.md); structure and overrides in
 [`../formats/scene.md`](../formats/scene.md).

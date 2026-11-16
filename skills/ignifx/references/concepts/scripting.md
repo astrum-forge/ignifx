@@ -1,6 +1,6 @@
 # Scripting: components, schemas, coroutines
 
-How game code is written: `Component` for data a system owns, `Script` for data with lifecycle callbacks, and a declarative schema instead of decorators (ADR-0004). Rationale in `docs/architecture/03-scripting-and-components.md`.
+How game code is written: `Component` for data a system owns, `Script` for data with lifecycle callbacks, and a declarative schema instead of decorators.
 
 ## 1. `Component` versus `Script`
 
@@ -87,7 +87,7 @@ member every object inherits (`constructor`, `toString`, `__proto__`, …, also 
 `IGX-0607` at definition time; `entityRef`/`componentRef` fields are **tracked**, so the engine nulls
 them in the destroy flush when the target dies, before any `onDestroy` (plain class fields are not);
 non-serialized state is an ordinary class field with a name no schema field uses; and changing a
-schema is a file-format change, which before 1.0 simply invalidates old files (`CONSTITUTION.md` §4.2).
+schema is a file-format change, which before 1.0 simply invalidates old files.
 
 ## 3. `typeId` and registration
 

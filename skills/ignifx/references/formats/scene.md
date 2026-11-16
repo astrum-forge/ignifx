@@ -1,9 +1,8 @@
 # Scene and prefab files (`.scene.json`, `.prefab.json`)
 
 Hand-written companion to the generated field table in
-[`ignifx.scene.md`](ignifx.scene.md). One format, `ignifx.scene`, for both levels and prefabs
-(ADR-0005): the extension only tells you what it is usually used for. Rationale in
-`docs/architecture/06-serialization-and-scene-format.md`.
+[`ignifx.scene.md`](ignifx.scene.md). One format, `ignifx.scene`, for both levels and prefabs:
+the extension only tells you what it is usually used for.
 
 Loaded with `world.loadScene(address)` (or `world.loadSceneFile(file, { address })` for a file object
 already in memory), instanced with `world.instantiate(sceneAsset)`, written with
@@ -70,7 +69,7 @@ A 2D file names a still sprite's frame in `SpriteRenderer`'s `frameName` field
 `#frame:` fragment in `sprite`: the renderer reports `IGX-1118` and draws nothing. `frame`, the
 index drawn, is runtime-only. `TilemapCollider2D` reads the `Tilemap` on the same entity, so a file
 that holds both has tile collision with no code. A tilemap's objects layer never spawns at runtime:
-`ignifx import tilemap` moves it into the scene file once, as entities (ADR-0030).
+`ignifx import tilemap` moves it into the scene file once, as entities.
 
 ## Value encoding
 
