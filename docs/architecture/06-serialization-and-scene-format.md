@@ -1,6 +1,27 @@
 # 06 · Serialization and Scene Format
 
-**Status:** Design standard (pre-1.0) · **Package:** `@ignifx/core` · **Related:** `02-scene-graph.md`, `03-scripting-and-components.md` §3, `05-assets-and-loading.md`, ADR-0004, ADR-0005
+**Status:** Design standard; describes the engine as built (pre-1.0) · **Package:** `@ignifx/core` · **Related:** `02-scene-graph.md`, `03-scripting-and-components.md` §3, `05-assets-and-loading.md`, ADR-0004, ADR-0005
+
+**Source map** (paths under `packages/core/src/`)
+
+| Where                                                                                                 | What                                                                                   |
+| ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `serialization/scene-file.ts`, `serialization/validate.ts`                                            | The scene file type, its JSON Schema and structural validation (§2, §7)                |
+| `serialization/load.ts`, `scene-loader.ts`, `scene-asset.ts`                                          | The loading algorithm and the `scene` asset loader (§4)                                |
+| `serialization/expand.ts`, `overrides.ts`, `instance-paths.ts`, `instance-targets.ts`, `uid-remap.ts` | Instance expansion, override application, instance paths, the uid remap (§2, §4)       |
+| `serialization/serialize.ts`, `prefab-overrides.ts`                                                   | `serializeScene` and the override diff; applying and reverting overrides on files (§5) |
+| `schema/encode.ts`, `schema/validate.ts`                                                              | Value encoding, `canonicalizeNumber`, field validation (§3)                            |
+| `schema/json.ts`, `schema/describe.ts`, `scripts/docs-schemas.ts` (repository root)                   | `toJsonSchema`, descriptions, the generator of §8                                      |
+| `skills/ignifx/references/formats/` (repository root)                                                 | The generated page and JSON Schema for every format of §6                              |
+
+Invariants:
+
+- Only schema fields are serialized; references are tagged objects, never bare strings (§1, §3).
+- Two saves of the same state are byte-identical: canonical key order, tree-ordered entities, numbers rounded to six decimals (§1, §3).
+- Uids are unique within a file; an instanced scene keeps its own uids and is addressed by path (§2).
+- An instance holds at most one override per identity (`IGX-0608`) (§2).
+- Asset references are loaded before `awake`; entity and component references are resolved before `awake` or set to `null` with `IGX-0602` (§4).
+- A `memory:` asset has no file form and is written as `null` (§3).
 
 ---
 
@@ -17,11 +38,10 @@
 {
   "format": "ignifx.scene",
   "formatVersion": 1,
-  "engineVersion": "0.4.0",
+  "engineVersion": "<the @ignifx/core version that wrote the file>",
   "name": "Level01",
   "settings": {
-    "environment": { "$asset": "env/studio.env" },
-    "clearColor": [0.05, 0.05, 0.08, 1]
+    "twoD": { "pixelsPerUnit": 16 }
   },
   "entities": [
     {
@@ -84,8 +104,14 @@ Field rules:
 - `active`, `static`, `layer`, `tags`, `enabled`: omitted when equal to defaults (`true`, `false`, `"Default"`, `[]`, `true`). `layer` is a layer **name** resolved against project settings at load; an unknown name resolves to `Default` with `IGX-0303`.
 - `transform`: always present; arrays `[x, y, z]`, `[x, y, z, w]`, `[x, y, z]`. `transformSchema()` describes the block as a schema, and `describeSchemas()` lists it as the built-in `ignifx/Transform` (`03-scripting-and-components.md` §3).
 - `components[i].props`: values according to the component's schema (§3). Omitted props take schema defaults.
-- `instance`: present only on instance roots. When the instanced scene has exactly one root, the instance root _is_ that root, as with `world.instantiate`: the root's components come first, then the entry's own `components`, and the entry's `uid`, `name`, `transform` and other entity fields replace the root's. Otherwise the instance root is a container: the instanced scene's roots become its children, and its own `components` and `transform` are its own. `instance.hash` records the content hash of the instanced scene asset at save time; a mismatch at load logs `IGX-0604` by default or fails when the loader option `strictInstanceHashes` is set, so save games notice prefab changes instead of silently reinterpreting overrides. An instance holds at most one override per identity — its `path`, its `op` (`"replace"` when absent), and for an `add` to `<uid>/components` the uid of the component it adds; a second one is a file defect, as a uid used twice is, and validation refuses it (`IGX-0608`) instead of letting the later one win. The serializer never writes two; a hand edit or a merge conflict does. An override's component segment may be an instance path into a prefab the instanced file itself instances, `"<nestedInstanceUid>/components/<nestedInstanceUid>/<uidInTheNestedPrefab>/props/<field>"` (the entity segment equals the component path's first segment; one more segment per deeper instance); it is resolved after the nested copy got its fresh uids, so it runs after, and wins over, the nested prefab's own overrides. `serializeScene` writes such overrides from live state for component props, `enabled` flags and removed components: the expansion keeps, per instance, the records its nested prefabs produced before the instance's own overrides ran (`EntityInstanceLink.nestedBaseline`), and the serializer diffs the live components against them, including the components a scene the instanced single root itself instances merged into the instance root (path prefix `<rootUid>/components/<rootUid>/…`). Only components are reachable: a nested entity's own fields (name, `active`, transform, layer, tags) are not written back by the serializer, and the grammar has no entity-field path into a nested prefab; a component added to a nested entity at run time and a nested entity destroyed at run time cannot be written either, and `serializeScene` reports each through `onIssue` (`IGX-0609`) instead of dropping it silently.
-- `settings`: scene-level values interpreted by systems (environment, clear color, 2D mode flags, physics overrides). Only the _first_ loaded scene's settings apply in additive loads unless a setting is marked `mergeable`. Today only `@ignifx/2d` reads a key (`twoD`); core carries the block to `SceneInstance.settings` and nothing in 3D consumes it, so a 3D level's clear color, environment and gravity are still project settings or components.
+- `instance`: present only on instance roots.
+  - **Root merging.** When the instanced scene has exactly one root, the instance root _is_ that root, as with `world.instantiate`: the root's components come first, then the entry's own `components`, and the entry's `uid`, `name`, `transform` and other entity fields replace the root's. Otherwise the instance root is a container: the instanced scene's roots become its children, and its own `components` and `transform` are its own.
+  - **Hash.** `instance.hash` records the content hash of the instanced scene asset at save time; a mismatch at load logs `IGX-0604` by default or fails when the loader option `strictInstanceHashes` is set, so save games notice prefab changes instead of silently reinterpreting overrides.
+  - **One override per identity.** An override's identity is its `path`, its `op` (`"replace"` when absent), and for an `add` to `<uid>/components` the uid of the component it adds. A second override with the same identity is a file defect, as a uid used twice is, and validation refuses it (`IGX-0608`) instead of letting the later one win. The serializer never writes two; a hand edit or a merge conflict does.
+  - **Overrides into nested prefabs.** An override's component segment may be an instance path into a prefab the instanced file itself instances, `"<nestedInstanceUid>/components/<nestedInstanceUid>/<uidInTheNestedPrefab>/props/<field>"` (the entity segment equals the component path's first segment; one more segment per deeper instance). It is resolved after the nested copy got its fresh uids, so it runs after, and wins over, the nested prefab's own overrides.
+  - **Writing nested overrides.** `serializeScene` writes such overrides from live state for component props, `enabled` flags and removed components: the expansion keeps, per instance, the records its nested prefabs produced before the instance's own overrides ran (`EntityInstanceLink.nestedBaseline`), and the serializer diffs the live components against them, including the components a scene the instanced single root itself instances merged into the instance root (path prefix `<rootUid>/components/<rootUid>/…`).
+  - **What cannot be written.** Only components are reachable: a nested entity's own fields (name, `active`, transform, layer, tags) are not written back, and the grammar has no entity-field path into a nested prefab. A component added to a nested entity at run time and a nested entity destroyed at run time cannot be written either; `serializeScene` reports each through `onIssue` (`IGX-0609`) instead of dropping it silently.
+- `settings`: scene-level values, keyed by the system that interprets them. Core carries the block to `SceneInstance.settings` as raw JSON and does not validate it. Only `@ignifx/2d` reads a key (`twoD`, the scene's 2D settings applied over the project's); nothing in 3D consumes the block, so a 3D level's clear color, environment and gravity are project settings or components.
 
 ## 3. Value encoding
 
@@ -108,7 +134,7 @@ Field rules:
 
 An `asset` value whose address is a `memory:` one — every primitive from `MeshAsset.box` and friends, every `createMaterialAsset` — names no file and is written as `null` with `IGX-0602`. A file names a primitive through a `.mesh.json` file instead (`{ "$asset": "meshes/crate.mesh.json" }`, ADR-0029), which round-trips. Publishing a primitive at a plain address with `Assets.register(value, { type, address })` before loading also works, but then the file loads only in an app that ran that code. A runtime `MaterialAsset.clone(app)` has no file either, so a level whose renderers each need a material of their own (the first-person template's pedestals) names the shared file and clones after the load. A runtime property that is not a schema field — `SpriteRenderer.frame` (the file stores the frame's name in `frameName` instead), `TilemapCollider2D.collisionData` (read from the `Tilemap` on the same entity) — is not written at all.
 
-Numbers are canonicalized before writing: `x = Math.round(x * 1e6) / 1e6`, `-0` becomes `0`, and the value is emitted with JavaScript's shortest round-trip representation (`String(x)`), integers without a fraction. Loading stores the canonical value and the rule is idempotent, so save → load → save is byte-identical. `NaN`/`Infinity` are rejected (`IGX-0601`).
+Numbers are canonicalized before writing: `x = Math.round(x * 1e6) / 1e6`, `-0` becomes `0`, and the value is emitted with JavaScript's shortest round-trip representation (`String(x)`), integers without a fraction. Loading stores the canonical value and the rule is idempotent, so save → load → save is byte-identical. `NaN`/`Infinity` are rejected (`IGX-0601`). Rounding moves a computed value by at most 5e-7, so a level that code used to build can differ by that much once it is a file.
 
 ## 4. Loading algorithm
 
@@ -129,28 +155,34 @@ Numbers are canonicalized before writing: `x = Math.round(x * 1e6) / 1e6`, `-0` 
 
 All share the `format`/`formatVersion` header and JSON Schema validation:
 
-| Format                   | Extension                                                 | Owner               |
-| ------------------------ | --------------------------------------------------------- | ------------------- |
-| `ignifx.material`        | `.material.json`                                          | core                |
-| `ignifx.environment`     | `.environment.json`                                       | core                |
-| `ignifx.mesh`            | `.mesh.json`                                              | core                |
-| `ignifx.spriteatlas`     | `.atlas.json`                                             | `@ignifx/2d`        |
-| `ignifx.spriteanimation` | `.spriteanim.json`                                        | `@ignifx/2d`        |
-| `ignifx.tilemap`         | `.tilemap.json` (import from Tiled `.tmj` / LDtk `.ldtk`) | `@ignifx/2d`        |
-| `ignifx.inputactions`    | `.input.json`                                             | `@ignifx/input`     |
-| `ignifx.animator`        | `.animator.json`                                          | `@ignifx/3d`        |
-| `ignifx.audiobuses`      | `.audio.json`                                             | `@ignifx/audio`     |
-| `ignifx.particles`       | `.particles.json`                                         | `@ignifx/particles` |
-| `ignifx.terrain`         | `.terrain.json` (heightmap as `.r16`, or PNG)             | `@ignifx/terrain`   |
-| `ignifx.manifest`        | `assets.manifest.json`                                    | vite plugin         |
+| Format                   | Extension                                                 | Owner                                    |
+| ------------------------ | --------------------------------------------------------- | ---------------------------------------- |
+| `ignifx.material`        | `.material.json`                                          | core                                     |
+| `ignifx.environment`     | `.environment.json`                                       | core                                     |
+| `ignifx.mesh`            | `.mesh.json`                                              | core                                     |
+| `ignifx-probes`          | `.probes.json`                                            | core                                     |
+| `ignifx-lightmap`        | `.lightmap.json`                                          | core                                     |
+| `ignifx.manifest`        | `assets.manifest.json`                                    | core reads it, the Vite plugin writes it |
+| `ignifx.spriteatlas`     | `.atlas.json`                                             | `@ignifx/2d`                             |
+| `ignifx.spriteanimation` | `.spriteanim.json`                                        | `@ignifx/2d`                             |
+| `ignifx.tilemap`         | `.tilemap.json` (import from Tiled `.tmj` / LDtk `.ldtk`) | `@ignifx/2d`                             |
+| `ignifx.inputactions`    | `.input.json`                                             | `@ignifx/input`                          |
+| `ignifx.inputoverrides`  | none; a saved rebinding document (`08-input.md` §6)       | `@ignifx/input`                          |
+| `ignifx.animator`        | `.animator.json`                                          | `@ignifx/3d`                             |
+| `ignifx.audiobuses`      | `.audio.json`                                             | `@ignifx/audio`                          |
+| `ignifx.physicsmaterial` | `.physicsmaterial.json`                                   | `@ignifx/physics`, `@ignifx/physics-2d`  |
+| `ignifx.i18n`            | `.i18n.json`                                              | `@ignifx/ui`                             |
+| `ignifx.particles`       | `.particles.json`                                         | `@ignifx/particles`                      |
+| `ignifx.terrain`         | `.terrain.json` (heightmap as `.r16`, or PNG)             | `@ignifx/terrain`                        |
+
+`skills/ignifx/references/formats/` holds a generated page for each format (§8); that directory is the field-level reference.
 
 ## 7. Versioning and migration
 
-- `formatVersion` is an integer per format. Before 1.0 it stays `1` and incompatible changes simply invalidate files (`CONSTITUTION.md` §4.2); the loader reports `IGX-0603` for an unknown `formatVersion` and `IGX-0608` with the offending path for a file that fails structural validation.
-- After 1.0, a format bump ships with a migration function registered by the owning extension (`registerFileMigration(format, from, to, fn)`) and a document in `docs/migrations/`. Loaders migrate in memory; tooling (`ignifx migrate`) rewrites files.
-- Components version their schema independently with `static schemaVersion = 1` and `static migrate(fromVersion, props)`. The file records the schema version per component only when it differs from `1`, keeping files terse.
-- Layer and sorting-layer names in files are validated against `ignifx.config.ts` by the Vite plugin at build time and by the loader at runtime; renaming one is meant to rewrite the files through `ignifx rename-layer` and `ignifx rename-sorting-layer`, but **neither command is implemented yet** (`packages/cli` has no such command; the sorting-layer rename is a deferred part of editor ask E10, PR #64). Until then, rename by hand in every scene, prefab and `.tilemap.json` that names the layer.
+- `formatVersion` is an integer per format. It stays `1`, and an incompatible change invalidates files (`CONSTITUTION.md` §4.2): the loader reports `IGX-0603` for an unknown `formatVersion` and `IGX-0608` with the offending path for a file that fails structural validation.
+- There is no migration mechanism: no migration registry, no per-component migrate hook and no CLI command that rewrites files. One field is reserved for it: a component class may declare `static schemaVersion`, and the serializer writes it on the component's record when it differs from `1`; nothing reads it at load.
+- Layer and sorting-layer names in files are resolved against the project settings by the loader at run time (an unknown layer loads as `Default` with `IGX-0303`; an unknown sorting layer is reported as `IGX-1107`). No tool rewrites files when a name changes: rename by hand in every scene, prefab and `.tilemap.json` that names it.
 
 ## 8. Generated JSON Schemas
 
-`pnpm docs:schemas` (the docs harness, from `describeSchemas()` exports) and later the `ignifx schemas` CLI command emit `ignifx.schemas.json` from every registered component schema and file format; the Vite plugin consumes those schemas (`ignifx({ schemas })`) — it cannot produce them, since it does not depend on the engine. These schemas drive build-time validation, editor autocompletion, and are linked from the Agent Skill so that agents can author scene files without guessing field names. Each field also carries its inspector options, as members of the description and as `x-ignifx-*` keywords in `toJsonSchema` (`03-scripting-and-components.md` §3); the validator ignores `x-` keywords.
+`pnpm docs:schemas` (`scripts/docs-schemas.ts`, from each package's `describeSchemas()` export) emits `skills/ignifx/references/formats/ignifx.schemas.json` and a page per format from every registered component schema and file format; the Vite plugin consumes those schemas (`ignifx({ schemas })`) — it cannot produce them, since it does not depend on the engine. These schemas drive build-time validation, editor autocompletion, and are linked from the Agent Skill so that agents can author scene files without guessing field names. Each field also carries its inspector options, as members of the description and as `x-ignifx-*` keywords in `toJsonSchema` (`03-scripting-and-components.md` §3); the validator ignores `x-` keywords.
