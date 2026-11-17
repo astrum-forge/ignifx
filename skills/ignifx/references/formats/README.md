@@ -20,7 +20,7 @@ written from the schema the owning package exports, so it cannot disagree with t
 | [`inputactions.md`](inputactions.md) | prose | `.input.json` | Maps, actions, binding paths, composites, processors (`@ignifx/input`) |
 | [`ignifx.inputactions.md`](ignifx.inputactions.md) | generated | the same | The input actions file's top-level fields |
 | [`ignifx.audiobuses.md`](ignifx.audiobuses.md) | generated | `.audio.json` | The mixer's bus tree (`@ignifx/audio`) |
-| [`ignifx.physicsmaterial.md`](ignifx.physicsmaterial.md) | generated | `.physicsmaterial.json` | Friction, restitution, combine rules (`@ignifx/physics`, `@ignifx/physics-2d`) |
+| [`ignifx.physicsmaterial.md`](ignifx.physicsmaterial.md) | generated | `.physicsmaterial.json` | Friction, static friction, restitution (`@ignifx/physics`, `@ignifx/physics-2d`) |
 | [`ignifx.spriteatlas.md`](ignifx.spriteatlas.md) | generated | `.atlas.json` | An image and its frame rectangles (`@ignifx/2d`) |
 | [`ignifx.spriteanimation.md`](ignifx.spriteanimation.md) | generated | `.spriteanim.json` | Clips of atlas frames, rates, frame events (`@ignifx/2d`) |
 | [`ignifx.tilemap.md`](ignifx.tilemap.md) | generated | `.tilemap.json` | Tile layers, tilesets with colliders, an objects layer (`@ignifx/2d`) |
@@ -28,7 +28,7 @@ written from the schema the owning package exports, so it cannot disagree with t
 | [`ignifx.particles.md`](ignifx.particles.md) | generated | `.particles.json` | A particle effect's modules (`@ignifx/particles`) |
 | [`ignifx.terrain.md`](ignifx.terrain.md) | generated | `.terrain.json` | Size, heightmap or noise, chunks, layers, splat (`@ignifx/terrain`) |
 | [`ignifx.i18n.md`](ignifx.i18n.md) | generated | `.i18n.json` | Message tables per locale, ICU-style plurals (`@ignifx/ui`) |
-| [`ignifx.schemas.json`](ignifx.schemas.json) | generated | — | Every schema above in one JSON Schema bundle, for tools and validators |
+| [`ignifx.schemas.json`](ignifx.schemas.json) | generated | — | Every schema above in one JSON file (ignifx's own descriptor format, not JSON Schema), for tools |
 
 The asset manifest (`assets.manifest.json`, format `ignifx.manifest`, version 1) is written by
 `@ignifx/vite-plugin`. Its entries and the `.meta.json` sidecars are documented in that package's

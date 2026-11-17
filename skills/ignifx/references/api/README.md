@@ -1,7 +1,7 @@
 # Generated API references
 
 One page per package entry point, generated from the packages' TSDoc: every exported symbol with its
-signature, parameters, defaults and examples. The pages are large (`core.md` is the largest), so
+signature, parameters, defaults and examples. The pages are large (`ignifx.md` and `core.md` are the largest), so
 search a page for the symbol you need instead of reading it whole.
 
 | Page | Import from |

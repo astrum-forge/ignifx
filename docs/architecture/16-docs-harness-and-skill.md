@@ -57,15 +57,15 @@ docs/migrations/                       post-1.0 migration guides; NEVER linked f
 Frontmatter, then exactly these ten `##` sections, spelled and ordered as written here — the `skill-lint` check compares heading for heading:
 
 1. **What this is / when to use**, kept short.
-2. **Environment**: engine version, Babylon Lite pinned version, Node/pnpm versions, WebGPU requirement, how to run and test (`pnpm dev`, `pnpm test`, `pnpm typecheck`). The line that begins `- Engine: ignifx` carries the version, is rewritten at release (§6) and must keep that shape.
+2. **Environment**: engine version, Babylon Lite pinned version, Node/pnpm versions, WebGPU requirement, how to scaffold, run and build a project. The engine version is the frontmatter's `metadata.ignifx-version`; a skill may repeat it in a line that begins ``- Engine: ignifx `<version>` `` (the subsystem skills do), which is rewritten at release with the frontmatter (§6) and must keep that shape.
 3. **Mental model** (one diagram): App → World → Scene → Entity → Component/Script; phases.
 4. **First app** (complete and compiling).
 5. **Core APIs** in tables: `createApp`, `Entity`, `Transform`, `Script` callbacks with timing, schema kinds, `Assets`, `Signal`.
-6. **Recipes**: one-line descriptions linking to `references/recipes/*.md`.
+6. **Recipes**: what the recipes cover, linking to the index `references/recipes/README.md` (one line per recipe there).
 7. **File formats** → `references/formats/*.md`.
 8. **Gotchas**, optionally as `Gotchas (top N)` (full list in `references/gotchas.md`).
 9. **Deprecated (current window)**: from 1.0 on, at most one line per symbol, "`X` is deprecated; use `Y`.", and nothing else about the past. Before 1.0 there is no deprecation window, so the section is one line beginning "None".
-10. **Where to look next**: `references/api/*.md`, `docs/architecture/`, and the single `docs/migrations/` pointer line.
+10. **Where to look next**: the concept pages under `references/concepts/`, `references/api/*.md` through its index, and the single `docs/migrations/` pointer line. No link leaves the package the skill ships in.
 
 Subsystem skills use the same ten sections, with the subsystem's components, service API, recipes, and gotchas; they add no `##` section of their own — extra material goes under a `###` heading inside the section it belongs to.
 
