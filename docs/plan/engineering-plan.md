@@ -127,4 +127,4 @@ Proposed by an API review in September 2026 and undecided; nothing here is a rul
 
 ## Upstream asks (Babylon Lite)
 
-`docs/architecture/07-rendering.md` §8, "Upstream asks", is the list: each ask by name, checked against the pinned typings, with the workaround in use. Three more gaps in Lite are outside that list: navmesh serialization, `removeAgent`, and removal of a text renderable (see the navigation and `WorldText` items above). None has a tracked issue.
+`docs/architecture/07-rendering.md` §8, "Upstream asks", is the list: each ask by name, checked against the pinned typings, with the workaround in use. Other Lite gaps this plan names are outside that list: navmesh serialization, `removeAgent`, removal of a text renderable, and shape identity in `shapeCast`/`overlap` (see the navigation, `WorldText` and 3D physics items above). None has a tracked issue.
