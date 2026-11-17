@@ -8,10 +8,10 @@ import type { EditorPeer } from "./support/editor.js";
 import type { Entity, FetchLike, SceneFile, SceneFileEntity } from "@ignifx/core";
 
 /**
- * Asset hot reload in a scene view on a real WebGPU canvas (engine ask E23): a prefab edited on
- * disk is reloaded through `app.assets.reload` and rebuilds the document's instance of it in place,
- * with its uid, transform, overrides and document children, and a mesh edited on disk is picked up
- * by its renderer; each sends `assetReloaded`.
+ * Asset hot reload in a scene view on a real WebGPU canvas: a prefab edited on disk is reloaded
+ * through `app.assets.reload` and rebuilds the document's instance of it in place, with its uid,
+ * transform, overrides and document children, and a mesh edited on disk is picked up by its
+ * renderer; each sends `assetReloaded`.
  */
 
 /** The canvas size, in pixels. */
@@ -242,7 +242,7 @@ function child(parent: Entity, name: string): Entity | null {
   return parent.children.find((candidate) => candidate.name === name) ?? null;
 }
 
-describe("asset hot reload in the scene view (E23)", () => {
+describe("asset hot reload in the scene view", () => {
   it("rebuilds a prefab instance from the edited prefab, keeping its uid, transform, overrides and children", async () => {
     const running = await sceneView();
     const before = entity(running, CRATE);

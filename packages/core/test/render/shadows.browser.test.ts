@@ -28,7 +28,7 @@ import type { ModelAsset } from "../../src/render/model-asset.js";
  * anything is compiled; and the light has to be posed in world space on an **unparented** Lite
  * light, because the shading direction (the light's world matrix) and the shadow frustum
  * (`light.direction`/`light.position`) are read from two different places and only agree when there
- * is no parent (ADR-0002, "Corrections after the visual suite").
+ * is no parent (ADR-0002 Validation).
  *
  * The suite measures brightness two ways. "The scene is darker when something is casting" is a
  * whole-frame mean, because SwiftShader plus a soft PCF edge make a single hard-coded shadow pixel a
@@ -472,9 +472,9 @@ describe("where the shadow lands", () => {
  * that the box's shadow lands on ground the camera can see rather than behind the box itself.
  *
  * The caster is a `Model`, the catcher is a `MeshRenderer`: what is under test is whether a model's
- * cloned subtree reaches a generator's caster list at all (ADR-0002, "Still outstanding" — it did
- * not, until this suite). `Box.glb` is a one-metre cube centred on its origin, so the entity is
- * scaled to two metres and the numbers read like the `MeshRenderer` scene above.
+ * cloned subtree reaches a generator's caster list at all (it did not, until this suite). `Box.glb`
+ * is a one-metre cube centred on its origin, so the entity is scaled to two metres and the numbers
+ * read like the `MeshRenderer` scene above.
  *
  * The model is added **after** `start()`, which is the case a viewer has: the glTF is fetched, and
  * the component that instantiates it exists only once the handle settles. That is also the case the

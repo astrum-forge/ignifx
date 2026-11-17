@@ -2,7 +2,7 @@
 // Below this comment it is byte-identical to that file, but for the link rule in `./index.ts`.
 /**
  * Protocol 0.3: the scene document transport between the editor and the scene view
- * (`@ignifx/editor-host`). Plan §3.4, §3.5, §3.7.
+ * (`@ignifx/editor-host`).
  *
  * The editor holds the scene document (`@ignifx/editor-core`) and the host mirrors it into a live
  * world: the editor opens the scene with the whole file, then sends every command's ops as it
@@ -101,14 +101,14 @@ export const SceneMethod = {
    */
   sampleAnimation: "sampleAnimation",
   /**
-   * Shows one frame of a clip on an entity's `SpriteAnimator` without playing it (engine ask E51).
-   * Needs `HostCapability.spriteAnimation`. Answers {@link SampleSpriteAnimationResult}. A host from
+   * Shows one frame of a clip on an entity's `SpriteAnimator` without playing it. Needs
+   * `HostCapability.spriteAnimation`. Answers {@link SampleSpriteAnimationResult}. A host from
    * before it answers `RpcErrorCode.methodNotFound`. Additive in 0.3.
    */
   sampleSpriteAnimation: "sampleSpriteAnimation",
   /**
-   * Shows or hides the view's grid and sets its spacing (engine ask E31). Needs
-   * `HostCapability.grid`. Answers `null`. Additive in 0.3.
+   * Shows or hides the view's grid and sets its spacing. Needs `HostCapability.grid`. Answers
+   * `null`. Additive in 0.3.
    */
   setGrid: "setGrid",
   /**
@@ -182,7 +182,7 @@ export type SceneNotification = (typeof SceneNotification)[keyof typeof SceneNot
 
 /**
  * The fewest milliseconds between two `transformDragging` notifications for the same gesture: at
- * most 20 a second, which S0.2 measured as smooth enough for an inspector to follow a drag.
+ * most 20 a second, which is smooth enough for an inspector to follow a drag.
  *
  * @public
  */
@@ -191,7 +191,7 @@ export const TRANSFORM_DRAGGING_INTERVAL_MS = 50;
 /**
  * The largest width and height, in pixels, of a `screenshot`. A request for more fails with
  * `invalidParams`; a request without a size gets the view's own size scaled down to fit. It keeps
- * an image well under what an MCP client accepts inline (plan §3.11).
+ * an image well under what an MCP client accepts inline.
  *
  * @public
  */
@@ -537,7 +537,7 @@ export interface FrameParams {
 }
 
 /**
- * The unit of a `pick` point (S0.2 §6.1).
+ * The unit of a `pick` point.
  *
  * @public
  */
@@ -789,8 +789,8 @@ export interface SchemaDescription {
    * `true` for the one component every entity carries itself, `ignifx/Transform`: it is never in a
    * scene file's `components` list, an editor neither adds nor removes it, and its fields are the
    * entity record's `transform` block, edited whole with the `setTransform` op rather than prop by
-   * prop. Absent on every other entry. A host from before the engine described the transform (engine
-   * ask E4) sends no such member.
+   * prop. Absent on every other entry. A host from before the engine described the transform
+   * sends no such member.
    */
   readonly builtIn?: boolean;
   /**
@@ -798,7 +798,7 @@ export interface SchemaDescription {
    * `typeId`), in declaration order. The engine adds each one that is missing whenever the component
    * is added, so an editor adds them itself as part of the same command; a component whose class
    * extends a required one counts. Absent when the class requires nothing, on file-format entries,
-   * and from a host from before engine ask E33.
+   * and from a host that predates this member.
    */
   readonly requires?: readonly (string | null)[];
   /**
@@ -807,8 +807,8 @@ export interface SchemaDescription {
    * abstract base, `Component`, `Script`) are left out. The engine counts a component whose class
    * extends a required one as present, so an editor treats a `requires` entry as present on an
    * entity when one of its components has that type id or lists it here. Empty when the class
-   * extends no registered component; absent on file-format entries and from a host from before
-   * engine ask E44, which an editor treats as unknown, not as none.
+   * extends no registered component; absent on file-format entries and from a host that predates
+   * this member, which an editor treats as unknown, not as none.
    */
   readonly extends?: readonly string[];
   /**

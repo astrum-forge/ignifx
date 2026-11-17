@@ -10,9 +10,9 @@ import type { BrowserApp } from "./support/browser-harness.js";
 import type { EnvironmentAsset } from "../../src/render/environment-asset.js";
 
 /**
- * `rendering.ambientOcclusion` (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, steps G8 and G9):
- * the inside corner between a floor and a wall gets darker under environment light, and a scene lit
- * only by a direct light does not change.
+ * `rendering.ambientOcclusion` (`docs/architecture/07-rendering.md` §2.14): the inside corner
+ * between a floor and a wall gets darker under environment light, and a scene lit only by a direct
+ * light does not change.
  */
 
 /** The canvas edge. */

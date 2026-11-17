@@ -17,7 +17,7 @@ import type { LiteEngine } from "../../src/lite/scene.js";
 import type { JsonObject } from "../../src/schema/json.js";
 
 /**
- * The texture and model loaders' GPU path, with Lite's loaders replaced (engine ask E13): which Lite
+ * The texture and model loaders' GPU path, with Lite's loaders replaced: which Lite
  * loader each container reaches, that the decoders are pointed at the manifest's copies before a
  * KTX2, Basis or glTF load and not before an image, and what a failed load leaves behind. The real
  * GPU loads are `ktx2.browser.test.ts`. This file calls `vi.mock`, so it runs in `node-isolated`;

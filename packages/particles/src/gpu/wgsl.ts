@@ -3,8 +3,8 @@ import { PARTICLE_SALT_Y, PARTICLE_SALT_Z } from "../emitter/pcg3d.js";
 import type { LookupRow, ParticleDefinition, ScalarValue } from "../definition/types.js";
 
 // The GPU evaluator: one `.wgsl` program generated per definition
-// (`docs/plan/2026-09-terrain-particles-shaders.md` §4.4), the second host of the specification
-// `src/evaluate/particle-math.ts` states in TypeScript. Read the two side by side.
+// (ADR-0025), the second host of the specification `src/evaluate/particle-math.ts` states in
+// TypeScript. Read the two side by side.
 
 /** Degrees to radians, as a WGSL literal. */
 const DEG_TO_RAD_WGSL = "0.017453292519943295";

@@ -3,7 +3,7 @@ import type { ColorLike } from "@ignifx/core";
 
 /**
  * The `terrainSplat` surface shader, generated per terrain
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §5.2).
+ * (ADR-0026).
  *
  * The layer count, which layers are triplanar and which carry a normal map all change the WGSL's
  * shape, so the file is generated rather than shipped. `surface()` reads the control maps at

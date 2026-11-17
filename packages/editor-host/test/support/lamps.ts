@@ -2,8 +2,8 @@ import { Component, f32 } from "@ignifx/core";
 import type { Entity, SceneFile } from "@ignifx/core";
 
 /**
- * The street of the hot-reloaded defaults tests (engine ask E25): lamps whose `brightness` the
- * document leaves out or sets, and a lamp post prefab instance with an override.
+ * The street of the hot-reloaded defaults tests: lamps whose `brightness` the document leaves out
+ * or sets, and a lamp post prefab instance with an override.
  */
 
 /** The prefab's address. */

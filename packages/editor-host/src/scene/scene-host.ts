@@ -582,10 +582,10 @@ export class SceneHost {
   }
 
   /**
-   * Gives the open document the defaults a hot reload changed, where it leaves them out (engine ask
-   * E25): each document component's omitted fields take the new default, then each prefab instance
-   * whose members hold a changed type is rebuilt from its prefab with its overrides. A component
-   * that throws while taking a default is a `hostError`, and the rest still runs.
+   * Gives the open document the defaults a hot reload changed, where it leaves them out: each
+   * document component's omitted fields take the new default, then each prefab instance whose
+   * members hold a changed type is rebuilt from its prefab with its overrides. A component that
+   * throws while taking a default is a `hostError`, and the rest still runs.
    *
    * @param changed - The changed fields, by type id.
    */

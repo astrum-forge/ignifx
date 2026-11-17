@@ -1,7 +1,6 @@
 /**
  * Build-time validation of the `.wgsl` shader assets under the asset root
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1, coding standards §14: "shader source comes
- * from assets validated at build time").
+ * (ADR-0024, coding standards §14: "shader source comes from assets validated at build time").
  *
  * The plugin has no dependency on `@ignifx/core` (`docs/architecture/00-overview.md` §2), so every
  * check here is self-contained: `wgsl_reflect` supplies the parse and the reflection, and the
@@ -33,7 +32,7 @@ export const WGSL_EXTENSION = ".wgsl";
 
 /**
  * The three forms a `.wgsl` file can declare with its `// @ignifx shader|surface|post` line
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1–§3.3).
+ * (ADR-0024).
  *
  * @public
  */
@@ -63,8 +62,8 @@ export const LITE_SYSTEM_UNIFORMS: readonly string[] = [
 
 /**
  * The uniforms ignifx supplies on top of Lite's, uploaded once per frame per material that declares
- * them (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1). They live beside a shader's own
- * custom uniforms, so a shader reads them as `shaderUniforms.time`, not `shaderSystem.time`.
+ * them (ADR-0024). They live beside a shader's own custom uniforms, so a shader reads them as
+ * `shaderUniforms.time`, not `shaderSystem.time`.
  *
  * @public
  */

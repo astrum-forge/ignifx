@@ -8,8 +8,7 @@ import {
 import { createHeadlessScene, disposeSceneOnly } from "../../src/lite/scene.js";
 
 /**
- * Spike S1.2 — the single-callback loop (`docs/plan/engineering-plan.md` Phase 1). The Havok half
- * of the spike lives in `havok-order.test.ts`.
+ * The single-callback loop. The Havok half lives in `havok-order.test.ts`.
  */
 
 /** One frame at 60 Hz, in seconds. */
@@ -18,7 +17,7 @@ const FIXED_STEP_SECONDS = 1 / 60;
 /** The same frame in the milliseconds Lite works in. */
 const FIXED_STEP_MS = 1000 / 60;
 
-describe("S1.2 · the ignifx frame callback", () => {
+describe("the ignifx frame callback", () => {
   it("runs callbacks in reverse registration order", () => {
     // `docs/architecture/00-overview.md` §3.1: Lite unshifts, so the last registration runs first.
     // This is why the world registers its callback after every extension has registered.

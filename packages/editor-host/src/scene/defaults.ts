@@ -1,8 +1,8 @@
 /**
- * Defaults that a script's hot reload changes (engine ask E25): which fields of which component
- * types took a new default, and the live world brought in line with the document for them. A field
- * a document component's record leaves out takes the new default; a field it sets keeps its value;
- * a prefab instance whose members hold such a field is rebuilt from its prefab, with its overrides
+ * Defaults that a script's hot reload changes: which fields of which component types took a new
+ * default, and the live world brought in line with the document for them. A field a document
+ * component's record leaves out takes the new default; a field it sets keeps its value; a prefab
+ * instance whose members hold such a field is rebuilt from its prefab, with its overrides
  * (`docs/architecture/17-editor-host.md` §6.1).
  */
 

@@ -1,9 +1,8 @@
 import type { EmitterRandom } from "./pcg3d.js";
 import type { ParticleShape } from "../definition/types.js";
 
-// The emitter shapes (`docs/plan/2026-09-terrain-particles-shaders.md` §4.2), in the emitter's
-// local space with `+Y` as the directional axis. Each draws its random numbers in a fixed order, so
-// two systems with one seed spawn identical particles.
+// The emitter shapes, in the emitter's local space with `+Y` as the directional axis. Each draws
+// its random numbers in a fixed order, so two systems with one seed spawn identical particles.
 
 /** Degrees to radians. */
 const DEG_TO_RAD = Math.PI / 180;

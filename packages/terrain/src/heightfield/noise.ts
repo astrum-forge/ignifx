@@ -1,8 +1,7 @@
 import type { TerrainNoiseDefinition } from "../definition/types.js";
 
 /**
- * Seeded fractal noise for procedural terrains (`docs/plan/2026-09-terrain-particles-shaders.md`
- * §5.1).
+ * Seeded fractal noise for procedural terrains (ADR-0026).
  *
  * The lattice values come from an integer hash and the interpolation uses only `+ - * /`, so one
  * seed produces a bit-identical field in Node and in the browser (`CONSTITUTION.md` §2.1).

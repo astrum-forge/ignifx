@@ -1,5 +1,5 @@
 /**
- * The committed S1.3 baseline. Regenerating it is a deliberate act: a change here means the
+ * The committed determinism baseline. Regenerating it is a deliberate act: a change here means the
  * transform math produced different numbers, which is either a Babylon Lite upgrade or a bug
  * (`CONSTITUTION.md` §2.1).
  *

@@ -3,7 +3,7 @@ import type { HeightField } from "../heightfield/height-field.js";
 import type { ControlMaps } from "../material/splat-rules.js";
 
 /**
- * Seeded foliage placement (`docs/plan/2026-09-terrain-particles-shaders.md` §5.5).
+ * Seeded foliage placement (ADR-0026).
  *
  * Candidates sit on a jittered grid, so the result is even rather than clumped, and every random
  * number comes from an integer hash of the cell and the seed — never a running generator — so a

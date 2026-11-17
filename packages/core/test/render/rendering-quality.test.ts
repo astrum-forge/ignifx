@@ -16,8 +16,8 @@ import type { RenderHarness } from "./support/render-harness.js";
 import type { RenderingSettings } from "../../src/render/rendering-settings.js";
 
 /**
- * `rendering.quality` (GI plan step G15): a named tier fills the effect switches the project did
- * not write itself, and `"custom"` changes nothing.
+ * `rendering.quality`: a named tier fills the effect switches the project did not write itself, and
+ * `"custom"` changes nothing.
  */
 
 let harness: RenderHarness | null = null;

@@ -54,9 +54,9 @@ async function isExistingFile(filePath: string): Promise<boolean> {
  * Discovery of the static files extension packages need served verbatim
  * (`docs/architecture/04-extensions.md` §4, `05-assets-and-loading.md` §7).
  *
- * `@ignifx/physics` ships `HavokPhysics.wasm`, `@ignifx/3d` ships the Recast binary, and a WASM
- * loader locates its companion by file name, not by a hashed URL. Those files are therefore copied
- * unhashed into the public asset path, and the assets service resolves them through `resolveUrl`.
+ * `@ignifx/physics` ships `HavokPhysics.wasm`, and a WASM loader locates its companion by file
+ * name, not by a hashed URL. Such files are therefore copied unhashed into the public asset path,
+ * and the assets service resolves them through `resolveUrl`.
  */
 
 import { readdir, readFile, realpath, stat } from "node:fs/promises";

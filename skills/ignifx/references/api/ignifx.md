@@ -2994,7 +2994,7 @@ already be loaded; an `asset()` field hands you exactly that.
 This is the **wider** of the two one-shot calls: it takes [OneShotOptions](#oneshotoptions), which is `bus`
 plus all of `PlayOptions`. `AudioSource.playOneShot(clip, { volume })` is the narrow form — it
 supplies the source's bus and accepts a gain and nothing else
-(`docs/architecture/10-audio.md` §3, "Corrections"). Neither form is spatial; a positional sound
+(`docs/architecture/10-audio.md` §3). Neither form is spatial; a positional sound
 is `play()` on a spatial `AudioSource`.
 
 ###### Example
@@ -23088,8 +23088,8 @@ app.input.simulateEvent({ type: "pointerdown", x: 10, y: 20, button: 0 });
 
 ### InstancedMeshRenderer
 
-Draws one mesh many times from a caller-owned matrix slab, in a single draw call (the plan's
-§3.5).
+Draws one mesh many times from a caller-owned matrix slab, in a single draw call
+(`docs/architecture/07-rendering.md` §2.9).
 
 #### Example
 
@@ -24958,7 +24958,7 @@ The grid.
 **`Beta`**
 
 Lights PBR materials with a baked light-probe grid instead of the scene environment's diffuse
-light (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B2).
+light (`docs/architecture/07-rendering.md` §2.15).
 
 #### Remarks
 
@@ -27479,7 +27479,7 @@ The shader asset, or `null` for a PBR or Standard material. A hot reload of the
 > **get** **surfaces**(): readonly [`SurfaceShaderBinding`](#surfaceshaderbinding)[]
 
 The surface shaders layered onto this material, in the order they were attached
-(`docs/plan/2026-09-terrain-particles-shaders.md` §3.2).
+(ADR-0024).
 
 ###### Returns
 
@@ -29899,7 +29899,7 @@ What the component does, in one line, for an inspector.
 
 **`Beta`**
 
-A baked lightmap, or `null` (default) for none (GI Phase 2, step B3).
+A baked lightmap, or `null` (default) for none.
 
 ###### Remarks
 
@@ -38375,10 +38375,10 @@ Binds an entity to an action document and one device slot.
 
 #### Remarks
 
-The schema field `actions` holds the *asset*; the resolved lookup is `playerInput.input`, which
-is the same [InputActionsView](#inputactionsview) `app.input.actions` exposes. `08-input.md` §7 spells the
-lookup `player.input.actions`; the two cannot both be called `actions` on one class, and the
-serialized field is the one whose name the file format fixes.
+The schema field `actions` holds the *asset*; the resolved lookup is `playerInput.input`
+(`08-input.md` §7), which is the same [InputActionsView](#inputactionsview) `app.input.actions` exposes. The
+two cannot both be called `actions` on one class, and the serialized field is the one whose name
+the file format fixes.
 
 #### Example
 
@@ -44921,7 +44921,7 @@ The handle [Script.startCoroutine](#startcoroutine-8) returned.
 ### ShaderAsset
 
 A loaded `.wgsl` file: its source and what its pragmas declare
-(`docs/plan/2026-09-terrain-particles-shaders.md` §3.1).
+(ADR-0024).
 
 #### Remarks
 
@@ -48859,7 +48859,7 @@ IgnifxError with code `IGX-0201` when the entity has no such component.
 ### StorageBufferAsset
 
 A read-only GPU buffer a custom shader indexes
-(`docs/plan/2026-09-terrain-particles-shaders.md` §2.2).
+(`docs/architecture/07-rendering.md` §2.9).
 
 #### Remarks
 
@@ -56999,8 +56999,8 @@ How many sprites the last frame actually wrote to Lite.
 
 ###### Remarks
 
-This is the number spike S6.1 watches: on a steady frame with a static tilemap it is the count
-of sprites that genuinely moved, not the count that exist.
+This is the number the sprite-sync test watches: on a steady frame with a static tilemap it is
+the count of sprites that genuinely moved, not the count that exist.
 
 ###### Returns
 
@@ -57016,8 +57016,7 @@ The count.
 
 **`Beta`**
 
-Claims a fixed-capacity crowd of sprites that no entity owns
-(`docs/plan/2026-09-terrain-particles-shaders.md` §2.2).
+Claims a fixed-capacity crowd of sprites that no entity owns.
 
 ###### Parameters
 
@@ -65718,8 +65717,8 @@ Every failure the engine caught at a boundary rather than rethrowing.
 
 > `readonly` **particles**: [`ParticlesService`](#particlesservice)
 
-Particles (`docs/plan/2026-09-terrain-particles-shaders.md` §4.3): the budget, the quality
-multiplier, the gravity, the counters, and the live list of `ParticleSystem` components.
+Particles: the budget, the quality multiplier, the gravity, the counters, and the live list
+of `ParticleSystem` components.
 
 ##### physics
 
@@ -68074,8 +68073,8 @@ Whether `play()` calls made before the first unlock are queued and flushed on un
 
 ### AutoExposureSettings
 
-Auto exposure under `rendering.hdr` (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G14):
-a compute pass meters the HDR scene and eases the exposure towards middle grey.
+Auto exposure under `rendering.hdr` (`docs/architecture/07-rendering.md` §2.7): a compute pass
+meters the HDR scene and eases the exposure towards middle grey.
 
 #### Remarks
 
@@ -68589,7 +68588,7 @@ Two bloom passes share the record. Without `rendering.hdr` it is Lite's LDR bloo
 chain after tone mapping, and `order`, `weight`, `kernel`, `threshold`, `exposure` and `scale`
 apply. With `rendering.hdr` the HDR bloom **replaces** it: a downsample/upsample chain on the
 linear scene colour, always before the output pass whatever `order` says, tuned by `intensity`,
-`radius` and `hdrThreshold` (GI plan step G12).
+`radius` and `hdrThreshold`.
 
 #### Properties
 
@@ -69897,8 +69896,8 @@ The world-space contact point, in metres.
 
 ### ContactShadowsEffectSettings
 
-The `contactShadows` record a `PostProcessStack` declares (GI plan step G10,
-`docs/architecture/07-rendering.md` §2.7): Lite's screen-space contact shadows towards the main
+The `contactShadows` record a `PostProcessStack` declares
+(`docs/architecture/07-rendering.md` §2.7): Lite's screen-space contact shadows towards the main
 directional light, fed from the shared scene-input depth.
 
 #### Properties
@@ -70860,7 +70859,7 @@ The host window's lifecycle events, as the main process reports them.
 ###### Remarks
 
 This signal is the **only** source of `minimize` and `restore` in an Electron renderer.
-Measured on Electron 44.2.0 / macOS arm64 (S9.1): minimising, restoring, and blurring the
+Measured on Electron 44.2.0 / macOS arm64: minimising, restoring, and blurring the
 window fired the matching `BrowserWindow` events in the main process and delivered **nothing**
 to the page — no `visibilitychange`, no window `focus`/`blur`, and `document.hidden` stayed
 `false` throughout. `electron()` turns `focus` and `blur` into `onApplicationFocus`, which
@@ -77589,7 +77588,7 @@ ambient occlusion, and the parent-LOD height a terrain morph reads all ride here
 
 **`Beta`**
 
-The `lightmap` record of a [MeshRenderer](#meshrenderer) (GI Phase 2, step B3).
+The `lightmap` record of a [MeshRenderer](#meshrenderer).
 
 #### Remarks
 
@@ -79727,8 +79726,7 @@ Roughness factor, 0 to 1.
 > `readonly` **surfaces**: readonly [`SurfaceShaderReference`](#surfaceshaderreference)[]
 
 The `.surface.wgsl` files layered onto this material, in the order they are applied
-(`docs/plan/2026-09-terrain-particles-shaders.md` §3.2). It needs
-`rendering.features.materialPlugins`.
+(ADR-0024). It needs `rendering.features.materialPlugins`.
 
 ##### textures
 
@@ -83544,7 +83542,7 @@ The value; a boolean compiles to `bool`, a number to `f32`.
 ### ShaderMaterialDefinition
 
 The properties a `"shader"` material declares: which shader, and what to set on it
-(`docs/plan/2026-09-terrain-particles-shaders.md` §3.1).
+(ADR-0024).
 
 #### Properties
 
@@ -85227,9 +85225,9 @@ The sorting layer's name.
 
 **`Beta`**
 
-The `ssgi` record a `PostProcessStack` declares (GI plan step G11,
-`docs/architecture/07-rendering.md` §2.7): Lite's `@beta` screen-space global illumination, one
-bounce of the lit scene colour. Desktop tier.
+The `ssgi` record a `PostProcessStack` declares (`docs/architecture/07-rendering.md` §2.7):
+Lite's `@beta` screen-space global illumination, one bounce of the lit scene colour. Desktop
+tier.
 
 #### Properties
 
@@ -86391,7 +86389,7 @@ How far, in metres, every LOD mesh's edges hang down to hide cracks between leve
 ### TerrainColliderInit
 
 What a `HeightfieldCollider` needs, by data: `@ignifx/terrain` never imports `@ignifx/physics`
-(plan §5.4), so this is the shape rather than the type.
+(ADR-0026), so this is the shape rather than the type.
 
 #### Properties
 
@@ -94759,8 +94757,8 @@ The `ignifx://` scheme the packaged renderer is served from.
 > `const` **IGNIFX\_UNIFORM\_NAMES**: readonly \[`"time"`, `"unscaledTime"`, `"deltaTime"`, `"mainLightDirection"`, `"mainLightColor"`, `"ambientColor"`\]
 
 The uniforms **ignifx** fills in every frame, read in WGSL as `shaderUniforms.<name>`
-(`docs/plan/2026-09-terrain-particles-shaders.md` §3.1). Babylon Lite has no clock and no light
-bindings for a shader material, so these are the engine's own addition.
+(ADR-0024). Babylon Lite has no clock and no light bindings for a shader material, so these are
+the engine's own addition.
 
 ***
 
@@ -95364,7 +95362,7 @@ How many `texture`/`sampler` pairs one material's plugins may declare together.
 
 #### Remarks
 
-Measured on a device on 2026-09-08 (spike S0.2): a fully textured PBR material — base colour,
+Measured on a device on 2026-09-08: a fully textured PBR material — base colour,
 normal, ORM, emissive — with image-based lighting and one PCF shadow light already binds seven
 textures and seven samplers of the sixteen per stage that every WebGPU implementation guarantees,
 SwiftShader included, and Lite requests no higher `requiredLimits`. Nine is what is left, and it
@@ -96009,7 +96007,7 @@ The section name as it appears in `ignifx.config.ts`.
 
 > `const` **PHYSICS\_DIAGNOSTICS\_COUNTERS**: readonly `string`[]
 
-The counters `09-physics.md` §9 and the plan's diagnostics deliverable name.
+The counters `09-physics.md` §9 names.
 
 ***
 
@@ -100395,8 +100393,8 @@ The backend.
 #### Remarks
 
 Node only: the factory loads `node:fs/promises` and rejects on a host that has none. It is what
-`createApp({ storage: { directory } })` calls, and it is exported so that tooling — `ignifx bake`,
-a future authoritative server — can build one without an app.
+`createApp({ storage: { directory } })` calls, and it is exported so that tooling can build one
+without an app.
 
 #### Throws
 
@@ -100665,9 +100663,8 @@ IgnifxError with code `IGX-0709` when a placement is malformed.
 
 **`Beta`**
 
-Builds the loader for `.lightmap.json` lightmaps (GI Phase 2, step B3). The texture the file names
-loads as a dependency, so it is released with the lightmap; a texture that fails to load fails
-the lightmap.
+Builds the loader for `.lightmap.json` lightmaps. The texture the file names loads as a
+dependency, so it is released with the lightmap; a texture that fails to load fails the lightmap.
 
 #### Returns
 
@@ -100717,8 +100714,8 @@ IgnifxError with code `IGX-0709` when the grid is malformed.
 
 **`Beta`**
 
-Builds the loader for `.probes.json` light-probe grids (GI Phase 2, step B2). It needs no device,
-so a grid loads in Node too.
+Builds the loader for `.probes.json` light-probe grids. It needs no device, so a grid loads in
+Node too.
 
 #### Returns
 
@@ -102756,7 +102753,7 @@ describeInputSchemas()["ignifx/PlayerInput"].fields["deviceSlot"].default; // 0
 
 **`Beta`**
 
-Describes the `.lightmap.json` lightmap format (GI Phase 2, step B3).
+Describes the `.lightmap.json` lightmap format.
 
 #### Returns
 
@@ -102772,7 +102769,7 @@ The description of the top-level file fields.
 
 **`Beta`**
 
-Describes the `.probes.json` light-probe grid format (GI Phase 2, step B2).
+Describes the `.probes.json` light-probe grid format.
 
 #### Returns
 
@@ -108830,8 +108827,8 @@ The candidate count.
 
 The draft 2020-12 JSON Schema for a scene file, with `components[].props` narrowed per registered
 component `typeId` (`docs/architecture/06-serialization-and-scene-format.md` §8). The Vite plugin
-and the `ignifx schemas` CLI command emit this into `ignifx.schemas.json`, which drives
-build-time validation and editor autocompletion.
+validates scene files against it at build time when a project supplies it
+(`ignifx({ schemas })`); written to a file, it gives an editor autocompletion for scene files.
 
 #### Parameters
 

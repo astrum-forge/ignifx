@@ -1,4 +1,4 @@
-// The particle draw of docs/plan/2026-09-terrain-particles-shaders.md §4.4: thin instances whose
+// The particle draw (ADR-0025): thin instances whose
 // vertex stage reads a spawn record out of a storage buffer by instance index.
 // @ignifx shader
 // @ignifx attributes position, uv

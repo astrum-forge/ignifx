@@ -302,7 +302,7 @@ export function stepWorld(world: RapierWorld, queue: RapierEventQueue): void {
  *
  * @remarks
  * Rapier only refreshes its acceleration structure inside `World.step`, so a collider created since
- * the last step is invisible to queries and to the character controller (S6.2). The queue is passed
+ * the last step is invisible to queries and to the character controller. The queue is passed
  * so an enter event raised by the priming step is still delivered.
  *
  * @param world - The world.
@@ -615,7 +615,7 @@ export function createCollider(
     description
       .setActiveEvents(ActiveEvents.COLLISION_EVENTS)
       // `DEFAULT` covers dynamic-versus-anything only, so a kinematic character would never report
-      // entering a static sensor (measured, S6.2).
+      // entering a static sensor (measured).
       .setActiveCollisionTypes(ActiveCollisionTypes.ALL);
   }
   try {

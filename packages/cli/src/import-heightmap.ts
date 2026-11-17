@@ -6,7 +6,7 @@ import type { DecodedPng } from "fast-png";
 
 /**
  * `ignifx import heightmap <in.png> <out.r16>`: the batch conversion path for terrain heightmaps
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §5.1).
+ * (ADR-0026).
  *
  * `.r16` is `@ignifx/terrain`'s canonical heightmap because it is exact in Node and in the browser
  * alike, and because no browser image API decodes a 16-bit PNG losslessly. An 8-bit source converts,

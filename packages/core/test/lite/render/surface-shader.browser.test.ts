@@ -31,7 +31,7 @@ import type { SurfaceBrowserApp } from "../../fixtures/shaders/surface-browser.j
  * The scene every test builds is a lit sphere over a ground plane with one shadow-casting
  * directional light, which is what makes both halves checkable: the sphere's own pixels prove the
  * fragment hooks, and the ground's pixels under it prove that the vertex hook reached the shadow
- * caster pass (spike S0.2 measured that it does; this is the regression guard).
+ * caster pass (it does; this is the regression guard).
  */
 
 let harness: SurfaceBrowserApp | null = null;
@@ -315,8 +315,8 @@ describe("the displace hook", () => {
     const groundAfter = await scene.running.pixelAt(SHADOW_X, SHADOW_Y);
     // The sphere left the row it was in: a dark pixel became the white ground behind it.
     expect(sphereAfter.r).toBeGreaterThan(sphereBefore.r + 40);
-    // And its shadow left with it, which is the claim spike S0.2 made about the caster pass: the
-    // point it used to darken is now lit.
+    // And its shadow left with it, which is the claim about the caster pass: the point it used to
+    // darken is now lit.
     expect(groundAfter.r).toBeGreaterThan(groundBefore.r + 40);
   });
 });

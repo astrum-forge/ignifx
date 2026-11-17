@@ -8,8 +8,8 @@
  *   are forbidden (same section) and so are circular module dependencies.
  * - The Babylon Lite adapter boundary of `CONSTITUTION.md` §3.4 / coding standards §4 —
  *   `@babylonjs/lite` (and the other native/WASM backends) may be imported only from
- *   `src/lite/**`. The custom ESLint rule `ignifx/no-lite-outside-adapter` (standards §6.5,
- *   Phase 1) covers the same ground from the linter side; this is the belt-and-braces copy that
+ *   `src/lite/**`. The custom ESLint rule `ignifx/no-lite-outside-adapter` (standards §6.5)
+ *   covers the same ground from the linter side; this is the belt-and-braces copy that
  *   also sees files ESLint is not asked to lint.
  *
  * Run with `pnpm deps` (coding standards §12, job 6).
@@ -73,8 +73,7 @@ const ALLOWED_IMPORTS = {
 
 /**
  * Extra imports a package's `test/` may make that its `src/` may not. Integration tests that check a
- * by-data coupling end to end (plan `2026-09-terrain-particles-shaders.md` §5.4) live here so the
- * runtime layering above stays exact.
+ * by-data coupling end to end (ADR-0026) live here so the runtime layering above stays exact.
  */
 const TEST_ONLY_IMPORTS = {
   // packages/physics/test/terrain-heightfield.test.ts drives a HeightfieldCollider from Terrain.colliderInit().

@@ -8,8 +8,8 @@ import { createBrowserApp, gpuDeviceErrors, settle, SETTLE_FRAMES } from "./supp
 import type { BrowserApp } from "./support/browser-harness.js";
 
 /**
- * `rendering.autoExposure` on a real device (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step
- * G14): the compute pass meters the HDR scene and writes `log2` of the exposure multiplier.
+ * `rendering.autoExposure` on a real device (`docs/architecture/07-rendering.md` §2.7): the compute
+ * pass meters the HDR scene and writes `log2` of the exposure multiplier.
  */
 
 /** The canvas edge. Small keeps SwiftShader fast. */

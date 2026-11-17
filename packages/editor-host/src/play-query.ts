@@ -1,7 +1,7 @@
 /**
- * The play view's `queryRuntime` (engine ask E48): one entity of the running game, as the scene
- * format writes it, read through core's `serializeEntity`, each value capped and the whole answer
- * kept within `QUERY_RUNTIME_MAX_JSON_LENGTH`.
+ * The play view's `queryRuntime`: one entity of the running game, as the scene format writes it,
+ * read through core's `serializeEntity`, each value capped and the whole answer kept within
+ * `QUERY_RUNTIME_MAX_JSON_LENGTH`.
  */
 
 import { serializeEntity } from "@ignifx/core";

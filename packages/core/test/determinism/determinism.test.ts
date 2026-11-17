@@ -5,9 +5,9 @@ import { EXPECTED_APP_HASH } from "./fixtures/expected.js";
 import type { App } from "../../src/index.js";
 
 /**
- * Spike S1.3 at the kernel level (`docs/plan/engineering-plan.md` Phase 1): the same scene built in
- * two headless apps, stepped the same number of times, hashes identically — and matches a committed
- * constant. The Chromium half asserts the same constant in `determinism.browser.test.ts`.
+ * Determinism at the kernel level: the same scene built in two headless apps, stepped the same
+ * number of times, hashes identically — and matches a committed constant. The Chromium half asserts
+ * the same constant in `determinism.browser.test.ts`.
  */
 
 /**
@@ -27,7 +27,7 @@ async function createRun(): Promise<{ app: App; hash: () => string; step: () => 
   };
 }
 
-describe("S1.3 · kernel determinism", () => {
+describe("kernel determinism", () => {
   it("reproduces the committed baseline hash", async () => {
     const run = await createRun();
     try {

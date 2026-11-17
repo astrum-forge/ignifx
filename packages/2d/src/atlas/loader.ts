@@ -128,7 +128,7 @@ export interface AtlasImageUrlResolver {
  * through the asset manifest (`assets.resolveUrl`), so a production build that content-hashes the
  * asset root still finds the image. A root-relative (`/sheet.png`) or absolute (`https://…`,
  * `blob:`, `data:`) reference is a URL and is fetched verbatim — the shape a file in Vite's `public/`
- * directory has. Resolving against the document's *URL* instead broke hashed builds (Phase 6).
+ * directory has. Resolving against the document's *URL* instead breaks hashed builds.
  *
  * @param assets - The app's asset service, or anything with its `resolveUrl`.
  * @param atlasAddress - The address of the atlas document.

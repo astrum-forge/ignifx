@@ -26,7 +26,7 @@ import type { RenderHarness } from "./fixtures/gpu-harness.js";
 import type { CapturedFrame } from "../../../src/lite/screenshot.js";
 
 /**
- * Spike S2.3, feature-ordering half, plus the render diagnostics that need a device.
+ * The feature opt-ins, ordering half, plus the render diagnostics that need a device.
  *
  * The ordering finding is a **negative** one and is the reason ignifx polices the rule itself:
  * calling a feature opt-in after `registerScene` neither throws nor takes effect. Lite installs the
@@ -92,7 +92,7 @@ async function buildScene(features = NO_RENDERING_FEATURES): Promise<RenderHarne
   return harness;
 }
 
-describe("S2.3 · applying the feature opt-ins on a real device", () => {
+describe("applying the feature opt-ins on a real device", () => {
   it("registers and renders with every device-free opt-in switched on", async () => {
     const harness = await buildScene({
       shadows: false,

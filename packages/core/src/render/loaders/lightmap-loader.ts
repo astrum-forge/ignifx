@@ -4,9 +4,8 @@ import type { AssetLoader, LoaderContext } from "../../assets/types.js";
 import type { TextureAsset } from "../texture-asset.js";
 
 /**
- * Builds the loader for `.lightmap.json` lightmaps (GI Phase 2, step B3). The texture the file names
- * loads as a dependency, so it is released with the lightmap; a texture that fails to load fails
- * the lightmap.
+ * Builds the loader for `.lightmap.json` lightmaps. The texture the file names loads as a
+ * dependency, so it is released with the lightmap; a texture that fails to load fails the lightmap.
  *
  * @returns The loader to register with `ctx.registerAssetLoader`.
  *

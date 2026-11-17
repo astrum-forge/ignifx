@@ -29,17 +29,16 @@ import type { Schema } from "../schema/types.js";
  * case that actually needs an entity inside the model — a weapon in a hand — by parenting an
  * entity's node under a glTF node, which makes it follow that bone with no per-frame copy.
  *
- * ## Decisions the documents left open
+ * ## Decisions
  *
- * - **glTF cameras and lights are ignored, and there is no way to ask otherwise.** §2.4 says
- *   they are imported only when `importLights`/`importCameras` are set in the asset's
- *   `.meta.json`. Lite gates cameras behind a process-global `enableGltfCameras()` that must run
- *   before the **first** load (`src/lite/render-features.ts`), so a per-asset sidecar flag cannot
- *   decide it: whichever asset loads first would fix the answer for every later one. Rather than
- *   ship a flag that silently means "whatever the first model wanted", ignifx imports neither and
- *   the adapter keeps `enableGltfCameraImport` ready for a project-level setting that no delivered
- *   phase has added. Lights inside a container are shallow-copied by Lite's own clone and are not added to
- *   the scene by ignifx, so they never light anything.
+ * - **glTF cameras and lights are ignored, and there is no way to ask otherwise (§2.4).** Lite
+ *   gates cameras behind a process-global `enableGltfCameras()` that must run before the **first**
+ *   load (`src/lite/render-features.ts`), so a per-asset sidecar flag cannot decide it: whichever
+ *   asset loads first would fix the answer for every later one. Rather than ship a flag that
+ *   silently means "whatever the first model wanted", ignifx imports neither and the adapter keeps
+ *   `enableGltfCameraImport` ready for a project-level setting that does not exist yet. Lights
+ *   inside a container are shallow-copied by Lite's own clone and are not added to the scene by
+ *   ignifx, so they never light anything.
  * - **`materialOverrides` matches on the glTF material *name*.** §2.4 says "by material name",
  *   which is the only stable identifier a glTF gives a material. The component records the map and
  *   applies it to the nodes whose material carries that name; a name nothing matches is ignored.

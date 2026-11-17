@@ -18,8 +18,8 @@ import type { BrowserApp } from "./support/browser-harness.js";
 import type { EnvironmentAsset } from "../../src/render/environment-asset.js";
 
 /**
- * `PostProcessStack.contactShadows` and `.ssgi` on a real device (GI plan steps G10 and G11): each
- * pass changes the frame in its direction, and a stack enabling neither adds no task.
+ * `PostProcessStack.contactShadows` and `.ssgi` on a real device: each pass changes the frame in
+ * its direction, and a stack enabling neither adds no task.
  */
 
 /** The canvas edge. Small keeps SwiftShader fast. */

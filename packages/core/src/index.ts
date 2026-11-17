@@ -320,10 +320,10 @@ export {
   type MeshPrimitiveOptionKinds,
 } from "./render/mesh-file.js";
 export { LIGHTMAP_MODES, MeshRenderer, type LightmapMode, type MeshRendererLightmap } from "./render/mesh-renderer.js";
-// Custom shaders (docs/plan/2026-09-terrain-particles-shaders.md §3). The pragma parser, the live
-// material state, the surface-shader layer and the post-effect compiler are reached through dynamic
-// `import()` and must not be re-exported here: a value re-export puts them in every entry chunk
-// (`CONSTITUTION.md` §2.5, `src/render/shader-support.ts`).
+// Custom shaders (ADR-0024). The pragma parser, the live material state, the surface-shader layer
+// and the post-effect compiler are reached through dynamic `import()` and must not be re-exported
+// here: a value re-export puts them in every entry chunk (`CONSTITUTION.md` §2.5,
+// `src/render/shader-support.ts`).
 export { createShaderLoader } from "./render/loaders/shader-loader.js";
 export { SHADER_ASSET_TYPE, SHADER_FILE_EXTENSIONS, ShaderAsset } from "./render/shader-asset.js";
 export {

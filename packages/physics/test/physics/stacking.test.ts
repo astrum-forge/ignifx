@@ -4,8 +4,8 @@ import { Rigidbody } from "../../src/components/rigidbody.js";
 import { createPhysicsApp } from "../support/harness.js";
 
 /**
- * Exit criterion 2 of Phase 4: a stacking-stability scene. Five unit boxes are dropped into a stack
- * on a static floor and stepped for 600 fixed steps; the stack must come to rest and stay there.
+ * A stacking-stability scene. Five unit boxes are dropped into a stack on a static floor and
+ * stepped for 600 fixed steps; the stack must come to rest and stay there.
  */
 
 describe("stacking stability", () => {

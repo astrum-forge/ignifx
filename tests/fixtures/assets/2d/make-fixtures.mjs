@@ -111,8 +111,8 @@ writeFileSync(
   ),
 );
 
-// checker.png — 16x16 magenta/black checkerboard, one pixel per cell. The S6.3 pixel-perfect
-// spike reads this back: at an integer zoom every screen pixel must be pure magenta or pure
+// checker.png — 16x16 magenta/black checkerboard, one pixel per cell. The pixel-perfect
+// test reads this back: at an integer zoom every screen pixel must be pure magenta or pure
 // black, never a blend of the two.
 writeFileSync(
   join(HERE, "checker.png"),

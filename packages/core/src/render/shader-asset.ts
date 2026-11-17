@@ -2,7 +2,7 @@ import type { ShaderDeclaration, ShaderKind } from "./shader-declaration.js";
 
 /**
  * One `.wgsl` file: its text and the declaration its `// @ignifx` pragmas carry
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1, ADR-0024).
+ * (ADR-0024).
  *
  * The asset is the program plus the schema of what a material may set on it, never the values. It
  * needs no device, so a `.wgsl` loads completely in Node. Two facts an author has to know:
@@ -34,7 +34,7 @@ export const SHADER_FILE_EXTENSIONS: readonly string[] = Object.freeze([".wgsl"]
 
 /**
  * A loaded `.wgsl` file: its source and what its pragmas declare
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1).
+ * (ADR-0024).
  *
  * @remarks
  * Shaders are shared: many materials reference one shader asset, and each material holds its own

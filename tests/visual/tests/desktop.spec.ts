@@ -7,8 +7,7 @@ import { _electron as electron, expect, test } from "playwright/test";
 import type { ElectronApplication, Page } from "playwright/test";
 
 /**
- * The Electron desktop suite (`docs/architecture/14-platform-electron.md` §3,
- * `docs/plan/engineering-plan.md` Phase 9 exit criteria).
+ * The Electron desktop suite (`docs/architecture/14-platform-electron.md` §3).
  *
  * It launches the **real** packaged main process of `templates/3d-third-person` — the same
  * `out/main/index.js` `pnpm build:desktop` produces — through Playwright's `_electron` fixture, and
@@ -295,7 +294,7 @@ test("observes CONSTITUTION.md §9.2's window options at runtime", async () => {
   expect(preferences.nodeIntegration).toBe(false);
   expect(preferences.webSecurity).toBe(true);
   // The rest of `ENFORCED_WEB_PREFERENCES`, read back off the running window rather than off the
-  // pure builder, so the two are pinned to each other (docs/security/electron-review-2026-09.md).
+  // pure builder, so the two are pinned to each other.
   expect(preferences.webviewTag).toBe(false);
   expect(preferences.experimentalFeatures).toBe(false);
   expect(preferences.allowRunningInsecureContent).toBe(false);

@@ -5,7 +5,7 @@ import type { Page } from "playwright/test";
 
 /**
  * The template scenes `create-ignifx` scaffolds, each against a committed golden, plus the front
- * end Phase 12 added to all four: a title screen, a pause menu, a settings screen with volume
+ * end all four share: a title screen, a pause menu, a settings screen with volume
  * sliders and an interactive rebinding page, and a save file.
  *
  * ## The viewport
@@ -165,8 +165,8 @@ test.describe("template scenes", () => {
     await expect(page).toHaveScreenshot("2d-topdown.png", { maxDiffPixelRatio: 0.02 });
   });
 
-  // `rendering.hdr` (GI plan step G3): sprites draw after the HDR output pass and the clear goes
-  // through it, so the picture must match the plain golden within the same tolerance.
+  // `rendering.hdr`: sprites draw after the HDR output pass and the clear goes through it, so the
+  // picture must match the plain golden within the same tolerance.
   test("2d-topdown, HDR", async ({ page }) => {
     await openScene(page, `${TOPDOWN}/?static=1&hdr=1`);
     await expect(page).toHaveScreenshot("2d-topdown.png", { maxDiffPixelRatio: 0.02 });
@@ -186,8 +186,8 @@ test.describe("template scenes", () => {
     await expect(page).toHaveScreenshot("3d-third-person.png", { maxDiffPixelRatio: 0.05 });
   });
 
-  // The desktop build's tier (GI plan step G16): `rendering.quality: "high"` (HDR, TAA, GTAO) and
-  // an AgX `Environment`. `?static=1` leaves the post-process stack out, so there is no bloom here.
+  // The desktop build's tier: `rendering.quality: "high"` (HDR, TAA, GTAO) and an AgX
+  // `Environment`. `?static=1` leaves the post-process stack out, so there is no bloom here.
   test("3d-third-person, high tier", async ({ page }) => {
     await openScene(page, `${THIRD_PERSON}/?static=1&quality=high`);
     await expect(page).toHaveScreenshot("3d-third-person-high.png", { maxDiffPixelRatio: 0.05 });
@@ -207,9 +207,7 @@ test.describe("template scenes", () => {
 });
 
 /**
- * The Phase 12 exit criterion, in the four templates that have to meet it: *"polish of the four
- * templates: art, audio, menus, settings/rebinding screens, save/load"*
- * (`docs/plan/engineering-plan.md`, Phase 12).
+ * The four templates' front end: menus, settings and rebinding screens, save and load.
  *
  * These open each template **without** `?static=1`, because the overlay is exactly what a golden
  * hides: the point here is that the DOM is right, not that the pixels are. Every screen is

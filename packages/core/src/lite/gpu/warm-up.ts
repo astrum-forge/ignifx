@@ -2,8 +2,8 @@ import { addToScene, createMeshFromData, isShaderMaterial, removeFromScene, setS
 import type { EngineContext, Material, Mesh, SceneContext } from "@babylonjs/lite";
 
 /**
- * Material warm-up (`docs/architecture/07-rendering.md` §1.1, ADR-0014). Spike S2.2 measured what
- * "warming up" has to mean in Babylon Lite; this module is the answer.
+ * Material warm-up (`docs/architecture/07-rendering.md` §1.1, ADR-0014). ADR-0002 Validation
+ * records what "warming up" has to mean in Babylon Lite; this module is the answer.
  *
  * Everything here is `@internal`, and it needs a device.
  *

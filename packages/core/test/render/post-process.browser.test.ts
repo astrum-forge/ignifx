@@ -17,7 +17,7 @@ import type { PixelRgba } from "../../src/lite/screenshot.js";
 /**
  * `PostProcessStack` on a real device (`docs/architecture/07-rendering.md` §2.7).
  *
- * The Phase 2 visual suite found that every non-empty chain presented a **black** frame: the first
+ * The visual suite found that every non-empty chain presented a **black** frame: the first
  * effect sampled the swapchain, which a WebGPU canvas context is not configured to allow, and the
  * frame's whole command buffer was rejected. The old version of this suite passed anyway, because it
  * only asserted that the image *changed* — and black is a change. So every assertion here is about

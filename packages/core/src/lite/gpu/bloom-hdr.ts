@@ -20,11 +20,10 @@ import type {
 } from "@babylonjs/lite";
 
 /**
- * HDR bloom (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G12): a downsample/upsample
- * chain on the linear `rgba16float` scene target, recorded before the HDR output pass so the glow
- * is tone mapped with the rest of the frame. Its own chunk: `../../render/hdr-bloom-support.ts`
- * imports it only when a `PostProcessStack` asks for bloom under `rendering.hdr`
- * (`CONSTITUTION.md` §2.5).
+ * HDR bloom (`docs/architecture/07-rendering.md` §2.7): a downsample/upsample chain on the linear
+ * `rgba16float` scene target, recorded before the HDR output pass so the glow is tone mapped with
+ * the rest of the frame. Its own chunk: `../../render/hdr-bloom-support.ts` imports it only when a
+ * `PostProcessStack` asks for bloom under `rendering.hdr` (`CONSTITUTION.md` §2.5).
  *
  * ```text
  * scene → hdr ─ down₀ → mip₀ ─ down₁ → mip₁ … → mip₅

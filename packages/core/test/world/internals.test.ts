@@ -22,7 +22,7 @@ describe("accessors", () => {
     harness.dispose();
   });
 
-  it("exposes the scene signals Phase 2 will fire", () => {
+  it("exposes the scene-loaded and scene-unloaded signals", () => {
     const harness = createTestWorld();
     expect(harness.world.onSceneLoaded.connectionCount).toBe(0);
     expect(harness.world.onSceneUnloaded.connectionCount).toBe(0);

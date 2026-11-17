@@ -18,9 +18,9 @@ import { loadHavokForTests } from "./fixtures/havok.js";
 import type { SceneContext } from "@babylonjs/lite";
 
 /**
- * **Spike S4.1 — the simulation scene.** The premise ADR-0003 and `09-physics.md` §1 are built on:
- * a Havok world hosted on a **null-engine** scene, stepped by `stepScene` from ignifx's fixed loop,
- * while the same `SceneNode`s are what a render scene draws.
+ * **The simulation scene.** The premise ADR-0003 and `09-physics.md` §1 are built on: a Havok world
+ * hosted on a **null-engine** scene, stepped by `stepScene` from ignifx's fixed loop, while the
+ * same `SceneNode`s are what a render scene draws.
  *
  * `@babylonjs/lite` and `@babylonjs/havok` are imported directly here: `test/lite/**` is the
  * documented exception to the adapter boundary (coding standards §4), because verifying the adapter
@@ -36,7 +36,7 @@ const MILLISECONDS = 1000;
 /** The Havok module, instantiated once. */
 let havok: unknown;
 
-describe("S4.1 · a Havok world on a null-engine scene", () => {
+describe("a Havok world on a null-engine scene", () => {
   beforeAll(async () => {
     havok = await loadHavokForTests();
   }, 30_000);
@@ -88,7 +88,7 @@ describe("S4.1 · a Havok world on a null-engine scene", () => {
   });
 
   it("gives two independently stepped worlds bit-identical poses", () => {
-    // Spike S4.1's determinism half, at the raw-Lite level: the same construction stepped 600 times
+    // The determinism half, at the raw-Lite level: the same construction stepped 600 times
     // in two worlds lands on the same float bits.
     const first = fall(600);
     const second = fall(600);

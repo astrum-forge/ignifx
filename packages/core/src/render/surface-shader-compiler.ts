@@ -7,7 +7,7 @@ import type { ShaderDeclaration, SurfaceHookName } from "./shader-declaration.js
 
 /**
  * The surface-shader compiler: three plain WGSL functions in, one Babylon Lite material plugin out
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.2).
+ * (ADR-0024).
  *
  * A `.surface.wgsl` declares its uniforms and textures with `// @ignifx` pragmas and provides up to
  * three functions that never mention Lite: `SurfaceInput`, `Surface` and `DisplaceInput` are

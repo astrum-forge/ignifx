@@ -8,7 +8,7 @@ import type { Capture, Rgba, UiBrowserApp } from "./support/browser-harness.js";
 import type { AssetHandle, FontAsset } from "@ignifx/core";
 
 /**
- * Phase 8's *"text rendering golden"* exit criterion, on a real WebGPU device.
+ * The text-rendering check, on a real WebGPU device.
  *
  * It is a **deterministic assertion, not a stored PNG**. A golden image of anti-aliased text would
  * be a hostage to the driver, to SwiftShader's rasteriser, and to the day the font is updated; what

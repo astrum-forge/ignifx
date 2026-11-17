@@ -1,5 +1,5 @@
 /**
- * Where the scene view's grid draws each frame (engine ask E31): plain arithmetic over the editor
+ * Where the scene view's grid draws each frame: plain arithmetic over the editor
  * cameras' state, so it runs and is tested without a GPU. `../lite/grid.ts` draws the result.
  */
 

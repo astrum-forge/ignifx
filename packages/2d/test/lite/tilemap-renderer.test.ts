@@ -25,8 +25,8 @@ import type { Texture2D } from "@babylonjs/lite";
  * `TilemapRenderer` (`docs/architecture/11-2d-toolkit.md` §2.5) building and dropping chunks.
  *
  * A chunk that is up and unchanged costs nothing per frame: its sprites are written once, when the
- * chunk is built, and never touched again. That is the property spike S6.1 measures, and it is what
- * makes a 100x100 map free once it is on screen.
+ * chunk is built, and never touched again. That is the property the sprite-sync test measures, and
+ * it is what makes a 100x100 map free once it is on screen.
  */
 
 let harness: TwoDAppHarness | null = null;

@@ -24,9 +24,9 @@ import { Mat4 } from "../../../src/math/mat4.js";
 import { degToRad } from "../../../src/math/math-utils.js";
 
 /**
- * Spike S2.1, headless half: a `FreeCamera` parented under an entity node follows that node exactly,
- * the orthographic toggle behaves, and `resolveCameraViewport` really does flip y. The pixel proof
- * that the rendered image moves with the node is in `camera.browser.test.ts`.
+ * The camera adapter, headless half: a `FreeCamera` parented under an entity node follows that node
+ * exactly, the orthographic toggle behaves, and `resolveCameraViewport` really does flip y. The
+ * pixel proof that the rendered image moves with the node is in `camera.browser.test.ts`.
  */
 
 /** A quaternion for a rotation of `degrees` about the world Y axis. */
@@ -35,7 +35,7 @@ function yawQuaternion(degrees: number): { x: number; y: number; z: number; w: n
   return { x: 0, y: Math.sin(half), z: 0, w: Math.cos(half) };
 }
 
-describe("S2.1 · a camera parented under an entity node", () => {
+describe("a camera parented under an entity node", () => {
   it("has the identity view matrix when its parent sits at the origin", () => {
     const camera = createCameraUnderNode(createNode("entity"));
     const view = new Float32Array(16);

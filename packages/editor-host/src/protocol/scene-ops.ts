@@ -1,7 +1,7 @@
 // A copy of `packages/editor-protocol/src/scene-ops.ts` from `astrum-forge/ignifx-editor` (protocol 0.3).
 // Below this comment it is byte-identical to that file, but for the link rule in `./index.ts`.
 /**
- * The scene op vocabulary on the wire: the thirteen ops of plan §3.4, exactly as
+ * The scene op vocabulary on the wire: the thirteen ops, exactly as
  * `@ignifx/editor-core` defines them (`packages/editor-core/src/ops.ts`), so a command the editor
  * applied to its document is sent to the host unchanged and MCP's `apply_ops` accepts the same JSON.
  *
@@ -323,7 +323,7 @@ export interface RemoveOverrideOp {
 }
 
 /**
- * One scene op: the closed vocabulary of plan §3.4, identical to `@ignifx/editor-core`'s `SceneOp`.
+ * One scene op: the closed vocabulary, identical to `@ignifx/editor-core`'s `SceneOp`.
  *
  * @public
  */

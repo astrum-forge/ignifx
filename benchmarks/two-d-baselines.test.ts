@@ -3,17 +3,18 @@ import baselines from "./baselines.json" with { type: "json" };
 
 /**
  * Check recorded 2D sync and pixel-perfect results against their budgets.
- * The S6.1 and S6.3 suites collect the measurements; this file does not rerun them.
- * Idle sprites must have zero sync writes, and nearest-sampled pixel art must have no blended pixels.
+ * The sprite-sync and pixel-perfect suites of `packages/2d/test` collect the measurements; this
+ * file does not rerun them. Idle sprites must have zero sync writes, and nearest-sampled pixel art
+ * must have no blended pixels.
  */
 
 /** The per-frame CPU budget the 2D engine has, in milliseconds (coding standards §7). */
 const FRAME_BUDGET_MS = 2;
 
-/** The environments S6.1 measured. */
+/** The environments the sprite-sync suite measured. */
 const ENVIRONMENTS = ["browser", "node"] as const;
 
-describe("the recorded 2D baselines (S6.1)", () => {
+describe("the recorded 2D baselines", () => {
   it.each(ENVIRONMENTS)("keeps %s sprite sync at scale inside the 2 ms frame budget", (environment) => {
     const sample = baselines.twoD.spriteSyncAtScale[environment];
 
@@ -41,7 +42,7 @@ describe("the recorded 2D baselines (S6.1)", () => {
   });
 });
 
-describe("the recorded pixel-perfect baselines (S6.3)", () => {
+describe("the recorded pixel-perfect baselines", () => {
   it("blends no pixel at any device pixel ratio", () => {
     const { blendedPixelsAtDpr1, blendedPixelsAtDpr1_5, blendedPixelsAtDpr2 } = baselines.twoD.pixelPerfect;
 

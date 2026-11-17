@@ -122,8 +122,8 @@ export function checkFreshness(context: HarnessContext): CheckResult {
   }
   // "The package's last public change" (16 §4) is the API report changing, not any `src/` edit: a
   // refactor that leaves the public surface identical regenerates to the very same reference, so
-  // keying on `src/` reported it stale for nothing (found in Phase 11). The pairing is per entry
-  // point, not per package: keying on the package folder demanded `electron.md` for a change to
+  // keying on `src/` reported it stale for nothing. The pairing is per entry point, not per
+  // package: keying on the package folder demanded `electron.md` for a change to
   // `electron-main.api.md` and let a stale `electron-main.md` through when `electron.md` changed.
   const reports = changed.filter((file) => API_REPORT.test(file)).length;
   const stale = staleApiReferences(changed);

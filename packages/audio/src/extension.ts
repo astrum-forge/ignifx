@@ -27,8 +27,8 @@ import type { App, Extension, ExtensionContext } from "@ignifx/core";
  *
  * ## Why the engine is created in `register` and not in `onStart`
  *
- * `10-audio.md` §1 says "The engine is created in `onStart`". It is created in `register` instead,
- * which `04-extensions.md` §2.4 explicitly allows to be `async`. Two reasons:
+ * The engine is created in `register` (`10-audio.md` §1), which `04-extensions.md` §2.4 explicitly
+ * allows to be `async`. Two reasons:
  *
  * - The audio engine has no dependency on the Lite *render* engine, which is the thing `onStart`
  *   waits for. There is nothing to wait for.

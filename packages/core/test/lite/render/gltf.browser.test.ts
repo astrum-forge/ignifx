@@ -24,7 +24,7 @@ import type { RenderHarness } from "./fixtures/gpu-harness.js";
 import type { AssetContainer, SceneNode } from "@babylonjs/lite";
 
 /**
- * Spike S2.4, glTF half: the Khronos `Box.glb` sample loads, instantiates, and renders, and two
+ * Instancing, glTF half: the Khronos `Box.glb` sample loads, instantiates, and renders, and two
  * instances of it share one upload of the geometry.
  *
  * `Box.glb` is 1.6 KB and its material is a plain red metallic-roughness PBR material, which makes
@@ -136,7 +136,7 @@ describe("loading Box.glb", () => {
   });
 });
 
-describe("S2.4 · instancing a loaded model", () => {
+describe("instancing a loaded model", () => {
   it("gives two instances the same geometry upload", async () => {
     const harness = await buildScene();
     const container = await loadBox(harness);

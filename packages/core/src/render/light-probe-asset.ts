@@ -5,7 +5,7 @@ import type { AssetHandle } from "../assets/types.js";
 import type { Vec3Like } from "../math/types.js";
 
 /**
- * Light probes (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B2): a regular grid of baked
+ * Light probes (`docs/architecture/07-rendering.md` §2.15): a regular grid of baked
  * irradiance samples that a `LightProbeVolume` lights PBR materials with, in place of the scene
  * environment's diffuse light. Everything here is plain data and runs in Node.
  *

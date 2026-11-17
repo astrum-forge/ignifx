@@ -61,8 +61,7 @@ import { degToRad } from "../math/math-utils.js";
  * - Include/exclude lists are sets of `Mesh.id` **strings**, not mesh references
  *   (`lib/render/mesh-light-selection.js`, `affectsMesh`), and a mesh with no `id` is never excluded.
  * - Hemispheric lights spell their colours `diffuseColor`/`specularColor`, not `diffuse`/`specular`
- *   (`index.d.ts` 7283) — `docs/architecture/07-rendering.md` §2.2 says "`diffuse`/`specular`" for
- *   every type, which is wrong for this one.
+ *   (`docs/architecture/07-rendering.md` §2.2).
  */
 
 /**

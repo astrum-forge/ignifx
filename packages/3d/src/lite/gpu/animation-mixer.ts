@@ -73,7 +73,7 @@ const MAX_WEIGHT = 1;
  * and because a cloned skinned mesh shares the template's skeleton
  * (`lib/scene/transform-node.js` 38-53), two `Model`s of one asset cannot be animated
  * independently: the second animator to claim the clips is refused, and both instances would show
- * one pose in any case. Instanced animated characters are a post-Phase-7 problem, and the mixer
+ * one pose in any case. Instanced animated characters are not supported, and the mixer
  * reports the refusal rather than throwing mid-frame.
  *
  * @internal

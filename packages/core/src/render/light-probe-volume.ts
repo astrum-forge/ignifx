@@ -7,7 +7,7 @@ import type { Schema } from "../schema/types.js";
 
 /**
  * Lights PBR materials with a baked light-probe grid instead of the scene environment's diffuse
- * light (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B2).
+ * light (`docs/architecture/07-rendering.md` §2.15).
  *
  * @remarks
  * Every lit PBR material samples the grid per pixel, blending the eight probes around it, so moving

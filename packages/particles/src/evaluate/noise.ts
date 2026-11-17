@@ -1,8 +1,8 @@
 import { hashToUnit, pcg3d } from "../emitter/pcg3d.js";
 
-// The positional noise both evaluators add (`docs/plan/2026-09-terrain-particles-shaders.md` §4.1):
-// classic lattice gradient noise with a quintic fade, hashed per corner with `pcg3d`. The WGSL in
-// `src/gpu/wgsl.ts` is the same code, and negative cells hash the same on both hosts.
+// The positional noise both evaluators add (ADR-0025): classic lattice gradient noise with a
+// quintic fade, hashed per corner with `pcg3d`. The WGSL in `src/gpu/wgsl.ts` is the same code, and
+// negative cells hash the same on both hosts.
 
 /** The offset of the second noise channel. */
 const OFFSET_Y: readonly number[] = Object.freeze([31.4, 47.2, 12.9]);

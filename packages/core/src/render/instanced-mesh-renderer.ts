@@ -18,7 +18,7 @@ import type { Schema } from "../schema/types.js";
 
 /**
  * One mesh, one draw call, thousands of world matrices
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.5).
+ * (`docs/architecture/07-rendering.md` §2.9).
  *
  * The matrix slab stays the caller's: Babylon Lite keeps the reference and never copies
  * (`lib/mesh/thin-instance.js`), so it has to stay alive and at least `count * 16` floats long, and
@@ -117,8 +117,8 @@ export interface InstanceRange {
 }
 
 /**
- * Draws one mesh many times from a caller-owned matrix slab, in a single draw call (the plan's
- * §3.5).
+ * Draws one mesh many times from a caller-owned matrix slab, in a single draw call
+ * (`docs/architecture/07-rendering.md` §2.9).
  *
  * @example
  * ```ts

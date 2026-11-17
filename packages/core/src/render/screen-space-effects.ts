@@ -6,8 +6,8 @@ import type { SceneInputs } from "../lite/gpu/scene-inputs.js";
 import type { SsgiPass } from "../lite/gpu/ssgi.js";
 
 /**
- * The `contactShadows` and `ssgi` records of a `PostProcessStack` (GI plan steps G10 and G11,
- * `docs/architecture/07-rendering.md` §2.7): the thin side that decides when to build, and the
+ * The `contactShadows` and `ssgi` records of a `PostProcessStack`
+ * (`docs/architecture/07-rendering.md` §2.7): the thin side that decides when to build, and the
  * lifecycle of what it built. Everything Lite does sits in chunks it imports only while one of the
  * two is enabled — `../lite/gpu/contact-shadows.ts`, `../lite/gpu/ssgi.ts`,
  * `../lite/gpu/scene-color-passes.ts` and the shared scene inputs — so a stack that enables neither

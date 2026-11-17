@@ -29,7 +29,7 @@ import type {
 
 /**
  * Reads the `// @ignifx …` comment pragmas of a `.wgsl` file into a {@link ShaderDeclaration}
- * (grammar: `docs/plan/2026-09-terrain-particles-shaders.md` §3.1; rationale: ADR-0024).
+ * (grammar: `docs/architecture/07-rendering.md` §2.8; rationale: ADR-0024).
  *
  * Pure string work with no Babylon Lite import, so the build-time validator and the runtime loader
  * can share it. Four rules the grammar itself does not show:

@@ -318,7 +318,7 @@ export class Physics2DRuntime {
 
   /**
    * Whether at least one fixed step has run, which is what Rapier's broadphase needs before a query
-   * can answer (`09-physics.md` §5, spike S6.2).
+   * can answer (`09-physics.md` §5).
    *
    * @returns `true` once a step has completed.
    */
@@ -585,7 +585,7 @@ export class Physics2DRuntime {
     const started = now();
     if (this.#colliderSetChanged || !this.#stepped) {
       // Rapier only refreshes its broadphase inside `step`, so a collider created since the last
-      // one is invisible to the character controller and to queries (S6.2). A zero-length step
+      // one is invisible to the character controller and to queries. A zero-length step
       // rebuilds it; it is skipped whenever the collider set is unchanged, because it perturbs a
       // running simulation.
       primeWorld(this.#world, this.#queue);
@@ -611,7 +611,7 @@ export class Physics2DRuntime {
    *
    * @remarks
    * Rapier refreshes its broadphase only inside a step, so after a change this runs the same
-   * zero-length step a game runs before its first real one (S6.2). With a zero timestep nothing
+   * zero-length step a game runs before its first real one. With a zero timestep nothing
    * moves; the events it reports are dropped. A changed scale rebuilds the body's colliders.
    */
   syncEditMode(): void {
@@ -1308,7 +1308,7 @@ export class Physics2DRuntime {
    * Rapier runs it from inside WebAssembly, so it reads only plain JavaScript state:
    * {@link Physics2DRuntime.#refreshOneWayPlatforms} caches every platform's world top *before* the
    * move, because calling back into Rapier (`collider.translation()`) from inside the callback is a
-   * re-entrant WebAssembly call and the obstacle is then never actually excluded (measured, S6.2).
+   * re-entrant WebAssembly call and the obstacle is then never actually excluded (measured).
    *
    * @param collider - The obstacle Rapier is considering.
    * @returns `false` when the obstacle should be ignored this step.

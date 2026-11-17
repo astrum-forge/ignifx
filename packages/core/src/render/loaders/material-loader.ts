@@ -65,8 +65,8 @@ const SURFACE_PRIORITY = 500;
  * `// @ignifx` declarations, and an undeclared name (`IGX-0712`) or a value of the wrong shape
  * (`IGX-0713`) fails the load. A PBR property that does not exist is a typo with an obvious
  * fallback — the default; a uniform that does not exist has none, and a shader that silently
- * ignores half its material is the failure mode custom shaders are hardest to debug from
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1). The same file is checked at build time
+ * ignores half its material is the failure mode custom shaders are hardest to debug from.
+ * The same file is checked at build time
  * by `@ignifx/vite-plugin`, so this is the last line rather than the first.
  *
  * ```jsonc

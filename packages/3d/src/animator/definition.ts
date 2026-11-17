@@ -342,7 +342,7 @@ function invalid(address: string, reason: string): Error {
     `${address} is not a valid ignifx.animator document: ${reason}.`,
     {
       context: { file: address, reason },
-      hint: "See skills/ignifx/references/formats/ignifx-animator.md for the document shape.",
+      hint: "See skills/ignifx/references/formats/ignifx.animator.md for the document shape.",
     },
   );
 }

@@ -16,8 +16,7 @@ import type { App, AssetHandle, ShaderAsset } from "@ignifx/core";
 
 /**
  * `TerrainAsset`: one loaded terrain — its definition, its height field, its splat weights, and the
- * GPU resources every `Terrain` drawing it shares (`docs/plan/2026-09-terrain-particles-shaders.md`
- * §5.1).
+ * GPU resources every `Terrain` drawing it shares (ADR-0026).
  *
  * The material is **not** here: the splat shader reads world positions, so its origin uniform
  * belongs to the entity, and each `Terrain` builds its own PBR material from the shader and

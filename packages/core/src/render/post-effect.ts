@@ -10,7 +10,7 @@ import type { CustomFieldCodec } from "../schema/types.js";
 /**
  * What a `PostProcessStack` needs to describe a custom `// @ignifx post` effect: its settings record,
  * the uniforms every effect gets for free, and the schema codec its `values` round-trip through
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.3).
+ * (ADR-0024).
  *
  * `PostProcessStack` is in every game's static graph, so the WGSL generator and the uniform layout
  * live in `./post-effect-compiler.ts`, which the `.wgsl` loader pulls in only for a `post` file.

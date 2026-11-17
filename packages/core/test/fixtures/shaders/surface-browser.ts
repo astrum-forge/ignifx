@@ -21,7 +21,7 @@ import type { World } from "../../../src/world/world.js";
  * into the asset cache rather than fetching a fixture file.
  *
  * `msaaSamples: 1` throughout, so a single-pixel assertion is exact rather than a resolve of four
- * samples (ADR-0002 Validation).
+ * samples.
  */
 
 /** How many frames a change is given to reach the screen before a test reads it. */

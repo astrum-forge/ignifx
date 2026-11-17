@@ -41,7 +41,7 @@ import type { ColorLike } from "../math/types.js";
  * - **`"type": "shader"` is values applied to a `ShaderAsset`.** §2.6 lists the family, and the
  *   WGSL attribute, uniform, sampler, storage, define, and pipeline layout is declared by the
  *   `.wgsl` file's own `// @ignifx` pragmas rather than by the material file
- *   (`src/render/shader-pragma.ts`, `docs/plan/2026-09-terrain-particles-shaders.md` §3.1). So a
+ *   (`src/render/shader-pragma.ts`, ADR-0024). So a
  *   shader `.material.json` names the shader, the values, the textures, and the defines, and
  *   nothing about Babylon Lite's `ShaderMaterialOptions` reaches the public API
  *   (`CONSTITUTION.md` §3.4). `IGX-0708` is still what an unknown `type` string produces.
@@ -151,8 +151,7 @@ export interface PbrMaterialDefinition {
   readonly textures: Readonly<Record<string, string>>;
   /**
    * The `.surface.wgsl` files layered onto this material, in the order they are applied
-   * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.2). It needs
-   * `rendering.features.materialPlugins`.
+   * (ADR-0024). It needs `rendering.features.materialPlugins`.
    */
   readonly surfaces: readonly SurfaceShaderReference[];
 }
@@ -352,7 +351,7 @@ export class MaterialAsset {
 
   /**
    * The surface shaders layered onto this material, in the order they were attached
-   * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.2).
+   * (ADR-0024).
    *
    * @returns The bindings, or an empty array.
    */

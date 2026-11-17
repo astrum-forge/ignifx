@@ -2,7 +2,7 @@ import { TerrainErrorCode, terrainError } from "../errors.js";
 
 /**
  * A minimal PNG decoder for heightmaps and control maps
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §5.1).
+ * (ADR-0026).
  *
  * No browser image API decodes a 16-bit PNG losslessly and Node has no image API at all, so the
  * loader reads PNG itself. It accepts non-interlaced greyscale, greyscale+alpha, RGB and RGBA at 8

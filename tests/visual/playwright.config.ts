@@ -2,15 +2,15 @@ import { defineConfig, devices } from "playwright/test";
 import type { PlaywrightTestConfig } from "playwright/test";
 
 /**
- * The visual golden suite (coding standards §10): one screenshot per Phase 2 exit-criterion scene,
- * compared against a committed golden with a per-scene tolerance.
+ * The visual golden suite (coding standards §10): one screenshot per scene, compared against a
+ * committed golden with a per-scene tolerance.
  *
  * ## Chromium, not the headless shell
  *
  * `channel: "chromium"` is required, not a preference. Playwright's default headless browser is
  * `chrome-headless-shell`, which has no compositor: a WebGPU canvas presents two or three frames
  * and then the device is lost with `A valid external Instance reference no longer exists`
- * (measured 2026-09-05, Phase 2 spike S2.1 — the same finding that pins `vitest.config.ts`).
+ * (measured 2026-09-05 — the same finding that pins `vitest.config.ts`).
  * `--use-webgpu-adapter=swiftshader` pins the software adapter so a golden does not depend on the
  * host GPU, which is what standards §10 asks of CI.
  *
@@ -54,9 +54,8 @@ import type { PlaywrightTestConfig } from "playwright/test";
  *
  * `gpu-budget` is `gpu-time.spec.ts` alone, and the one project that does **not** pin SwiftShader:
  * it measures each 3D template's GPU milliseconds per frame on the host GPU (Apple M1 through Metal
- * on the reference machine, GI Phase 1 spike S4), which a software rasteriser cannot stand in for.
- * GitHub's runners have no GPU, so it never runs in CI: `pnpm test:gpu-budget`, locally (coding
- * standards §7 and §12).
+ * on the reference machine), which a software rasteriser cannot stand in for. GitHub's runners have
+ * no GPU, so it never runs in CI: `pnpm test:gpu-budget`, locally (coding standards §7 and §12).
  */
 
 /** One `webServer` entry. Playwright does not export `TestConfigWebServer` by name. */

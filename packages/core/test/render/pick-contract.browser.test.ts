@@ -15,7 +15,7 @@ import type { ModelAsset } from "../../src/render/model-asset.js";
 import type { RenderPick } from "../../src/render/renderer.js";
 
 /**
- * The `app.renderer.pickAsync` contract (`docs/architecture/07-rendering.md` §3, engine ask E3):
+ * The `app.renderer.pickAsync` contract (`docs/architecture/07-rendering.md` §3):
  * coordinates are backing-store pixels at every device pixel ratio, a hit on any mesh of a glTF
  * `Model` resolves through the nearest node an entity owns, `ignore` looks through entities,
  * components and earlier hits, and a hit names its mesh, its instance, its point and its distance.

@@ -1,5 +1,5 @@
 /**
- * The scene view's 2D editor camera (S0.2 §5): a script on the editor camera's entity that, while
+ * The scene view's 2D editor camera: a script on the editor camera's entity that, while
  * the view is in 2D mode, drives an editor-owned `Camera2D` that outranks the level's, and turns
  * the 3D editor camera into a matching orthographic camera looking down +Z at the 2D plane, so
  * the gizmo overlay and the 3D picker see what the sprites show. The level's own `Camera2D` is
@@ -38,8 +38,7 @@ type Gesture2D = "none" | "click" | "pan";
  * @remarks
  * Middle drag, right drag, and left drag with Space held pan; the wheel zooms in pixel steps about
  * the cursor; a left click is reported to `onClick`. A press on a gizmo handle is left to the
- * gizmo, by the same rule as the 3D camera (S0.2 §4.2). It does nothing until
- * {@link EditorCamera2D.activate}.
+ * gizmo, by the same rule as the 3D camera. It does nothing until {@link EditorCamera2D.activate}.
  */
 export class EditorCamera2D extends Script implements ScriptCallbacks {
   /** The type id; the host leaves it out of the schemas it reports. */

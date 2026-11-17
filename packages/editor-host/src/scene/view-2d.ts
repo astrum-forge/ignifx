@@ -23,7 +23,7 @@ export const DEFAULT_PIXELS_PER_UNIT = 100;
 
 /**
  * The wheel's zoom steps, in screen pixels per layer pixel (`Camera2D.zoom`): with a pixels-per-unit
- * equal to the art's, a source pixel spans a whole number of screen pixels from 1 up (S0.2 §5).
+ * equal to the art's, a source pixel spans a whole number of screen pixels from 1 up.
  */
 export const ZOOM_STEPS: readonly number[] = [0.125, 0.25, 0.5, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32];
 

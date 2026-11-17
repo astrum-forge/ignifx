@@ -9,7 +9,7 @@ import { createFixtureTree, disposeFixtures } from "./support/fixtures.js";
 import type { AssetManifest } from "../src/manifest.js";
 
 /**
- * Babylon Lite's run-time decoders, served from the project's own origin (engine ask E13).
+ * Babylon Lite's run-time decoders, served from the project's own origin.
  *
  * `@ignifx/core` ships the KTX2 decoder, its transcoders and the meshopt decoder in `decoders/`
  * and lists them in `ignifx.assets.public`, so the plugin's extension-asset path serves them in

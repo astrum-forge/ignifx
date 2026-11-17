@@ -13,10 +13,10 @@ import { ENGINE_VERSION } from "./support/engine-version.js";
 import type { App } from "@ignifx/core";
 
 /**
- * `virtual:ignifx/editor` in a real page (engine ask E24): the generated development module is
- * evaluated as a game's `main.ts` would import it, the editor posts its port to the real `window`
- * before the game has called `attachEditorPlayControls(app)`, and the handshake still completes,
- * once, on that first port.
+ * `virtual:ignifx/editor` in a real page: the generated development module is evaluated as a game's
+ * `main.ts` would import it, the editor posts its port to the real `window` before the game has
+ * called `attachEditorPlayControls(app)`, and the handshake still completes, once, on that first
+ * port.
  */
 
 // `src/vite/modules.ts` takes four ids from the Vite plugin, a Node package, for the scene view's

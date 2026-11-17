@@ -14,7 +14,7 @@ import type { Entity } from "../../src/entity/entity.js";
  * What is being proved is the round trip through Lite's node metadata: `MeshRenderer` tags its
  * clone with `{ entity, component }`, Lite hands the picked mesh back, and the renderer resolves
  * those handles to the objects a script holds. `faceId` is deliberately never asserted — it stays
- * `-1` on SwiftShader (ADR-0002 Validation).
+ * `-1` on SwiftShader.
  */
 
 let harness: BrowserApp | null = null;

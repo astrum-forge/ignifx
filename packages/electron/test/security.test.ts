@@ -15,8 +15,7 @@ import {
 } from "../src/main/window.js";
 
 /**
- * The security checklist (`CONSTITUTION.md` §9.2, `docs/plan/engineering-plan.md` Phase 9 exit
- * criteria).
+ * The security checklist (`CONSTITUTION.md` §9.2).
  *
  * Every assertion here is on a **pure builder**, which is the point: `windowOptionsFor`, `cspFor`,
  * and `isAllowedExternalUrl` were factored out of `createGameWindow` and `installHostHandlers`

@@ -6,7 +6,7 @@ import type { LiteScene } from "../lite/scene.js";
 
 /**
  * The gate `InstancedMeshRenderer` reaches its Babylon Lite adapter through
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.5, "Bundle cost" in §3.1).
+ * (`docs/architecture/07-rendering.md` §2.8, "Bundle cost").
  *
  * The component is registered by the core extension, so it is in every app's static graph; Lite's
  * thin-instance code is not, and a game that draws no instance cloud must not pay for it

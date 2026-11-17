@@ -8,8 +8,8 @@ import type { App } from "@ignifx/core";
 
 /**
  * The one place `@ignifx/terrain` and `@ignifx/physics` are checked against each other
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §5.4). `Terrain.colliderInit()` couples the two
- * by data, so nothing enforces that the two agree except a test that drives both.
+ * (ADR-0026). `Terrain.colliderInit()` couples the two by data, so nothing enforces that the two
+ * agree except a test that drives both.
  *
  * It lives here rather than in `packages/terrain/test` because the layering rule lets physics see
  * terrain and not the other way round: a terrain must cost no physics code

@@ -4,7 +4,7 @@ import type { MutableVec3 } from "@ignifx/core";
 
 /**
  * Chunk geometry: geomipmapped grids with skirts, baked on the CPU
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §5.2, `docs/adr/0023-terrain-chunked-geomipmapping.md`).
+ * (`docs/adr/0026-terrain-chunked-geomipmapping.md`).
  *
  * A chunk's level-`lod` mesh has `n = chunkSize / 2^lod + 1` vertices per side: `n²` grid vertices
  * in row order, then four skirt strips of `n` vertices — the `-Z`, `+Z`, `-X`, `+X` edges in that

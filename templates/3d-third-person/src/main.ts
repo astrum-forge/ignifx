@@ -500,7 +500,7 @@ async function main(): Promise<AppStatus> {
   gameUi.loading.hide();
 
   // Two test-only hooks, and only under `?probe=1`: `tests/visual/tests/desktop.spec.ts` uses the
-  // first for the Phase 9 device-loss exit criterion, and the gameplay half of
+  // first for its device-loss test, and the gameplay half of
   // `tests/visual/tests/templates.spec.ts` uses the second to read the camera and the character as
   // numbers rather than as pixels. See `src/desktop-probe.ts` and `src/gameplay-probe.ts`.
   if (flags.get("probe") === "1") {

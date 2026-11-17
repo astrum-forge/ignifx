@@ -16,9 +16,9 @@ import type {
   Vec3Like,
 } from "@ignifx/core";
 
-// `app.particles` (`docs/plan/2026-09-terrain-particles-shaders.md` §4.3): the budget, the quality
-// multiplier, the gravity, the counters, and the resources every system playing one definition
-// shares. The storage buffer and the material are per system; everything else is per definition.
+// `app.particles`: the budget, the quality multiplier, the gravity, the counters, and the resources
+// every system playing one definition shares. The storage buffer and the material are per system;
+// everything else is per definition.
 
 /**
  * The diagnostics group name.

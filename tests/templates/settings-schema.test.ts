@@ -14,7 +14,7 @@ import type { App, Extension, SettingsInput } from "@ignifx/core";
 import type { JsonObject, JsonValue } from "@ignifx/vite-plugin";
 
 /**
- * Engine ask E6: the settings schema and descriptions are in the form `createApp` reads. Every
+ * The settings schema and descriptions are in the form `createApp` reads. Every
  * template's own `ignifx.config.ts` validates against the schema its app generates, and a settings
  * file written from the described defaults, as an editor's Settings panel would, starts an app.
  */

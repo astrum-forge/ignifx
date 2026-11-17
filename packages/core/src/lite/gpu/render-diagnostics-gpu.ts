@@ -20,7 +20,7 @@ import type { EngineContext, RenderTaskGpuTimings, SurfaceContext } from "@babyl
  *
  * - `isGpuTimingSupported` and `getRenderTaskGpuTimings` both check
  *   `engine._device.features.has("timestamp-query")` (`lib/engine/gpu-task-timing.js`). Chromium's
- *   SwiftShader now offers that feature too (GI spike S4, 2026-11-02), but its timings measure a
+ *   SwiftShader now offers that feature too (2026-11-02), but its timings measure a
  *   software rasteriser, so coding standards §10 still skips GPU-timing assertions there; real
  *   numbers come from the host-GPU `gpu-budget` project (§7).
  * - `setSurfaceSize` writes `canvas.width`/`canvas.height` (`lib/engine/surface.js`), and a null

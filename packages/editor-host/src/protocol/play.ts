@@ -2,7 +2,7 @@
 // Below this comment it is byte-identical to that file, but for the link rule in `./index.ts`.
 /**
  * The play view's controls: the methods the editor calls on the project's own game page after the
- * handshake, through `attachEditorPlayControls(app)` from `virtual:ignifx/editor`. Plan §3.6.
+ * handshake, through `attachEditorPlayControls(app)` from `virtual:ignifx/editor`.
  */
 import { isRecord } from "./rpc.js";
 import { isSceneFileEntity, isUidString } from "./scene-file.js";

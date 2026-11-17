@@ -8,13 +8,12 @@ import type { Schema, ScriptCallbacks } from "@ignifx/core";
  *
  * ## Why it extends `Script` rather than `Component`
  *
- * `10-audio.md` §4 does not say, and §3 shows `AudioSource` as a plain `Component`. It cannot be
- * one: this kernel delivers `awake`, `onEnable`, and `onDisable` only to classes that derive from
+ * The kernel delivers `awake`, `onEnable`, and `onDisable` only to classes that derive from
  * `Script` (`packages/core/src/lifecycle/lifecycle-queue.ts`, `invokeCallback` returns early when
- * `info.script` is `null`), and a listener has to know when it becomes the active one. The same
- * argument applies to `AudioSource`, whose `playOnAwake` is defined in terms of `awake` — and it is
- * `awake`, not `onAttach`, that runs after a scene file's props have been decoded
- * (`06-serialization-and-scene-format.md` §4).
+ * `info.script` is `null`), and a listener has to know when it becomes the active one.
+ * `AudioSource` extends `Script` for the same reason (`10-audio.md` §3): its `playOnAwake` is
+ * defined in terms of `awake` — and it is `awake`, not `onAttach`, that runs after a scene file's
+ * props have been decoded (`06-serialization-and-scene-format.md` §4).
  *
  * ## Selection
  *

@@ -15,9 +15,9 @@ import type { UiBrowserApp } from "./support/browser-harness.js";
  * The Chromium half of the UI suite: a real overlay over a real WebGPU canvas
  * (`docs/architecture/13-ui.md` §1-§3).
  *
- * Two of Phase 8's exit criteria live here — *"focus routing test (typing in a field does not fire
- * actions)"* and *"anchor placement visual test"* — and both are asserted as arithmetic rather than
- * against a stored image, so they cannot rot with a font update or a driver change.
+ * Two checks live here — focus routing (typing in a field does not fire actions) and anchor
+ * placement — and both are asserted as arithmetic rather than against a stored image, so they
+ * cannot rot with a font update or a driver change.
  */
 
 let harness: UiBrowserApp | null = null;

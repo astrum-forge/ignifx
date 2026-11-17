@@ -5,7 +5,7 @@ import type { AssetLoader, LoaderContext } from "../../assets/types.js";
 
 /**
  * The `shader` asset loader: `.wgsl` to `ShaderAsset`
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1).
+ * (ADR-0024).
  *
  * One loader covers all three forms, because `.surface.wgsl` and `.post.wgsl` both end in `.wgsl`;
  * the `@ignifx shader|surface|post` pragma is what says which form a file is.

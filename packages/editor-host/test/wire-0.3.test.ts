@@ -368,7 +368,7 @@ describe("the editor's 0.3 wire fixture, through the host's guards", () => {
     expect(isSceneOpenedParams({ ...opened, viewMode: 2 })).toBe(false);
   });
 
-  it("refuses an assetReloaded without an address, a type, or a list of uids (engine ask E23)", () => {
+  it("refuses an assetReloaded without an address, a type, or a list of uids", () => {
     const params = member(wire("assetReloaded"), "params");
     expect(isAssetReloadedParams({ ...params, address: "" })).toBe(false);
     expect(isAssetReloadedParams({ ...params, type: undefined })).toBe(false);
@@ -377,7 +377,7 @@ describe("the editor's 0.3 wire fixture, through the host's guards", () => {
     expect(isAssetReloadedParams({ ...params, entities: [] })).toBe(true);
   });
 
-  it("refuses a play state with an unknown state, a fractional frame count or a negative time (E24)", () => {
+  it("refuses a play state with an unknown state, a fractional frame count or a negative time", () => {
     const report = member(wire("playStateResponse"), "result");
     expect(isPlayStateReport(report)).toBe(true);
     expect(isPlayStateReport({ ...report, state: "running" })).toBe(false);
@@ -388,7 +388,7 @@ describe("the editor's 0.3 wire fixture, through the host's guards", () => {
     expect(isPlayStateReport(null)).toBe(false);
   });
 
-  it("refuses play stats with a negative or non-finite rate or a fractional count (E25)", () => {
+  it("refuses play stats with a negative or non-finite rate or a fractional count", () => {
     const stats = member(wire("playStatsResponse"), "result");
     expect(isPlayStats(stats)).toBe(true);
     expect(isPlayStats({ ...stats, fps: -1 })).toBe(false);
@@ -542,7 +542,7 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
     }
   });
 
-  it("describes the transform with core's schema, marked built-in (engine ask E4)", async () => {
+  it("describes the transform with core's schema, marked built-in", async () => {
     const { peer } = await started();
     const answer = await peer.request(wire("getSchemas"));
     const schemas = member(member(answer, "result"), "schemas");
@@ -822,7 +822,7 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
     expectWire(await peer.request(wire("pickBacking")), wire("pickMiss"));
   });
 
-  it("reloads a changed prefab in place and announces it as the fixture's assetReloaded (E23)", async () => {
+  it("reloads a changed prefab in place and announces it as the fixture's assetReloaded", async () => {
     const { app, peer } = await started();
     const host = await (live?.host ?? Promise.reject(new Error("No live host.")));
     await peer.request(wire("openScene"));
@@ -862,7 +862,7 @@ describe("the editor's 0.3 wire fixture, through a live headless host", () => {
     expect(maskHashes([record])).toEqual(maskHashes([recordBefore]));
   });
 
-  it("leaves a texture, a removed file and an asset it never loaded alone (E23)", async () => {
+  it("leaves a texture, a removed file and an asset it never loaded alone", async () => {
     const { peer } = await started();
     const host = await (live?.host ?? Promise.reject(new Error("No live host.")));
     await peer.request(wire("openScene"));
@@ -915,7 +915,7 @@ function isRecord(value: unknown): value is JsonObject {
 }
 
 describe("the editor's 0.3 wire fixture, through live play controls", () => {
-  it("answers playState and reports each change, after the answer to the method that made it (E24)", async () => {
+  it("answers playState and reports each change, after the answer to the method that made it", async () => {
     const app = await createApp({ headless: true });
     const target = new EventTarget();
     const controls = startEditorPlayControls(app, {
@@ -941,7 +941,7 @@ describe("the editor's 0.3 wire fixture, through live play controls", () => {
       await peer.request({ jsonrpc: "2.0", id: 25, method: PlayMethod.stop });
       expectWire(await peer.notification(PlayNotification.playStateChanged), wire("playStateChangedStopped"));
 
-      // Stopped on its one frame, with three entities: no rate, the world's count (E25).
+      // Stopped on its one frame, with three entities: no rate, the world's count.
       for (const name of ["Player", "Crate", "Sun"]) {
         app.world.createEntity(name);
       }
@@ -954,7 +954,7 @@ describe("the editor's 0.3 wire fixture, through live play controls", () => {
   });
 });
 
-describe("the editor's 0.3 wire fixture, through a canvas-backed play view (E47)", () => {
+describe("the editor's 0.3 wire fixture, through a canvas-backed play view", () => {
   it("lists screenshot, refuses it while the game is not running, and answers an image while it is", async () => {
     // The fixture's game also has `@ignifx/input`, as every template does, so it lists `sendInput`.
     const app = await createApp({ headless: true, extensions: [input({ gamepadReader: null })] });
@@ -1004,7 +1004,7 @@ describe("the editor's 0.3 wire fixture, through a canvas-backed play view (E47)
   });
 });
 
-describe("the editor's 0.3 wire fixture, through queryRuntime in the play view (E48)", () => {
+describe("the editor's 0.3 wire fixture, through queryRuntime in the play view", () => {
   it("refuses a stopped game, answers a scene entity's live state, and refuses an unknown uid", async () => {
     const app = await createApp({ headless: true });
     app.world.registry.register(Health);
@@ -1047,7 +1047,7 @@ describe("the editor's 0.3 wire fixture, through queryRuntime in the play view (
   });
 });
 
-describe("the editor's 0.3 wire fixture, through sendInput in the play view (E49)", () => {
+describe("the editor's 0.3 wire fixture, through sendInput in the play view", () => {
   it("refuses a stopped game, then queues the events into the game's own input", async () => {
     const app = await createApp({ headless: true, extensions: [input({ gamepadReader: null })] });
     const target = new EventTarget();

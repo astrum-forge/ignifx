@@ -23,11 +23,11 @@ import type { EnvironmentAsset } from "../../src/render/environment-asset.js";
 
 /**
  * `rendering.hdr` for every colour writer besides plain PBR
- * (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G3): fog after the restore, Standard and
- * unlit materials, custom `.wgsl` materials, the environment skybox, and custom post effects that
- * run on linear colour ahead of the output pass. Each scene is rendered with HDR off and on; with
- * Lite's default image processing (no curve, exposure 1, contrast 1) the two must present the same
- * bytes, which is what a writer encoded twice would break.
+ * (`docs/architecture/07-rendering.md` §2.7): fog after the restore, Standard and unlit materials,
+ * custom `.wgsl` materials, the environment skybox, and custom post effects that run on linear
+ * colour ahead of the output pass. Each scene is rendered with HDR off and on; with Lite's default
+ * image processing (no curve, exposure 1, contrast 1) the two must present the same bytes, which is
+ * what a writer encoded twice would break.
  */
 
 /** The canvas edge. Small keeps SwiftShader fast. */

@@ -124,7 +124,7 @@ describe("the scene view's page", () => {
     }
   });
 
-  it("serves the game's own page, the play view, with frame-ancestors limited to the editor (E24)", async () => {
+  it("serves the game's own page, the play view, with frame-ancestors limited to the editor", async () => {
     const server = await devServer(await createFixtureTree(PROJECT));
     try {
       // What a browser sends when it navigates a frame, or a tab, to the page.
@@ -143,7 +143,7 @@ describe("the scene view's page", () => {
     }
   });
 
-  it("leaves a policy the project sets in server.headers in place (E24)", async () => {
+  it("leaves a policy the project sets in server.headers in place", async () => {
     const own = "frame-ancestors 'none'";
     const server = await devServer(
       await createFixtureTree(PROJECT),

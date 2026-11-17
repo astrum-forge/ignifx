@@ -311,8 +311,8 @@ describe("scaffolding the 2d-topdown template", () => {
     expect(tsconfig).not.toContain("extends");
   });
 
-  // The editor-ready shape (ignifx-editor plan, engine asks E2 and E15): the level is a scene file,
-  // the extension list is a module of its own, and there is no `src/level.ts`.
+  // The editor-ready shape: the level is a scene file, the extension list is a module of its own,
+  // and there is no `src/level.ts`.
   it.each([
     {
       template: "2d-topdown",

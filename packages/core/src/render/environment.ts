@@ -94,11 +94,11 @@ import type { Schema } from "../schema/types.js";
  *
  * ## `ambientColor` does not exist
  *
- * §2.5 lists an `ambientColor` field. Babylon Lite 1.27.0 has no scene-level ambient term:
- * `ambientColor` appears once in `index.d.ts`, on `StandardMaterialProps`, and `SceneContext`
- * declares nothing of the kind. A field that mapped onto nothing would serialise into save files
- * and quietly start mattering when the mapping appeared, so the component does not declare one. The
- * flat term a project wants from it is a hemispheric `Light`, which Lite does have.
+ * Babylon Lite 1.27.0 has no scene-level ambient term: `ambientColor` appears once in `index.d.ts`,
+ * on `StandardMaterialProps`, and `SceneContext` declares nothing of the kind. A field that mapped
+ * onto nothing would serialise into save files and quietly start mattering when the mapping
+ * appeared, so the component does not declare one. The flat term a project wants from it is a
+ * hemispheric `Light`, which Lite does have.
  *
  * ## Headless
  *

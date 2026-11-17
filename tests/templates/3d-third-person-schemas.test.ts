@@ -4,7 +4,7 @@ import { createThirdPersonApp } from "./third-person-app.js";
 import type { App } from "@ignifx/core";
 
 /**
- * Engine ask E19: the schemas an external inspector is generated from, described over the
+ * The schemas an external inspector is generated from, described over the
  * `3d-third-person` app the way the ignifx editor's scene view builds it, name the package that
  * registered each component and whether an entity may hold more than one.
  */

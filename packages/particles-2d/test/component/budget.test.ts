@@ -6,9 +6,8 @@ import type { Particles2DAppHarness } from "../support/app.js";
 import type { SpriteAtlasAsset } from "@ignifx/2d";
 
 /**
- * One budget for both dimensions (`docs/plan/2026-09-terrain-particles-shaders.md` §4.3): a 2D
- * system reserves its capacity from `app.particles`, so `maxParticles` and `qualityScale` mean the
- * same thing whichever renderer draws the effect.
+ * One budget for both dimensions: a 2D system reserves its capacity from `app.particles`, so
+ * `maxParticles` and `qualityScale` mean the same thing whichever renderer draws the effect.
  */
 
 /** An effect asking for 600 records, so two of them do not fit a 1,000 budget. */

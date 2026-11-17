@@ -7,9 +7,8 @@ import { createTopdownApp, TOPDOWN } from "./topdown-app.js";
 import type { App, Entity, MemorySink } from "@ignifx/core";
 
 /**
- * `templates/2d-topdown` is editor-ready (ignifx-editor plan, engine ask E2): its level is
- * `assets/scenes/main.scene.json`, loaded by a boilerplate `main.ts`. `entry-rules.test.ts` checks
- * the entry's imports for all four templates.
+ * `templates/2d-topdown` is editor-ready: its level is `assets/scenes/main.scene.json`, loaded by a
+ * boilerplate `main.ts`. `entry-rules.test.ts` checks the entry's imports for all four templates.
  */
 
 /** The level's address, as `main.ts` loads it. */

@@ -38,9 +38,9 @@ import type { SchemaDescription } from "../schema/describe.js";
  * their `format`. A *file* format is not a component and has no type id, so the file formats
  * below are keyed `ignifx/scene-file`, `ignifx/material-file`, `ignifx/environment-file`, and
  * `ignifx/mesh-file` while declaring `format: "ignifx.scene"`, `"ignifx.material"`,
- * `"ignifx.environment"`, and `"ignifx.mesh"`. The wave-1
- * hand-off asked for the key `"ignifx.scene"`; that key fails the namespacing check, and the
- * grouping — which is what actually decides the page — comes from `format` either way.
+ * `"ignifx.environment"`, and `"ignifx.mesh"`. A key of `"ignifx.scene"` would fail the namespacing
+ * check, and the grouping — which is what actually decides the page — comes from `format` either
+ * way.
  *
  * ## The transform
  *
@@ -276,7 +276,7 @@ export function describeMeshFileFormat(): SchemaDescription {
 }
 
 /**
- * Describes the `.probes.json` light-probe grid format (GI Phase 2, step B2).
+ * Describes the `.probes.json` light-probe grid format.
  *
  * @returns The description of the top-level file fields.
  *
@@ -317,7 +317,7 @@ export function describeLightProbeFileFormat(): SchemaDescription {
 }
 
 /**
- * Describes the `.lightmap.json` lightmap format (GI Phase 2, step B3).
+ * Describes the `.lightmap.json` lightmap format.
  *
  * @returns The description of the top-level file fields.
  *

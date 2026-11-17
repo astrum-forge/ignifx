@@ -30,8 +30,7 @@ import type { ColorLike } from "../math/types.js";
 import type { Disconnect } from "../signal/signal.js";
 
 /**
- * The `"shader"` material family (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1): a
- * `ShaderAsset` plus the values a material sets on it.
+ * The `"shader"` material family (ADR-0024): a `ShaderAsset` plus the values a material sets on it.
  *
  * Nothing here imports Babylon Lite: {@link toShaderMaterialOptions} is the whole mapping onto the
  * shape `createShaderMaterial` takes, as plain data, and the adapter itself arrives through
@@ -1110,8 +1109,8 @@ export function buildShaderMaterialState(
  * Builds the Babylon Lite material a declaration describes, through the dynamically loaded adapter.
  *
  * @remarks
- * Under `rendering.hdr` the fragment is wrapped to write linear colour (GI plan step G3), so the
- * output pass does not encode it a second time.
+ * Under `rendering.hdr` the fragment is wrapped to write linear colour, so the output pass does not
+ * encode it a second time.
  *
  * @param app - The app, whose scene says whether it renders through `rendering.hdr`.
  * @param name - The material's name.

@@ -6,13 +6,13 @@ import { createTerrainApp } from "./support/app.js";
 import type { TerrainAppHarness } from "./support/app.js";
 
 /**
- * The `terrain-512` scene of `docs/plan/2026-09-terrain-particles-shaders.md` §6.3, built headless.
+ * The `terrain-512` benchmark scene, built headless.
  * Its two time budgets are measured by `benchmarks/scenes/terrain-512.ts` on the reference machine
  * and recorded in `benchmarks/baselines.json`; a shared test runner's clock is not a benchmark, so
  * these tests check that the work happens and stays bounded, not how long it takes.
  */
 
-/** Samples per side: `2^9 + 1`, the plan's terrain. */
+/** Samples per side: `2^9 + 1`. */
 const RESOLUTION = 513;
 
 /** Quads per chunk side, and metres per chunk at this resolution. */
@@ -31,7 +31,7 @@ const FRAMES = 120;
 const WARMUP = 120;
 
 /**
- * Builds the plan's 512 m terrain, headless, with a camera to cull against.
+ * Builds the 512 m terrain, headless, with a camera to cull against.
  *
  * @returns The harness and the terrain.
  */

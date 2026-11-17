@@ -14,8 +14,8 @@ import {
 import type { Mesh } from "@babylonjs/lite";
 
 /**
- * Thin-instance half of the Babylon Lite adapter (`docs/architecture/07-rendering.md` §2.3,
- * `docs/plan/2026-09-terrain-particles-shaders.md` §3.5). Everything here is `@internal` and needs a
+ * Thin-instance half of the Babylon Lite adapter (`docs/architecture/07-rendering.md` §2.3, §2.9).
+ * Everything here is `@internal` and needs a
  * WebGPU device, so the browser project is what covers it.
  *
  * Lite fixes the order these must be called in, and both the culling opt-in and the LOD pairing only

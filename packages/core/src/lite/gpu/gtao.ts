@@ -44,10 +44,9 @@ import type {
 } from "@babylonjs/lite";
 
 /**
- * Ground-truth ambient occlusion (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, steps G8 and G9;
- * `docs/architecture/07-rendering.md` §2.14). Its own chunk: the renderer imports it only when
- * `rendering.ambientOcclusion.enabled` is on, so a project without it loads none of it and its frame
- * graph has none of these tasks (`CONSTITUTION.md` §2.5).
+ * Ground-truth ambient occlusion (`docs/architecture/07-rendering.md` §2.14). Its own chunk: the
+ * renderer imports it only when `rendering.ambientOcclusion.enabled` is on, so a project without it
+ * loads none of it and its frame graph has none of these tasks (`CONSTITUTION.md` §2.5).
  *
  * ```text
  * … depth pyramid → gtao params → gtao (compute: horizons, then depth-aware blur) → scene → …
@@ -61,7 +60,7 @@ import type {
  *   from the scene inputs' world normals, rotated into view space. Slice angle and step offset are
  *   jittered per pixel with interleaved gradient noise.
  * - **Denoise.** A 5×5 blur weighted by view-depth similarity, in the same compute pass.
- * - **Indirect light only (spike S3).** {@link createAmbientOcclusionPlugin} multiplies Lite's PBR
+ * - **Indirect light only.** {@link createAmbientOcclusionPlugin} multiplies Lite's PBR
  *   `occlusion` variable, which scales the environment's irradiance and specular occlusion and
  *   nothing else (`lib/material/pbr/fragments/ibl-fragment.js`), by the AO texture at the
  *   fragment's screen position. Every lit PBR variant declares `occlusion` before that slot: the
@@ -74,7 +73,7 @@ import type {
  *   textures and bindings, swaps them in, and rebuilds the patched materials, whose bind groups hold
  *   the AO texture's view. The old textures are disposed a few frames later, once no in-flight bind
  *   group can still name them.
- * - **TAA.** `rendering.taa` (G5) filters the final colour, AO included; a dedicated AO history is
+ * - **TAA.** `rendering.taa` filters the final colour, AO included; a dedicated AO history is
  *   not wired. It would accumulate {@link AmbientOcclusion.texture} before the plugin reads it.
  */
 
@@ -360,8 +359,8 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
  * @remarks
  * At half resolution the AO texel under the fragment is blended bilinearly from four loads rather
  * than through a sampler, so the result does not depend on the storage texture's sampler. The block
- * scope keeps its names out of the shader's. `input.clipPos` is the fragment's `@builtin(position)`
- * (spike S3).
+ * scope keeps its names out of the shader's. `input.clipPos` is the fragment's
+ * `@builtin(position)`.
  *
  * @param scale - Full-resolution pixels per AO pixel.
  * @returns The WGSL for `CUSTOM_FRAGMENT_BEFORE_LIGHTS`.
@@ -388,7 +387,7 @@ export function gtaoPluginWgsl(scale: number): string {
 }
 
 /**
- * Builds the material plugin that applies the AO texture to indirect light (spike S3).
+ * Builds the material plugin that applies the AO texture to indirect light.
  *
  * @param scale - Full-resolution pixels per AO pixel.
  * @param texture - Reads the current AO texture; it changes on resize.

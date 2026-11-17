@@ -597,8 +597,8 @@ export function lockNavigation(
  * The permissions a game window is allowed to ask Chromium for.
  *
  * @remarks
- * Pointer lock and full screen are the two a game genuinely needs; measured on Electron 44.2.0
- * (S9.1), `document.body.requestPointerLock` is present in a sandboxed `ignifx://` window and
+ * Pointer lock and full screen are the two a game genuinely needs; measured on Electron 44.2.0,
+ * `document.body.requestPointerLock` is present in a sandboxed `ignifx://` window and
  * `navigator.getGamepads()` returns its four slots without any permission at all. Everything else —
  * the camera, the microphone, geolocation, USB, HID, serial, notifications — is denied, because a
  * game that has not asked for them has no business being able to prompt for them.

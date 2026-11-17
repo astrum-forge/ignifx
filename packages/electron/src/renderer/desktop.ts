@@ -53,7 +53,7 @@ export interface Desktop {
    *
    * @remarks
    * This signal is the **only** source of `minimize` and `restore` in an Electron renderer.
-   * Measured on Electron 44.2.0 / macOS arm64 (S9.1): minimising, restoring, and blurring the
+   * Measured on Electron 44.2.0 / macOS arm64: minimising, restoring, and blurring the
    * window fired the matching `BrowserWindow` events in the main process and delivered **nothing**
    * to the page — no `visibilitychange`, no window `focus`/`blur`, and `document.hidden` stayed
    * `false` throughout. `electron()` turns `focus` and `blur` into `onApplicationFocus`, which

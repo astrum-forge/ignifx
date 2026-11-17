@@ -1115,7 +1115,7 @@ already be loaded; an `asset()` field hands you exactly that.
 This is the **wider** of the two one-shot calls: it takes [OneShotOptions](#oneshotoptions), which is `bus`
 plus all of `PlayOptions`. `AudioSource.playOneShot(clip, { volume })` is the narrow form — it
 supplies the source's bus and accepts a gain and nothing else
-(`docs/architecture/10-audio.md` §3, "Corrections"). Neither form is spatial; a positional sound
+(`docs/architecture/10-audio.md` §3). Neither form is spatial; a positional sound
 is `play()` on a spatial `AudioSource`.
 
 ###### Example

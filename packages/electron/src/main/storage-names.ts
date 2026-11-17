@@ -10,8 +10,8 @@
  * value — exactly what `packages/core/src/storage/node/file-backend.ts` writes, using exactly the
  * codec `packages/core/src/storage/file-names.ts` defines. That is the point: the contract in
  * `packages/core/src/storage/backend.ts` promises that one save file is readable from any backend,
- * and a desktop build that encoded its names differently would quietly break `ignifx bake`, a
- * headless test fixture, and any tool that reads a user's saves outside Electron.
+ * and a desktop build that encoded its names differently would quietly break a headless test
+ * fixture and any tool that reads a user's saves outside Electron.
  *
  * The codec is percent-encoding over a **lower-case-only** alphabet — every byte outside
  * `a`–`z`, `0`–`9`, `.`, `_`, `-` becomes `%` plus two lower-case hex digits — which answers four

@@ -14,9 +14,8 @@ import { SCENE_FILE_FORMAT } from "../../src/serialization/scene-file.js";
 import type { App } from "../../src/index.js";
 
 /**
- * Engine ask E4: the entity transform is described as a schema, so an inspector and its ops can
- * treat it like every component, while the scene file keeps storing it as each entity's
- * `transform` block.
+ * The entity transform is described as a schema, so an inspector and its ops can treat it like
+ * every component, while the scene file keeps storing it as each entity's `transform` block.
  */
 
 /** The transform's field descriptions, as `describeSchemas()` publishes them. */

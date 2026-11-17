@@ -3,7 +3,7 @@ import { Rigidbody } from "../../../src/components/rigidbody.js";
 import type { Entity, World } from "@ignifx/core";
 
 /**
- * The Phase 4 determinism scene: a static floor plus a deterministic pile of dynamic bodies that
+ * The physics determinism scene: a static floor plus a deterministic pile of dynamic bodies that
  * collide with each other and come to rest (`docs/architecture/09-physics.md` §8).
  *
  * Everything about it is fixed: the entity creation order (which is the body creation order Havok's
@@ -60,7 +60,7 @@ export function buildPhysicsDeterminismScene(world: World): readonly Entity[] {
 
 /**
  * Hashes every body's world pose with FNV-1a over the `Float64` bit patterns, the same way the
- * kernel's S1.3 baseline does.
+ * kernel's determinism baseline does.
  *
  * @param bodies - The entities to hash, in creation order.
  * @returns The hash as eight lowercase hexadecimal digits.

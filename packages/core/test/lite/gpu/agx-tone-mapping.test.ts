@@ -7,8 +7,8 @@ import type { ImageProcessingState } from "../../../src/lite/gpu/environment.js"
 import type { SceneContext } from "@babylonjs/lite";
 
 /**
- * AgX (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G13), without a device: the Lite
- * curve object, its recognition on both paths, and the CPU copy the clear colour uses.
+ * AgX (`docs/architecture/07-rendering.md` §2.5), without a device: the Lite curve object, its
+ * recognition on both paths, and the CPU copy the clear colour uses.
  * `agx-tone-mapping.browser.test.ts` compares the two paths on a device.
  */
 

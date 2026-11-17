@@ -1,7 +1,7 @@
 /**
- * Asset hot reload in the scene view (engine ask E23): which changed assets the host reloads in
- * place, how it waits for the new value, and which of the document's instance roots a changed scene
- * or prefab rebuilds (`docs/architecture/17-editor-host.md` §6.1).
+ * Asset hot reload in the scene view: which changed assets the host reloads in place, how it waits
+ * for the new value, and which of the document's instance roots a changed scene or prefab rebuilds
+ * (`docs/architecture/17-editor-host.md` §6.1).
  */
 
 import type { DocumentIndex } from "./document.js";

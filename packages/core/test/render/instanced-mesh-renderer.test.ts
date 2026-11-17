@@ -10,7 +10,7 @@ import type { Entity } from "../../src/entity/entity.js";
 import type { LiteMesh } from "../../src/lite/gpu/mesh.js";
 
 /**
- * `InstancedMeshRenderer` without a device (the plan's §3.5, `07-rendering.md` §6).
+ * `InstancedMeshRenderer` without a device (`07-rendering.md` §2.9, §6).
  *
  * A headless `MeshAsset` carries no geometry, so nothing here reaches Lite: what is asserted is the
  * component's own state machine — the slab, the count, the capacity guards, the caster
@@ -77,7 +77,7 @@ function slabOf(count: number): Float32Array {
 }
 
 describe("declared fields", () => {
-  it("start at the defaults the plan fixes", async () => {
+  it("start at their documented defaults", async () => {
     const running = await createRenderHarness();
     harness = running;
     running.app.registerComponents([InstancedMeshRenderer]);

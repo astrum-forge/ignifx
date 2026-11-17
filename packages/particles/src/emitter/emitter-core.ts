@@ -6,8 +6,8 @@ import { MeshShapeTable, sampleShape } from "./shapes.js";
 import type { RingCensus } from "./record-ring.js";
 import type { ParticleDefinition } from "../definition/types.js";
 
-// The whole CPU side of one particle system, with no app, no component and no GPU
-// (`docs/plan/2026-09-terrain-particles-shaders.md` §4.3). `ParticleSystem` drives it from the
+// The whole CPU side of one particle system, with no app, no component and no GPU.
+// `ParticleSystem` drives it from the
 // frame loop; `@ignifx/particles-2d` drives the same object and draws the records itself.
 
 /** The sub-step `simulate()` advances in, in seconds. */

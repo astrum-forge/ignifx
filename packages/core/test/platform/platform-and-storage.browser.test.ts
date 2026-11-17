@@ -8,7 +8,7 @@ import type { App } from "../../src/app/types.js";
 import type { StoredValue } from "../../src/storage/backend.js";
 
 /**
- * The browser halves of Phase 9: the host scrape reading a real browser
+ * The browser halves of platform detection and storage: the host scrape reading a real browser
  * (`docs/architecture/14-platform-electron.md` §1), the WebGPU adapter probe, and the IndexedDB
  * backend (§2). Neither `navigator.gpu` nor `indexedDB` exists under Node, which is why
  * `src/platform/web/**` and `src/storage/web/**` are excluded from the unit run's coverage and

@@ -77,7 +77,7 @@ type Gesture = "none" | "orbit" | "fly" | "pan";
  * Left drag orbits, middle drag pans, right drag looks around while W, A, S, D, Q and E fly (Shift
  * for speed), the wheel dollies, and a left click is reported to `onClick`. The camera listens in
  * the bubble phase, after Lite's gizmo dispatcher has seen the press in the capture phase, and it
- * yields to the gizmo by the three rules Lite documents for its own controls (S0.2 §4.2): no orbit
+ * yields to the gizmo by the three rules Lite documents for its own controls: no orbit
  * starts on a hovered handle, a move is held while the press is still being picked, and an orbit
  * stops once a gizmo drag begins.
  */

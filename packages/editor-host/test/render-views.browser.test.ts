@@ -8,7 +8,7 @@ import type { EditorPeer, Received } from "./support/editor.js";
 import type { FetchLike, SceneFile } from "@ignifx/core";
 
 /**
- * The render views on a real WebGPU canvas (engine ask E8): the Game panel's view renders the
+ * The render views on a real WebGPU canvas: the Game panel's view renders the
  * document's own camera beside the editor camera, and `renderThumbnail` renders a model or a
  * prefab on a stage app of its own.
  */

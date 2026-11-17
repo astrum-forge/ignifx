@@ -29,7 +29,7 @@ let worlds: TestWorld[] = [];
 
 /** A headless app with the scene loader registered and the fake network primed. */
 async function sceneApp(files: Readonly<Record<string, SceneFile>>): Promise<AssetHarness> {
-  // The core extension registers the scene loader itself since Phase 2 (`04-extensions.md` §7), so
+  // The core extension registers the scene loader itself (`04-extensions.md` §7), so
   // the harness only has to prime the network.
   const harness = await createAssetHarness();
   harnesses.push(harness);

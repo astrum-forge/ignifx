@@ -24,11 +24,11 @@ function isTriggerEvent2D(value: unknown): value is TriggerEvent2D {
  *
  * ## Deactivated, not destroyed
  *
- * Phase 6's version called `entity.destroy()`, which was right when a coin was a demonstration and
- * wrong now that the template has a save file: "Continue" has to put a level back the way the
- * player left it, and a destroyed entity cannot be un-destroyed. Setting `entity.active = false`
- * takes the sprite and the collider out of the world just as completely, and `setCollected(false)`
- * puts them back — which is what a save restore and "New game" both need.
+ * Calling `entity.destroy()` would be wrong in a template that has a save file: "Continue" has to
+ * put a level back the way the player left it, and a destroyed entity cannot be un-destroyed.
+ * Setting `entity.active = false` takes the sprite and the collider out of the world just as
+ * completely, and `setCollected(false)` puts them back — which is what a save restore and "New
+ * game" both need.
  *
  * The callback name is the 3D one (`onTriggerEnter`, not `onTriggerEnter2D`); only the payload is a
  * `TriggerEvent2D`. Both entities in a 2D trigger pair receive the callback and both sides of the

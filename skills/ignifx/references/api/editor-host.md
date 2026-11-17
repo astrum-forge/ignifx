@@ -3045,8 +3045,8 @@ core's `describeRegisteredSchemas`, where an editor assumes `true`.
 `true` for the one component every entity carries itself, `ignifx/Transform`: it is never in a
 scene file's `components` list, an editor neither adds nor removes it, and its fields are the
 entity record's `transform` block, edited whole with the `setTransform` op rather than prop by
-prop. Absent on every other entry. A host from before the engine described the transform (engine
-ask E4) sends no such member.
+prop. Absent on every other entry. A host from before the engine described the transform
+sends no such member.
 
 ##### description?
 
@@ -3063,8 +3063,8 @@ registered under its own `static typeId`. The class itself and its unregistered 
 abstract base, `Component`, `Script`) are left out. The engine counts a component whose class
 extends a required one as present, so an editor treats a `requires` entry as present on an
 entity when one of its components has that type id or lists it here. Empty when the class
-extends no registered component; absent on file-format entries and from a host from before
-engine ask E44, which an editor treats as unknown, not as none.
+extends no registered component; absent on file-format entries and from a host that predates
+this member, which an editor treats as unknown, not as none.
 
 ##### fields
 
@@ -3102,7 +3102,7 @@ The components the class lists in `static requires`, as type ids (`null` for a c
 `typeId`), in declaration order. The engine adds each one that is missing whenever the component
 is added, so an editor adds them itself as part of the same command; a component whose class
 extends a required one counts. Absent when the class requires nothing, on file-format entries,
-and from a host from before engine ask E33.
+and from a host that predates this member.
 
 ##### title
 
@@ -4286,7 +4286,7 @@ The union of the names in `SceneNotification`.
 
 > **SceneOp** = [`CreateEntityOp`](#createentityop) \| [`DestroyEntityOp`](#destroyentityop) \| [`ReparentOp`](#reparentop) \| [`ReorderOp`](#reorderop) \| [`SetEntityFieldOp`](#setentityfieldop) \| [`SetTransformOp`](#settransformop) \| [`AddComponentOp`](#addcomponentop) \| [`RemoveComponentOp`](#removecomponentop) \| [`SetPropOp`](#setpropop) \| [`SetSceneSettingOp`](#setscenesettingop) \| [`InstantiateOp`](#instantiateop) \| [`SetOverrideOp`](#setoverrideop) \| [`RemoveOverrideOp`](#removeoverrideop)
 
-One scene op: the closed vocabulary of plan §3.4, identical to `@ignifx/editor-core`'s `SceneOp`.
+One scene op: the closed vocabulary, identical to `@ignifx/editor-core`'s `SceneOp`.
 
 ***
 
@@ -4956,8 +4956,8 @@ the play view. Additive in 0.3; without it, the scene host answers both with
 > `readonly` **gameView**: `"gameView"` = `"gameView"`
 
 The scene host answers `setGameView` and `gameViewFrame`: the open scene through its own main
-camera, rendered beside the editor camera (`RenderViewMethod`). From engine ask E8 (additive in
-0.3); without it, the host answers both with `RpcErrorCode.methodNotFound`.
+camera, rendered beside the editor camera (`RenderViewMethod`). Additive in 0.3; without it,
+the host answers both with `RpcErrorCode.methodNotFound`.
 
 ##### gameView2d
 
@@ -4995,8 +4995,8 @@ The scene host draws gizmos on the primary selection, answers `setGizmo`, and se
 > `readonly` **grid**: `"grid"` = `"grid"`
 
 The scene host draws a grid in the view and answers `setGrid`: a ground grid at `y = 0` in 3D
-view mode and a unit grid (a pixel grid when zoomed in) over the 2D view. From engine ask E31
-(additive in 0.3); without it, the scene host answers `setGrid` with
+view mode and a unit grid (a pixel grid when zoomed in) over the 2D view. Additive in
+0.3; without it, the scene host answers `setGrid` with
 `RpcErrorCode.methodNotFound`.
 
 ##### gridOverlay
@@ -5058,8 +5058,8 @@ The host answers the methods in `PlayMethod`.
 
 > `readonly` **queryRuntime**: `"queryRuntime"` = `"queryRuntime"`
 
-The play controls answer `queryRuntime`: an entity's live state in the scene format. From engine
-ask E48 (additive in 0.3); without it, the play view answers `queryRuntime` with
+The play controls answer `queryRuntime`: an entity's live state in the scene format.
+Additive in 0.3; without it, the play view answers `queryRuntime` with
 `RpcErrorCode.methodNotFound`.
 
 ##### screenshot
@@ -5067,8 +5067,8 @@ ask E48 (additive in 0.3); without it, the play view answers `queryRuntime` with
 > `readonly` **screenshot**: `"screenshot"` = `"screenshot"`
 
 The host answers `screenshot`: the scene host captures its view, the play controls the game's
-canvas. The play controls list it from engine ask E47 (additive in 0.3); without it, the play
-view answers `screenshot` with `RpcErrorCode.methodNotFound`.
+canvas. The play controls list it additively in 0.3; without it, the play view answers
+`screenshot` with `RpcErrorCode.methodNotFound`.
 
 ##### sendInput
 
@@ -5076,16 +5076,16 @@ view answers `screenshot` with `RpcErrorCode.methodNotFound`.
 
 The play controls answer `sendInput`: synthetic key and pointer events queued into the game's
 own input system (`app.input` from `@ignifx/input`), never into the editor's window. Listed only
-when the game has `app.input`. From engine ask E49 (additive in 0.3); without it, the play view
-answers `sendInput` with `RpcErrorCode.methodNotFound`.
+when the game has `app.input`. Additive in 0.3; without it, the play view answers `sendInput`
+with `RpcErrorCode.methodNotFound`.
 
 ##### spriteAnimation
 
 > `readonly` **spriteAnimation**: `"spriteAnimation"` = `"spriteAnimation"`
 
 The scene host answers `sampleSpriteAnimation`: one frame of a clip on an entity's
-`SpriteAnimator` (`@ignifx/2d`), for the editor's sprite animation panel. From engine ask E51
-(additive in 0.3); without it, the scene host answers `sampleSpriteAnimation` with
+`SpriteAnimator` (`@ignifx/2d`), for the editor's sprite animation panel. Additive in
+0.3; without it, the scene host answers `sampleSpriteAnimation` with
 `RpcErrorCode.methodNotFound`.
 
 ##### thumbnailAtlases
@@ -5110,7 +5110,7 @@ typed `"material"`): the material on a sphere under the thumbnail lighting. List
 > `readonly` **thumbnails**: `"thumbnails"` = `"thumbnails"`
 
 The scene host answers `renderThumbnail`: a model or prefab asset rendered on its own
-(`RenderViewMethod`). From engine ask E8 (additive in 0.3); without it, the host answers it with
+(`RenderViewMethod`). Additive in 0.3; without it, the host answers it with
 `RpcErrorCode.methodNotFound`.
 
 ##### thumbnailTextures
@@ -5285,7 +5285,7 @@ The entity counts when its projected bounds overlap the rectangle at all.
 
 > `const` **PickUnit**: `object`
 
-The unit of a `pick` point (S0.2 §6.1).
+The unit of a `pick` point.
 
 #### Type Declaration
 
@@ -5753,8 +5753,8 @@ amendment 2026-10-20). Answers [SampleAnimationResult](#sampleanimationresult). 
 
 > `readonly` **sampleSpriteAnimation**: `"sampleSpriteAnimation"` = `"sampleSpriteAnimation"`
 
-Shows one frame of a clip on an entity's `SpriteAnimator` without playing it (engine ask E51).
-Needs `HostCapability.spriteAnimation`. Answers [SampleSpriteAnimationResult](#samplespriteanimationresult). A host from
+Shows one frame of a clip on an entity's `SpriteAnimator` without playing it. Needs
+`HostCapability.spriteAnimation`. Answers [SampleSpriteAnimationResult](#samplespriteanimationresult). A host from
 before it answers `RpcErrorCode.methodNotFound`. Additive in 0.3.
 
 ##### screenshot
@@ -5795,8 +5795,8 @@ Sets the gizmo's mode, space and snapping. Needs `HostCapability.gizmos`. Answer
 
 > `readonly` **setGrid**: `"setGrid"` = `"setGrid"`
 
-Shows or hides the view's grid and sets its spacing (engine ask E31). Needs
-`HostCapability.grid`. Answers `null`. Additive in 0.3.
+Shows or hides the view's grid and sets its spacing. Needs `HostCapability.grid`. Answers
+`null`. Additive in 0.3.
 
 ##### setTilemapCells
 
@@ -5998,7 +5998,7 @@ Sets an entity's local transform.
 
 The largest width and height, in pixels, of a `screenshot`. A request for more fails with
 `invalidParams`; a request without a size gets the view's own size scaled down to fit. It keeps
-an image well under what an MCP client accepts inline (plan §3.11).
+an image well under what an MCP client accepts inline.
 
 ***
 
@@ -6062,7 +6062,7 @@ with more fails with `invalidParams`.
 > `const` **TRANSFORM\_DRAGGING\_INTERVAL\_MS**: `50` = `50`
 
 The fewest milliseconds between two `transformDragging` notifications for the same gesture: at
-most 20 a second, which S0.2 measured as smooth enough for an inspector to follow a drag.
+most 20 a second, which is smooth enough for an inspector to follow a drag.
 
 ***
 

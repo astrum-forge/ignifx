@@ -61,8 +61,8 @@ interface Source {
 }
 
 /**
- * The pinned sources. 9.30.0 is the decoder Lite 1.34.0 was verified against (editor spike S0.6
- * §4.4 loaded ETC1S and UASTC files through `cdn.babylonjs.com/v9.30.0/`).
+ * The pinned sources. 9.30.0 is the decoder Lite 1.34.0 was verified against (ETC1S and UASTC files
+ * loaded through `cdn.babylonjs.com/v9.30.0/`).
  */
 const SOURCES: readonly Source[] = [
   {

@@ -14,7 +14,7 @@ import {
 import type { BrowserApp } from "./support/browser-harness.js";
 
 /**
- * The Phase 2 acceptance scene on a real device: a box, a PBR material, a light, and a camera, in a
+ * The hello-cube scene on a real device: a box, a PBR material, a light, and a camera, in a
  * `createApp({ canvas })` app that a game would recognise
  * (`docs/architecture/07-rendering.md` §2.1–§2.3).
  *
