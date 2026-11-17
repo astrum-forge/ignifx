@@ -149,8 +149,9 @@ export async function applyRenderingFeatures(
  * Enables glTF camera import. Must run before the first `loadGltf`.
  *
  * @remarks
- * Separate from {@link applyRenderingFeatures} because it is an **asset** opt-in, driven by an
- * asset's `.meta.json` rather than by the renderer block
+ * Separate from {@link applyRenderingFeatures} because it is not part of the renderer block.
+ * Nothing in the engine calls it: glTF cameras are always ignored, because Lite's switch is
+ * process-global and a per-asset flag could not decide it
  * (`docs/architecture/07-rendering.md` §2.4).
  *
  * @internal

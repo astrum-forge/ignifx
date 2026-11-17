@@ -10,7 +10,7 @@ import { defineConfig } from "vitest/config";
  * (2026-09-05): `--enable-unsafe-webgpu` alone is enough to get `navigator.gpu` **and** an adapter;
  * `--use-webgpu-adapter=swiftshader` pins the software adapter so results do not depend on the
  * host GPU, which is what coding standards §10 requires of CI. Adding `--enable-features=Vulkan`
- * and `--use-angle=vulkan` — a combination often suggested for Linux — makes `requestAdapter()`
+ * and `--use-angle=vulkan` — a combination tried for Linux — makes `requestAdapter()`
  * return `null` on macOS. On Linux (measured 2026-09-06, Playwright's `v1.63.0-noble` image and
  * GitHub's ubuntu runner) the two base flags give an adapter and a device, but the first present
  * to a canvas destroys the device; `--enable-features=Vulkan --use-vulkan=swiftshader

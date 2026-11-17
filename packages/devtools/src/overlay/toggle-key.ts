@@ -8,7 +8,7 @@
  * take the developer's escape hatch with it.
  *
  * The listener is the only thing devtools leaves running while the overlay is closed, which is what
- * zero cost when closed allows: one listener, one string comparison per keystroke, nothing
+ * the zero-cost-when-closed rule allows: one listener, one string comparison per keystroke, nothing
  * allocated.
  */
 

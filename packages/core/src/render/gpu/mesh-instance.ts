@@ -25,8 +25,8 @@ import type { Transform } from "../../transform/transform.js";
  *
  * Every line here needs a WebGPU device: a clone only exists when the template does, and a template
  * only exists when the engine uploaded its buffers. That is why the module lives under
- * `src/render/gpu/`, the render layer's half of the rule R1 established for `src/lite/gpu/`: the
- * root Vitest coverage config excludes both, and the browser project is what measures them.
+ * `src/render/gpu/`, the render layer's counterpart of `src/lite/gpu/`: the root Vitest coverage
+ * config excludes both, and the browser project is what measures them.
  *
  * The per-field "did it change" cache lives here rather than on the component for the same reason.
  * It is only consulted when there is something to write to, so leaving it on the component would

@@ -40186,8 +40186,8 @@ Linear RGB.
 
 The draft 2020-12 JSON Schema for a scene file, with `components[].props` narrowed per registered
 component `typeId` (`docs/architecture/06-serialization-and-scene-format.md` §8). The Vite plugin
-and the `ignifx schemas` CLI command emit this into `ignifx.schemas.json`, which drives
-build-time validation and editor autocompletion.
+validates scene files against it at build time when a project supplies it
+(`ignifx({ schemas })`); written to a file, it gives an editor autocompletion for scene files.
 
 #### Parameters
 

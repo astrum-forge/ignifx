@@ -41,10 +41,10 @@ import type { App, AssetHandle, Extension, ExtensionContext } from "@ignifx/core
  *
  * ## Headless
  *
- * Everything registers headlessly. With no DOM canvas the host is inert (`13-ui.md` §1's
- * "the host hides itself in headless mode"*, read through `07-rendering.md` §6's rule that a
- * headless member is a documented no-op rather than a throw), no text renderer is created, and the
- * `PreRender` system still runs — so `WorldText` keeps its state and a test asserts on it.
+ * Everything registers headlessly. With no DOM canvas the host is absent (`13-ui.md` §6:
+ * `app.ui.root` is `null`, and a headless member is a documented no-op rather than a throw), no
+ * text renderer is created, and the `PreRender` system still runs — so `WorldText` keeps its state
+ * and a test asserts on it.
  */
 
 /**

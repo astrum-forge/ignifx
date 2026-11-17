@@ -38375,10 +38375,10 @@ Binds an entity to an action document and one device slot.
 
 #### Remarks
 
-The schema field `actions` holds the *asset*; the resolved lookup is `playerInput.input`, which
-is the same [InputActionsView](#inputactionsview) `app.input.actions` exposes. `08-input.md` §7 spells the
-lookup `player.input.actions`; the two cannot both be called `actions` on one class, and the
-serialized field is the one whose name the file format fixes.
+The schema field `actions` holds the *asset*; the resolved lookup is `playerInput.input`
+(`08-input.md` §7), which is the same [InputActionsView](#inputactionsview) `app.input.actions` exposes. The
+two cannot both be called `actions` on one class, and the serialized field is the one whose name
+the file format fixes.
 
 #### Example
 
@@ -108827,8 +108827,8 @@ The candidate count.
 
 The draft 2020-12 JSON Schema for a scene file, with `components[].props` narrowed per registered
 component `typeId` (`docs/architecture/06-serialization-and-scene-format.md` §8). The Vite plugin
-and the `ignifx schemas` CLI command emit this into `ignifx.schemas.json`, which drives
-build-time validation and editor autocompletion.
+validates scene files against it at build time when a project supplies it
+(`ignifx({ schemas })`); written to a file, it gives an editor autocompletion for scene files.
 
 #### Parameters
 
