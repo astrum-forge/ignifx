@@ -57,7 +57,7 @@ docs/migrations/                       post-1.0 migration guides; NEVER linked f
 Frontmatter, then exactly these ten `##` sections, spelled and ordered as written here — the `skill-lint` check compares heading for heading:
 
 1. **What this is / when to use**, kept short.
-2. **Environment**: engine version, Babylon Lite pinned version, Node/pnpm versions, WebGPU requirement, how to scaffold, run and build a project. The engine version is the frontmatter's `metadata.ignifx-version`; a skill may repeat it in a line that begins ``- Engine: ignifx `<version>` `` (the subsystem skills do), which is rewritten at release with the frontmatter (§6) and must keep that shape.
+2. **Environment**: engine version, Babylon Lite pinned version, Node/pnpm versions, WebGPU requirement, how to scaffold, run and build a project. The engine version is the frontmatter's `metadata.ignifx-version`; a skill may repeat it in a line that begins ``- Engine: ignifx `<version>` `` (most subsystem skills do), which is rewritten at release with the frontmatter (§6) and must keep that shape.
 3. **Mental model** (one diagram): App → World → Scene → Entity → Component/Script; phases.
 4. **First app** (complete and compiling).
 5. **Core APIs** in tables: `createApp`, `Entity`, `Transform`, `Script` callbacks with timing, schema kinds, `Assets`, `Signal`.
