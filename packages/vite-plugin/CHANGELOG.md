@@ -1,5 +1,15 @@
 # @ignifx/vite-plugin
 
+## 0.21.1
+
+### Patch Changes
+
+- 0be954f: API documentation and the generated API reference pages no longer cite plan documents, phase numbers or task ids that are not published; they cite the architecture section or ADR that describes the behaviour, or state it alone. The hint on an invalid `ignifx.animator` file names the format page that exists, `ignifx.animator.md`.
+- cd97af6: Every package ships a README, so its npm page says what the package is, how to install it and where its skill page is. The `@ignifx/cli` README gives the scaffold command that works, `npx --package=@ignifx/cli create-ignifx <dir>`, and the `@ignifx/vite-plugin` README lists every asset type and points to the shipped `@ignifx/vite-plugin/client` types.
+- Updated dependencies [0be954f]
+- Updated dependencies [cd97af6]
+  - @ignifx/core@0.21.1
+
 ## 0.21.0
 
 ### Patch Changes
