@@ -43,11 +43,11 @@ if (canvas instanceof HTMLCanvasElement) {
 `ignifx.config.ts` carries the same settings under `twoD`, and a scene file's `settings.twoD` block
 overrides them for that scene:
 
-| Setting         | Default    | Meaning                                                             |
-| --------------- | ---------- | ------------------------------------------------------------------- |
-| `mode`          | `"sprite"` | `"sprite"` clears the frame; `"mixed"` composites over the 3D scene |
-| `pixelsPerUnit` | `100`      | How many pixels one world metre spans                               |
-| `ySort`         | `{}`       | Which sorting layers draw back-to-front by world Y                  |
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `mode` | `"sprite"` | `"sprite"` clears the frame; `"mixed"` composites over the 3D scene |
+| `pixelsPerUnit` | `100` | How many pixels one world metre spans |
+| `ySort` | `{}` | Which sorting layers draw back-to-front by world Y |
 
 Sorting layers themselves live in the **core** `sortingLayers` section, back to front, and the colour
 a `"sprite"`-mode frame is cleared to is the core `rendering.clearColor` setting — see the Gotchas.
@@ -107,35 +107,35 @@ load is delivered in `PreUpdate`.
 
 ## Core APIs
 
-Full signatures: `skills/ignifx/references/api/2d.md`.
+Full signatures: `skills/ignifx/references/api/2d.md` in the `ignifx` package.
 
 ### `app.twoD` — `TwoDService`
 
-| Member                                | Meaning                                                    |
-| ------------------------------------- | ---------------------------------------------------------- |
-| `pixelsPerUnit` · `mode` · `settings` | The resolved `twoD` section, after any scene override      |
-| `mainCamera`                          | The highest-priority enabled `Camera2D`, or `null`         |
-| `pickAt(xPx, yPx, options?)`          | Topmost `SpriteRenderer` under a viewport pixel, or `null` |
-| `pickAllAt(xPx, yPx, options?)`       | Every `SpriteRenderer` under the pixel, topmost first      |
-| `screenToWorld` · `worldToScreen`     | Through the active camera                                  |
-| `visibleWorldBounds(out)`             | The world rectangle the camera sees (parallax not applied) |
-| `layers`                              | Diagnostics: every Lite layer in draw order                |
-| `syncedLastFrame` · `spriteCount`     | How many sprites the last frame actually wrote             |
-| `createSpriteBatch(options)`          | A fixed-capacity crowd of entity-less sprites (`@beta`)    |
-| `lite.renderer`                       | The Lite `SpriteRenderer`, or `null` headless              |
+| Member | Meaning |
+| --- | --- |
+| `pixelsPerUnit` · `mode` · `settings` | The resolved `twoD` section, after any scene override |
+| `mainCamera` | The highest-priority enabled `Camera2D`, or `null` |
+| `pickAt(xPx, yPx, options?)` | Topmost `SpriteRenderer` under a viewport pixel, or `null` |
+| `pickAllAt(xPx, yPx, options?)` | Every `SpriteRenderer` under the pixel, topmost first |
+| `screenToWorld` · `worldToScreen` | Through the active camera |
+| `visibleWorldBounds(out)` | The world rectangle the camera sees (parallax not applied) |
+| `layers` | Diagnostics: every Lite layer in draw order |
+| `syncedLastFrame` · `spriteCount` | How many sprites the last frame actually wrote |
+| `createSpriteBatch(options)` | A fixed-capacity crowd of entity-less sprites (`@beta`) |
+| `lite.renderer` | The Lite `SpriteRenderer`, or `null` headless |
 
 ### Components
 
-| Component (`typeId`)                             | Key fields                                                                                                                                            |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Camera2D` (`ignifx/Camera2D`)                   | `orthographicSize`, `pixelPerfect`, `referenceResolution`, `boundsMin`/`boundsMax`, `follow`, `deadZone`, `priority`                                  |
-| `SpriteRenderer` (`ignifx/SpriteRenderer`)       | `sprite`, `frameName`, `color`, `flipX`/`flipY`, `sortingLayer`, `orderInLayer`, `blend`, `pivotOverride`, `screenSpace`, `pickable`; runtime `frame` |
-| `SpriteAnimator` (`ignifx/SpriteAnimator`)       | `animations`, `defaultClip`, `playOnAwake`, `speed`; `play`/`stop`/`pause`/`resume`/`sample`/`sampleTime`, `onClipEnded`, `onEvent`                   |
-| `Tilemap` (`ignifx/Tilemap`)                     | `map`, `chunkSize`; `getTile`/`setTile`/`setCells`, `worldToCell`/`cellToWorld`, `collisionData`, `onTileChanged`                                     |
-| `TilemapRenderer` (`ignifx/TilemapRenderer`)     | `atlas`, `sortingLayer`, `cullChunks`                                                                                                                 |
-| `ParallaxLayer` (`ignifx/ParallaxLayer`)         | `sortingLayer`, `factor`, `repeatX`/`repeatY`, `repeatWidth`/`repeatHeight`                                                                           |
-| `SpriteLayerEffect` (`ignifx/SpriteLayerEffect`) | `sortingLayer`, `kind`, `tint`, `params`, `shader`                                                                                                    |
-| `Camera2DFollow` (`ignifx/Camera2DFollow`)       | A `Script`; reads `Camera2D`'s follow fields in `lateUpdate`                                                                                          |
+| Component (`typeId`) | Key fields |
+| --- | --- |
+| `Camera2D` (`ignifx/Camera2D`) | `orthographicSize`, `pixelPerfect`, `referenceResolution`, `boundsMin`/`boundsMax`, `follow`, `deadZone`, `priority` |
+| `SpriteRenderer` (`ignifx/SpriteRenderer`) | `sprite`, `frameName`, `color`, `flipX`/`flipY`, `sortingLayer`, `orderInLayer`, `blend`, `pivotOverride`, `screenSpace`, `pickable`; runtime `frame` |
+| `SpriteAnimator` (`ignifx/SpriteAnimator`) | `animations`, `defaultClip`, `playOnAwake`, `speed`; `play`/`stop`/`pause`/`resume`/`sample`/`sampleTime`, `onClipEnded`, `onEvent` |
+| `Tilemap` (`ignifx/Tilemap`) | `map`, `chunkSize`; `getTile`/`setTile`/`setCells`, `worldToCell`/`cellToWorld`, `collisionData`, `onTileChanged` |
+| `TilemapRenderer` (`ignifx/TilemapRenderer`) | `atlas`, `sortingLayer`, `cullChunks` |
+| `ParallaxLayer` (`ignifx/ParallaxLayer`) | `sortingLayer`, `factor`, `repeatX`/`repeatY`, `repeatWidth`/`repeatHeight` |
+| `SpriteLayerEffect` (`ignifx/SpriteLayerEffect`) | `sortingLayer`, `kind`, `tint`, `params`, `shader` |
+| `Camera2DFollow` (`ignifx/Camera2DFollow`) | A `Script`; reads `Camera2D`'s follow fields in `lateUpdate` |
 
 ### `SpriteBatch` — sprites without entities (`@beta`)
 
@@ -145,14 +145,14 @@ sprites are not _things_ — bullets, sparks, debris, 2D particles — and one e
 more than the drawing does. Use `SpriteRenderer` for anything with a transform, a pick or a place in
 a scene file.
 
-| Member                                                                  | Meaning                                                            |
-| ----------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `capacity`                                                              | The slots claimed; fixed for the batch's life                      |
-| `count`                                                                 | How many leading slots draw; slots at `count` and above are hidden |
-| `write(index, x, y, w, h, frame, rotation, r, g, b, a, flipX?, flipY?)` | One slot, in world metres, +Y up, and degrees counter-clockwise    |
-| `hide(index)`                                                           | Hides one slot until it is written again                           |
-| `dispose()`                                                             | Gives the slots back; also runs at the end of a `using` block      |
-| `lite.handles`                                                          | The Lite `Sprite2DHandle` per slot — unstable escape hatch         |
+| Member | Meaning |
+| --- | --- |
+| `capacity` | The slots claimed; fixed for the batch's life |
+| `count` | How many leading slots draw; slots at `count` and above are hidden |
+| `write(index, x, y, w, h, frame, rotation, r, g, b, a, flipX?, flipY?)` | One slot, in world metres, +Y up, and degrees counter-clockwise |
+| `hide(index)` | Hides one slot until it is written again |
+| `dispose()` | Gives the slots back; also runs at the end of a `using` block |
+| `lite.handles` | The Lite `Sprite2DHandle` per slot — unstable escape hatch |
 
 ```ts
 import { createApp } from "ignifx";
@@ -226,7 +226,9 @@ if (canvas instanceof HTMLCanvasElement) {
 A level kept in a scene file gets its objects once, as entities, from the command line. Each
 becomes an entity named after the object and tagged with its type, at the object's centre, and the
 map's `objects` field is deleted. Add the components each type needs afterwards; the command prints
-every object's size and properties for that.
+every object's size and properties for that. The `ignifx` command is an executable of `@ignifx/cli`, which the templates do not install: add
+`@ignifx/cli` to the project's dev dependencies and run `pnpm exec ignifx …`, or run it once with
+`npx --package=@ignifx/cli ignifx …`.
 
 ```sh
 ignifx import tilemap assets/level.tilemap.json assets/scenes/main.scene.json --parent Level
@@ -358,7 +360,7 @@ export function clearRect(map: Tilemap, layer: number, x0: number, y0: number, x
 
 ## File formats
 
-Generated reference: `skills/ignifx/references/formats/`.
+Generated reference: `skills/ignifx/references/formats/` in the `ignifx` package.
 
 - **`.atlas.json`** (`ignifx.spriteatlas`) — `image` (an address relative to the document, resolved through the manifest; `/x.png` and URLs verbatim), `sampling`,
   `premultipliedAlpha`, and `frames: [{ name, x, y, w, h, pivot?, sourceSize?, sourceOffset? }]` in **image pixels
@@ -398,7 +400,7 @@ Generated reference: `skills/ignifx/references/formats/`.
 - **`pixelPerfect` ignores `orthographicSize`** and scales `referenceResolution` by a whole number
   instead. It does **not** change an atlas's sampling: write `"sampling": "nearest"` in the
   `.atlas.json`, because a texture's sampler is fixed at upload.
-- **A tilemap's objects layer is authoring data.** Nothing spawns from it at runtime (ADR-0030):
+- **A tilemap's objects layer is authoring data.** Nothing spawns from it at runtime:
   move it into the scene with `ignifx import tilemap`, or read `tilemap.definition.objects` in code.
 - **Tiles are not pickable.** They have no component, so `pickAt` skips them and looks underneath; use
   `Tilemap.worldToCell`, which is exact and free.
@@ -422,8 +424,7 @@ Generated reference: `skills/ignifx/references/formats/`.
   precedence applies as usual.
 - **`clearColor` is sRGB and presents as authored**, so a channel lands on screen at `value * 255`:
   `{ r: 0.6, g: 0.2, b: 0.9 }` reads back as bytes `153, 51, 230`, and `#14181F` matches the same
-  page colour. That is the same in both 2D modes and on the 3D path — one setting, one colour
-  (`packages/2d/test/clear-color.browser.test.ts`).
+  page colour. That is the same in both 2D modes and on the 3D path — one setting, one colour.
 - **A world whose only camera is a `Camera2D` does not log `IGX-0706`.** Core's "no enabled camera"
   warning is suppressed while the sprite renderer has an active `Camera2D`, so a correct 2D-only
   scene is quiet. Build the camera **before** `app.start()`, as the templates do: a world that is
@@ -440,5 +441,6 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-`skills/ignifx/SKILL.md` for the engine entry skill · `docs/architecture/11-2d-toolkit.md` for
-design rationale · `skills/ignifx/references/api/2d.md` for full signatures.
+The entry skill is `skills/ignifx/SKILL.md` in the `ignifx` package: `node_modules/ignifx/` in an
+installed project, the repository root in the engine repository. Under it, `references/api/2d.md` has every exact signature and `references/formats/` the atlas,
+sprite-animation and tilemap field tables.

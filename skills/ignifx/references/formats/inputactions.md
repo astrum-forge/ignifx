@@ -2,7 +2,7 @@
 
 Hand-written companion to the generated field table in
 [`ignifx.inputactions.md`](ignifx.inputactions.md). One format, `ignifx.inputactions`, version 1,
-owned by `@ignifx/input`. Rationale in `docs/architecture/08-input.md`.
+owned by `@ignifx/input`.
 
 Loaded with `app.assets.load<InputActionsAsset>(address)` and installed with
 `app.input.loadActions(asset)`, or pointed at once in `ignifx.config.ts` as
@@ -59,13 +59,13 @@ build time by `@ignifx/vite-plugin` against the schema `inputActionsJsonSchema()
 
 ## Maps and actions
 
-| Field             | Required | Meaning                                                                      |
-| ----------------- | -------- | ---------------------------------------------------------------------------- |
-| `maps[].name`     | yes      | The context name a game enables and disables (`"Player"`, `"UI"`)            |
-| `maps[].enabled`  | no       | Whether the map starts enabled. Defaults to `true`                           |
-| `actions[].name`  | yes      | The name `app.input.actions.get(name)` searches enabled maps for             |
-| `actions[].type`  | no       | `"button"` (default), `"axis"`, or `"vector2"`                               |
-| `actions[].bindings` | yes   | What feeds the action; the highest-magnitude binding wins each frame         |
+| Field | Required | Meaning |
+| --- | --- | --- |
+| `maps[].name` | yes | The context name a game enables and disables (`"Player"`, `"UI"`) |
+| `maps[].enabled` | no | Whether the map starts enabled. Defaults to `true` |
+| `actions[].name` | yes | The name `app.input.actions.get(name)` searches enabled maps for |
+| `actions[].type` | no | `"button"` (default), `"axis"`, or `"vector2"` |
+| `actions[].bindings` | yes | What feeds the action; the highest-magnitude binding wins each frame |
 
 Action names are unique inside one map (`IGX-0810`); two maps may declare the same name, and
 `app.input.actions.get` then answers with the first **enabled** map that has it.
@@ -78,14 +78,14 @@ Action names are unique inside one map (`IGX-0810`); two maps may declare the sa
 <Device>{index}/control       <Gamepad>{1}/leftStick — a zero-based device slot
 ```
 
-| Device       | Controls                                                                                                                                                |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `<Keyboard>` | Physical `KeyboardEvent.code` in camelCase, `Key`/`Digit` dropped: `w`, `1`, `space`, `enter`, `shiftLeft`, `arrowUp`, `numpad0`, plus `anyKey`         |
-| `<Mouse>`    | `leftButton`, `rightButton`, `middleButton`, `position`, `delta`, `scroll`                                                                              |
-| `<Pointer>`  | `press`, `position`, `delta` — mouse, pen, or the primary touch, whichever acted last                                                                  |
-| `<Touch>`    | `primaryTouch/press`, `primaryTouch/position`, `primaryTouch/delta`, `touch0…touch9/press|position|delta`, `touchCount`                                 |
-| `<Gamepad>`  | `leftStick`, `rightStick`, `dpad`, `dpad/up|down|left|right`, `buttonSouth|East|West|North`, `leftShoulder`, `rightShoulder`, `leftTrigger`, `rightTrigger`, `start`, `select`, `leftStickPress`, `rightStickPress` |
-| `<Virtual>`  | Any name; the control is created the first time a binding or an on-screen widget names it                                                               |
+| Device | Controls |
+| --- | --- |
+| `<Keyboard>` | Physical `KeyboardEvent.code` in camelCase, `Key`/`Digit` dropped: `w`, `1`, `space`, `enter`, `shiftLeft`, `arrowUp`, `numpad0`, plus `anyKey` |
+| `<Mouse>` | `leftButton`, `rightButton`, `middleButton`, `position`, `delta`, `scroll` |
+| `<Pointer>` | `press`, `position`, `delta` — mouse, pen, or the primary touch, whichever acted last |
+| `<Touch>` | `primaryTouch/press`, `primaryTouch/position`, `primaryTouch/delta`, `touch0…touch9/press\|position\|delta`, `touchCount` |
+| `<Gamepad>` | `leftStick`, `rightStick`, `dpad`, `dpad/up\|down\|left\|right`, `buttonSouth\|East\|West\|North`, `leftShoulder`, `rightShoulder`, `leftTrigger`, `rightTrigger`, `start`, `select`, `leftStickPress`, `rightStickPress` |
+| `<Virtual>` | Any name; the control is created the first time a binding or an on-screen widget names it |
 
 Only `<Gamepad>` has more than one device, and its slots are `0` to `3`. `<Gamepad>` and
 `<Gamepad>{0}` name the same pad — the one `app.input.gamepads[0]` reports and the one a
@@ -97,11 +97,11 @@ Gamepad sticks report `+1` for **up**, unlike the raw Gamepad API, and `dpad` is
 
 ## Composites
 
-| `composite`          | Parts                        | Produces  |
-| -------------------- | ---------------------------- | --------- |
-| `2DVector`           | `up`, `down`, `left`, `right` | `vector2` |
-| `1DAxis`             | `negative`, `positive`        | `axis`    |
-| `ButtonWithModifier` | `modifier`, `button`          | `button`  |
+| `composite` | Parts | Produces |
+| --- | --- | --- |
+| `2DVector` | `up`, `down`, `left`, `right` | `vector2` |
+| `1DAxis` | `negative`, `positive` | `axis` |
+| `ButtonWithModifier` | `modifier`, `button` | `button` |
 
 An unknown composite is `IGX-0806`.
 
@@ -110,13 +110,13 @@ An unknown composite is `IGX-0806`.
 Written as strings and parsed once, at load time. An unknown name or a non-numeric argument is
 `IGX-0802`.
 
-| Processor           | Default arguments | Effect                                                                  |
-| ------------------- | ----------------- | ----------------------------------------------------------------------- |
-| `deadzone(min,max)` | `0.125, 1`        | Radial for `vector2`, axial for scalars; rescales `[min, max]` to `[0,1]` |
-| `invert`            | —                 | Negates every component                                                 |
-| `scale(x,y)`        | `1, x`            | Multiplies per axis; one argument scales both                           |
-| `clamp(min,max)`    | `-1, 1`           | Clamps every component                                                  |
-| `normalize`         | —                 | Unit length for a `vector2`; clamps a scalar into `[-1, 1]`             |
+| Processor | Default arguments | Effect |
+| --- | --- | --- |
+| `deadzone(min,max)` | `0.125, 1` | Radial for `vector2`, axial for scalars; rescales `[min, max]` to `[0,1]` |
+| `invert` | — | Negates every component |
+| `scale(x,y)` | `1, x` | Multiplies per axis; one argument scales both |
+| `clamp(min,max)` | `-1, 1` | Clamps every component |
+| `normalize` | — | Unit length for a `vector2`; clamps a scalar into `[-1, 1]` |
 
 ## Control schemes
 

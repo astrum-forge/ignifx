@@ -87,27 +87,27 @@ await app.start();
 
 ### `ParticleSystem2D`
 
-| Field          | Kind                      | Default     | Meaning                                                        |
-| -------------- | ------------------------- | ----------- | -------------------------------------------------------------- |
-| `definition`   | `asset(ParticleAsset)`    | `null`      | The `.particles.json` to play                                  |
-| `atlas`        | `asset(SpriteAtlasAsset)` | `null`      | The atlas whose frames the particles draw; must be loaded      |
-| `playOnAwake`  | `bool`                    | `true`      | Play the first frame it is enabled, if the document agrees     |
-| `seed`         | `u32`                     | `0`         | `0` uses the document's; `0` there picks at random on `play()` |
-| `sortingLayer` | `str`                     | `"Default"` | Which sorting layer the sprites draw on                        |
+| Field | Kind | Default | Meaning |
+| --- | --- | --- | --- |
+| `definition` | `asset(ParticleAsset)` | `null` | The `.particles.json` to play |
+| `atlas` | `asset(SpriteAtlasAsset)` | `null` | The atlas whose frames the particles draw; must be loaded |
+| `playOnAwake` | `bool` | `true` | Play the first frame it is enabled, if the document agrees |
+| `seed` | `u32` | `0` | `0` uses the document's; `0` there picks at random on `play()` |
+| `sortingLayer` | `str` | `"Default"` | Which sorting layer the sprites draw on |
 
-| Member                   | Meaning                                                                      |
-| ------------------------ | ---------------------------------------------------------------------------- |
-| `play()`                 | Start, or resume after `stop()`; `prewarm` fast-forwards one cycle           |
-| `stop({ clear })`        | Stop emitting; `clear: true` also forgets the live particles                 |
-| `pause()` / `resume()`   | Hold and release the system's own clock                                      |
-| `emit(count)`            | Spawn now, playing or not; from `update` they are drawn the same frame       |
-| `simulate(seconds)`      | Fast-forward, emitting as it goes                                            |
-| `isPlaying` / `isPaused` | The state `play`, `stop` and `pause` set                                     |
-| `aliveCount`             | Exact live particles, as of the last frame                                   |
-| `spriteCount`            | Slots the last frame drew; equals `aliveCount` while the system is enabled   |
-| `capacity`               | The ring size in use, after `app.particles.maxParticles` clamped it          |
-| `time`                   | The system's own clock, in seconds — what every particle's age measures from |
-| `onStopped`              | `Signal<ParticleSystem2D>`, emitted once a non-looping system runs dry       |
+| Member | Meaning |
+| --- | --- |
+| `play()` | Start, or resume after `stop()`; `prewarm` fast-forwards one cycle |
+| `stop({ clear })` | Stop emitting; `clear: true` also forgets the live particles |
+| `pause()` / `resume()` | Hold and release the system's own clock |
+| `emit(count)` | Spawn now, playing or not; from `update` they are drawn the same frame |
+| `simulate(seconds)` | Fast-forward, emitting as it goes |
+| `isPlaying` / `isPaused` | The state `play`, `stop` and `pause` set |
+| `aliveCount` | Exact live particles, as of the last frame |
+| `spriteCount` | Slots the last frame drew; equals `aliveCount` while the system is enabled |
+| `capacity` | The ring size in use, after `app.particles.maxParticles` clamped it |
+| `time` | The system's own clock, in seconds — what every particle's age measures from |
+| `onStopped` | `Signal<ParticleSystem2D>`, emitted once a non-looping system runs dry |
 
 The API is the 3D `ParticleSystem`'s, plus `atlas`, `sortingLayer` and `spriteCount`. Everything a
 `.particles.json` declares is simulated identically, because both components run the same emitter
@@ -115,17 +115,17 @@ and the same evaluator.
 
 ### How a document becomes sprites
 
-| Document field                             | What the 2D system does with it                                             |
-| ------------------------------------------ | --------------------------------------------------------------------------- |
-| `main.capacity`                            | The number of sprite slots claimed, after the shared budget clamps it       |
-| `main.simulationSpace`                     | `"local"` follows the entity, `"world"` leaves particles where they spawned |
-| `start.size`, `overLifetime.size`          | The sprite's width from `size.x` and height from `size.y`, in metres        |
-| `start.rotation`, `overLifetime.rotation`  | Degrees counter-clockwise, as `Transform.rotation2D` reads                  |
-| `start.color`, `overLifetime.color`        | The sprite tint, linear — the same values a `SpriteRenderer.color` holds    |
-| `renderer.blend`                           | The layer's blend: `premultiplied`, `additive` or `alpha`                   |
-| `renderer.sheet.tiles`                     | Frame **n** of the sheet is frame **n** of the atlas (see below)            |
-| `forces.*`, `emission.*`, `shape.*`        | Simulated exactly as in 3D; the Z they produce is not drawn                 |
-| `renderer.texture`, `mode`, `lit`, `pivot` | Ignored: the `atlas` field is the texture, and sprites are flat             |
+| Document field | What the 2D system does with it |
+| --- | --- |
+| `main.capacity` | The number of sprite slots claimed, after the shared budget clamps it |
+| `main.simulationSpace` | `"local"` follows the entity, `"world"` leaves particles where they spawned |
+| `start.size`, `overLifetime.size` | The sprite's width from `size.x` and height from `size.y`, in metres |
+| `start.rotation`, `overLifetime.rotation` | Degrees counter-clockwise, as `Transform.rotation2D` reads |
+| `start.color`, `overLifetime.color` | The sprite tint, linear — the same values a `SpriteRenderer.color` holds |
+| `renderer.blend` | The layer's blend: `premultiplied`, `additive` or `alpha` |
+| `renderer.sheet.tiles` | Frame **n** of the sheet is frame **n** of the atlas (see below) |
+| `forces.*`, `emission.*`, `shape.*` | Simulated exactly as in 3D; the Z they produce is not drawn |
+| `renderer.texture`, `mode`, `lit`, `pivot` | Ignored: the `atlas` field is the texture, and sprites are flat |
 
 **The frame rule.** The evaluator turns `renderer.sheet` into a tile index counted across rows, and
 the 2D system uses that number as the **atlas frame index**, unchanged. So pack the atlas frames in
@@ -134,22 +134,22 @@ the same order as the sheet tiles and `tiles: { x: 2, y: 2 }` picks frames 0–3
 `SpriteRenderer` falls back.
 
 **The Z rule.** Records are simulated in three dimensions — a cone shape, gravity and an orbit all
-produce Z — but only X and Y are drawn, because 2D ordering is sorting layers, not depth
-(`docs/architecture/11-2d-toolkit.md` §3). An effect written for a 2D scene should emit in the XY
+produce Z — but only X and Y are drawn, because 2D ordering is sorting layers, not depth.
+An effect written for a 2D scene should emit in the XY
 plane; a `cone` pointing along +Z looks like a still point.
 
 **Which way a shape faces.** Shapes are authored in the emitter's local space and directional ones
 send particles along local `+Y`, which is "up" on screen. Two shapes lie flat in the ground plane
 (X and Z), so a 2D camera sees them edge-on:
 
-| Shape                  | Spread                               | Seen by a 2D camera                                             |
-| ---------------------- | ------------------------------------ | --------------------------------------------------------------- |
-| `circle`               | X and Z, nothing in Y                | A horizontal line; rotate the emitter 90° about X for a ring    |
-| `edge`                 | X only                               | A line along X, particles travelling up                         |
-| `box`                  | X, Y and Z by `size`                 | A rectangle of `size.x` by `size.y`                             |
-| `cone`                 | X and Z on the base disc by `radius` | A fan travelling up; a wide `angle` spreads it sideways along X |
-| `sphere`, `hemisphere` | X, Y and Z by `radius`               | A disc (`hemisphere` keeps `y >= 0`)                            |
-| `point`                | Nothing                              | One spot, particles travelling up                               |
+| Shape | Spread | Seen by a 2D camera |
+| --- | --- | --- |
+| `circle` | X and Z, nothing in Y | A horizontal line; rotate the emitter 90° about X for a ring |
+| `edge` | X only | A line along X, particles travelling up |
+| `box` | X, Y and Z by `size` | A rectangle of `size.x` by `size.y` |
+| `cone` | X and Z on the base disc by `radius` | A fan travelling up; a wide `angle` spreads it sideways along X |
+| `sphere`, `hemisphere` | X, Y and Z by `radius` | A disc (`hemisphere` keeps `y >= 0`) |
+| `point` | Nothing | One spot, particles travelling up |
 
 For a fan in the screen plane use a `cone` with a small `angle` and widen it with
 `shape.randomDirection`.
@@ -296,7 +296,7 @@ app.dispose();
 There is no format of this package's own. `ParticleSystem2D` reads `ignifx.particles`
 (`.particles.json`), which `@ignifx/particles` defines and documents, and `ignifx.spriteatlas`
 (`.atlas.json`), which `@ignifx/2d` defines. The generated tables are in
-`skills/ignifx/references/formats/`.
+`skills/ignifx/references/formats/` in the `ignifx` package.
 
 The component serializes as any other: `definition` and `atlas` are asset references, `playOnAwake`,
 `seed` and `sortingLayer` are plain fields.
@@ -332,7 +332,7 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-`packages/particles/skills/particles/SKILL.md` for the document and the presets ·
-`packages/2d/skills/2d/SKILL.md` for atlases, sorting layers and cameras ·
-`skills/ignifx/SKILL.md` for the engine entry skill ·
-`docs/plan/2026-09-terrain-particles-shaders.md` §4 for the design.
+The entry skill is `skills/ignifx/SKILL.md` in the `ignifx` package: `node_modules/ignifx/` in an
+installed project, the repository root in the engine repository. Under it, `references/api/particles-2d.md` has every exact signature. The `@ignifx/particles` skill
+(`skills/particles/SKILL.md` in that package) has the document and the presets; the `@ignifx/2d`
+skill (`skills/2d/SKILL.md` in that package) has atlases, sorting layers and cameras.

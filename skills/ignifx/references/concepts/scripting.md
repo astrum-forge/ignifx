@@ -1,14 +1,14 @@
 # Scripting: components, schemas, coroutines
 
-How game code is written: `Component` for data a system owns, `Script` for data with lifecycle callbacks, and a declarative schema instead of decorators (ADR-0004). Rationale in `docs/architecture/03-scripting-and-components.md`.
+How game code is written: `Component` for data a system owns, `Script` for data with lifecycle callbacks, and a declarative schema instead of decorators.
 
 ## 1. `Component` versus `Script`
 
-|               | `Component`                                                             | `Script`                                                |
-| ------------- | ----------------------------------------------------------------------- | ------------------------------------------------------- |
-| Callbacks     | `onAttach?()` / `onDetach?()` from the `ComponentHooks` interface       | the `ScriptCallbacks` interface (see `lifecycle.md` §2) |
-| Driven by     | a system an extension registered                                        | the kernel's scheduler                                  |
-| Extra statics | `typeId`, `schema`, `requires`, `allowMultiple`, `title`, `description` | those plus `executionOrder`, `updateWhenPaused`         |
+|  | `Component` | `Script` |
+| --- | --- | --- |
+| Callbacks | `onAttach?()` / `onDetach?()` from the `ComponentHooks` interface | the `ScriptCallbacks` interface (see `lifecycle.md` §2) |
+| Driven by | a system an extension registered | the kernel's scheduler |
+| Extra statics | `typeId`, `schema`, `requires`, `allowMultiple`, `title`, `description` | those plus `executionOrder`, `updateWhenPaused` |
 
 Both reach everything the same way from inside a method — `this.entity`, `this.transform`,
 `this.world`, `this.app`, `this.uid`, `this.handle`, `this.enabled`, `this.isEnabledInHierarchy`,
@@ -87,7 +87,7 @@ member every object inherits (`constructor`, `toString`, `__proto__`, …, also 
 `IGX-0607` at definition time; `entityRef`/`componentRef` fields are **tracked**, so the engine nulls
 them in the destroy flush when the target dies, before any `onDestroy` (plain class fields are not);
 non-serialized state is an ordinary class field with a name no schema field uses; and changing a
-schema is a file-format change, which before 1.0 simply invalidates old files (`CONSTITUTION.md` §4.2).
+schema is a file-format change, which before 1.0 simply invalidates old files.
 
 ## 3. `typeId` and registration
 
@@ -112,20 +112,20 @@ schema is a file-format change, which before 1.0 simply invalidates old files (`
 What each kind becomes in a scene file. The full format, with instances and overrides, is in
 [`../formats/scene.md`](../formats/scene.md).
 
-| Kind                       | JSON                                                                                        |
-| -------------------------- | ------------------------------------------------------------------------------------------- |
-| `f32 f64 i32 u32`          | number (canonicalized to 1e-6; `NaN`/`Infinity` rejected with `IGX-0601`)                   |
-| `bool` / `str`             | boolean / string                                                                            |
-| `vec2 vec3 vec4 quat`      | array of numbers                                                                            |
-| `color`                    | `[r, g, b, a]` in sRGB 0–1                                                                  |
-| `enumOf`                   | the string value                                                                            |
-| `entityRef`                | `{ "$entity": "<uid>" }` or `null`                                                          |
-| `componentRef`             | `{ "$component": "<uid>" }` or `null`                                                       |
-| `asset`                    | `{ "$asset": "<address>", "type"?: "<type>" }` or `null`                                    |
-| `array` / `record` / `map` | array / object / object                                                                     |
-| `optional`                 | the inner encoding or `null`                                                                |
-| `layerMask`                | array of layer names, so renames survive                                                    |
-| `curve` / `custom`         | `{ "keys": [[t, v, inTangent, outTangent], …] }` / whatever the codec's `serialize` returns |
+| Kind | JSON |
+| --- | --- |
+| `f32 f64 i32 u32` | number (canonicalized to 1e-6; `NaN`/`Infinity` rejected with `IGX-0601`) |
+| `bool` / `str` | boolean / string |
+| `vec2 vec3 vec4 quat` | array of numbers |
+| `color` | `[r, g, b, a]` in sRGB 0–1 |
+| `enumOf` | the string value |
+| `entityRef` | `{ "$entity": "<uid>" }` or `null` |
+| `componentRef` | `{ "$component": "<uid>" }` or `null` |
+| `asset` | `{ "$asset": "<address>", "type"?: "<type>" }` or `null` |
+| `array` / `record` / `map` | array / object / object |
+| `optional` | the inner encoding or `null` |
+| `layerMask` | array of layer names, so renames survive |
+| `curve` / `custom` | `{ "keys": [[t, v, inTangent, outTangent], …] }` / whatever the codec's `serialize` returns |
 
 The **runtime** value of an `asset()` field is the loaded `AssetHandle`, not the address: the scene
 loader resolves every reference before it writes the props, so `awake` can read `this.mesh.value`
@@ -219,25 +219,25 @@ for (let frame = 0; frame < 48; frame += 1) {
 
 ## 7. Patterns and anti-patterns
 
-| Do                                                                      | Instead of                                               |
-| ----------------------------------------------------------------------- | -------------------------------------------------------- |
-| Cache lookups in `awake`: `this.health = this.requireComponent(Health)` | calling `getComponent` every frame                       |
-| Emit a `Signal` upward, call methods downward                           | name-based messaging or a broadcast helper               |
-| Link objects with `entityRef`/`componentRef`                            | `entity.find("Body/Arm.L")` outside tests and tools      |
-| Keep `fixedUpdate` pure simulation, integrating with its `dt`           | `app.time.deltaTime` or wall-clock time inside it        |
-| Sequence with coroutines; compose small scripts with `requires`         | `async awake()`, one large script, or a global singleton |
-| Move long work into a coroutine, a system, or a worker                  | looping over everything in `update`                      |
-| Move a value with `app.tweens.to(...)`                                  | a coroutine that lerps by hand on `deltaTime`            |
+| Do | Instead of |
+| --- | --- |
+| Cache lookups in `awake`: `this.health = this.requireComponent(Health)` | calling `getComponent` every frame |
+| Emit a `Signal` upward, call methods downward | name-based messaging or a broadcast helper |
+| Link objects with `entityRef`/`componentRef` | `entity.find("Body/Arm.L")` outside tests and tools |
+| Keep `fixedUpdate` pure simulation, integrating with its `dt` | `app.time.deltaTime` or wall-clock time inside it |
+| Sequence with coroutines; compose small scripts with `requires` | `async awake()`, one large script, or a global singleton |
+| Move long work into a coroutine, a system, or a worker | looping over everything in `update` |
+| Move a value with `app.tweens.to(...)` | a coroutine that lerps by hand on `deltaTime` |
 
 ## 8. Hot reload
 
 `app.hotReload` swaps script classes in a running game (`@ignifx/vite-plugin` drives it in `vite dev`;
 it works headlessly with no bundler). Two policies, chosen per class:
 
-| `static hotReload`  | What happens to live instances                                                                                                                                                                                                         |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `"patch"` (default) | The prototype is swapped: same objects, every field value kept, coroutines still running, **no** lifecycle callback re-run. Statics are re-read, so a changed `executionOrder` reorders dispatch.                                      |
-| `"recreate"`        | Each instance is serialized through its schema, destroyed (`onDisable`, `onDestroy`), and rebuilt from the new class with the same uid and position — so `awake`, `onEnable`, and `start` run again, and its coroutines are cancelled. |
+| `static hotReload` | What happens to live instances |
+| --- | --- |
+| `"patch"` (default) | The prototype is swapped: same objects, every field value kept, coroutines still running, **no** lifecycle callback re-run. Statics are re-read, so a changed `executionOrder` reorders dispatch. |
+| `"recreate"` | Each instance is serialized through its schema, destroyed (`onDisable`, `onDestroy`), and rebuilt from the new class with the same uid and position — so `awake`, `onEnable`, and `start` run again, and its coroutines are cancelled. |
 
 ```ts run
 import { createApp, f32, Script } from "@ignifx/core";

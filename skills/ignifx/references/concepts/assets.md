@@ -1,8 +1,7 @@
 # Assets
 
 Everything a game loads — textures, models, scenes and prefabs, materials, environments, fonts,
-JSON, text, bytes — is addressed, typed, reference-counted, and asynchronous. Rationale in
-`docs/architecture/05-assets-and-loading.md`.
+JSON, text, bytes — is addressed, typed, reference-counted, and asynchronous.
 
 ```
 address ──▶ manifest ──▶ url ──▶ loader ──▶ value
@@ -37,16 +36,16 @@ address ──▶ manifest ──▶ url ──▶ loader ──▶ value
 
 ## 2. `AssetHandle<T>`
 
-| Member               | Meaning                                                             |
-| -------------------- | ------------------------------------------------------------------- |
-| `address`, `type`    | What was asked for, and the loader type that answered               |
-| `state`              | `"loading" \| "loaded" \| "failed" \| "released"`                   |
-| `value`              | The loaded value; throws `IGX-0501` unless `state === "loaded"`     |
-| `promise`            | Resolves with the value, rejects with an `AssetLoadError`           |
-| `progress`, `error`  | `0…1`, bytes-weighted where sizes are known; the failure, or `null` |
-| `refCount`           | Holders; `retain()` adds one, `release()` drops one                 |
-| `[Symbol.dispose]()` | Same as `release()`, so `using handle = …` works                    |
-| `onReplaced`         | Hot reload delivered a new value; `value` is already the new one    |
+| Member | Meaning |
+| --- | --- |
+| `address`, `type` | What was asked for, and the loader type that answered |
+| `state` | `"loading" \| "loaded" \| "failed" \| "released"` |
+| `value` | The loaded value; throws `IGX-0501` unless `state === "loaded"` |
+| `promise` | Resolves with the value, rejects with an `AssetLoadError` |
+| `progress`, `error` | `0…1`, bytes-weighted where sizes are known; the failure, or `null` |
+| `refCount` | Holders; `retain()` adds one, `release()` drops one |
+| `[Symbol.dispose]()` | Same as `release()`, so `using handle = …` works |
+| `onReplaced` | Hot reload delivered a new value; `value` is already the new one |
 
 Two `load` calls for one address answer with the **same handle**, refcount incremented — so each
 `load` needs exactly one `release`. At zero the value is unloaded after `assets.gcDelay` seconds
@@ -55,18 +54,18 @@ Two `load` calls for one address answer with the **same handle**, refcount incre
 
 ## 3. `app.assets`
 
-| Member                                | Notes                                                                         |
-| ------------------------------------- | ----------------------------------------------------------------------------- |
-| `load(ref, options?)`                 | Returns a handle **immediately**, still `"loading"`                           |
-| `loadAsync(ref, options?)`            | The same, awaited                                                             |
-| `loadAll(refs, options?)`             | A `BatchHandle`: `promise`, `progress`, `handles`, `release()`, `cancel()`    |
-| `preloadGroup(group, options?)`       | Every manifest entry carrying that group label                                |
-| `get(address)`                        | The cached handle or `null`, without changing the refcount                    |
-| `release(handleOrAddress)`            | Drop one reference                                                            |
-| `register(value, { type, address? })` | Publish an in-code value; the handle arrives already `"loaded"`               |
-| `registerType`, `registerLoader`      | Normally reached through `ExtensionContext`                                   |
-| `gc()`, `gcDelay`, `resolveUrl`       | Collection and address resolution                                             |
-| `manifest`, `onProgress`              | The table, and `{ loaded, total, bytesLoaded, bytesTotal }` as work completes |
+| Member | Notes |
+| --- | --- |
+| `load(ref, options?)` | Returns a handle **immediately**, still `"loading"` |
+| `loadAsync(ref, options?)` | The same, awaited |
+| `loadAll(refs, options?)` | A `BatchHandle`: `promise`, `progress`, `handles`, `release()`, `cancel()` |
+| `preloadGroup(group, options?)` | Every manifest entry carrying that group label |
+| `get(address)` | The cached handle or `null`, without changing the refcount |
+| `release(handleOrAddress)` | Drop one reference |
+| `register(value, { type, address? })` | Publish an in-code value; the handle arrives already `"loaded"` |
+| `registerType`, `registerLoader` | Normally reached through `ExtensionContext` |
+| `gc()`, `gcDelay`, `resolveUrl` | Collection and address resolution |
+| `manifest`, `onProgress` | The table, and `{ loaded, total, bytesLoaded, bytesTotal }` as work completes |
 
 `LoadOptions` carries `signal` (an `AbortSignal`), `priority`, `type`, and `onProgress`. Requests go
 through a priority queue with a concurrency limit (default 6) and retry twice on a network failure.
@@ -150,7 +149,8 @@ progress propagate), `reportProgress(fraction)`, `meta` (the `.meta.json` sideca
 
 The core extension registers: `texture` (`.png .jpg .jpeg .webp .ktx2 .basis`), `shader` (`.wgsl`), `model`
 (`.glb .gltf`), `scene` (`.scene.json .prefab.json`), `material` (`.material.json`), `mesh`
-(`.mesh.json`), `environment` (`.env .hdr .dds`), `font` (`.ttf .otf`), and the generic
+(`.mesh.json`), `environment` (`.env .hdr .dds .environment.json`), `lightprobes` (`.probes.json`),
+`lightmap` (`.lightmap.json`), `font` (`.ttf .otf`), and the generic
 `jsonAssetLoader`, `textAssetLoader`, and `binaryAssetLoader`.
 
 ### Compressed textures (`.ktx2`)
@@ -170,8 +170,8 @@ silicon and mobile, RGBA8 without compression support — so it stays compressed
   `@ignifx/core` directly (the scaffolded templates do). Without the plugin, copy
   `node_modules/@ignifx/core/decoders/*` beside the assets and list each file in the manifest at
   its bare name.
-- `.basis` is not supported in a project that serves its own decoders (the Vite plugin's): Lite
-  1.34 loads its transcoder only from `cdn.babylonjs.com`, with no setter, so the load fails with
+- `.basis` is not supported in a project that serves its own decoders (the Vite plugin's): Babylon
+  Lite loads its transcoder only from `cdn.babylonjs.com`, with no setter, so the load fails with
   `IGX-0509` before anything is fetched. Without the plugin Lite still tries the CDN, and a strict
   CSP's refusal becomes the same `IGX-0509`. Convert `.basis` files to `.ktx2`.
 
@@ -232,15 +232,15 @@ asset's `address`, through `app.onError`.
 
 ## 7. Errors
 
-| Code       | When                                                  |
-| ---------- | ----------------------------------------------------- |
+| Code | When |
+| --- | --- |
 | `IGX-0501` | `handle.value` read while the state is not `"loaded"` |
-| `IGX-0502` | The load was aborted through `options.signal`         |
-| `IGX-0503` | The app was disposed with loads in flight             |
-| `IGX-0504` | No loader claims that type or extension               |
-| `IGX-0505` | The fetch or the loader failed (an `AssetLoadError`)  |
-| `IGX-0506` | Two loaders registered for one type                   |
-| `IGX-0507` | A `.mesh.json` has a bad primitive or option          |
+| `IGX-0502` | The load was aborted through `options.signal` |
+| `IGX-0503` | The app was disposed with loads in flight |
+| `IGX-0504` | No loader claims that type or extension |
+| `IGX-0505` | The fetch or the loader failed (an `AssetLoadError`) |
+| `IGX-0506` | Two loaders registered for one type |
+| `IGX-0507` | A `.mesh.json` has a bad primitive or option |
 
 `AssetLoadError` extends `IgnifxError` and carries `address` and `url`. Failures raised inside the
 loading path are also reported through `app.onError` with `source: "asset"`.

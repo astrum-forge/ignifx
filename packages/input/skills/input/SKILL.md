@@ -58,14 +58,14 @@ await app.input.actionsHandle?.promise;
 
 `ignifx.config.ts` carries the same settings under `input`:
 
-| Setting               | Default | Meaning                                                              |
-| --------------------- | ------- | -------------------------------------------------------------------- |
-| `actions`             | `""`    | Address of the `.input.json` loaded at startup                       |
-| `pressPoint`          | `0.5`   | Magnitude at which an analog value counts as pressed                 |
-| `gamepadPolling`      | `true`  | Whether pads are polled each frame                                   |
-| `pointerLock.allowed` | `true`  | Whether `pointerLock.request()` may ask the browser                  |
-| `defaultScheme`       | `""`    | Scheme the app starts in; empty picks the document's first           |
-| `strictSchemes`       | `false` | Whether a binding's `scheme` tag filters resolution, not just glyphs |
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `actions` | `""` | Address of the `.input.json` loaded at startup |
+| `pressPoint` | `0.5` | Magnitude at which an analog value counts as pressed |
+| `gamepadPolling` | `true` | Whether pads are polled each frame |
+| `pointerLock.allowed` | `true` | Whether `pointerLock.request()` may ask the browser |
+| `defaultScheme` | `""` | Scheme the app starts in; empty picks the document's first |
+| `strictSchemes` | `false` | Whether a binding's `scheme` tag filters resolution, not just glyphs |
 
 ## Mental model
 
@@ -149,42 +149,42 @@ app.input.actions.get("jump").wasPressedThisFrame; // true, for the whole frame
 
 ### `app.input`
 
-| Member                                                         | What it does                                                                                                                                                                                                                                 |
-| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `actions.get(name)`                                            | Action from the **enabled** maps; `IGX-0801` when unknown _or in a disabled map_                                                                                                                                                             |
-| `actions.find(name)` / `actions.map(name)`                     | Tolerant lookup / one map by name (`IGX-0804`)                                                                                                                                                                                               |
-| `loadActions(assetOrDefinition)`                               | Installs a document's maps, merging by map name                                                                                                                                                                                              |
-| `devices` / `gamepads`                                         | The device table; `gamepads[i].rumble(intensity, seconds)`. For gameplay, bind a `vector2` action to `<Pointer>/position` and read `action.vector`; `devices.resolve(path)` / `control(name)` / `valueAt(offset)` are the raw path for tools |
-| `events`                                                       | The frame's raw events, in arrival order (records are recycled)                                                                                                                                                                              |
-| `currentScheme` / `onControlSchemeChanged`                     | The active control scheme                                                                                                                                                                                                                    |
-| `onDeviceConnected` / `onDeviceDisconnected`                   | Gamepad slots filling and emptying                                                                                                                                                                                                           |
-| `uiHasFocus`                                                   | While `true`, keyboard actions read as released                                                                                                                                                                                              |
-| `pressPoint` / `strictSchemes`                                 | Runtime knobs, defaulted from the settings section                                                                                                                                                                                           |
-| `pointerLock.request()/exit()/locked/onChange`                 | Pointer lock; `<Mouse>/delta` keeps reporting while locked. `request()` asks for `unadjustedMovement` (raw, un-accelerated motion) and falls back to the plain request where the browser refuses the option                                  |
-| `cursor.visible`                                               | `cursor: none` on the canvas                                                                                                                                                                                                                 |
-| `simulate(values)` / `simulateEvent(event)`                    | Headless and test input, through the same pipeline                                                                                                                                                                                           |
-| `releaseAll()`                                                 | Queues what `blur` queues, so nothing stays stuck                                                                                                                                                                                            |
-| `performInteractiveRebind(action, options?)`                   | Listens for the next control and writes an override                                                                                                                                                                                          |
-| `saveOverrides()` / `loadOverrides(json)` / `clearOverrides()` | Override persistence                                                                                                                                                                                                                         |
-| `createActionSet(source, options?)`                            | A private copy of the maps pinned to one gamepad slot                                                                                                                                                                                        |
+| Member | What it does |
+| --- | --- |
+| `actions.get(name)` | Action from the **enabled** maps; `IGX-0801` when unknown _or in a disabled map_ |
+| `actions.find(name)` / `actions.map(name)` | Tolerant lookup / one map by name (`IGX-0804`) |
+| `loadActions(assetOrDefinition)` | Installs a document's maps, merging by map name |
+| `devices` / `gamepads` | The device table; `gamepads[i].rumble(intensity, seconds)`. For gameplay, bind a `vector2` action to `<Pointer>/position` and read `action.vector`; `devices.resolve(path)` / `control(name)` / `valueAt(offset)` are the raw path for tools |
+| `events` | The frame's raw events, in arrival order (records are recycled) |
+| `currentScheme` / `onControlSchemeChanged` | The active control scheme |
+| `onDeviceConnected` / `onDeviceDisconnected` | Gamepad slots filling and emptying |
+| `uiHasFocus` | While `true`, keyboard actions read as released |
+| `pressPoint` / `strictSchemes` | Runtime knobs, defaulted from the settings section |
+| `pointerLock.request()/exit()/locked/onChange` | Pointer lock; `<Mouse>/delta` keeps reporting while locked. `request()` asks for `unadjustedMovement` (raw, un-accelerated motion) and falls back to the plain request where the browser refuses the option |
+| `cursor.visible` | `cursor: none` on the canvas |
+| `simulate(values)` / `simulateEvent(event)` | Headless and test input, through the same pipeline |
+| `releaseAll()` | Queues what `blur` queues, so nothing stays stuck |
+| `performInteractiveRebind(action, options?)` | Listens for the next control and writes an override |
+| `saveOverrides()` / `loadOverrides(json)` / `clearOverrides()` | Override persistence |
+| `createActionSet(source, options?)` | A private copy of the maps pinned to one gamepad slot |
 
 ### `InputAction`
 
-| Member                                                     | Notes                                                                                                                                                                                                        |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `name`, `map`, `type`, `enabled`, `bindings`               | `type` is `button`, `axis`, or `vector2`                                                                                                                                                                     |
-| `isPressed`, `wasPressedThisFrame`, `wasReleasedThisFrame` | Edge flags hold for the whole frame                                                                                                                                                                          |
-| `axis`, `vector`, `magnitude`, `value`                     | `vector` is a **live** view; never reallocated                                                                                                                                                               |
-| `activeDevice`                                             | The `DeviceKind` of the binding that won this frame (`"Mouse"`, `"Gamepad"`, …), `null` at rest or disabled; a composite reports its first part's device. Read it to treat one action differently per device |
-| `onStarted`, `onPerformed`, `onCanceled`                   | `Signal<InputActionEvent>`; the event is reused                                                                                                                                                              |
+| Member | Notes |
+| --- | --- |
+| `name`, `map`, `type`, `enabled`, `bindings` | `type` is `button`, `axis`, or `vector2` |
+| `isPressed`, `wasPressedThisFrame`, `wasReleasedThisFrame` | Edge flags hold for the whole frame |
+| `axis`, `vector`, `magnitude`, `value` | `vector` is a **live** view; never reallocated |
+| `activeDevice` | The `DeviceKind` of the binding that won this frame (`"Mouse"`, `"Gamepad"`, …), `null` at rest or disabled; a composite reports its first part's device. Read it to treat one action differently per device |
+| `onStarted`, `onPerformed`, `onCanceled` | `Signal<InputActionEvent>`; the event is reused |
 
 ### `PlayerInput` (component, `ignifx/PlayerInput`)
 
-| Field        | Kind                       | Default | Meaning                                            |
-| ------------ | -------------------------- | ------- | -------------------------------------------------- |
-| `actions`    | `asset(InputActionsAsset)` | `null`  | The document the private maps are built from       |
-| `deviceSlot` | `i32`                      | `0`     | The gamepad slot `<Gamepad>/…` paths are pinned to |
-| `scheme`     | `str`                      | `""`    | Keep only bindings tagged with this scheme         |
+| Field | Kind | Default | Meaning |
+| --- | --- | --- | --- |
+| `actions` | `asset(InputActionsAsset)` | `null` | The document the private maps are built from |
+| `deviceSlot` | `i32` | `0` | The gamepad slot `<Gamepad>/…` paths are pinned to |
+| `scheme` | `str` | `""` | Keep only bindings tagged with this scheme |
 
 The resolved lookup is `playerInput.input` (an `InputActionsView`, or `null` until the document is
 loaded), because the serialized field already owns the name `actions`.
@@ -220,9 +220,8 @@ the declared schemes, `-1` for none), `pointerLocked`.
 ## File formats
 
 `.input.json`, format `ignifx.inputactions`, version 1 — maps, actions, binding paths, composites,
-processors, control schemes. Prose and tables:
-[`inputactions.md`](../../../../skills/ignifx/references/formats/inputactions.md); generated field
-table: [`ignifx.inputactions.md`](../../../../skills/ignifx/references/formats/ignifx.inputactions.md).
+processors, control schemes. Prose and tables: `skills/ignifx/references/formats/inputactions.md` in
+the `ignifx` package; generated field table: `ignifx.inputactions.md` beside it.
 Overrides are a separate `ignifx.inputoverrides` document produced by `saveOverrides()`.
 
 ## Gotchas
@@ -267,5 +266,6 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-`skills/ignifx/SKILL.md` for the engine entry skill · `skills/ignifx/references/api/input.md` for the
-generated API · `docs/architecture/08-input.md` for design rationale.
+The entry skill is `skills/ignifx/SKILL.md` in the `ignifx` package: `node_modules/ignifx/` in an
+installed project, the repository root in the engine repository. Under it, `references/api/input.md` has every exact signature and
+`references/formats/inputactions.md` the action file in full.

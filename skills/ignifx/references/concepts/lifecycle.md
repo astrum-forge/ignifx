@@ -1,7 +1,7 @@
 # Lifecycle and time
 
 When things happen in a frame, which callbacks a `Script` may implement, and how a headless app is
-stepped. Rationale in `docs/architecture/01-lifecycle-and-time.md`.
+stepped.
 
 ## 1. Frame order
 
@@ -18,7 +18,7 @@ ascending, creation order ascending)`.
 5. **Fixed loop** — while the accumulator holds a whole step: `Phase.FixedUpdate` systems with `order < 0`, `fixedUpdate(fixedDeltaTime)` on scripts, `Phase.FixedUpdate` systems with `order >= 0`, then coroutines waiting on `waitFixedUpdate()`. Skipped entirely while `time.paused` is `true`.
 6. **Lifecycle flush B** — `start()` for effectively enabled scripts that have never started.
 7. **Update** — `Phase.Update` systems with `order < 0`, `update(deltaTime)` on scripts, coroutine resumes (`yield`, `waitSeconds`, `waitUntil`, `waitWhile`, settled promises), then `Phase.Update` systems with `order >= 0`.
-8. **PostUpdate** — `Phase.PostUpdate` systems (animation lands here in a later phase).
+8. **PostUpdate** — `Phase.PostUpdate` systems: tweens, and the animators of `@ignifx/3d` and `@ignifx/2d`.
 9. **LateUpdate** — `lateUpdate(deltaTime)` on scripts.
 10. **Destroy flush** — tracked `entityRef`/`componentRef` fields pointing at doomed objects are nulled, then `onDisable()` and `onDestroy()` run for everything queued this frame, children before parents and, within an entity, components in attach order.
 11. **PreRender** — `Phase.PreRender` systems, ending with `ignifx/render-sync` (order 900), which
@@ -32,20 +32,20 @@ Callbacks are **not** members of `Script`: implement the ones you need as ordina
 scheduler finds them by prototype inspection, once per class. `implements ScriptCallbacks` is
 optional and only turns on signature checking.
 
-| Callback          | When                                                                                                                                                | How often          |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| `awake()`         | Flush A of the first frame in which the component is effectively enabled; nested and synchronous when the component is added from inside a callback | Once per component |
-| `onEnable()`      | Flush A, right after `awake`, and again after every transition back to effectively enabled                                                          | Every transition   |
-| `start()`         | Flush B, after the fixed loop of that same frame                                                                                                    | Once per component |
-| `fixedUpdate(dt)` | Each fixed step; `dt === time.fixedDeltaTime`                                                                                                       | 0…N per frame      |
-| `update(dt)`      | Each frame; `dt === time.deltaTime`                                                                                                                 | Once per frame     |
-| `lateUpdate(dt)`  | Each frame, after `update` and `PostUpdate`                                                                                                         | Once per frame     |
-| `onDisable()`     | Synchronously at the transition away from effectively enabled, and in the destroy flush                                                             | Every transition   |
-| `onDestroy()`     | Destroy flush of the frame `destroy()` was called in (at once for `destroyImmediate()`)                                                             | Once               |
+| Callback | When | How often |
+| --- | --- | --- |
+| `awake()` | Flush A of the first frame in which the component is effectively enabled; nested and synchronous when the component is added from inside a callback | Once per component |
+| `onEnable()` | Flush A, right after `awake`, and again after every transition back to effectively enabled | Every transition |
+| `start()` | Flush B, after the fixed loop of that same frame | Once per component |
+| `fixedUpdate(dt)` | Each fixed step; `dt === time.fixedDeltaTime` | 0…N per frame |
+| `update(dt)` | Each frame; `dt === time.deltaTime` | Once per frame |
+| `lateUpdate(dt)` | Each frame, after `update` and `PostUpdate` | Once per frame |
+| `onDisable()` | Synchronously at the transition away from effectively enabled, and in the destroy flush | Every transition |
+| `onDestroy()` | Destroy flush of the frame `destroy()` was called in (at once for `destroyImmediate()`) | Once |
 
 `onApplicationPause(paused)`/`onApplicationFocus(focused)` fire per document-visibility or focus
 transition; `onCollisionEnter/Stay/Exit` and `onTriggerEnter/Exit` are declared on `ScriptCallbacks`
-now and delivered by `@ignifx/physics` in a later phase. Rules the kernel enforces:
+and delivered after the fixed step by `@ignifx/physics` and `@ignifx/physics-2d`. Rules the kernel enforces:
 
 - A component added with `enabled = false` receives **no** `awake` until it is first enabled.
 - `start` never runs twice, even after a disable/enable cycle; a script destroyed during `update` does not receive `lateUpdate` that frame.
@@ -53,12 +53,12 @@ now and delivered by `@ignifx/physics` in a later phase. Rules the kernel enforc
 
 ## 3. Activation, enabling, destruction
 
-| Concept                          | API                                                    | Effect                                                                                                  |
-| -------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| Entity flag / effective state    | `entity.active` / `entity.activeInHierarchy`           | Toggling `active` cascades `onEnable`/`onDisable` over the subtree                                      |
-| Component flag / effective state | `component.enabled` / `component.isEnabledInHierarchy` | `Transform` cannot be disabled (`IGX-0205`)                                                             |
-| Deferred destroy                 | `entity.destroy()` / `component.destroy()`             | Queued to the destroy flush; `isDestroyed` is `true` at once, and mutating afterwards throws `IGX-0101` |
-| Immediate destroy                | `entity.destroyImmediate()`                            | Tools and tests only; throws `IGX-0102` inside a lifecycle callback                                     |
+| Concept | API | Effect |
+| --- | --- | --- |
+| Entity flag / effective state | `entity.active` / `entity.activeInHierarchy` | Toggling `active` cascades `onEnable`/`onDisable` over the subtree |
+| Component flag / effective state | `component.enabled` / `component.isEnabledInHierarchy` | `Transform` cannot be disabled (`IGX-0205`) |
+| Deferred destroy | `entity.destroy()` / `component.destroy()` | Queued to the destroy flush; `isDestroyed` is `true` at once, and mutating afterwards throws `IGX-0101` |
+| Immediate destroy | `entity.destroyImmediate()` | Tools and tests only; throws `IGX-0102` inside a lifecycle callback |
 
 Tracked `entityRef`/`componentRef` fields are ordinary properties the engine sets to `null` in the destroy flush, before any `onDestroy`. Plain class fields are not tracked — check `isDestroyed`.
 
@@ -82,20 +82,20 @@ which is what makes a headless run reproduce across Node and Chromium.
 
 Seconds everywhere unless the name ends in `Ms`.
 
-| Property                | Meaning                                                             | Writable | Default |
-| ----------------------- | ------------------------------------------------------------------- | -------- | ------- |
-| `deltaTime`             | Scaled seconds since the previous frame; what `update` receives     | no       | —       |
-| `unscaledDeltaTime`     | Frame delta after the `maximumDeltaTime` clamp, before `timeScale`  | no       | —       |
-| `fixedDeltaTime`        | Size of one fixed step; what `fixedUpdate` receives                 | yes      | `1/60`  |
-| `maximumDeltaTime`      | Upper clamp on one frame's raw delta                                | yes      | `0.1`   |
-| `timeScale`             | Multiplier from unscaled to scaled time; `0` freezes the simulation | yes      | `1`     |
-| `paused`                | Set through `app.pause()`/`app.resume()`                            | yes      | `false` |
-| `time` / `unscaledTime` | Scaled / unscaled seconds since the first frame                     | no       | `0`     |
-| `fixedTime`             | Scaled seconds advanced by fixed steps                              | no       | `0`     |
-| `realtimeSinceStartup`  | Wall clock since app creation, unaffected by pause or `timeScale`   | no       | —       |
-| `frameCount`            | Frames started                                                      | no       | `0`     |
-| `inFixedStep`           | `true` while the fixed loop is running                              | no       | `false` |
-| `fixedStepAlpha`        | Leftover accumulator / `fixedDeltaTime`, in `[0, 1)`                | no       | —       |
+| Property | Meaning | Writable | Default |
+| --- | --- | --- | --- |
+| `deltaTime` | Scaled seconds since the previous frame; what `update` receives | no | — |
+| `unscaledDeltaTime` | Frame delta after the `maximumDeltaTime` clamp, before `timeScale` | no | — |
+| `fixedDeltaTime` | Size of one fixed step; what `fixedUpdate` receives | yes | `1/60` |
+| `maximumDeltaTime` | Upper clamp on one frame's raw delta | yes | `0.1` |
+| `timeScale` | Multiplier from unscaled to scaled time; `0` freezes the simulation | yes | `1` |
+| `paused` | Set through `app.pause()`/`app.resume()` | yes | `false` |
+| `time` / `unscaledTime` | Scaled / unscaled seconds since the first frame | no | `0` |
+| `fixedTime` | Scaled seconds advanced by fixed steps | no | `0` |
+| `realtimeSinceStartup` | Wall clock since app creation, unaffected by pause or `timeScale` | no | — |
+| `frameCount` | Frames started | no | `0` |
+| `inFixedStep` | `true` while the fixed loop is running | no | `false` |
+| `fixedStepAlpha` | Leftover accumulator / `fixedDeltaTime`, in `[0, 1)` | no | — |
 
 Writing zero or a negative `fixedDeltaTime`/`maximumDeltaTime` throws `IGX-0108`.
 
@@ -156,7 +156,7 @@ app.dispose();
 ## 8. Edit mode
 
 `createApp({ editMode: true })` builds an app for an editor's scene view: the scene shows, nothing
-plays (ADR-0028). `app.isEditMode` reports it; it never changes for the app's life.
+plays. `app.isEditMode` reports it; it never changes for the app's life.
 
 - **Scripts are inert unless they opt in.** A script gets no callback at all — not `awake`, not
   `update`, not `onDestroy`, from no path — unless its class sets `static runInEditMode = true`.

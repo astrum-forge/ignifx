@@ -56,10 +56,10 @@ emit()  ──▶  spawn record  ──▶  ring buffer (capacity records)
               vertex shader: state(t) = f(record, clock)  ──▶  one instanced draw
 ```
 
-| Thing                                        | Phase       | Order | Why there                                                                 |
-| -------------------------------------------- | ----------- | ----- | ------------------------------------------------------------------------- |
-| Emission (`ParticleUpdateSystem`)            | `Update`    | `900` | After every script's `update`, so `emit()` from a script draws this frame |
-| Upload and uniforms (`ParticleRenderSystem`) | `PreRender` | `880` | Before core's shader-uniform and render-sync systems                      |
+| Thing | Phase | Order | Why there |
+| --- | --- | --- | --- |
+| Emission (`ParticleUpdateSystem`) | `Update` | `900` | After every script's `update`, so `emit()` from a script draws this frame |
+| Upload and uniforms (`ParticleRenderSystem`) | `PreRender` | `880` | Before core's shader-uniform and render-sync systems |
 
 What follows from being stateless:
 
@@ -108,37 +108,37 @@ app.dispose();
 
 ### `ParticleSystem`
 
-| Member                   | What it does                                                                                           |
-| ------------------------ | ------------------------------------------------------------------------------------------------------ |
-| `definition`             | The `.particles.json` handle it plays. Assigning a different one rebuilds the effect.                  |
-| `playOnAwake`            | Play the first frame the component is enabled. The document's own `main.playOnAwake` must agree.       |
-| `seed`                   | The emission seed. `0` uses the document's, and `0` there picks one at random on `play()`.             |
-| `play()`                 | Start, or resume after `stop()`. A `prewarm` document fast-forwards one cycle first.                   |
-| `stop({ clear })`        | Stop emitting. Live particles finish their lives unless `clear` is `true`.                             |
-| `pause()` / `resume()`   | Hold and release the system clock. Everything freezes in place.                                        |
-| `emit(count)`            | Spawn `count` particles at the current clock, playing or not. `qualityScale` does not apply.           |
-| `simulate(seconds)`      | Fast-forward in sixtieths, emitting as it goes. What `prewarm` uses.                                   |
-| `isPlaying` / `isPaused` | Playback state.                                                                                        |
-| `aliveCount`             | How many particles are alive. Exact, on the CPU, headless too.                                         |
-| `drawCount`              | How many records the GPU draws: the newest back to the oldest still alive.                             |
-| `droppedCount`           | Spawns that displaced a particle that was still alive, because the capacity is too small for the rate. |
-| `time`                   | The system's own clock, in seconds. `app.time` is never read.                                          |
-| `capacity`               | The records it holds, after `app.particles.maxParticles` clamped the document's.                       |
-| `onStopped`              | Emitted once when a non-looping system runs out of cycle and particles.                                |
-| `evaluate(slot, out)`    | The CPU twin of the shader: one record's world state at the current clock. `@beta`, for tools.         |
+| Member | What it does |
+| --- | --- |
+| `definition` | The `.particles.json` handle it plays. Assigning a different one rebuilds the effect. |
+| `playOnAwake` | Play the first frame the component is enabled. The document's own `main.playOnAwake` must agree. |
+| `seed` | The emission seed. `0` uses the document's, and `0` there picks one at random on `play()`. |
+| `play()` | Start, or resume after `stop()`. A `prewarm` document fast-forwards one cycle first. |
+| `stop({ clear })` | Stop emitting. Live particles finish their lives unless `clear` is `true`. |
+| `pause()` / `resume()` | Hold and release the system clock. Everything freezes in place. |
+| `emit(count)` | Spawn `count` particles at the current clock, playing or not. `qualityScale` does not apply. |
+| `simulate(seconds)` | Fast-forward in sixtieths, emitting as it goes. What `prewarm` uses. |
+| `isPlaying` / `isPaused` | Playback state. |
+| `aliveCount` | How many particles are alive. Exact, on the CPU, headless too. |
+| `drawCount` | How many records the GPU draws: the newest back to the oldest still alive. |
+| `droppedCount` | Spawns that displaced a particle that was still alive, because the capacity is too small for the rate. |
+| `time` | The system's own clock, in seconds. `app.time` is never read. |
+| `capacity` | The records it holds, after `app.particles.maxParticles` clamped the document's. |
+| `onStopped` | Emitted once when a non-looping system runs out of cycle and particles. |
+| `evaluate(slot, out)` | The CPU twin of the shader: one record's world state at the current clock. `@beta`, for tools. |
 
 Several effects may share one entity: `ParticleSystem` is `allowMultiple`.
 
 ### `app.particles`
 
-| Member          | What it does                                                                                        |
-| --------------- | --------------------------------------------------------------------------------------------------- |
-| `maxParticles`  | The budget every system's `capacity` is counted against. Default `100_000`.                         |
-| `qualityScale`  | A `0`–`1` multiplier on every emission rate and burst count, read each frame. For settings screens. |
-| `gravity`       | The world gravity a document's `forces.gravityMultiplier` scales. Defaults to `(0, -9.81, 0)`.      |
-| `systems`       | Every attached `ParticleSystem`, in attach order.                                                   |
-| `capacityInUse` | How much of the budget the attached systems hold.                                                   |
-| `counters`      | The `particles` diagnostics group: `systems`, `alive`, `emitted`, `uploadBytes`, `drawCalls`.       |
+| Member | What it does |
+| --- | --- |
+| `maxParticles` | The budget every system's `capacity` is counted against. Default `100_000`. |
+| `qualityScale` | A `0`–`1` multiplier on every emission rate and burst count, read each frame. For settings screens. |
+| `gravity` | The world gravity a document's `forces.gravityMultiplier` scales. Defaults to `(0, -9.81, 0)`. |
+| `systems` | Every attached `ParticleSystem`, in attach order. |
+| `capacityInUse` | How much of the budget the attached systems hold. |
+| `counters` | The `particles` diagnostics group: `systems`, `alive`, `emitted`, `uploadBytes`, `drawCalls`. |
 
 ### Presets
 
@@ -157,15 +157,15 @@ export const bigFire = particleDefinition("fire", {
 
 ### The module set
 
-| Module         | Fields                                                                                                                                                                                                     |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `main`         | `capacity`, `duration`, `looping`, `prewarm`, `startDelay`, `simulationSpace`, `seed`, `playOnAwake`, `timeScale`, `renderOrder`                                                                           |
-| `emission`     | `rateOverTime`, `rateOverDistance`, `bursts: [{ time, count, cycles, interval, probability }]`                                                                                                             |
-| `shape`        | `kind` (`point`, `sphere`, `hemisphere`, `cone`, `box`, `circle`, `edge`, `mesh`), `radius`, `thickness`, `arc`, `angle`, `length`, `size`, `emitFrom`, `randomDirection`, `spherizeDirection`, `vertices` |
-| `start`        | `lifetime`, `speed`, `size`, `size3D`, `rotation`, `color`                                                                                                                                                 |
-| `forces`       | `gravity`, `gravityMultiplier`, `drag`, `constantForce`, `orbit: { axis, speed }`, `noise: { strength, frequency, scroll, octaves, influenceOverLife }`                                                    |
-| `overLifetime` | `color` (gradient), `size`, `sizeY`, `sizeZ`, `rotation` (angular speed)                                                                                                                                   |
-| `renderer`     | `mode` (`billboard`, `stretched`, `horizontal`, `vertical`, `mesh`), `mesh`, `texture`, `sheet`, `blend`, `lit`, `pivot`, `speedScale`, `lengthScale`                                                      |
+| Module | Fields |
+| --- | --- |
+| `main` | `capacity`, `duration`, `looping`, `prewarm`, `startDelay`, `simulationSpace`, `seed`, `playOnAwake`, `timeScale`, `renderOrder` |
+| `emission` | `rateOverTime`, `rateOverDistance`, `bursts: [{ time, count, cycles, interval, probability }]` |
+| `shape` | `kind` (`point`, `sphere`, `hemisphere`, `cone`, `box`, `circle`, `edge`, `mesh`), `radius`, `thickness`, `arc`, `angle`, `length`, `size`, `emitFrom`, `randomDirection`, `spherizeDirection`, `vertices` |
+| `start` | `lifetime`, `speed`, `size`, `size3D`, `rotation`, `color` |
+| `forces` | `gravity`, `gravityMultiplier`, `drag`, `constantForce`, `orbit: { axis, speed }`, `noise: { strength, frequency, scroll, octaves, influenceOverLife }` |
+| `overLifetime` | `color` (gradient), `size`, `sizeY`, `sizeZ`, `rotation` (angular speed) |
+| `renderer` | `mode` (`billboard`, `stretched`, `horizontal`, `vertical`, `mesh`), `mesh`, `texture`, `sheet`, `blend`, `lit`, `pivot`, `speedScale`, `lengthScale` |
 
 A **value** is a number, `{ "min": a, "max": b }` (rolled once per particle), or
 `{ "curve": { "keys": [[t, v, inTangent, outTangent], …] } }` (read at the particle's age). A
@@ -177,15 +177,15 @@ GPU read the same way.
 one sends particles along local `+Y`. Rotate the entity to aim it; a negative `start.speed` reverses
 it. Two of them lie flat in the ground plane, which is the usual surprise:
 
-| Shape                  | Spread                               | Direction                                                    |
-| ---------------------- | ------------------------------------ | ------------------------------------------------------------ |
-| `circle`               | X and Z, nothing in Y                | Radially outward in the XZ plane — a ring seen from above    |
-| `edge`                 | X only                               | `+Y`                                                         |
-| `box`                  | X, Y and Z by `size`                 | `+Y`                                                         |
-| `cone`                 | X and Z on the base disc by `radius` | `+Y`, opening out by `angle` — a wide `angle` spreads in X/Z |
-| `sphere`, `hemisphere` | X, Y and Z by `radius`               | Radially outward (`hemisphere` keeps `y >= 0`)               |
-| `point`                | Nothing                              | `+Y`                                                         |
-| `mesh`                 | The triangles you supply             | Along each face normal                                       |
+| Shape | Spread | Direction |
+| --- | --- | --- |
+| `circle` | X and Z, nothing in Y | Radially outward in the XZ plane — a ring seen from above |
+| `edge` | X only | `+Y` |
+| `box` | X, Y and Z by `size` | `+Y` |
+| `cone` | X and Z on the base disc by `radius` | `+Y`, opening out by `angle` — a wide `angle` spreads in X/Z |
+| `sphere`, `hemisphere` | X, Y and Z by `radius` | Radially outward (`hemisphere` keeps `y >= 0`) |
+| `point` | Nothing | `+Y` |
+| `mesh` | The triangles you supply | Along each face normal |
 
 A camera looking down `-Z` at a scene laid out in X and Y therefore sees a `circle` edge-on, as a
 horizontal line, and sees a wide `cone` spread sideways while it travels up. For a fan in the camera
@@ -194,11 +194,11 @@ emitter ninety degrees about X so the circle faces the camera.
 
 ### Choosing a blend
 
-| Blend           | Use it for                           | Why                                                                            |
-| --------------- | ------------------------------------ | ------------------------------------------------------------------------------ |
+| Blend | Use it for | Why |
+| --- | --- | --- |
 | `premultiplied` | Smoke, dust, mixed effects (default) | Fire and smoke can share one draw and still composite front to back correctly. |
-| `additive`      | Fire, sparks, glints, magic          | Light adds; overlapping particles get brighter, and black is transparent.      |
-| `alpha`         | Rain, leaves, anything with an edge  | Straight alpha over the background, with no brightening.                       |
+| `additive` | Fire, sparks, glints, magic | Light adds; overlapping particles get brighter, and black is transparent. |
+| `alpha` | Rain, leaves, anything with an edge | Straight alpha over the background, with no brightening. |
 
 Particles never write depth and are never depth-sorted against each other. `main.renderOrder` orders
 whole systems within the transparent phase; lower draws first.
@@ -329,9 +329,9 @@ export const exhaust = particleDefinition("smoke", {
 
 ## File formats
 
-| Format             | Extension         | Reference                           |
-| ------------------ | ----------------- | ----------------------------------- |
-| `ignifx.particles` | `.particles.json` | `skills/ignifx/references/formats/` |
+| Format | Extension | Reference |
+| --- | --- | --- |
+| `ignifx.particles` | `.particles.json` | `skills/ignifx/references/formats/ignifx.particles.md` in the `ignifx` package |
 
 Every module and every field is optional; `defineParticles` fills in the defaults and refuses a
 document it cannot read with `IGX-1701`, naming the exact path — `start.lifetime.min`, not "invalid
@@ -339,19 +339,19 @@ document". A misspelled key is an error, not a silent no-op.
 
 ## Gotchas
 
-| Trap                                                       | What happens                                                                                                                            | Do this instead                                                                                                                                |
-| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Expecting particles to collide, or to spawn more particles | Neither is a function of the particle's age, so the shader cannot compute it. There is no collision module and no sub-emitter.          | Hit an effect at the point your own code decides: play a second `ParticleSystem` there, or drive a `Rigidbody` for the few pieces that matter. |
-| Expecting particles to sort against each other             | They never write depth and are never depth-sorted, so two overlapping systems composite in draw order.                                  | Use `additive` (order-independent), or set `main.renderOrder` to order whole systems.                                                          |
-| A looping effect that starts empty and fills in            | Without `prewarm` the first cycle is the effect filling up; a campfire the player walks up to should already be burning.                | `"main": { "prewarm": true }` on a looping document, or call `system.simulate(seconds)` after `play()`.                                        |
-| A rate the capacity cannot hold                            | The ring overwrites the oldest live particle, so the effect visibly thins out. `droppedCount` counts each one.                          | `capacity` at least `rateOverTime × the longest lifetime`. Check `system.droppedCount` after a few seconds.                                    |
-| A system that draws nothing after a while                  | `app.particles.maxParticles` ran out and the system was clamped; `IGX-1702` was logged once, naming the entity.                         | Raise `maxParticles` in `ignifx.config.ts`, or give the document a smaller `capacity`.                                                         |
-| `app.pause()` and an effect that keeps moving              | It cannot: the system clock advances only while `time.paused` is false. An effect that _should_ keep moving while paused has no switch. | Nothing to do — pause is exact. For a menu background, keep it in its own app or run it with `main.timeScale` and your own `simulate()`.       |
-| `emit()` before the definition has loaded                  | `IGX-1705`: the system has no document, so it cannot spawn anything.                                                                    | Await the handle, or emit from `update` and let the first frames pass; `aliveCount` stays `0` until the document arrives.                      |
-| The first frames of a new effect drawing nothing           | The generated program is loaded as an asset and compiled on first draw, which takes a few frames.                                       | Expect it, or warm the effect up during a loading screen by adding the system while the screen is still showing.                               |
-| Reading `app.time.time` to age particles                   | A system's clock is its own: `timeScale`, `pause()` and `simulate()` all move it independently.                                         | Read `system.time`.                                                                                                                            |
-| A gradient authored in linear colour                       | Document colours are sRGB in `0`–`1`, decoded on the way to the GPU, so linear values come out dark.                                    | Author the numbers you would type into a colour picker.                                                                                        |
-| Expecting `stop()` to clear the screen                     | It stops emission; the live particles finish their lives, which is what a torch being put out looks like.                               | `stop({ clear: true })` to drop them all at once.                                                                                              |
+| Trap | What happens | Do this instead |
+| --- | --- | --- |
+| Expecting particles to collide, or to spawn more particles | Neither is a function of the particle's age, so the shader cannot compute it. There is no collision module and no sub-emitter. | Hit an effect at the point your own code decides: play a second `ParticleSystem` there, or drive a `Rigidbody` for the few pieces that matter. |
+| Expecting particles to sort against each other | They never write depth and are never depth-sorted, so two overlapping systems composite in draw order. | Use `additive` (order-independent), or set `main.renderOrder` to order whole systems. |
+| A looping effect that starts empty and fills in | Without `prewarm` the first cycle is the effect filling up; a campfire the player walks up to should already be burning. | `"main": { "prewarm": true }` on a looping document, or call `system.simulate(seconds)` after `play()`. |
+| A rate the capacity cannot hold | The ring overwrites the oldest live particle, so the effect visibly thins out. `droppedCount` counts each one. | `capacity` at least `rateOverTime × the longest lifetime`. Check `system.droppedCount` after a few seconds. |
+| A system that draws nothing after a while | `app.particles.maxParticles` ran out and the system was clamped; `IGX-1702` was logged once, naming the entity. | Raise `maxParticles` in `ignifx.config.ts`, or give the document a smaller `capacity`. |
+| `app.pause()` and an effect that keeps moving | It cannot: the system clock advances only while `time.paused` is false. An effect that _should_ keep moving while paused has no switch. | Nothing to do — pause is exact. For a menu background, keep it in its own app or run it with `main.timeScale` and your own `simulate()`. |
+| `emit()` before the definition has loaded | `IGX-1705`: the system has no document, so it cannot spawn anything. | Await the handle, or emit from `update` and let the first frames pass; `aliveCount` stays `0` until the document arrives. |
+| The first frames of a new effect drawing nothing | The generated program is loaded as an asset and compiled on first draw, which takes a few frames. | Expect it, or warm the effect up during a loading screen by adding the system while the screen is still showing. |
+| Reading `app.time.time` to age particles | A system's clock is its own: `timeScale`, `pause()` and `simulate()` all move it independently. | Read `system.time`. |
+| A gradient authored in linear colour | Document colours are sRGB in `0`–`1`, decoded on the way to the GPU, so linear values come out dark. | Author the numbers you would type into a colour picker. |
+| Expecting `stop()` to clear the screen | It stops emission; the live particles finish their lives, which is what a torch being put out looks like. | `stop({ clear: true })` to drop them all at once. |
 
 - `simulate(seconds)` advances the records at once, but `aliveCount` and the draw count refresh in the next `app.step()`, when the update system runs its census.
 - In an edit-mode app (`createApp({ editMode: true })`) a system still plays on awake and shows its first frame, but its clock stands still. `simulate(seconds)` previews it.
@@ -362,7 +362,7 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-`skills/ignifx/SKILL.md` for the engine entry skill · `skills/ignifx/references/api/particles.md` for
-the generated API · `docs/plan/2026-09-terrain-particles-shaders.md` §4 for the design ·
-`docs/adr/0025-stateless-gpu-particles.md` for why particles are stateless and what that costs ·
-`packages/particles-2d/skills/particles-2d/SKILL.md` for the same documents drawn as sprites.
+The entry skill is `skills/ignifx/SKILL.md` in the `ignifx` package: `node_modules/ignifx/` in an
+installed project, the repository root in the engine repository. Under it, `references/api/particles.md` has every exact signature and
+`references/formats/ignifx.particles.md` the document's fields. The `@ignifx/particles-2d` skill
+(`skills/particles-2d/SKILL.md` in that package) draws the same documents as sprites.

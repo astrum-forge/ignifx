@@ -45,12 +45,12 @@ if (canvas instanceof HTMLCanvasElement) {
 
 `ignifx.config.ts` carries the same settings under `ui`:
 
-| Setting               | Default                      | Meaning                                 |
-| --------------------- | ---------------------------- | --------------------------------------- |
-| `scaling`             | `"css"`                      | `"css"`, `"fit"` or `"dpi"` — see below |
-| `referenceResolution` | `[1920, 1080]`               | The `[w, h]` `"fit"` scales to          |
-| `layers`              | `["hud", "menu", "overlay"]` | Created up front, back to front         |
-| `visible`             | `true`                       | Whether the overlay is shown            |
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `scaling` | `"css"` | `"css"`, `"fit"` or `"dpi"` — see below |
+| `referenceResolution` | `[1920, 1080]` | The `[w, h]` `"fit"` scales to |
+| `layers` | `["hud", "menu", "overlay"]` | Created up front, back to front |
+| `visible` | `true` | Whether the overlay is shown |
 
 `ui()` also takes `strings` (a `.i18n.json` address to load at start-up) and `locale`.
 
@@ -77,11 +77,11 @@ DOM.
 `HudText`, and `captureScreenshot()` all work in **backing-store** pixels; a DOM element is placed in
 **UI units**. The scaling mode decides what a UI unit is:
 
-| Mode    | One UI unit is      | Use it for                                             |
-| ------- | ------------------- | ------------------------------------------------------ |
-| `"css"` | one CSS pixel       | responsive HTML menus (the browser default)            |
+| Mode | One UI unit is | Use it for |
+| --- | --- | --- |
+| `"css"` | one CSS pixel | responsive HTML menus (the browser default) |
 | `"fit"` | one reference pixel | a HUD authored once at a fixed resolution, letterboxed |
-| `"dpi"` | one backing pixel   | a pixel HUD that must line up with a screenshot        |
+| `"dpi"` | one backing pixel | a pixel HUD that must line up with a screenshot |
 
 `app.ui.pixelMapping` converts between them, and `WorldAnchor` already does it for you.
 
@@ -147,15 +147,15 @@ wrap, text })`, then `setRows`, `refresh()`, `show()`/`hide()`, `moveSelection(�
 `rows`, `selected`, `selectedIndex`, `isVisible`, `cancelable`, `keyboardEnabled`, and the signals
 `onSelectionChanged`, `onActivated`, `onBack`.
 
-| Row `kind`    | What it declares, on top of `id`, `label` and `enabled?`      |
-| ------------- | ------------------------------------------------------------- |
-| `"action"`    | `activate?()`, and an optional right-hand `value`             |
-| `"toggle"`    | `get`/`set` a boolean; drawn with the menu's `text.on`/`.off` |
-| `"slider"`    | `min`/`max`/`step` plus `get`/`set`, and an optional `format` |
-| `"choice"`    | `values` plus `get`/`set` a string, and an optional `format`  |
-| `"binding"`   | `path()` and `rebind?()`, and an optional `listening()`       |
-| `"heading"`   | a label that groups the rows under it; never selected         |
-| `"separator"` | a rule; never selected                                        |
+| Row `kind` | What it declares, on top of `id`, `label` and `enabled?` |
+| --- | --- |
+| `"action"` | `activate?()`, and an optional right-hand `value` |
+| `"toggle"` | `get`/`set` a boolean; drawn with the menu's `text.on`/`.off` |
+| `"slider"` | `min`/`max`/`step` plus `get`/`set`, and an optional `format` |
+| `"choice"` | `values` plus `get`/`set` a string, and an optional `format` |
+| `"binding"` | `path()` and `rebind?()`, and an optional `listening()` |
+| `"heading"` | a label that groups the rows under it; never selected |
+| `"separator"` | a rule; never selected |
 
 `label` (and `title`, `subtitle`, `text.*`) is a string **or** a function, re-read on every
 `refresh()` — which is what makes a menu localizable.
@@ -169,7 +169,7 @@ is how the widget reaches a gamepad without importing the package.
 **`app.i18n`** — `load(handleOrAsset)`, `t(key, params)`, `has(key)`, `locale`, `fallbackLocale`,
 `availableLocales`, `onLocaleChanged`.
 
-Full signatures: `skills/ignifx/references/api/ui.md`.
+Full signatures: `skills/ignifx/references/api/ui.md` in the `ignifx` package.
 
 ## Recipes
 
@@ -303,7 +303,7 @@ changes; `i18nKey` wins over `text`.
 Supported: `{name}` interpolation, `{n, plural, …}` with `=0`-style exact matches, the CLDR
 categories for the active locale, and `#` for the number. Not supported: `select`, number and date
 skeletons, and ICU's apostrophe quoting — braces are structural, so a literal brace arrives as a
-parameter. Field reference: `skills/ignifx/references/formats/ignifx.i18n.md`.
+parameter. Field reference: `skills/ignifx/references/formats/ignifx.i18n.md` in the `ignifx` package.
 
 ## Gotchas
 
@@ -351,5 +351,6 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-`skills/ignifx/SKILL.md` for the engine entry skill · `docs/architecture/13-ui.md` for design
-rationale · `skills/ignifx/references/api/ui.md` for full signatures.
+The entry skill is `skills/ignifx/SKILL.md` in the `ignifx` package: `node_modules/ignifx/` in an
+installed project, the repository root in the engine repository. Under it, `references/api/ui.md` has every exact signature and
+`references/formats/ignifx.i18n.md` the translation file's fields.

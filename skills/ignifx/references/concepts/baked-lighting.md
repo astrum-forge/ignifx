@@ -5,18 +5,17 @@ Three components light a 3D scene from data prepared ahead of time instead of fr
 and static objects receive) and a `MeshRenderer`'s `lightmap` record (baked light painted onto
 static surfaces). All three are `@beta`, work at every quality tier, and load their GPU code only
 once a world uses them. Field tables are in [`../formats/components.md`](../formats/components.md);
-the per-component prose is in [`rendering.md`](rendering.md) §1. Rationale in
-`docs/architecture/07-rendering.md` §2.15 and `docs/plan/2026-11-gi-phase-2-execution-plan.md`.
+the rest of the renderer is in [`rendering.md`](rendering.md).
 
 ## 1. Which one to use
 
-| Need                                                   | Use                                    | Costs                                                  | Data                              |
-| ------------------------------------------------------ | -------------------------------------- | ------------------------------------------------------ | --------------------------------- |
-| Mirrors, metal and wet floors that show the room       | `ReflectionProbe`                      | Six scene passes per capture, nothing between captures | None: captured at run time        |
-| Coloured, directional indirect light on moving objects | `LightProbeVolume`                     | Eight texel fetches per pixel (≤ 0.3 ms estimated)     | A `.probes.json` grid             |
-| Soft baked shadows and bounce on static level geometry | `MeshRenderer.lightmap`                | One texture fetch per pixel (≤ 0.1 ms estimated)       | A `.lightmap.json` plus a texture |
-| One bounce of the lit scene that follows the frame     | `PostProcessStack.ssgi` (screen space) | Desktop `"high"` tier only; misses what is off screen  | None                              |
-| Contact darkening in creases                           | `rendering.ambientOcclusion` (GTAO)    | Half resolution from `"low"`, full at `"high"`         | None                              |
+| Need | Use | Costs | Data |
+| --- | --- | --- | --- |
+| Mirrors, metal and wet floors that show the room | `ReflectionProbe` | Six scene passes per capture, nothing between captures | None: captured at run time |
+| Coloured, directional indirect light on moving objects | `LightProbeVolume` | Eight texel fetches per pixel (≤ 0.3 ms estimated) | A `.probes.json` grid |
+| Soft baked shadows and bounce on static level geometry | `MeshRenderer.lightmap` | One texture fetch per pixel (≤ 0.1 ms estimated) | A `.lightmap.json` plus a texture |
+| One bounce of the lit scene that follows the frame | `PostProcessStack.ssgi` (screen space) | Desktop `"high"` tier only; misses what is off screen | None |
+| Contact darkening in creases | `rendering.ambientOcclusion` (GTAO) | Half resolution from `"low"`, full at `"high"` | None |
 
 They combine. A typical level uses a lightmap on its static walls and floors, one light-probe volume
 so characters walking through match them, and a reflection probe per room with `boxProjection` set
@@ -29,7 +28,9 @@ without one a `ReflectionProbe` loads nothing and a volume does nothing.
 
 A `ReflectionProbe` renders six views from its entity's position into a cube map, builds a
 box-filtered mip chain, and every lit PBR material reflects the nearest enabled probe instead of the
-environment (a probe whose `boxProjection` box holds the mesh wins, then the closest). There is no
+environment (a probe whose `boxProjection` box holds the mesh wins, then the closest).
+`boxProjection` is the box's full size in metres, centred on the probe: it makes reflections line up
+with the room's walls (parallax), and `null` makes them look infinitely far away. There is no
 file and no bake: the capture is the bake. `refreshMode: "once"` (default) captures when the
 environment is ready and again on `probe.refresh()`, so call `refresh()` after the static scene
 around it changes (a door opens). `"onDemand"` captures only on `refresh()`; `"everyFrame"` captures
@@ -66,15 +67,22 @@ harmonics. Every lit PBR material blends the eight probes around each pixel, so 
 and moving objects need nothing extra; outside the grid the edge probes apply. The probe term is
 scaled by the material's `occlusion`, the same value GTAO darkens. When several volumes are
 enabled the one created last wins; `intensity` scales the probes' light without a rebuild.
+Reflections still come from the `Environment` or a `ReflectionProbe`.
+
+With a `PostProcessStack`'s `ssgi` on, which removes `1 − environmentDiffuse` of the environment's
+diffuse light, the diffuse term becomes `P − (1 − environmentDiffuse)·E` (`P − 0.5·E` at the
+default) plus the screen-space bounce, where `P` is the probes' light and `E` the environment's.
+The probes are not discounted, so a dim volume under a bright environment can read darker than the
+environment alone.
 
 The file (`format: "ignifx-probes"`, `formatVersion: 1`; generated table:
 [`../formats/ignifx-probes.md`](../formats/ignifx-probes.md)):
 
-| Field          | Meaning                                                                                                                            |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `origin`       | World position of probe `(0, 0, 0)`                                                                                                |
-| `cellSize`     | Metres between neighbouring probes per axis; positive                                                                              |
-| `counts`       | Probes per axis, whole numbers; `counts.x` ≤ 1024 and `counts.y × counts.z` ≤ 4096                                                 |
+| Field | Meaning |
+| --- | --- |
+| `origin` | World position of probe `(0, 0, 0)` |
+| `cellSize` | Metres between neighbouring probes per axis; positive |
+| `counts` | Probes per axis, whole numbers; `counts.x` ≤ 1024 and `counts.y × counts.z` ≤ 4096 |
 | `coefficients` | 12 linear-RGB floats per probe, `c0, c1, c2, c3`, X fastest then Y then Z; light for normal `n` is `c0 + c1·n.y + c2·n.z + c3·n.x` |
 
 Load it with `app.assets.loadAsync<LightProbeAsset>("lighting/hall.probes.json")`, or publish a grid
@@ -82,15 +90,34 @@ built in code with `createLightProbeAsset(app, data)`. `writeLightProbeFile(data
 save, and `sampleLightProbes(data, x, y, z, normal)` reads a grid on the CPU the way the shader does.
 A malformed file is `IGX-0709`.
 
+```ts
+import type { App, World } from "@ignifx/core";
+import { createLightProbeAsset, LightProbeVolume } from "@ignifx/core";
+
+/** A 2 × 2 × 2 grid built in code: every probe holds the same warm, undirected light. */
+export function addWarmRoom(app: App, world: World): LightProbeVolume {
+  const warm = [1, 0.8, 0.6, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  const probes = createLightProbeAsset(app, {
+    origin: { x: -4, y: 0, z: -4 },
+    cellSize: { x: 8, y: 3, z: 8 },
+    counts: { x: 2, y: 2, z: 2 },
+    coefficients: Array.from({ length: 8 }, () => warm).flat(),
+  });
+  return world.createEntity("Room probes").addComponent(LightProbeVolume, { probes });
+}
+```
+
 ## 4. Lightmaps: `.lightmap.json`
 
 A `MeshRenderer`'s `lightmap` record (`asset`, `mode`, `level`, `gamma`, `uv2`) samples a baked
 texture through the mesh's second UV set (`uvs2`; `uv2: false` uses the first). Only a renderer on a
 **static** entity (`entity.isStatic`, set in the file or before `awake`) with a **PBR** material
 samples it; anything else draws without it and logs `IGX-0735` once. Such a renderer draws with its
-own copy of its material, so later edits of the shared `MaterialAsset` do not reach it. `mode: "add"`
+own copy of its material, so later edits of the shared `MaterialAsset` do not reach it, and it shows
+the lightmap one frame after the copy is made. `mode: "add"`
 adds the baked light; `"shadowmap"` multiplies the shading by it (a baked shadow mask under
-real-time lights). `rendering.features.lightmaps` is not needed.
+real-time lights). `level` multiplies the sample, and `gamma` decodes it from sRGB for a texture
+that was not decoded on load. `rendering.features.lightmaps` is not needed.
 
 The file (`format: "ignifx-lightmap"`, `formatVersion: 1`; generated table:
 [`../formats/ignifx-lightmap.md`](../formats/ignifx-lightmap.md)) names the `texture` by asset
@@ -104,6 +131,23 @@ primitives have none); otherwise it logs `IGX-0735` once and samples the whole t
 placement compiles its own pipeline variant, so a scene with hundreds of placed renderers pays that
 many shader compiles at load. `createLightmapAsset(app, texture, entries?)` publishes one built in
 code, such as a `TextureAsset.fromPixels` texture.
+
+```ts
+import type { App, AssetHandle, MeshAsset, World } from "@ignifx/core";
+import { createLightmapAsset, MeshRenderer, TextureAsset } from "@ignifx/core";
+
+export function addShadowedFloor(app: App, world: World, mesh: AssetHandle<MeshAsset>): MeshRenderer {
+  // 2×1 texels: the left half of the floor's UV2 square in shadow, the right half lit.
+  const pixels = Uint8Array.of(40, 40, 40, 255, 255, 255, 255, 255);
+  const lightmap = createLightmapAsset(app, TextureAsset.fromPixels(app, "floor-lightmap", pixels, 2, 1));
+  const floor = world.createEntity("Floor");
+  floor.isStatic = true;
+  return floor.addComponent(MeshRenderer, {
+    mesh,
+    lightmap: { asset: lightmap, mode: "shadowmap", level: 1, gamma: false, uv2: true },
+  });
+}
+```
 
 ## 5. Baking light probes
 
@@ -129,21 +173,19 @@ world **once**, when it starts:
 - **Direct light, per light: `Light.bakeMode`.** Whether a probe also stores the light it receives
   straight from a light depends on who draws that light at run time:
 
-  | `bakeMode`             | Drawn at run time | Bake stores its bounce | Bake stores its direct light       |
-  | ---------------------- | ----------------- | ---------------------- | ---------------------------------- |
-  | `"realtime"` (default) | yes               | yes                    | only with `directLight: "include"` |
-  | `"mixed"`              | yes               | yes                    | never                              |
-  | `"baked"`              | no (dimmed to 0)  | yes                    | always                             |
+  | `bakeMode` | Drawn at run time | Bake stores its bounce | Bake stores its direct light |
+  | --- | --- | --- | --- |
+  | `"realtime"` (default) | yes | yes | only with `directLight: "include"` |
+  | `"mixed"` | yes | yes | never |
+  | `"baked"` | no (dimmed to 0) | yes | always |
 
   A hemispheric light's direct light is what a probe sees of its sky and ground colours, so it
-  follows the same rule. Before 0.20.0 the bake always stored it while the light kept drawing,
-  which lit a volume's surfaces about twice by a hemispheric light; set the light to `"baked"` to
-  keep it in the probes only. `lightBakeTerms(bakeMode, directLight)` gives the rule as code.
+  follows the same rule: set the light to `"baked"` to keep it in the probes only.
+  `lightBakeTerms(bakeMode, directLight)` gives the rule as code.
 
 - **`directLight`** (`"exclude"` by default, or `"include"`) applies to `"realtime"` lights only:
-  `"include"` reads a probe's total light (for `sampleLightProbes`). Before 0.19.0 the bake always
-  included it, so a re-bake of an older `.probes.json` comes out darker unless you pass
-  `"include"` or set the lights to `"baked"`.
+  `"include"` stores a probe's total light, for reading with `sampleLightProbes`. With the default,
+  a light that keeps drawing is never counted twice by a `LightProbeVolume`.
 - **Sky.** What a ray that hits nothing returns, in linear radiance: a colour, a gradient
   `{ kind: "gradient", sky, horizon, ground }`, or nine RGB spherical-harmonic coefficients
   `{ kind: "sh9", coefficients }` (27 numbers, real SH basis, order `Y00, Y1-1, Y10, Y11, Y2-2,
@@ -199,12 +241,12 @@ engine (§8).
 `rendering.quality` caps reflection probes only; light probes and lightmaps run unchanged at every
 tier, because baked lighting is the low-end path.
 
-| Tier       | Reflection probe `size` | `"everyFrame"`                    | Light probes, lightmaps | SSGI    | GTAO   |
-| ---------- | ----------------------- | --------------------------------- | ----------------------- | ------- | ------ |
-| `"low"`    | clamped to ≤ 64         | captures as `"once"`, one warning | on                      | off     | half   |
-| `"medium"` | clamped to ≤ 128        | captures as `"once"`, one warning | on                      | off     | half   |
-| `"high"`   | clamped to ≤ 256        | allowed                           | on                      | allowed | full   |
-| `"custom"` | 16–1024, as authored    | allowed                           | on                      | as set  | as set |
+| Tier | Reflection probe `size` | `"everyFrame"` | Light probes, lightmaps | SSGI | GTAO |
+| --- | --- | --- | --- | --- | --- |
+| `"low"` | clamped to ≤ 64 | captures as `"once"`, one warning | on | off | half |
+| `"medium"` | clamped to ≤ 128 | captures as `"once"`, one warning | on | off | half |
+| `"high"` | clamped to ≤ 256 | allowed | on | allowed | full |
+| `"custom"` | 16–1024, as authored | allowed | on | as set | as set |
 
 The tier is read every frame: `size` is clamped to 16 and the tier's maximum, then rounded down to
 a power of two.
@@ -220,22 +262,22 @@ a power of two.
   by itself.
 - **Headless** apps load and validate both files, run `bakeLightProbes`, and answer
   `sampleLightProbes`; nothing captures or draws.
-- **Device loss.** Reflection probes drop their cubes and capture again after recovery
-  (`07-rendering.md` §4). Light-probe volumes and lightmaps have no device-loss handling of their
-  own, and none of the three has a device-loss test.
+- **Device loss.** Reflection probes drop their cubes and capture again after recovery.
+  Light-probe volumes and lightmaps have no device-loss handling of their own, and recovery is
+  untested for all three.
 
 ## 8. Known gaps
 
 - **Lightmap atlas limits.** A placement works only with `uv2: true` on a mesh with `uvs2`, and each
-  distinct placement is its own pipeline variant (Babylon Lite 1.34's lightmap has no UV transform,
+  distinct placement is its own pipeline variant (Babylon Lite's lightmap has no UV transform,
   so ignifx rewrites UV2 in a vertex plugin with the placement as constants). For very many placed
   renderers, bake UV2 that already points into the shared texture and leave `entries` empty.
-- **No lightmap baker in the engine.** It needs a UV2 unwrap and a GPU path tracer; it is planned
-  for the editor. Bring textures from an external tool, or build them in code.
+- **No lightmap baker in the engine.** One needs a UV2 unwrap and a GPU path tracer. Bring textures
+  from an external tool, or build them in code.
 - **Reflection probes without `blendDistance`** reflect one probe per material (a material shared
   by several meshes follows the first). There is no prefiltered (GGX) mip chain, so very rough
   surfaces look blurrier and blockier than with an `.env`, and no `ReflectionProbe.capture()` to a
   file.
-- **The light-probe bake** is first-order, one bounce and flat-coloured; it reads glTF models only
-  under a headless app, not Draco or meshopt primitives, and not the scene's `Environment` (§5).
-- No Phase 2 cost has been measured on a device yet; the figures above are estimates.
+- **The light-probe bake** is first-order, one bounce and flat-coloured; it does not read Draco or
+  meshopt primitives, textures, or the scene's `Environment` (§5).
+- The costs in §1 are estimates, not device measurements.

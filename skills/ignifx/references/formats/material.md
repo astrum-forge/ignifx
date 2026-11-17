@@ -1,8 +1,7 @@
 # Material files (`.material.json`)
 
 Hand-written companion to the generated field table in
-[`ignifx.material.md`](ignifx.material.md). Rationale in
-`docs/architecture/07-rendering.md` §2.6 and `06-serialization-and-scene-format.md` §6.
+[`ignifx.material.md`](ignifx.material.md).
 
 A material file loads as a `MaterialAsset`, which a `MeshRenderer.materials` entry or a
 `Model.materialOverrides` entry points at. `MATERIAL_FILE_FORMAT` is `"ignifx.material"`,
@@ -54,14 +53,14 @@ Texture slots (`STANDARD_TEXTURE_SLOTS`): `diffuseTexture`, `specularTexture`, `
 
 ## Rules
 
-| Rule                | Detail                                                                                          |
-| ------------------- | ------------------------------------------------------------------------------------------------ |
-| `type`              | `MATERIAL_KINDS` is `"pbr" \| "standard" \| "shader"`; a `"shader"` file names a `.wgsl` (see [`wgsl.md`](wgsl.md)); a PBR file may carry `surfaces`     |
-| Unknown family      | `IGX-0708` — the file names a family this build cannot construct                                 |
-| Wrong header        | `IGX-0709` — the file is not the ignifx description format it claims                             |
-| `alphaMode`         | `MATERIAL_ALPHA_MODES` is `"opaque" \| "mask" \| "blend"`; `"mask"` uses `alphaCutoff`      |
-| Omitted fields      | Take the schema defaults, so a file only states what differs                                     |
-| Sharing             | One asset, many renderers. `materialAsset.clone(app)` makes a per-object copy in the same family |
+| Rule | Detail |
+| --- | --- |
+| `type` | `MATERIAL_KINDS` is `"pbr" \| "standard" \| "shader"`; a `"shader"` file names a `.wgsl` (see [`wgsl.md`](wgsl.md)); a PBR file may carry `surfaces` |
+| Unknown family | `IGX-0708` — the file names a family this build cannot construct |
+| Wrong header | `IGX-0709` — the file is not the ignifx description format it claims |
+| `alphaMode` | `MATERIAL_ALPHA_MODES` is `"opaque" \| "mask" \| "blend"`; `"mask"` uses `alphaCutoff` |
+| Omitted fields | Take the schema defaults, so a file only states what differs |
+| Sharing | One asset, many renderers. `materialAsset.clone(app)` makes a per-object copy in the same family |
 
 ## The same material in code
 

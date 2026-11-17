@@ -1,9 +1,8 @@
 # Scene and prefab files (`.scene.json`, `.prefab.json`)
 
 Hand-written companion to the generated field table in
-[`ignifx.scene.md`](ignifx.scene.md). One format, `ignifx.scene`, for both levels and prefabs
-(ADR-0005): the extension only tells you what it is usually used for. Rationale in
-`docs/architecture/06-serialization-and-scene-format.md`.
+[`ignifx.scene.md`](ignifx.scene.md). One format, `ignifx.scene`, for both levels and prefabs:
+the extension only tells you what it is usually used for.
 
 Loaded with `world.loadScene(address)` (or `world.loadSceneFile(file, { address })` for a file object
 already in memory), instanced with `world.instantiate(sceneAsset)`, written with
@@ -47,16 +46,16 @@ generates. `SCENE_FILE_FORMAT` is `"ignifx.scene"` and `SCENE_FORMAT_VERSION` is
 }
 ```
 
-| Field                     | Rule                                                                                              |
-| ------------------------- | ------------------------------------------------------------------------------------------------- |
-| `uid`                     | ULID, unique within the file. Instantiation gives every copy a fresh runtime uid                  |
-| `parent`                  | The parent's uid, or `null`. Sibling order is the order of appearance in `entities`               |
-| `transform`               | Always present: `[x, y, z]`, `[x, y, z, w]`, `[x, y, z]`                                          |
-| `active` `static` `tags`  | Omitted when equal to `true`, `false`, `[]`                                                       |
-| `layer`                   | A layer **name**, resolved against project settings; an unknown name falls back with `IGX-0303`   |
-| `components[].type`       | The component's `typeId`; an unregistered one is `IGX-0307`                                       |
-| `components[].props`      | Values per the component's schema; omitted props take schema defaults                             |
-| `settings`                | Scene-level values systems interpret; only the first loaded scene's settings apply                |
+| Field | Rule |
+| --- | --- |
+| `uid` | ULID, unique within the file. Instantiation gives every copy a fresh runtime uid |
+| `parent` | The parent's uid, or `null`. Sibling order is the order of appearance in `entities` |
+| `transform` | Always present: `[x, y, z]`, `[x, y, z, w]`, `[x, y, z]` |
+| `active` `static` `tags` | Omitted when equal to `true`, `false`, `[]` |
+| `layer` | A layer **name**, resolved against project settings; an unknown name falls back with `IGX-0303` |
+| `components[].type` | The component's `typeId`; an unregistered one is `IGX-0307` |
+| `components[].props` | Values per the component's schema; omitted props take schema defaults |
+| `settings` | Scene-level values systems interpret; only the first loaded scene's settings apply |
 
 A scene or prefab names a primitive through a `.mesh.json` file:
 `"mesh": { "$asset": "meshes/crate.mesh.json" }` (`../concepts/assets.md` §5). `MeshAsset.box(app)`
@@ -70,23 +69,23 @@ A 2D file names a still sprite's frame in `SpriteRenderer`'s `frameName` field
 `#frame:` fragment in `sprite`: the renderer reports `IGX-1118` and draws nothing. `frame`, the
 index drawn, is runtime-only. `TilemapCollider2D` reads the `Tilemap` on the same entity, so a file
 that holds both has tile collision with no code. A tilemap's objects layer never spawns at runtime:
-`ignifx import tilemap` moves it into the scene file once, as entities (ADR-0030).
+`ignifx import tilemap` moves it into the scene file once, as entities.
 
 ## Value encoding
 
-| Kind                       | JSON                                                                                        |
-| -------------------------- | ------------------------------------------------------------------------------------------- |
-| `f32 f64 i32 u32`          | number, canonicalized to 1e-6; `NaN`/`Infinity` are rejected with `IGX-0601`                |
-| `bool` / `str` / `enumOf`  | boolean / string / the string value                                                         |
-| `vec2 vec3 vec4 quat`      | array of numbers                                                                            |
-| `color`                    | `[r, g, b, a]` in sRGB 0–1                                                                  |
-| `entityRef`                | `{ "$entity": "<uid>" }` or `null`                                                          |
-| `componentRef`             | `{ "$component": "<uid>" }` or `null`                                                       |
-| `asset`                    | `{ "$asset": "<address>", "type"?: "<type>" }` or `null`                                    |
-| `array` / `record` / `map` | array / object / object                                                                     |
-| `optional`                 | the inner encoding, or `null`                                                               |
-| `layerMask`                | array of layer **names**, so renames survive                                                |
-| `curve` / `custom`         | `{ "keys": [[t, v, inTangent, outTangent], …] }` / whatever the codec's `serialize` returns |
+| Kind | JSON |
+| --- | --- |
+| `f32 f64 i32 u32` | number, canonicalized to 1e-6; `NaN`/`Infinity` are rejected with `IGX-0601` |
+| `bool` / `str` / `enumOf` | boolean / string / the string value |
+| `vec2 vec3 vec4 quat` | array of numbers |
+| `color` | `[r, g, b, a]` in sRGB 0–1 |
+| `entityRef` | `{ "$entity": "<uid>" }` or `null` |
+| `componentRef` | `{ "$component": "<uid>" }` or `null` |
+| `asset` | `{ "$asset": "<address>", "type"?: "<type>" }` or `null` |
+| `array` / `record` / `map` | array / object / object |
+| `optional` | the inner encoding, or `null` |
+| `layerMask` | array of layer **names**, so renames survive |
+| `curve` / `custom` | `{ "keys": [[t, v, inTangent, outTangent], …] }` / whatever the codec's `serialize` returns |
 
 Canonicalization is idempotent, so save → load → save is byte-identical.
 

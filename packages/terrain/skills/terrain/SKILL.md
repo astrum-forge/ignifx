@@ -41,13 +41,13 @@ if (canvas instanceof HTMLCanvasElement) {
 
 ## Mental model
 
-| Thing              | What it is                                                                                |
-| ------------------ | ----------------------------------------------------------------------------------------- |
-| `.terrain.json`    | The document: size, resolution, heightmap or noise, chunking, layers, splat.              |
-| `TerrainAsset`     | One loaded document: the height field, the splat weights, the layer textures, the shader. |
-| `Terrain`          | The component on an entity: builds the chunk meshes and answers every query.              |
-| `TerrainLodSystem` | One `PreRender` pass: builds terrains whose asset arrived, picks levels, culls chunks.    |
-| `TerrainScatter`   | Seeded foliage on an `InstancedMeshRenderer`, placed once from the terrain and the rules. |
+| Thing | What it is |
+| --- | --- |
+| `.terrain.json` | The document: size, resolution, heightmap or noise, chunking, layers, splat. |
+| `TerrainAsset` | One loaded document: the height field, the splat weights, the layer textures, the shader. |
+| `Terrain` | The component on an entity: builds the chunk meshes and answers every query. |
+| `TerrainLodSystem` | One `PreRender` pass: builds terrains whose asset arrived, picks levels, culls chunks. |
+| `TerrainScatter` | Seeded foliage on an `InstancedMeshRenderer`, placed once from the terrain and the rules. |
 
 ```
 .terrain.json ─▶ TerrainAsset ─▶ Terrain ─▶ chunks x LODs (Babylon Lite meshes, not entities)
@@ -58,8 +58,8 @@ if (canvas instanceof HTMLCanvasElement) {
 The field is centred on the entity: local X spans `-width/2 .. +width/2`, Z the same, heights run
 `0 .. size.height`. Queries take **world** coordinates and honour the entity's position and scale.
 
-| System             | Phase       | Order  | Why there                                                                         |
-| ------------------ | ----------- | ------ | --------------------------------------------------------------------------------- |
+| System | Phase | Order | Why there |
+| --- | --- | --- | --- |
 | `TerrainLodSystem` | `PreRender` | `1010` | After core's render sync, which is what writes the camera the frustum test reads. |
 
 ## First app
@@ -112,47 +112,47 @@ app.log.info(`ground height at the origin: ${field.heightAt(0, 0).toFixed(2)} m`
 
 ### `Terrain`
 
-| Field            | Type                        | Default | Meaning                                       |
-| ---------------- | --------------------------- | ------- | --------------------------------------------- |
-| `definition`     | `AssetHandle<TerrainAsset>` | `null`  | The document this terrain draws.              |
-| `lodBias`        | `number`                    | `1`     | Multiplies every level threshold.             |
-| `receiveShadows` | `boolean`                   | `true`  | Whether shadow maps darken the ground.        |
-| `frustumCulling` | `boolean`                   | `true`  | Whether chunks outside the camera are hidden. |
+| Field | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `definition` | `AssetHandle<TerrainAsset>` | `null` | The document this terrain draws. |
+| `lodBias` | `number` | `1` | Multiplies every level threshold. |
+| `receiveShadows` | `boolean` | `true` | Whether shadow maps darken the ground. |
+| `frustumCulling` | `boolean` | `true` | Whether chunks outside the camera are hidden. |
 
-| Member                                            | Answers                                                               |
-| ------------------------------------------------- | --------------------------------------------------------------------- |
-| `heightAt(x, z)`                                  | World Y of the surface under a world XZ, bilinear.                    |
-| `normalAt(x, z, out)`                             | The unit surface normal, into `out`.                                  |
-| `slopeAt(x, z)`                                   | Degrees from horizontal, `0` flat, `90` vertical.                     |
-| `raycast(ray, out)`                               | `true` and fills a `TerrainHit` where a world ray meets the ground.   |
-| `bounds(out)`                                     | The world box, as `[minX, minY, minZ, maxX, maxY, maxZ]`.             |
-| `worldToSample(x, z, out)` / `sampleToWorld(...)` | The sample grid in both directions.                                   |
-| `size` / `resolution` / `heights`                 | The document's extent, samples per side, and the live height array.   |
-| `colliderInit(region?)`                           | The `HeightfieldCollider` init, by data.                              |
-| `regionCenter(region, out)`                       | A region's centre, for the collider's child entity.                   |
-| `setHeights(x, z, width, depth, heights)`         | Sculpts, rebuilds the chunks it touches, raises `onHeightsChanged`.   |
-| `setSplat(layer, x, z, width, depth, weights)`    | Paints one layer's weights and re-uploads the control map.            |
-| `onHeightsChanged`                                | `Signal<TerrainRegion>`, after every sculpt.                          |
-| `chunkCount` / `visibleChunks` / `drawCalls`      | How many chunks exist, show, and cost a draw.                         |
-| `lodOf(chunkX, chunkZ)`                           | The level a chunk is showing.                                         |
-| `asset` / `material` / `isLoaded`                 | The loaded asset, the PBR material, and whether the document arrived. |
+| Member | Answers |
+| --- | --- |
+| `heightAt(x, z)` | World Y of the surface under a world XZ, bilinear. |
+| `normalAt(x, z, out)` | The unit surface normal, into `out`. |
+| `slopeAt(x, z)` | Degrees from horizontal, `0` flat, `90` vertical. |
+| `raycast(ray, out)` | `true` and fills a `TerrainHit` where a world ray meets the ground. |
+| `bounds(out)` | The world box, as `[minX, minY, minZ, maxX, maxY, maxZ]`. |
+| `worldToSample(x, z, out)` / `sampleToWorld(...)` | The sample grid in both directions. |
+| `size` / `resolution` / `heights` | The document's extent, samples per side, and the live height array. |
+| `colliderInit(region?)` | The `HeightfieldCollider` init, by data. |
+| `regionCenter(region, out)` | A region's centre, for the collider's child entity. |
+| `setHeights(x, z, width, depth, heights)` | Sculpts, rebuilds the chunks it touches, raises `onHeightsChanged`. |
+| `setSplat(layer, x, z, width, depth, weights)` | Paints one layer's weights and re-uploads the control map. |
+| `onHeightsChanged` | `Signal<TerrainRegion>`, after every sculpt. |
+| `chunkCount` / `visibleChunks` / `drawCalls` | How many chunks exist, show, and cost a draw. |
+| `lodOf(chunkX, chunkZ)` | The level a chunk is showing. |
+| `asset` / `material` / `isLoaded` | The loaded asset, the PBR material, and whether the document arrived. |
 
 Every query allocates nothing: the vector answers take an `out` parameter, and the entity's matrix
 is decoded only when it moves.
 
 ### `TerrainScatter`
 
-| Field                                   | Default               | Meaning                                           |
-| --------------------------------------- | --------------------- | ------------------------------------------------- |
-| `mesh` / `material`                     | `null`                | What each instance draws.                         |
-| `lodMesh` / `lodDistance`               | `null` / `40`         | A cheaper mesh past that many metres.             |
-| `density`                               | `0.5`                 | Instances per square metre.                       |
-| `layers` / `layerThreshold`             | `[]` / `0.5`          | Splat layers to stand on; empty means everywhere. |
-| `slope` / `height`                      | `0..35` / all         | The bands a candidate must fall in.               |
-| `scale` / `randomYaw` / `alignToNormal` | `0.8..1.2` / on / off | How each instance is turned and sized.            |
-| `seed`                                  | `1`                   | The placement seed.                               |
-| `maxInstances`                          | `50000`               | The cap, which also sizes the GPU buffer.         |
-| `count` / `regenerate()`                | —                     | How many stand, and how to place them again.      |
+| Field | Default | Meaning |
+| --- | --- | --- |
+| `mesh` / `material` | `null` | What each instance draws. |
+| `lodMesh` / `lodDistance` | `null` / `40` | A cheaper mesh past that many metres. |
+| `density` | `0.5` | Instances per square metre. |
+| `layers` / `layerThreshold` | `[]` / `0.5` | Splat layers to stand on; empty means everywhere. |
+| `slope` / `height` | `0..35` / all | The bands a candidate must fall in. |
+| `scale` / `randomYaw` / `alignToNormal` | `0.8..1.2` / on / off | How each instance is turned and sized. |
+| `seed` | `1` | The placement seed. |
+| `maxInstances` | `50000` | The cap, which also sizes the GPU buffer. |
+| `count` / `regenerate()` | — | How many stand, and how to place them again. |
 
 ### Diagnostics
 
@@ -161,20 +161,20 @@ is decoded only when it moves.
 
 ### Errors
 
-| Code       | Means                                                             |
-| ---------- | ----------------------------------------------------------------- |
-| `IGX-1601` | The document is not a readable `ignifx.terrain`.                  |
-| `IGX-1602` | `resolution` is not `2^n + 1`, or does not fit the chunking.      |
+| Code | Means |
+| --- | --- |
+| `IGX-1601` | The document is not a readable `ignifx.terrain`. |
+| `IGX-1602` | `resolution` is not `2^n + 1`, or does not fit the chunking. |
 | `IGX-1603` | An 8-bit heightmap was loaded; it terraces. Logged, never thrown. |
-| `IGX-1604` | The terrain's entity is rotated, which queries do not honour.     |
-| `IGX-1605` | The document declares no layer, or more than eight.               |
-| `IGX-1606` | An image is not one the built-in PNG decoder reads.               |
-| `IGX-1607` | Two layer textures are different sizes.                           |
-| `IGX-1608` | A heightmap decoded to the wrong number of samples.               |
-| `IGX-1609` | A query ran before the document was delivered.                    |
-| `IGX-1610` | A region falls outside the field or the control map.              |
-| `IGX-1611` | A rule or a scatter names a layer the terrain does not declare.   |
-| `IGX-1612` | A `TerrainScatter` found no `Terrain` on it or on any ancestor.   |
+| `IGX-1604` | The terrain's entity is rotated, which queries do not honour. |
+| `IGX-1605` | The document declares no layer, or more than eight. |
+| `IGX-1606` | An image is not one the built-in PNG decoder reads. |
+| `IGX-1607` | Two layer textures are different sizes. |
+| `IGX-1608` | A heightmap decoded to the wrong number of samples. |
+| `IGX-1609` | A query ran before the document was delivered. |
+| `IGX-1610` | A region falls outside the field or the control map. |
+| `IGX-1611` | A rule or a scatter names a layer the terrain does not declare. |
+| `IGX-1612` | A `TerrainScatter` found no `Terrain` on it or on any ancestor. |
 
 ## Recipes
 
@@ -296,14 +296,16 @@ ignifx import heightmap island.png island.r16
 ```
 
 An 8-bit source converts, and the command says on stderr that the heights are already terraced
-(`IGX-1406`). Loading one warns with `IGX-1603`.
+(`IGX-1406`). Loading one warns with `IGX-1603`. The `ignifx` command is an executable of `@ignifx/cli`, which the templates do not install: add
+`@ignifx/cli` to the project's dev dependencies and run `pnpm exec ignifx …`, or run it once with
+`npx --package=@ignifx/cli ignifx …`.
 
 ## File formats
 
-| Format           | Extension       | Reference                           |
-| ---------------- | --------------- | ----------------------------------- |
-| `ignifx.terrain` | `.terrain.json` | `skills/ignifx/references/formats/` |
-| raw heightmap    | `.r16`          | This page, below.                   |
+| Format | Extension | Reference |
+| --- | --- | --- |
+| `ignifx.terrain` | `.terrain.json` | `skills/ignifx/references/formats/ignifx.terrain.md` in the `ignifx` package |
+| raw heightmap | `.r16` | This page, below. |
 
 ```jsonc
 {
@@ -376,9 +378,6 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-`skills/ignifx/SKILL.md` for the engine entry skill · `skills/ignifx/references/api/terrain.md` for
-the generated API · `skills/ignifx/references/formats/` for the document schema ·
-`docs/architecture/07-rendering.md` and `docs/adr/0023-terrain-chunked-geomipmapping.md` for the
-design and what it costs.
-
-`docs/migrations/` exists only after 1.0.
+The entry skill is `skills/ignifx/SKILL.md` in the `ignifx` package: `node_modules/ignifx/` in an
+installed project, the repository root in the engine repository. Under it, `references/api/terrain.md` has every exact signature and
+`references/formats/ignifx.terrain.md` the document's fields.

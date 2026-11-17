@@ -14,24 +14,25 @@ metadata:
 ignifx is a code-first TypeScript game engine for browsers and Electron. It renders exclusively
 through WebGPU via Babylon Lite (`@babylonjs/lite`), and it is designed for indie 2D (top-down,
 side-scrolling) and 3D (third-person, first-person) games. Use this skill whenever you write or
-modify code, scenes, or assets for an ignifx project. The engine covers the kernel (app, frame loop,
-entities, transforms, components, scripts, schemas, coroutines, signals, layers, math), rendering,
-assets, the scene/prefab format, custom shaders, input, 3D and 2D physics, audio, the 2D and 3D
-toolkits, UI, particles, terrain, Electron, and devtools; each subsystem has its own skill (see
-"Adding extensions").
+modify code, scenes, or assets for an ignifx project. This page covers the kernel in `@ignifx/core`: the
+app and frame loop, entities, transforms, components, scripts, schemas, coroutines, signals,
+rendering, assets, scenes and prefabs, and custom shaders. Input, physics, audio, the 2D and 3D
+toolkits, UI, particles, terrain, Electron, devtools and the editor host are extensions, each with
+its own skill (see "Adding extensions").
 
 ## Environment
 
-| Item                | Value                                                                                                                                                                                                                                                                                                                                          |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engine version      | the `ignifx-version` in this file's frontmatter; `@ignifx/core`, `@ignifx/input`, `@ignifx/audio`, `@ignifx/physics`, `@ignifx/2d`, `@ignifx/physics-2d`, `@ignifx/3d`, `@ignifx/ui`, `@ignifx/particles`, `@ignifx/particles-2d`, `@ignifx/terrain`, `@ignifx/electron`, `@ignifx/devtools`, `@ignifx/vite-plugin`, and the `ignifx` umbrella |
-| Babylon Lite        | 1.34.0 (pinned; do not call Lite APIs directly outside adapter code)                                                                                                                                                                                                                                                                           |
-| Node / pnpm         | 24 LTS / 11                                                                                                                                                                                                                                                                                                                                    |
-| Browser requirement | WebGPU (Chrome/Edge 113+, Safari 26+, Firefox 141+ Windows / 145+ Apple Silicon); Electron needs `--enable-unsafe-webgpu` (handled by `@ignifx/electron`)                                                                                                                                                                                      |
-| Headless            | Node 24, no GPU: `createApp({ headless: true })` plus `app.step(dt)`                                                                                                                                                                                                                                                                           |
-| Extensions          | `createApp({ canvas, extensions: [input(), audio(), physics()] })` — each adds its `app.<name>` service; all re-exported from `ignifx`                                                                                                                                                                                                         |
-| Build               | Vite 8 with `ignifx()` from `@ignifx/vite-plugin`: asset manifest, `.meta.json` sidecars, JSON validation, HMR                                                                                                                                                                                                                                 |
-| Commands            | `pnpm dev` · `pnpm test` · `pnpm typecheck` · `pnpm build` · `pnpm check` (all gates) · `node scripts/check-webgpu.mjs` · `node scripts/new-script.mjs <Name>`                                                                                                                                                                                 |
+| Item | Value |
+| --- | --- |
+| Engine version | the `ignifx-version` in this file's frontmatter, shared by `@ignifx/core`, every extension under "Adding extensions", the tools `@ignifx/vite-plugin` and `@ignifx/cli`, and the `ignifx` umbrella |
+| Babylon Lite | 1.34.0 (pinned; do not call Lite APIs directly outside adapter code) |
+| Node / pnpm | 24 LTS / 11 |
+| Browser requirement | WebGPU (Chrome/Edge 113+, Safari 26+, Firefox 141+ Windows / 145+ Apple Silicon); Electron needs `--enable-unsafe-webgpu` (handled by `@ignifx/electron`) |
+| Headless | Node 24, no GPU: `createApp({ headless: true })` plus `app.step(dt)` |
+| Build | Vite 8 with `ignifx()` from `@ignifx/vite-plugin`: asset manifest, `.meta.json` sidecars, JSON validation, HMR |
+| New project | `npx --package=@ignifx/cli create-ignifx <dir> [--template <name>] [--desktop]`; templates `2d-topdown` (default), `2d-sidescroller`, `3d-third-person`, `3d-first-person` |
+| Project commands | A scaffolded project has `pnpm dev`, `pnpm build`, `pnpm preview` and `pnpm typecheck`; `--desktop` adds `pnpm dev:desktop`, `pnpm build:desktop` and `pnpm dist:desktop`. It has no test script |
+| Skill scripts | In `scripts/` beside this file, run with `node`: `check-webgpu.mjs`, `new-script.mjs <Name>` ([`scripts/README.md`](scripts/README.md)) |
 
 ## Mental model
 
@@ -117,22 +118,25 @@ Without a GPU — how tests and tools run it — `createApp({ headless: true, cl
 
 ### Adding extensions
 
-Extensions register in `createApp({ extensions })`; each adds an `app.<name>` service, scripts, asset types, and a settings section, and has a subsystem skill with the detail. Everything below is also re-exported from `ignifx`. Headless apps drive input with `simulate` and advance audio playback by the frame delta, so both are testable without a device.
+Extensions register in `createApp({ extensions })`; each adds an `app.<name>` service, components, asset types and a settings section. `ignifx` re-exports `@ignifx/core` and every factory below. Headless apps drive input with `simulate` and advance audio playback by the frame delta, so both are testable without a device.
 
-| Package (factory)                        | Adds                                                                                                                                                                                                                                                                                                                                                                                                        | Skill                                                |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `@ignifx/input` (`input()`)              | `app.input`, `PlayerInput`, `.input.json` actions (`inputactions`), the `input` settings section                                                                                                                                                                                                                                                                                                            | `packages/input/skills/input/SKILL.md`               |
-| `@ignifx/audio` (`audio()`)              | `app.audio` (buses, one-shots, unlock), `AudioSource`, `AudioListener`, `MusicPlayer`, `.audio.json` buses (`audiobuses`), `audioclip`, the `audio` settings section                                                                                                                                                                                                                                        | `packages/audio/skills/audio/SKILL.md`               |
-| `@ignifx/2d` (`twoD()`)                  | `app.twoD`: `Camera2D`, `SpriteRenderer`, `SpriteAnimator`, atlases, `Tilemap`/`TilemapRenderer`, sorting layers and Y-sort, pixel-perfect cameras, `ParallaxLayer`, 2D picking; `pixelsPerUnit` defaults to 100                                                                                                                                                                                            | `packages/2d/skills/2d/SKILL.md`                     |
-| `@ignifx/ui` (`ui()`)                    | `app.ui`: DOM overlay root, named layers, `"css"`/`"fit"`/`"dpi"` scaling, safe-area variables, focus routing into `app.input.uiHasFocus`; `WorldAnchor`; `HudText`/`WorldText`/`WorldText2D` on Lite text; `Dialog`/`Toast`/`LoadingScreen`; `VirtualJoystick`/`VirtualButton` (need `@ignifx/input`); `app.i18n` with `.i18n.json` (`i18n`)                                                               | `packages/ui/skills/ui/SKILL.md`                     |
-| `@ignifx/3d` (`threeD()`)                | `app.navigation` with `NavMeshSurface`/`NavMeshAgent`/`NavMeshObstacle` on Recast (headless too — the wasm is inlined); `ThirdPersonController`/`FirstPersonController`, `RigidbodyMover`/`PlatformMover`/`Projectile`; `ThirdPersonCamera` with wall collision; `Animator` with blend trees, masks and events from `.animator.json` (`animator`); `LodGroup`, `Billboard`. Needs `physics()` and `input()` | `packages/3d/skills/3d/SKILL.md`                     |
-| `@ignifx/electron` (`electron()`)        | Desktop builds: `createGameWindow` and the `ignifx://` protocol (`@ignifx/electron/main`), the sandboxed preload bridge (`@ignifx/electron/preload`), file-system `app.storage`, `platform.kind === "electron"`, `app.desktop`; scaffold with `create-ignifx --desktop`                                                                                                                                     | `packages/electron/skills/electron/SKILL.md`         |
-| `@ignifx/devtools` (`devtools()`)        | `app.devtools`: the debug overlay — stats, scene tree, schema-driven inspector, assets, input, audio, physics, console, timeline; backtick toggles it; zero cost while closed                                                                                                                                                                                                                               | `packages/devtools/skills/devtools/SKILL.md`         |
-| `@ignifx/physics` (`physics()`)          | `app.physics`: 3D rigid bodies on Havok — `Rigidbody`, box/sphere/capsule/cylinder/mesh/heightfield colliders, triggers, `CharacterController`, the layer matrix, raycasts and shape queries, render interpolation; simulates on its own null-engine scene stepped by the fixed loop, so it runs headless                                                                                                   | `packages/physics/skills/physics/SKILL.md`           |
-| `@ignifx/particles` (`particles()`)      | `app.particles` (budget, quality scale, gravity, counters), `ParticleSystem`, `.particles.json` effects (`particles`) built on the GPU from CPU-written spawn records, nine presets through `particleDefinition(name, overrides?)`; everything but the upload runs headless                                                                                                                                 | `packages/particles/skills/particles/SKILL.md`       |
-| `@ignifx/particles-2d` (`particles2D()`) | `ParticleSystem2D`: the same `.particles.json` drawn as sprites in a `@ignifx/2d` sorting layer, sharing `app.particles`' budget. Needs `twoD()` and `particles()`                                                                                                                                                                                                                                          | `packages/particles-2d/skills/particles-2d/SKILL.md` |
-| `@ignifx/terrain` (`terrain()`)          | `Terrain` and `.terrain.json` (`terrain`): 16-bit heightmaps (`.r16`) or seeded noise, chunked level of detail with frustum culling, a splat surface shader on PBR, `heightAt`/`normalAt`/`raycast`, `colliderInit()` for a `HeightfieldCollider`, `setHeights` sculpting, and `TerrainScatter` foliage. Declares `materialPlugins`                                                                         | `packages/terrain/skills/terrain/SKILL.md`           |
-| `@ignifx/physics-2d` (`physics2d()`)     | `app.physics2d`: 2D physics on Rapier — `Rigidbody2D`, box/circle/capsule/polygon/edge/tilemap colliders, triggers, `CharacterController2D` with slopes, autostep, snap-to-ground and one-way platforms, 2D queries; runs headless (the WebAssembly is inlined)                                                                                                                                             | `packages/physics-2d/skills/physics-2d/SKILL.md`     |
+**Each extension package ships its own skill** with the detail, at `skills/<name>/SKILL.md` inside the package, where `<name>` is the package name without `@ignifx/`: `node_modules/@ignifx/<name>/skills/<name>/SKILL.md` in an installed project, `packages/<name>/skills/<name>/SKILL.md` in the engine repository. Read it before using the extension.
+
+| Package (factory) | Adds |
+| --- | --- |
+| `@ignifx/input` (`input()`) | `app.input`: action maps, bindings, `PlayerInput`, rebinding |
+| `@ignifx/audio` (`audio()`) | `app.audio`: buses, `AudioSource`, `AudioListener`, `MusicPlayer` |
+| `@ignifx/physics` (`physics()`) | `app.physics`: 3D bodies, colliders, `CharacterController`, queries (Havok) |
+| `@ignifx/physics-2d` (`physics2d()`) | `app.physics2d`: 2D bodies, colliders, `CharacterController2D`, queries (Rapier) |
+| `@ignifx/2d` (`twoD()`) | `app.twoD`: sprites, atlases, tilemaps, sorting layers, `Camera2D` |
+| `@ignifx/3d` (`threeD()`) | `app.navigation`, character controllers, `ThirdPersonCamera`, `Animator`, `LodGroup`; needs `physics()` and `input()` |
+| `@ignifx/ui` (`ui()`) | `app.ui`: DOM overlay, HUD and world text, dialogs, touch controls, `app.i18n` |
+| `@ignifx/particles` (`particles()`) | `app.particles`, `ParticleSystem`, `.particles.json` effects and presets |
+| `@ignifx/particles-2d` (`particles2D()`) | `ParticleSystem2D`: the same effects drawn as sprites; needs `twoD()` and `particles()` |
+| `@ignifx/terrain` (`terrain()`) | `Terrain`: heightmaps or noise, level of detail, height queries, `TerrainScatter` |
+| `@ignifx/electron` (`electron()`) | Desktop builds: the game window, the `ignifx://` protocol, the preload bridge, file storage |
+| `@ignifx/devtools` (`devtools()`) | `app.devtools`: the debug overlay; backtick toggles it |
+| `@ignifx/editor-host` (no factory: `editorHostPlugin()` in `vite.config.ts`) | Opens the project in the ignifx editor; development only, not re-exported from `ignifx` |
 
 ```ts run
 import { audio, AudioSource, createApp, defineInputActions, input } from "ignifx";
@@ -153,46 +157,49 @@ app.audio.bus("SFX").volume = 0.5;
 
 ### `createApp(options?): Promise<App>`
 
-| Option       | Type                            | Default                          | Notes                                                                                                                                                                        |
-| ------------ | ------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `headless`   | `boolean`                       | `true` when no `canvas` is given | Lite's null engine; the only mode where `app.step` is legal                                                                                                                  |
-| `canvas`     | `RenderSurface`                 | —                                | `HTMLCanvasElement \| OffscreenCanvas`; rejects `IGX-0701` when WebGPU is unavailable                                                                                        |
-| `extensions` | `readonly Extension[]`          | `[]`                             | Registered after the implicit `coreExtension()`                                                                                                                              |
-| `settings`   | `SettingsInput`                 | `{}`                             | Core sections `layers`, `sortingLayers`, `time`, `assets`, `rendering`; `describeSettings(app)` lists all; data in `ignifx.settings.json`, `ignifx.config.ts` wins a section |
-| `assets`     | `AssetsCreateOptions`           | —                                | Supplies the manifest ahead of the network fetch                                                                                                                             |
-| `fetch`      | `FetchLike`                     | `globalThis.fetch`               | How a Node app maps addresses to files                                                                                                                                       |
-| `clock`      | `Clock`                         | `createPerformanceClock()`       | Tests pass `createManualClock()`                                                                                                                                             |
-| `mode`       | `"development" \| "production"` | `"development"`                  | Development adds phase timings, full messages, strict checks                                                                                                                 |
-| `logSink`    | `LogSink`                       | `createConsoleSink()`            | `createMemorySink()` captures records in tests                                                                                                                               |
-| `logLevel`   | `LogThreshold`                  | `"info"`                         | Lowest level `app.log` writes; `"debug"` shows the kernel's own diagnostics                                                                                                  |
-| `editMode`   | `boolean`                       | `false`                          | An editor's scene view: scripts and simulation stay still (see "Edit mode" below)                                                                                            |
+| Option | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `headless` | `boolean` | `true` when no `canvas` is given | Lite's null engine; the only mode where `app.step` is legal |
+| `canvas` | `RenderSurface` | — | `HTMLCanvasElement \| OffscreenCanvas`; rejects `IGX-0701` when WebGPU is unavailable |
+| `extensions` | `readonly Extension[]` | `[]` | Registered after the implicit `coreExtension()` |
+| `settings` | `SettingsInput` | `{}` | Core sections `layers`, `sortingLayers`, `time`, `assets`, `rendering`; `describeSettings(app)` lists all; data in `ignifx.settings.json`, `ignifx.config.ts` wins a section |
+| `assets` | `AssetsCreateOptions` | — | Supplies the manifest ahead of the network fetch |
+| `fetch` | `FetchLike` | `globalThis.fetch` | How a Node app maps addresses to files |
+| `clock` | `Clock` | `createPerformanceClock()` | Tests pass `createManualClock()` |
+| `mode` | `"development" \| "production"` | `"development"` | Development adds phase timings, full messages, strict checks |
+| `logSink` | `LogSink` | `createConsoleSink()` | `createMemorySink()` captures records in tests |
+| `logLevel` | `LogThreshold` | `"info"` | Lowest level `app.log` writes; `"debug"` shows the kernel's own diagnostics |
+| `editMode` | `boolean` | `false` | An editor's scene view: scripts and simulation stay still (see "Edit mode" below) |
+| `storage` | `StorageBackend \| FileStorageOptions` | IndexedDB in a browser, in memory elsewhere | Where `app.storage` writes; `{ directory }` is a directory tree under Node |
+| `hotReload` | `HotReloadOptions` | `{ reloadScenes: false }` | Whether a changed scene file rebuilds the live instances built from it |
 
 ### `App`
 
-| Member                                                     | What it is                                                                                                                                                                                                                                                                                                                             |
-| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `world`, `time`, `settings`, `diagnostics`, `log`          | The world, the `Time` service, resolved settings, counters, the logger                                                                                                                                                                                                                                                                 |
-| `assets`, `renderer`, `events`                             | The asset service, the render service, the engine-wide signal table                                                                                                                                                                                                                                                                    |
-| `services`, `coroutines`, `platform`, `storage`, `version` | `ServiceRegistry`, `CoroutineHost`, `{ kind, os, isMobile, hasPointerLock, hasGamepads, webgpu, locale, reducedMotion }`, the async key-value store (`get`/`set`/`delete`/`keys`/`namespace`) behind save games and settings — [`references/concepts/platform-and-storage.md`](references/concepts/platform-and-storage.md), `VERSION` |
-| `start()`, `stop()`, `pause()`, `resume()`, `dispose()`    | `start` is `async`; `stop` may be followed by `start` again                                                                                                                                                                                                                                                                            |
-| `step(deltaSeconds)`                                       | Headless only; throws `IGX-0105` otherwise                                                                                                                                                                                                                                                                                             |
-| `registerComponents(types)`                                | Makes game components known to the registry                                                                                                                                                                                                                                                                                            |
-| `isRunning`, `isHeadless`, `isEditMode`                    | Loop and mode state                                                                                                                                                                                                                                                                                                                    |
-| `onError`                                                  | `Signal<ErrorReport>` — every callback, coroutine, system, extension failure                                                                                                                                                                                                                                                           |
-| `lite`                                                     | `{ engine, scene }`; unstable escape hatch                                                                                                                                                                                                                                                                                             |
+| Member | What it is |
+| --- | --- |
+| `world`, `time`, `settings`, `diagnostics`, `log` | The world, the `Time` service, resolved settings, counters, the logger |
+| `assets`, `renderer`, `events` | The asset service, the render service, the engine-wide signal table |
+| `tweens`, `hotReload` | The app-wide tween list (`app.tweens.to(...)`), script and scene hot reload |
+| `services`, `coroutines`, `platform`, `storage`, `version` | `ServiceRegistry`, `CoroutineHost`, `{ kind, os, isMobile, hasPointerLock, hasGamepads, webgpu, locale, reducedMotion }`, the async key-value store (`get`/`set`/`delete`/`keys`/`namespace`) behind save games and settings — [`concepts/platform-and-storage.md`](references/concepts/platform-and-storage.md), `VERSION` |
+| `start()`, `stop()`, `pause()`, `resume()`, `dispose()` | `start` is `async`; `stop` may be followed by `start` again |
+| `step(deltaSeconds)` | Headless only; throws `IGX-0105` otherwise |
+| `registerComponents(types)` | Makes game components known to the registry |
+| `isRunning`, `isHeadless`, `isEditMode` | Loop and mode state |
+| `onError` | `Signal<ErrorReport>` — every callback, coroutine, system, extension failure |
+| `lite` | `{ engine, scene }`; unstable escape hatch |
 
 `app.events` carries `onSceneLoaded`, `onSceneUnloaded`, `onDeviceLost` (`{ reason, message }`),
 `onDeviceRecovered`, and `onDeviceRecoveryFailed`. Connect with `{ owner: this }` from a script.
 
 ### `Entity`
 
-| Group      | Members                                                                                                                                                                                                        |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Hierarchy  | `parent`, `children`, `setParent(parent, options?)`, `root()`, `isDescendantOf(other)`, `findChild(predicate, deep?)`, `find(path)`                                                                            |
+| Group | Members |
+| --- | --- |
+| Hierarchy | `parent`, `children`, `setParent(parent, options?)`, `root()`, `isDescendantOf(other)`, `findChild(predicate, deep?)`, `find(path)` |
 | Components | `addComponent(Type, init?)`, `getComponent`, `requireComponent`, `getComponents`, `getComponentInChildren`, `getComponentsInChildren`, `getComponentInParent`, `hasComponent`, `removeComponent`, `components` |
-| Lifecycle  | `active`, `activeInHierarchy`, `isStatic`, `isDestroyed`, `destroy()`, `destroyImmediate()`                                                                                                                    |
-| Identity   | `uid` (ULID), `handle`, `name`, `layer`, `tags`, `world`, `scene`, `prefab`, `transform`                                                                                                                       |
-| Signals    | `onChildAdded`, `onChildRemoved`, `onParentChanged`, `onActiveChanged`, `onDestroyed`                                                                                                                          |
+| Lifecycle | `active`, `activeInHierarchy`, `isStatic`, `isDestroyed`, `destroy()`, `destroyImmediate()` |
+| Identity | `uid` (ULID), `handle`, `name`, `layer`, `tags`, `world`, `scene`, `prefab`, `transform` |
+| Signals | `onChildAdded`, `onChildRemoved`, `onParentChanged`, `onActiveChanged`, `onDestroyed` |
 
 `World` adds `createEntity(name?, options?)`, `getEntity(uid)`, `getEntityByHandle(handle)`,
 `findByName`, `findAllByName`, `findByTag`, `components(Type)`, `activeScene`, `scenes`, `layers`,
@@ -201,60 +208,62 @@ app.audio.bus("SFX").volume = 0.5;
 
 ### `Transform`
 
-| Kind             | Members                                                                                                                                   | Cost                                                                                                                                 |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Local live views | `localPosition`, `localRotation`, `localScale`                                                                                            | free; mutate in place                                                                                                                |
-| Local values     | `localEulerAngles`, `localMatrix`, `localPosition2D`, `localScale2D`                                                                      | getter allocates                                                                                                                     |
-| World getters    | `position`, `rotation`, `eulerAngles`, `lossyScale`, `forward`, `right`, `up`                                                             | **allocates each call**                                                                                                              |
-| World `ToRef`    | `positionToRef`, `rotationToRef`, `eulerAnglesToRef`, `localEulerAnglesToRef`, `lossyScaleToRef`, `forwardToRef`, `rightToRef`, `upToRef` | allocation-free; `out` must be a `Vec3` (written through `out.set`), not a `{ x, y, z }` literal — `Vec3Like` is an input-only shape |
-| Operations       | `translate`, `rotate`, `rotateAround`, `lookAt`, `setPositionAndRotation`                                                                 | degrees                                                                                                                              |
-| Spaces           | `transformPoint`, `transformDirection`, `inverseTransformPoint`, `inverseTransformDirection`                                              | optional `out`                                                                                                                       |
-| 2D               | `position2D`, `localPosition2D`, `rotation2D`, `localScale2D`                                                                             | degrees about +Z                                                                                                                     |
-| Matrices         | `worldMatrix`, `worldMatrixVersion`, `lite`                                                                                               | lazily recomputed                                                                                                                    |
+| Kind | Members | Cost |
+| --- | --- | --- |
+| Local live views | `localPosition`, `localRotation`, `localScale` | free; mutate in place |
+| Local values | `localEulerAngles`, `localMatrix`, `localPosition2D`, `localScale2D` | getter allocates |
+| World getters | `position`, `rotation`, `eulerAngles`, `lossyScale`, `forward`, `right`, `up` | **allocates each call** |
+| World `ToRef` | `positionToRef`, `rotationToRef`, `eulerAnglesToRef`, `localEulerAnglesToRef`, `lossyScaleToRef`, `forwardToRef`, `rightToRef`, `upToRef` | allocation-free; `out` must be a `Vec3` (written through `out.set`), not a `{ x, y, z }` literal — `Vec3Like` is an input-only shape |
+| Operations | `translate`, `rotate`, `rotateAround`, `lookAt`, `setPositionAndRotation` | degrees |
+| Spaces | `transformPoint`, `transformDirection`, `inverseTransformPoint`, `inverseTransformDirection` | optional `out` |
+| 2D | `position2D`, `localPosition2D`, `rotation2D`, `localScale2D` | degrees about +Z |
+| Matrices | `worldMatrix`, `worldMatrixVersion`, `lite` | lazily recomputed |
 
 ### Rendering components
 
-Fields and defaults: [`references/formats/components.md`](references/formats/components.md); how
-they behave: [`references/concepts/rendering.md`](references/concepts/rendering.md); reflection probes, light probes, lightmaps and the probe bake: [`references/concepts/baked-lighting.md`](references/concepts/baked-lighting.md).
+Fields and defaults: [`formats/components.md`](references/formats/components.md); how
+they behave: [`concepts/rendering.md`](references/concepts/rendering.md); reflection probes, light probes, lightmaps and the probe bake: [`concepts/baked-lighting.md`](references/concepts/baked-lighting.md).
 
-| Component          | Key fields                                                                                   | Notes                                                                                                                                                                                                                     |
-| ------------------ | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Camera`           | `projection`, `fov`, `orthographicSize`, `near`, `far`, `viewport`, `clearColor`, `priority` | The entity's transform is the view; highest `priority` renders. Methods: `screenToRay(x, y)`, `worldToScreen(point, out)`, `screenToWorldPoint`, `viewportToWorldPoint`, `getViewMatrix(out)`, `getProjectionMatrix(out)` |
-| `Light`            | `type`, `color`, `intensity`, `range`, `spotAngle`, `shadows`, `includeOnly`, `exclude`      | `shadows` needs the `shadows` feature; point/hemispheric cast none                                                                                                                                                        |
-| `MeshRenderer`     | `mesh`, `materials`, `castShadows`, `receiveShadows`, `renderOrder`, `pickable`              | `allowMultiple`; only `materials[0]` draws in this Lite version; `displayHidden` hides it without saving anything                                                                                                         |
-| `Model`            | `model`, `materialOverrides`, `castShadows`, `receiveShadows`, `pickable`                    | `nodes`, `attachToNode(name, entity)`; shadows cover the whole subtree; `animations`/`skeletons` are beta                                                                                                                 |
-| `Environment`      | `environment`, `rotation`, `blur`, `skybox`, `fog`, `imageProcessing`, `clearColor`          | One per world; a second logs `IGX-0705`                                                                                                                                                                                   |
-| `PostProcessStack` | `bloom`, `smaa`, `imageProcessing`                                                           | Needs the `postProcessing` feature (`IGX-0710`); `imageProcessing` always runs last                                                                                                                                       |
+| Component | Key fields | Notes |
+| --- | --- | --- |
+| `Camera` | `projection`, `fov`, `orthographicSize`, `near`, `far`, `viewport`, `clearColor`, `priority` | The entity's transform is the view; highest `priority` renders. Methods: `screenToRay(x, y)`, `worldToScreen(point, out)`, `screenToWorldPoint`, `viewportToWorldPoint`, `getViewMatrix(out)`, `getProjectionMatrix(out)` |
+| `Light` | `type`, `color`, `intensity`, `range`, `spotAngle`, `shadows`, `includeOnly`, `exclude` | `shadows` needs the `shadows` feature; point/hemispheric cast none |
+| `MeshRenderer` | `mesh`, `materials`, `castShadows`, `receiveShadows`, `renderOrder`, `pickable` | `allowMultiple`; only `materials[0]` draws (Babylon Lite has one material per mesh); `displayHidden` hides it without saving anything |
+| `Model` | `model`, `materialOverrides`, `castShadows`, `receiveShadows`, `pickable` | `nodes`, `attachToNode(name, entity)`; shadows cover the whole subtree; `animations`/`skeletons` are beta |
+| `Environment` | `environment`, `rotation`, `blur`, `skybox`, `fog`, `imageProcessing`, `clearColor` | One per world; a second logs `IGX-0705` |
+| `PostProcessStack` | `bloom`, `smaa`, `imageProcessing` | Needs the `postProcessing` feature (`IGX-0710`); `imageProcessing` always runs last |
+| `ReflectionProbe` (`@beta`) | `size`, `refreshMode`, `boxProjection`, `blendDistance`, `cullingMask` | A cube map nearby PBR materials reflect; `refresh()` recaptures |
+| `LightProbeVolume` (`@beta`) | `probes`, `intensity` | Diffuse light from a baked `.probes.json` grid |
 
 ### Meshes and materials in code
 
-| Call                                                                                   | Answers                                         |
-| -------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| Call | Answers |
+| --- | --- |
 | `MeshAsset.box / sphere / plane / ground / cylinder / capsule / torus (app, options?)` | `AssetHandle<MeshAsset>` at a `memory:` address |
-| `MeshAsset.fromData(app, name, { positions, normals, indices, uvs? })`                 | The same, from your own geometry                |
-| `pbrMaterialDefinition(overrides?)`, `standardMaterialDefinition(overrides?)`          | A `MaterialDefinition`                          |
-| `createMaterialAsset(app, definition, textures)`                                       | `AssetHandle<MaterialAsset>`                    |
-| `materialAsset.clone(app)`, `.setBaseColor`, `.setMetallicRoughness`, `.setAlpha`      | A per-object copy, and live edits               |
-| `shaderMaterialDefinition({ shader, values?, textures?, defines? })`                   | A material built on your own `.wgsl`            |
-| `pbrMaterialDefinition({ surfaces: [...] })`, `materialAsset.surface(name)`            | `.surface.wgsl` layers on PBR, and their values |
-| `InstancedMeshRenderer` — `setMatrices(slab, count)`, `setCount`, `markDirty(range)`   | Thousands of copies of one mesh, one draw call  |
+| `MeshAsset.fromData(app, name, { positions, normals, indices, uvs? })` | The same, from your own geometry |
+| `pbrMaterialDefinition(overrides?)`, `standardMaterialDefinition(overrides?)` | A `MaterialDefinition` |
+| `createMaterialAsset(app, definition, textures)` | `AssetHandle<MaterialAsset>` |
+| `materialAsset.clone(app)`, `.setBaseColor`, `.setMetallicRoughness`, `.setAlpha` | A per-object copy, and live edits |
+| `shaderMaterialDefinition({ shader, values?, textures?, defines? })` | A material built on your own `.wgsl` |
+| `pbrMaterialDefinition({ surfaces: [...] })`, `materialAsset.surface(name)` | `.surface.wgsl` layers on PBR, and their values |
+| `InstancedMeshRenderer` — `setMatrices(slab, count)`, `setCount`, `markDirty(range)` | Thousands of copies of one mesh, one draw call |
 
 A scene file names a primitive through a `.mesh.json` file (`{ "format": "ignifx.mesh",
 "formatVersion": 1, "primitive": "box", "options": { "size": 1 } }`); a primitive built in code is an
 in-code asset and cannot be serialized into a scene file (`IGX-0602`). Custom shaders, their pragma
-declarations and the WGSL rules are in [`references/formats/wgsl.md`](references/formats/wgsl.md)
-and [`references/concepts/rendering.md`](references/concepts/rendering.md) §6.
+declarations and the WGSL rules are in [`formats/wgsl.md`](references/formats/wgsl.md)
+and [`concepts/rendering.md`](references/concepts/rendering.md) §6.
 
 ### `app.assets`
 
-Full page: [`references/concepts/assets.md`](references/concepts/assets.md).
+Full page: [`concepts/assets.md`](references/concepts/assets.md).
 
-| Member                                                           | Notes                                                              |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Member | Notes |
+| --- | --- |
 | `load(ref, options?)` / `loadAsync` / `loadAll` / `preloadGroup` | A handle immediately, awaited, in bulk, or by manifest group label |
-| `get(address)`, `release(handleOrAddress)`, `gc()`, `gcDelay`    | Cache lookup without a refcount change, and collection             |
-| `register(value, { type, address? })`                            | Publish an in-code value at a `memory:` address                    |
-| `manifest`, `resolveUrl(address)`, `onProgress`                  | The generated table and the address → URL mapping                  |
+| `get(address)`, `release(handleOrAddress)`, `gc()`, `gcDelay` | Cache lookup without a refcount change, and collection |
+| `register(value, { type, address? })` | Publish an in-code value at a `memory:` address |
+| `manifest`, `resolveUrl(address)`, `onProgress` | The generated table and the address → URL mapping |
 
 `AssetHandle<T>`: `address`, `type`, `state`, `value` (`IGX-0501` unless loaded), `promise`,
 `progress`, `error`, `refCount`, `retain()`, `release()`, `[Symbol.dispose]()`, `onReplaced`.
@@ -267,18 +276,18 @@ An `asset(TypeToken)` schema field holds the **loaded handle**; the file stores
 
 ### Scenes and prefabs
 
-| Call                                                          | Notes                                                                |
-| ------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `world.loadScene(ref, options?)`                              | `mode: "single" \| "additive"`, `signal`, `onProgress`, `setActive`  |
-| `world.unloadScene(instance)`                                 | Destroys the entities, releases the handles                          |
-| `world.instantiate(sceneAsset, options?)`                     | Synchronous; `parent`, `name`, `position`, `rotation`, `worldSpace`  |
-| `world.instantiateAsync(ref, options?)`                       | Loads first, then instantiates                                       |
-| `serializeScene(source, options?)`                            | `SceneInstance` or roots → `SceneFile`; `flatten`, `name`, `onIssue` |
-| `stringifySceneFile`, `validateSceneFile`, `computeSceneHash` | Write, check, and hash a file                                        |
+| Call | Notes |
+| --- | --- |
+| `world.loadScene(ref, options?)` | `mode: "single" \| "additive"`, `signal`, `onProgress`, `setActive` |
+| `world.unloadScene(instance)` | Destroys the entities, releases the handles |
+| `world.instantiate(sceneAsset, options?)` | Synchronous; `parent`, `name`, `position`, `rotation`, `worldSpace` |
+| `world.instantiateAsync(ref, options?)` | Loads first, then instantiates |
+| `serializeScene(source, options?)` | `SceneInstance` or roots → `SceneFile`; `flatten`, `name`, `onIssue` |
+| `stringifySceneFile`, `validateSceneFile`, `computeSceneHash` | Write, check, and hash a file |
 
-A prefab and a level are one format, `ignifx.scene` (ADR-0005). `SceneInstance` carries `uid`,
+A prefab and a level are one format, `ignifx.scene`. `SceneInstance` carries `uid`,
 `name`, `roots`, `isLoaded`, `persistent`, `settings`, `asset`, `remap`, `onUnloading`. A file cannot
-name a code-built primitive — see [`references/formats/scene.md`](references/formats/scene.md).
+name a code-built primitive — see [`formats/scene.md`](references/formats/scene.md).
 
 ### `app.renderer` and the `rendering` settings
 
@@ -286,63 +295,63 @@ name a code-built primitive — see [`references/formats/scene.md`](references/f
 `requireFeature(name)`, `warmUp(materials)`, `pickAsync(x, y, options?)`, `captureScreenshot()`,
 `drawCalls`, `gpuFrameTimeMs`, `profileTasks`, `taskTimings()`, `openOverlay()` (`@beta`: an editor's gizmo layer), `animateMaterialsInEditMode` (an edit-mode app's shader clock; `true` by default).
 
-The `rendering` section is read once, at `createApp`: `features` (`shadows`, `postProcessing`, `skeletons`, `boneControl`, `stencil`, `lightmaps`, `materialPlugins`, `asyncPipelines`, `deviceLostRecovery` — all `false` by default and refused after start with `IGX-0704`), `msaaSamples` (1 or 4, default 4), `alphaMode`, `srgb`, `format`, `maxDevicePixelRatio`, `useHighPrecisionMatrix`, `useFloatingOrigin`, `requiredLimits`, `hdr` (off by default; an `rgba16float` scene and one tone-mapping pass for every colour writer; custom post effects ordered first see linear colour), `clearColor` (a colour object; a non-null `Camera.clearColor` beats a non-null `Environment.clearColor`, which beats this), `brdfLut` (`DEFAULT_BRDF_LUT_ADDRESS`), and `quality` (`"custom"` by default; `"low"`, `"medium"` and `"high"` switch `hdr`, TAA and GTAO and cap a stack's contact shadows and SSGI to fit the GPU budget, and a field you write yourself wins over the tier). There is no `powerPreference`. The `assets` section takes `root`, `preload`, `concurrency`, `gcDelay`, `retries`.
+The `rendering` settings section is read once, at `createApp`. `features` holds `shadows`, `postProcessing`, `skeletons`, `boneControl`, `stencil`, `lightmaps`, `materialPlugins`, `asyncPipelines` and `deviceLostRecovery`, all `false` by default and refused after start with `IGX-0704`. The rest: `msaaSamples`, `alphaMode`, `srgb`, `format`, `maxDevicePixelRatio`, `useHighPrecisionMatrix`, `useFloatingOrigin`, `requiredLimits`, `hdr`, `taa`, `ambientOcclusion`, `autoExposure`, `clearColor`, `brdfLut` and `quality` (`"low"`, `"medium"`, `"high"` or the default `"custom"`). Defaults and what each does: [`concepts/rendering.md`](references/concepts/rendering.md) §4.
 
 ### `Script` callbacks and their timing
 
 Callbacks are not members of `Script`; implement the ones you need, optionally with
 `implements ScriptCallbacks` for signature checking.
 
-| Callback                                                    | Timing in the frame                                              | How often          |
-| ----------------------------------------------------------- | ---------------------------------------------------------------- | ------------------ |
-| `awake()`                                                   | Flush A of the first frame the component is effectively enabled  | Once per component |
-| `onEnable()`                                                | Flush A, after `awake`, and on every later transition to enabled | Every transition   |
-| `start()`                                                   | Flush B, after the fixed loop, before `update`                   | Once per component |
-| `fixedUpdate(dt)`                                           | Inside the fixed loop; `dt === time.fixedDeltaTime`              | 0…N per frame      |
-| `update(dt)`                                                | Update phase; `dt === time.deltaTime`                            | Once per frame     |
-| `lateUpdate(dt)`                                            | After `update` and `PostUpdate`                                  | Once per frame     |
-| `onDisable()`                                               | Synchronously at the transition, and in the destroy flush        | Every transition   |
-| `onDestroy()`                                               | Destroy flush, after the tracked references are nulled           | Once               |
-| `onApplicationPause(paused)`, `onApplicationFocus(focused)` | Visibility and focus changes                                     | Per transition     |
-| `onCollisionEnter/Stay/Exit`, `onTriggerEnter/Exit`         | After the fixed step, by `@ignifx/physics` (see its skill)       | Per event          |
+| Callback | Timing in the frame | How often |
+| --- | --- | --- |
+| `awake()` | Flush A of the first frame the component is effectively enabled | Once per component |
+| `onEnable()` | Flush A, after `awake`, and on every later transition to enabled | Every transition |
+| `start()` | Flush B, after the fixed loop, before `update` | Once per component |
+| `fixedUpdate(dt)` | Inside the fixed loop; `dt === time.fixedDeltaTime` | 0…N per frame |
+| `update(dt)` | Update phase; `dt === time.deltaTime` | Once per frame |
+| `lateUpdate(dt)` | After `update` and `PostUpdate` | Once per frame |
+| `onDisable()` | Synchronously at the transition, and in the destroy flush | Every transition |
+| `onDestroy()` | Destroy flush, after the tracked references are nulled | Once |
+| `onApplicationPause(paused)`, `onApplicationFocus(focused)` | Visibility and focus changes | Per transition |
+| `onCollisionEnter/Stay/Exit`, `onTriggerEnter/Exit` | After the fixed step, by `@ignifx/physics` (see its skill) | Per event |
 
-Statics (`static typeId`, `requires`, `allowMultiple`, `executionOrder`, `updateWhenPaused`, `runInEditMode`) and callbacks are written plainly with no `override`: they are not members of `Component`/`Script`; the class-token types match them structurally (`ComponentStatics`, `ScriptStatics`) and the registry applies the defaults. **Edit mode** (`createApp({ editMode: true })`, an editor's scene view): no script gets a callback unless its class sets `static runInEditMode = true`, and nothing simulates — [`references/concepts/lifecycle.md`](references/concepts/lifecycle.md) §8.
+Statics (`static typeId`, `requires`, `allowMultiple`, `executionOrder`, `updateWhenPaused`, `runInEditMode`) and callbacks are written plainly with no `override`: they are not members of `Component`/`Script`; the class-token types match them structurally (`ComponentStatics`, `ScriptStatics`) and the registry applies the defaults. **Edit mode** (`createApp({ editMode: true })`, an editor's scene view): no script gets a callback unless its class sets `static runInEditMode = true`, and nothing simulates — [`concepts/lifecycle.md`](references/concepts/lifecycle.md) §8.
 
 ### Schema kinds
 
 Declared with `Script.define({...})` / `Component.define({...})`. Every kind takes `FieldOptions`
 last (`min`, `max`, `step`, `tooltip`, `group`, `hidden`, `readonly`, `transient`).
 
-| Kind                                           | Field value                  | JSON encoding                                         |
-| ---------------------------------------------- | ---------------------------- | ----------------------------------------------------- |
-| `f32(d?)`, `f64(d?)`, `i32(d?)`, `u32(d?)`     | `number`                     | number (canonicalized; `NaN`/`Infinity` → `IGX-0601`) |
-| `bool(d?)`                                     | `boolean`                    | boolean                                               |
-| `str(d?)`                                      | `string`                     | string                                                |
-| `vec2(d?)`, `vec3(d?)`, `vec4(d?)`, `quat(d?)` | `Vec2Like`…`QuatLike`        | array of numbers                                      |
-| `color(d?)`                                    | `ColorLike`                  | `[r, g, b, a]` in sRGB 0–1                            |
-| `enumOf(values, default)`                      | the string union             | the string value                                      |
-| `entityRef<E>()`                               | `E \| null`, tracked         | `{ "$entity": "<uid>" }` or `null`                    |
-| `componentRef(Type)`                           | `C \| null`, tracked         | `{ "$component": "<uid>" }` or `null`                 |
-| `asset(TypeToken)`                             | `AssetHandle<A> \| null`     | `{ "$asset": "<address>" }` or `null`                 |
-| `array(item, d?)`                              | `T[]`                        | array                                                 |
-| `record(fields)`, `map(value)`                 | struct / `Record<string, T>` | object                                                |
-| `optional(inner)`                              | `T \| null`                  | inner encoding or `null`                              |
-| `layerMask(names?)`                            | `readonly string[]`          | array of layer names                                  |
-| `curve(d?)`                                    | `CurveValue`                 | `{ "keys": [[t, v, inTangent, outTangent], …] }`      |
-| `custom(codec)`                                | whatever the codec returns   | whatever `serialize` returns                          |
+| Kind | Field value | JSON encoding |
+| --- | --- | --- |
+| `f32(d?)`, `f64(d?)`, `i32(d?)`, `u32(d?)` | `number` | number (canonicalized; `NaN`/`Infinity` → `IGX-0601`) |
+| `bool(d?)` | `boolean` | boolean |
+| `str(d?)` | `string` | string |
+| `vec2(d?)`, `vec3(d?)`, `vec4(d?)`, `quat(d?)` | `Vec2Like`…`QuatLike` | array of numbers |
+| `color(d?)` | `ColorLike` | `[r, g, b, a]` in sRGB 0–1 |
+| `enumOf(values, default)` | the string union | the string value |
+| `entityRef<E>()` | `E \| null`, tracked | `{ "$entity": "<uid>" }` or `null` |
+| `componentRef(Type)` | `C \| null`, tracked | `{ "$component": "<uid>" }` or `null` |
+| `asset(TypeToken)` | `AssetHandle<A> \| null` | `{ "$asset": "<address>" }` or `null` |
+| `array(item, d?)` | `T[]` | array |
+| `record(fields)`, `map(value)` | struct / `Record<string, T>` | object |
+| `optional(inner)` | `T \| null` | inner encoding or `null` |
+| `layerMask(names?)` | `readonly string[]` | array of layer names |
+| `curve(d?)` | `CurveValue` | `{ "keys": [[t, v, inTangent, outTangent], …] }` |
+| `custom(codec)` | whatever the codec returns | whatever `serialize` returns |
 
 ### `Time` (`app.time`)
 
-| Property                                      | Meaning                                             | Default |
-| --------------------------------------------- | --------------------------------------------------- | ------- |
-| `deltaTime` / `unscaledDeltaTime`             | Scaled / clamped-but-unscaled frame delta           | —       |
-| `fixedDeltaTime`                              | One fixed step; writable between frames             | `1/60`  |
-| `maximumDeltaTime`                            | Clamp on a raw frame delta; writable                | `0.1`   |
-| `timeScale`                                   | Scaled = unscaled × this; writable, `0` freezes     | `1`     |
-| `paused`                                      | Set via `app.pause()` / `app.resume()`              | `false` |
-| `time` / `unscaledTime` / `fixedTime`         | Seconds since the first frame                       | `0`     |
-| `realtimeSinceStartup`                        | Wall clock, unaffected by pause or `timeScale`      | —       |
-| `frameCount`, `inFixedStep`, `fixedStepAlpha` | Frame counter, fixed-loop flag, interpolation alpha | —       |
+| Property | Meaning | Default |
+| --- | --- | --- |
+| `deltaTime` / `unscaledDeltaTime` | Scaled / clamped-but-unscaled frame delta | — |
+| `fixedDeltaTime` | One fixed step; writable between frames | `1/60` |
+| `maximumDeltaTime` | Clamp on a raw frame delta; writable | `0.1` |
+| `timeScale` | Scaled = unscaled × this; writable, `0` freezes | `1` |
+| `paused` | Set via `app.pause()` / `app.resume()` | `false` |
+| `time` / `unscaledTime` / `fixedTime` | Seconds since the first frame | `0` |
+| `realtimeSinceStartup` | Wall clock, unaffected by pause or `timeScale` | — |
+| `frameCount`, `inFixedStep`, `fixedStepAlpha` | Frame counter, fixed-loop flag, interpolation alpha | — |
 
 ### `Signal<T>`
 
@@ -356,15 +365,15 @@ last (`min`, `max`, `step`, `tooltip`, `group`, `hidden`, `readonly`, `transient
 `startCoroutine(routine)` / `stopCoroutine(handle)` / `stopAllCoroutines()` on a `Script`, plus the
 `app.coroutines` host. A `Coroutine` is `Generator<CoroutineYield, void, unknown>`.
 
-| Yield                                 | Resumes                                                                                    |
-| ------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `yield` / `yield null`                | Next frame, after every `update()`                                                         |
-| `waitSeconds(s)`                      | After `s` scaled seconds (inclusive, relative `1e-6` tolerance)                            |
-| `waitSecondsRealtime(s)`              | After `s` unscaled seconds                                                                 |
-| `waitFixedUpdate()`                   | After the next fixed step                                                                  |
-| `waitUntil(pred)` / `waitWhile(pred)` | When the predicate flips, checked in the Update phase                                      |
-| `yield handle`                        | When that coroutine finishes                                                               |
-| `yield promise`                       | First `Update` after it settles; the value is the `yield` result, a rejection is thrown in |
+| Yield | Resumes |
+| --- | --- |
+| `yield` / `yield null` | Next frame, after every `update()` |
+| `waitSeconds(s)` | After `s` scaled seconds (inclusive, relative `1e-6` tolerance) |
+| `waitSecondsRealtime(s)` | After `s` unscaled seconds |
+| `waitFixedUpdate()` | After the next fixed step |
+| `waitUntil(pred)` / `waitWhile(pred)` | When the predicate flips, checked in the Update phase |
+| `yield handle` | When that coroutine finishes |
+| `yield promise` | First `Update` after it settles; the value is the `yield` result, a rejection is thrown in |
 
 ### `defineExtension`
 
@@ -392,92 +401,50 @@ Misuse throws `IgnifxError` with a stable `code`, a `context` record, and a `hin
 narrows an `unknown`. `AssetLoadError` adds `address` and `url`. Codes are `IGX-####`, where the
 first two digits are the area.
 
-| Range  | Area                           | Range         | Area                               |
-| ------ | ------------------------------ | ------------- | ---------------------------------- |
-| `01xx` | Lifecycle, app, time           | `06xx`        | Serialization and schemas          |
-| `02xx` | Components and registration    | `07xx`        | Rendering (`IGX-0701` = no WebGPU) |
-| `03xx` | Scenes, layers, parenting      | `08xx`–`13xx` | Input, physics, audio, 2D, 3D, UI  |
-| `04xx` | Extensions, services, settings | `14xx`–`15xx` | Platform, devtools                 |
-| `05xx` | Assets                         | `9xxx`        | Third-party extensions             |
+| Range | Area | Range | Area |
+| --- | --- | --- | --- |
+| `01xx` | Lifecycle, app, time, tweens | `10xx` | Audio |
+| `02xx` | Components and registration | `11xx` | 2D (`1150` up: 2D physics) |
+| `03xx` | Scenes, layers, parenting | `12xx` | 3D |
+| `04xx` | Extensions, services, settings | `13xx` | UI |
+| `05xx` | Assets (`0550` up: the Vite plugin) | `14xx` | Platform and storage (`1401`–`1419`: the CLI; `1460` up: Electron) |
+| `06xx` | Serialization and schemas (`0650` up: the Vite plugin) | `15xx` | Diagnostics and devtools |
+| `07xx` | Rendering (`IGX-0701` = no WebGPU) | `16xx` | Terrain |
+| `08xx` | Input | `17xx` | Particles, 3D and 2D |
+| `09xx` | 3D physics | `18xx` | Editor host |
 
-`CoreErrorCode` names every kernel code; `CORE_ERROR_MESSAGES` holds the templates. Runtime failures inside callbacks, coroutines, systems, extensions, and the asset pipeline reach `app.onError` as an `ErrorReport` rather than being thrown at the caller.
+`9xxx` is reserved for extensions published outside the `@ignifx` scope. `CoreErrorCode` names every kernel code; `CORE_ERROR_MESSAGES` holds the templates. Runtime failures inside callbacks, coroutines, systems, extensions, and the asset pipeline reach `app.onError` as an `ErrorReport` rather than being thrown at the caller.
 
 ## Recipes
 
-| Recipe (generated from `examples/recipes/`, so it compiles)                              | Task                                                                           |
-| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| [`load-a-model`](references/recipes/load-a-model.md)                                     | Load a `.glb` and show it with a `Model` component                             |
-| [`spawn-a-prefab`](references/recipes/spawn-a-prefab.md)                                 | Load a `.prefab.json` as a `SceneAsset` and stamp copies of it out             |
-| [`spawn-a-prefab-on-click`](references/recipes/spawn-a-prefab-on-click.md)               | Raycast from the camera on a click and instantiate a physics prefab at the hit |
-| [`bind-an-action-and-read-it`](references/recipes/bind-an-action-and-read-it.md)         | Build an action document with two control schemes and read it in `update`      |
-| [`character-controller-3d`](references/recipes/character-controller-3d.md)               | Walk and jump a `CharacterController` in `fixedUpdate`, with coyote time       |
-| [`platformer-controller-2d`](references/recipes/platformer-controller-2d.md)             | Run and jump a `CharacterController2D` with autostep and snap-to-ground        |
-| [`animate-a-sprite-from-an-atlas`](references/recipes/animate-a-sprite-from-an-atlas.md) | Play a clip from a `.spriteanim.json` and flip the sprite by direction         |
-| [`play-a-one-shot-and-a-loop`](references/recipes/play-a-one-shot-and-a-loop.md)         | Play a positional one-shot on a bus and fade a music loop with a tween         |
-| [`build-a-pause-menu`](references/recipes/build-a-pause-menu.md)                         | Pause the app, swap action maps, and drive a `Dialog` by keyboard and pad      |
-| [`write-a-custom-shader`](references/recipes/write-a-custom-shader.md)                   | Declare a `.wgsl` with `// @ignifx` pragmas and drive its uniforms             |
-| [`add-a-surface-shader`](references/recipes/add-a-surface-shader.md)                     | Layer a `.surface.wgsl` on PBR and keep its lighting and shadows               |
-| [`add-a-custom-post-process`](references/recipes/add-a-custom-post-process.md)           | Record a `.post.wgsl` into `PostProcessStack.custom` beside bloom              |
-| [`instance-many-meshes`](references/recipes/instance-many-meshes.md)                     | Draw thousands of copies of one mesh from a matrix slab, in one draw call      |
-| [`play-a-particle-effect`](references/recipes/play-a-particle-effect.md)                 | Play a preset effect, stop it, and fast-forward it with `simulate`             |
-| [`burst-particles-on-hit`](references/recipes/burst-particles-on-hit.md)                 | Emit a one-off burst from a trigger callback, drawn the same frame             |
-| [`particles-in-2d`](references/recipes/particles-in-2d.md)                               | Draw one particle document as sprites on a 2D sorting layer                    |
-| [`load-a-heightmap-terrain`](references/recipes/load-a-heightmap-terrain.md)             | Load a `.terrain.json` with a 16-bit heightmap and query the ground            |
-| [`walk-on-terrain`](references/recipes/walk-on-terrain.md)                               | Couple a terrain to a `HeightfieldCollider` and walk a character on it         |
-| [`scatter-foliage`](references/recipes/scatter-foliage.md)                               | Place seeded grass with `TerrainScatter` and a wind foliage material           |
-
-All twenty-eight — tweens, saves, rebinding, tilemaps, physics queries, the camera rig, devtools counters, baking light probes, lightmaps — are indexed in [`references/recipes/README.md`](references/recipes/README.md).
+Task-sized examples, each compiled from a real source file, are indexed with one line apiece in [`recipes/README.md`](references/recipes/README.md): loading models and prefabs, instancing, save games, binding and rebinding input, 3D and 2D character controllers, physics queries, the third-person camera, tweens, sprite animation, tilemaps, custom shaders, particles, terrain, baked light probes and lightmaps, audio, a pause menu, and devtools counters. Each subsystem skill carries further recipes of its own.
 
 ## File formats
 
-| Page                                                                                                                                                                                                                    | Covers                                                                                                          |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| [`formats/scene.md`](references/formats/scene.md)                                                                                                                                                                       | `.scene.json` / `.prefab.json`: entities, instances, overrides                                                  |
-| [`formats/ignifx.scene.md`](references/formats/ignifx.scene.md)                                                                                                                                                         | The scene file's top-level fields (generated)                                                                   |
-| [`formats/material.md`](references/formats/material.md)                                                                                                                                                                 | `.material.json`: PBR and Standard, texture slots                                                               |
-| [`formats/ignifx.material.md`](references/formats/ignifx.material.md)                                                                                                                                                   | The material file's fields (generated)                                                                          |
-| [`formats/ignifx.environment.md`](references/formats/ignifx.environment.md) · [`ignifx-probes.md`](references/formats/ignifx-probes.md) · [`ignifx-lightmap.md`](references/formats/ignifx-lightmap.md)                 | `.environment.json`, `.probes.json`, `.lightmap.json`: IBL and skybox, light-probe grids, lightmaps (generated) |
-| [`formats/inputactions.md`](references/formats/inputactions.md)                                                                                                                                                         | `.input.json`: maps, actions, paths, composites, processors                                                     |
-| [`formats/ignifx.audiobuses.md`](references/formats/ignifx.audiobuses.md)                                                                                                                                               | `.audio.json`: the bus tree (`Master` root, volumes, children)                                                  |
-| [`formats/ignifx.physicsmaterial.md`](references/formats/ignifx.physicsmaterial.md)                                                                                                                                     | `.physicsmaterial.json`: friction, restitution, combine rules                                                   |
-| [`formats/ignifx.spriteatlas.md`](references/formats/ignifx.spriteatlas.md) · [`ignifx.spriteanimation.md`](references/formats/ignifx.spriteanimation.md) · [`ignifx.tilemap.md`](references/formats/ignifx.tilemap.md) | `.atlas.json`, `.spriteanim.json`, `.tilemap.json`: 2D frames, clips, tile layers                               |
-| [`formats/wgsl.md`](references/formats/wgsl.md)                                                                                                                                                                         | `.wgsl`: the `// @ignifx` pragma grammar, surface hooks, post effects                                           |
-| [`formats/ignifx.particles.md`](references/formats/ignifx.particles.md)                                                                                                                                                 | `.particles.json`: the effect document's modules (generated)                                                    |
-| [`formats/ignifx.terrain.md`](references/formats/ignifx.terrain.md)                                                                                                                                                     | `.terrain.json`: size, heightmap or noise, chunks, layers, splat (generated)                                    |
-| [`formats/ignifx.i18n.md`](references/formats/ignifx.i18n.md)                                                                                                                                                           | `.i18n.json`: every locale's messages, ICU-style plurals                                                        |
-| [`formats/ignifx.animator.md`](references/formats/ignifx.animator.md)                                                                                                                                                   | `.animator.json`: parameters, layers, states, transitions, 1D blend trees                                       |
-| [`formats/components.md`](references/formats/components.md)                                                                                                                                                             | Every built-in component's fields and defaults (generated)                                                      |
-| [`formats/ignifx.schemas.json`](references/formats/ignifx.schemas.json)                                                                                                                                                 | All of the above bundled, for tools and validators                                                              |
+Every ignifx JSON file carries a `format` string and a `formatVersion`, and `@ignifx/vite-plugin` validates it at build time. [`formats/README.md`](references/formats/README.md) indexes a page for every format; the ones the kernel owns:
 
-`assets.manifest.json` (format `ignifx.manifest`, version 1) and the `.meta.json` sidecar are
-documented in `@ignifx/vite-plugin`'s `README.md`, together with `virtual:ignifx/manifest` and
-`virtual:ignifx/scripts`.
+- [`formats/scene.md`](references/formats/scene.md): `.scene.json` and `.prefab.json`, with every built-in component's fields in [`formats/components.md`](references/formats/components.md).
+- [`formats/material.md`](references/formats/material.md) and [`formats/wgsl.md`](references/formats/wgsl.md): `.material.json` and the `// @ignifx` shader pragmas.
+- `.mesh.json`, `.environment.json`, `.probes.json`, `.lightmap.json` and each extension's files (`.input.json`, `.audio.json`, `.atlas.json`, `.tilemap.json`, `.animator.json`, `.particles.json`, `.terrain.json`, `.i18n.json`, …) have generated field tables there, bundled as [`formats/ignifx.schemas.json`](references/formats/ignifx.schemas.json).
 
-## Gotchas (top 21)
+`assets.manifest.json` and the `.meta.json` sidecar are documented in the `@ignifx/vite-plugin` package's `README.md`.
 
-1. **Rendering features are declared before `app.start()`.** `shadows`, `postProcessing`, `skeletons`, `stencil`, `materialPlugins`, `deviceLostRecovery` and the rest are `false` by default and refused afterwards with `IGX-0704`. Set `settings.rendering.features`, or call `ctx.requireRenderingFeature(name)` from an extension. `postProcessing` is the one people forget: a `PostProcessStack` without it logs `IGX-0710` and does nothing.
-2. **A mesh added at runtime appears a few frames late.** Spike S2.2 measured **3 extra frames** for a cold material family against 0–2 for a warmed one. `app.start()` warms the `boot` preload group; use `app.renderer.warmUp(materials)` for anything loaded later, a shader material included (ADR-0014).
+## Gotchas (top 12)
+
+1. **Rendering features are declared before `app.start()`.** All are `false` by default and refused afterwards with `IGX-0704`: set `settings.rendering.features`, or call `ctx.requireRenderingFeature(name)` from an extension. `postProcessing` is the one people forget: a `PostProcessStack` without it logs `IGX-0710` and does nothing.
+2. **A mesh added at runtime appears a few frames late.** A material family that did not exist when the scene was registered is compiled on Babylon Lite's runtime path: about 3 extra frames, against 0–2 for a warmed one. `app.start()` warms the `boot` preload group; use `app.renderer.warmUp(materials)` for anything loaded later, a shader material included.
 3. **One `Environment` per world** (a second logs `IGX-0705`), **point and hemispheric lights cast no shadows** (`IGX-0703`), and **a world with no enabled camera renders nothing** (`IGX-0706`).
 4. **Assets are delivered in `PreUpdate` once the app runs.** A load requested in `update` is ready on the _next_ frame at the earliest, and `handle.value` throws `IGX-0501` until then. In a headless test that has called `app.start()`, nothing settles until you `app.step()`; `await` loads _before_ `start()` instead, where they settle as they finish.
-5. **Pair every `load` with a `release`.** Handles are shared and reference-counted; `using` works. An `asset()` field is not a holder — the scene instance that loaded the asset releases it.
+5. **Pair every `load` with a `release`**; `using` works. An `asset()` field is not a holder: the scene instance that loaded the asset releases it.
 6. **`active = false` hides, `destroy()` removes.** Lite disposes a mesh removed from its last scene, permanently — never unhook Lite objects to hide something.
 7. **`fixedUpdate` runs 0…N times per frame.** Integrate with its `dt` argument, never with `app.time.deltaTime`. And no `async` lifecycle callbacks: use a coroutine.
 8. **`.lite` escape hatches are unstable.** `app.lite`, `world.lite`, `transform.lite`, `asset.lite` expose Babylon Lite objects with no stability guarantee; ask for a first-class API.
 9. **WebGPU only, no fallback.** Probe with `isWebGpuAvailable()`; `createApp({ canvas })` rejects with `IGX-0701` when no adapter is available.
 10. **Degrees in the public API; world getters allocate.** A radian API carries a `Rad` suffix, and `transform.position`/`.forward`/… allocate — use `positionToRef(out)` in hot paths.
-11. **Browsers start audio locked.** `app.audio.state` is `"locked"` until a user gesture or `app.audio.unlock()`; plays made before then are queued, not lost. Headless apps are never locked.
-12. **Physics needs a completed fixed step.** Queries throw `IGX-0902` before the first step; collision and trigger callbacks reach both entities with `other` set; `MeshCollider` needs a GPU app.
-13. **2D physics filters by the project's first sixteen layers only.** Rapier's interaction groups are 16 bits; a 2D collider on a higher layer logs `IGX-1152` and falls back to layer 0. Queries throw `IGX-1153` before the first fixed step, as in 3D.
-14. **`twoD.pixelsPerUnit` is 100 by default**, so a 32-px sprite is 0.32 m; set it to your art's pixel size (16, 32) or everything looks tiny. 2D is +Y up in metres; the adapter flips into Lite's pixel space.
-15. **A click on UI never reaches gameplay, but a drag does.** Input reads `pointerdown` from the canvas and the overlay is its sibling, while `pointermove`/`pointerup` come from the window — so the UI host sets `app.input.uiHasPointer` during such a drag and pointing-device actions read as released. Pointer positions are backing-store pixels, the space `pickAsync` and `worldToScreen` use. Only _text_ fields set `app.input.uiHasFocus`. `WorldText` must exist before `app.start()` (`IGX-1308`); spawn `WorldText2D` mid-game instead.
-16. **Two `Model`s of one `.glb` cannot be animated independently.** Lite binds an animation group to one manager and a cloned skinned mesh shares the template's skeleton, so a second `Animator` is refused the clips (reported on `app.onError`). Load the `.glb` under a second address for a second animated character.
-17. **A sandboxed Electron preload cannot be an ES module.** An `.mjs` preload leaves `window.ignifxHost` undefined with no error at all; build `desktop/preload.ts` as CommonJS (`index.cjs`). Device-loss recovery needs `shadows.technique` `"csm"` (the 3D templates' choice) or `"esm"`; PCF shadow maps do not survive a lost device.
-18. **Hot reload `"patch"` keeps state and skips every lifecycle callback.** Change a field layout and write `static hotReload = "recreate"`, or the engine re-creates anyway with an `IGX-0207` warning; wire it with `acceptHotReload(app)` from `virtual:ignifx/scripts`.
-19. **A custom shader declares itself in its `.wgsl`.** `// @ignifx system time` is read as `shaderUniforms.time`, a `@ignifx shader` file is unlit and casts no ESM shadow, a `.surface.wgsl` needs a PBR host and `materialPlugins` (`IGX-0716`, `IGX-0723`), and with `instancing matrices` the shader composes `shaderSystem.world * mat4x4(input.world0..world3)` itself.
-20. **Particles are stateless.** No collisions, no sub-emitters, no per-particle sorting; `capacity` is the whole budget and the ring overwrites the oldest live particle (`droppedCount`), a looping effect the player walks up to wants `"prewarm": true`, and a system's clock is `system.time`, never `app.time`.
-21. **A terrain is 16-bit, unrotated, and answers without physics.** An 8-bit heightmap terraces (`IGX-1603`), a rotated entity logs `IGX-1604`, chunks receive shadows but cast none, `heightAt`/`raycast` read the height field rather than a collider, and `TerrainScatter` places once — `regenerate()` after a rule change.
+11. **Hot reload `"patch"` keeps state and skips every lifecycle callback.** Change a field layout and write `static hotReload = "recreate"`, or the engine re-creates anyway with an `IGX-0207` warning; wire it with `acceptHotReload(app)` from `virtual:ignifx/scripts`.
+12. **A custom shader declares itself in its `.wgsl`.** `// @ignifx system time` is read as `shaderUniforms.time`, a `@ignifx shader` file is unlit, and a `.surface.wgsl` needs a PBR host and the `materialPlugins` feature (`IGX-0716`, `IGX-0723`). Read [`formats/wgsl.md`](references/formats/wgsl.md) first.
 
-The full list, with error codes, is in [`references/gotchas.md`](references/gotchas.md).
+The full kernel list, with error codes, is in [`references/gotchas.md`](references/gotchas.md). Each extension's gotchas are in the Gotchas section of its own skill.
 
 ## Deprecated (current window)
 
@@ -485,15 +452,19 @@ None (pre-1.0: no deprecation window; breaking changes are listed in the changel
 
 ## Where to look next
 
-| Topic                                 | Read                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Frame order, callbacks, `Time`        | [`references/concepts/lifecycle.md`](references/concepts/lifecycle.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| World, entities, scenes, prefabs      | [`references/concepts/scene-graph.md`](references/concepts/scene-graph.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Components, schemas, coroutines       | [`references/concepts/scripting.md`](references/concepts/scripting.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| Cameras, lights, meshes, the renderer | [`references/concepts/rendering.md`](references/concepts/rendering.md) · [`references/concepts/baked-lighting.md`](references/concepts/baked-lighting.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Addresses, handles, loaders           | [`references/concepts/assets.md`](references/concepts/assets.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| Extensions, services, settings        | [`references/concepts/extensions.md`](references/concepts/extensions.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Every exact signature                 | [`api/core.md`](references/api/core.md) · [`api/input.md`](references/api/input.md) · [`api/audio.md`](references/api/audio.md) · [`api/physics.md`](references/api/physics.md) · [`api/physics-2d.md`](references/api/physics-2d.md) · [`api/2d.md`](references/api/2d.md) · [`api/ui.md`](references/api/ui.md) · [`api/3d.md`](references/api/3d.md) · [`api/particles.md`](references/api/particles.md) · [`api/particles-2d.md`](references/api/particles-2d.md) · [`api/terrain.md`](references/api/terrain.md) · [`api/electron.md`](references/api/electron.md) · [`api/devtools.md`](references/api/devtools.md) · the subsystem skills under `packages/*/skills/` |
-| Design rationale                      | `docs/architecture/`, `docs/adr/`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Topic | Read |
+| --- | --- |
+| Frame order, callbacks, `Time` | [`concepts/lifecycle.md`](references/concepts/lifecycle.md) |
+| World, entities, scenes, prefabs | [`concepts/scene-graph.md`](references/concepts/scene-graph.md) |
+| Components, schemas, coroutines, hot reload | [`concepts/scripting.md`](references/concepts/scripting.md) |
+| Cameras, lights, meshes, shaders, the renderer | [`concepts/rendering.md`](references/concepts/rendering.md) |
+| Reflection probes, light probes, lightmaps | [`concepts/baked-lighting.md`](references/concepts/baked-lighting.md) |
+| Addresses, handles, loaders | [`concepts/assets.md`](references/concepts/assets.md) |
+| Extensions, services, settings | [`concepts/extensions.md`](references/concepts/extensions.md) |
+| `app.platform`, `app.storage`, saves | [`concepts/platform-and-storage.md`](references/concepts/platform-and-storage.md) |
+| Every exact signature | `references/api/<entry>.md`, one generated page per package entry point, listed in [`api/README.md`](references/api/README.md). The pages are large: search them for a symbol instead of reading them whole |
+| An extension | Its own skill (the table under "Adding extensions") |
+
+This skill ships in the `ignifx` package (`node_modules/ignifx/skills/ignifx/` in an installed project, `skills/ignifx/` in the engine repository), and every path above is relative to this file.
 
 `docs/migrations/` exists only after 1.0.
