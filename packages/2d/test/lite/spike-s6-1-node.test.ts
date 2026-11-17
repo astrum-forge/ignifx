@@ -19,7 +19,7 @@ import type { TwoDAppHarness } from "../support/app.js";
 import type { Texture2D } from "@babylonjs/lite";
 
 /**
- * **Spike S6.1, the Node half** (`docs/plan/engineering-plan.md` Phase 6).
+ * **Sprite sync at scale, the Node half.**
  *
  * The browser half measures the same scene on SwiftShader; this one measures it under Node with no
  * device at all, which isolates the sync system's own arithmetic from anything WebGPU does. The
@@ -40,10 +40,10 @@ afterEach(() => {
   harness = null;
 });
 
-/** How many cells the spike's map spans on each axis. */
+/** How many cells the map spans on each axis. */
 const MAP_EDGE = 100;
 
-/** How many moving sprites the spike drives. */
+/** How many moving sprites the test drives. */
 const MOVERS = 1000;
 
 /** The budget, in milliseconds of CPU per frame, coding standards §7 sets for a 2D template. */
@@ -79,7 +79,7 @@ function bigMap(): TilemapAsset {
   return new TilemapAsset("2d/big.tilemap.json", defineTilemap(input));
 }
 
-describe("S6.1 sprite sync at scale, headless", () => {
+describe("sprite sync at scale, headless", () => {
   it("stays under the per-frame budget and touches nothing while idle", async () => {
     const created = await createTwoDApp();
     harness = created;
@@ -142,7 +142,7 @@ describe("S6.1 sprite sync at scale, headless", () => {
     const loaded = measure(60, true);
 
     globalThis.console.log(
-      `S6.1-node movers=${String(MOVERS)} tiles=${String(MAP_EDGE * MAP_EDGE)} chunkedTiles=${String(tiles.spriteCount)} ` +
+      `sprite-sync-node movers=${String(MOVERS)} tiles=${String(MAP_EDGE * MAP_EDGE)} chunkedTiles=${String(tiles.spriteCount)} ` +
         `loadedMedianMs=${loaded.median.toFixed(4)} loadedWorstMs=${loaded.worst.toFixed(4)} ` +
         `idleMedianMs=${idle.median.toFixed(4)} idleWorstMs=${idle.worst.toFixed(4)} ` +
         `syncedWhileIdle=${String(runtime.syncedLastFrame)}`,

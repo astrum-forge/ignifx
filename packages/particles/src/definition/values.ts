@@ -4,8 +4,8 @@ import type { ColorValue, GradientStop, ScalarValue } from "./types.js";
 import type { ColorLike, CurveKey, CurveValue } from "@ignifx/core";
 
 // Hermite curves, gradients, and the 64-sample lookup rows both evaluators read
-// (`docs/plan/2026-09-terrain-particles-shaders.md` §4.1). The baking functions run once inside
-// `defineParticles`; the sampling functions read preallocated rows through `out` parameters.
+// (ADR-0025). The baking functions run once inside `defineParticles`; the sampling functions read
+// preallocated rows through `out` parameters.
 
 /** Floats per colour sample. */
 const COLOR_FLOATS = 4;

@@ -9,8 +9,8 @@ import { createBrowserApp, gpuDeviceErrors, pixelLuminance, settle, SETTLE_FRAME
 import type { BrowserApp } from "./support/browser-harness.js";
 
 /**
- * HDR bloom on a real device (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G12): the mip
- * chain exists, and a bright sphere lights the black pixels around it.
+ * HDR bloom on a real device (`docs/architecture/07-rendering.md` §2.7): the mip chain exists, and
+ * a bright sphere lights the black pixels around it.
  */
 
 /** The canvas edge. 64 gives the chain six mips of at least one pixel. */

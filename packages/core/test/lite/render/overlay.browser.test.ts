@@ -30,9 +30,9 @@ import type { BrowserApp } from "../../render/support/browser-harness.js";
  * The scene is a red box at the origin, seen by a camera 4 m back, on a grey clear colour. The
  * overlay holds a smaller green box **behind** the red one: in the render scene it would be hidden,
  * so a green centre proves the overlay drew over the frame with a depth buffer of its own. A red
- * pixel beside it and a grey corner prove the render scene was not blacked out (editor spike S0.2
- * §3.2). Every case runs at MSAA 1 and 4, on the plain path and on the post-processing path, whose
- * render scene resolves into an offscreen target and presents through `ignifx:present`.
+ * pixel beside it and a grey corner prove the render scene was not blacked out. Every case runs at
+ * MSAA 1 and 4, on the plain path and on the post-processing path, whose render scene resolves into
+ * an offscreen target and presents through `ignifx:present`.
  *
  * This file lives under `test/lite/**` because it fills the overlay with Lite meshes, as an editor
  * does, and registers Lite text and sprite renderers the way `@ignifx/ui` and `@ignifx/2d` do.

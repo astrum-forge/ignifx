@@ -1,6 +1,6 @@
 /**
- * The scene view's grid (engine ask E31): a script on the `Scene Grid` entity of the host's
- * persistent `editor` scene, which moves the grid with the editor camera every frame.
+ * The scene view's grid: a script on the `Scene Grid` entity of the host's persistent `editor`
+ * scene, which moves the grid with the editor camera every frame.
  */
 
 import { Script } from "@ignifx/core";

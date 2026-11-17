@@ -5,7 +5,7 @@ import type { ShaderTextureDeclaration, ShaderUniformDeclaration, ShaderUniformT
 
 /**
  * The raw Babylon Lite material-plugin points, as a `@beta` escape hatch
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.2, ADR-0024).
+ * (ADR-0024).
  *
  * `@beta` because the meaning of each point is whatever the surrounding Lite template declares at
  * that line; ignifx's stable contract is the three hooks of `./surface-shader.ts`. Four rules read
@@ -63,7 +63,7 @@ export const MATERIAL_PLUGIN_DEFAULT_PRIORITY = 500;
  * How many `texture`/`sampler` pairs one material's plugins may declare together.
  *
  * @remarks
- * Measured on a device on 2026-09-08 (spike S0.2): a fully textured PBR material — base colour,
+ * Measured on a device on 2026-09-08: a fully textured PBR material — base colour,
  * normal, ORM, emissive — with image-based lighting and one PCF shadow light already binds seven
  * textures and seven samplers of the sixteen per stage that every WebGPU implementation guarantees,
  * SwiftShader included, and Lite requests no higher `requiredLimits`. Nine is what is left, and it

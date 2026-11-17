@@ -28,13 +28,13 @@ import type { Schema } from "../schema/types.js";
  *
  * ## The schema is three records, not a discriminated list
  *
- * §2.7 describes an "ordered list of effects". A list of heterogeneous effect records needs either a
- * `custom()` field with a hand-written codec or a tagged union the schema kinds cannot express, and
- * neither is inspectable without extra tooling. Three optional records with an `order` each is the
- * simplest shape that round-trips through `encodeProps`/`decodeProps` unchanged, shows up in the
- * inspector with real field names and tooltips, and still lets a project reorder the chain. The
- * cost is that a fourth effect would add a fourth record rather than a new list entry; that is a
- * schema addition, which the format already tolerates.
+ * A list of heterogeneous effect records needs either a `custom()` field with a hand-written codec
+ * or a tagged union the schema kinds cannot express, and neither is inspectable without extra
+ * tooling. Three optional records with an `order` each is the simplest shape that round-trips
+ * through `encodeProps`/`decodeProps` unchanged, shows up in the inspector with real field names
+ * and tooltips, and still lets a project reorder the chain. The cost is that a fourth effect would
+ * add a fourth record rather than a new list entry; that is a schema addition, which the format
+ * already tolerates.
  *
  * ## It needs `rendering.features.postProcessing`, declared at app start
  *
@@ -99,7 +99,7 @@ import type { Schema } from "../schema/types.js";
  * chain after tone mapping, and `order`, `weight`, `kernel`, `threshold`, `exposure` and `scale`
  * apply. With `rendering.hdr` the HDR bloom **replaces** it: a downsample/upsample chain on the
  * linear scene colour, always before the output pass whatever `order` says, tuned by `intensity`,
- * `radius` and `hdrThreshold` (GI plan step G12).
+ * `radius` and `hdrThreshold`.
  *
  * @public
  */
@@ -160,8 +160,8 @@ export interface ImageProcessingEffectSettings {
 }
 
 /**
- * The `contactShadows` record a `PostProcessStack` declares (GI plan step G10,
- * `docs/architecture/07-rendering.md` §2.7): Lite's screen-space contact shadows towards the main
+ * The `contactShadows` record a `PostProcessStack` declares
+ * (`docs/architecture/07-rendering.md` §2.7): Lite's screen-space contact shadows towards the main
  * directional light, fed from the shared scene-input depth.
  *
  * @public
@@ -180,9 +180,9 @@ export interface ContactShadowsEffectSettings {
 }
 
 /**
- * The `ssgi` record a `PostProcessStack` declares (GI plan step G11,
- * `docs/architecture/07-rendering.md` §2.7): Lite's `@beta` screen-space global illumination, one
- * bounce of the lit scene colour. Desktop tier.
+ * The `ssgi` record a `PostProcessStack` declares (`docs/architecture/07-rendering.md` §2.7):
+ * Lite's `@beta` screen-space global illumination, one bounce of the lit scene colour. Desktop
+ * tier.
  *
  * @beta
  */

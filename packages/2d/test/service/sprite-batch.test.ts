@@ -16,8 +16,7 @@ import type { TwoDAppHarness } from "../support/app.js";
 import type { AssetHandle, AssetState } from "@ignifx/core";
 
 /**
- * `app.twoD.createSpriteBatch` on the null engine
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §2.2).
+ * `app.twoD.createSpriteBatch` on the null engine.
  *
  * A `Sprite2DLayer` is a plain object over a `Float32Array`, so the whole batch — layer creation,
  * every write, `count`, `hide` and teardown — runs under Node against an atlas whose Lite half is

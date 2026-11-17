@@ -1,6 +1,6 @@
 /**
  * Level-of-detail selection for terrain chunks
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §5.2).
+ * (ADR-0026).
  *
  * The thresholds double per level: level 1 takes over at `lodDistance * lodBias`, level 2 at twice
  * that, level `n` at `lodDistance * lodBias * 2^(n-1)`. A camera sitting on a threshold would

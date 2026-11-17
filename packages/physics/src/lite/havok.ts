@@ -51,7 +51,7 @@ import type { LiteEngine, LiteScene, LiteSceneNode, MutableQuat, MutableVec3, Qu
  * - `_stepWorld` (`lib/physics/havok.js:73-107`) pre-syncs node→body only for `ANIMATED` bodies and
  *   for bodies with `_preStep` set, then steps once, then syncs body→node for `DYNAMIC` bodies. A
  *   `DYNAMIC` body therefore never reads its node, which is what makes the interpolated display
- *   pose of `09-physics.md` §1 safe (spike S4.3).
+ *   pose of `09-physics.md` §1 safe.
  * - `_syncBodyToNode` writes `node.position` / `node.rotationQuaternion` — the node's **local** TRS.
  *   A body's node must therefore be a root node for its pose to be world space; the extension
  *   reports `IGX-0907` otherwise.
@@ -185,7 +185,7 @@ export interface SimulationHandles {
 }
 
 /**
- * Creates the null-engine scene the Havok world is hosted on (`09-physics.md` §1, spike S4.1).
+ * Creates the null-engine scene the Havok world is hosted on (`09-physics.md` §1).
  *
  * @returns The engine and scene. Release with {@link disposeSimulation}.
  *

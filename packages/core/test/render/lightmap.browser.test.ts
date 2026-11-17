@@ -15,10 +15,10 @@ import {
 import type { BrowserApp } from "./support/browser-harness.js";
 
 /**
- * `MeshRenderer.lightmap` (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B3): a white quad
+ * `MeshRenderer.lightmap` (`docs/architecture/07-rendering.md` §2.15): a white quad
  * whose UV2 spans a lightmap black on its left texel and white on its right reads dark on one half
  * and lit on the other, but only on a static entity. Two quads sharing one atlas through their
- * `.lightmap.json` placements (GI plan §5, spike P2) each read only their own half of it.
+ * `.lightmap.json` placements each read only their own half of it.
  */
 
 /** The canvas edge. */

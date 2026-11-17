@@ -4,7 +4,7 @@ import { deviceOf } from "./render-texture.js";
 import type { EngineContext, MaterialPlugin, SceneContext, Texture2D } from "@babylonjs/lite";
 
 /**
- * Light probes on the GPU (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B2). Its own chunk,
+ * Light probes on the GPU (`docs/architecture/07-rendering.md` §2.15). Its own chunk,
  * loaded only once a world has a `LightProbeVolume` (`CONSTITUTION.md` §2.5). Every Lite claim was
  * read from `@babylonjs/lite@1.34.0`.
  *

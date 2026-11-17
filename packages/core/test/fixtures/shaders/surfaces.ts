@@ -8,10 +8,9 @@ import type { RenderHarness } from "../../render/support/render-harness.js";
  * The `.surface.wgsl` and `.post.wgsl` fixtures, and a harness that registers the `.wgsl` loader
  * with the `materialPlugins` rendering feature declared.
  *
- * Separate from `./harness.ts` and `./sources.ts` — which belong to the shader-material brief — so
- * the two suites do not fight over one file. Every source here is real WGSL that
- * `test/lite/render/surface-shader.browser.test.ts` and `post-effect.browser.test.ts` compile on a
- * device.
+ * Separate from `./harness.ts` and `./sources.ts`, which serve the shader-material suite. Every
+ * source here is real WGSL that `test/lite/render/surface-shader.browser.test.ts` and
+ * `post-effect.browser.test.ts` compile on a device.
  */
 
 /** A surface shader that pushes the base colour towards a declared colour, masked by a texture. */

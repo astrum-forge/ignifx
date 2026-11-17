@@ -16,9 +16,8 @@ import { createNode, disposeNode } from "../../src/lite/node.js";
 import { createHeadlessScene, disposeSceneOnly } from "../../src/lite/scene.js";
 
 /**
- * Spike S1.2, Havok half — where Lite's own physics step callback sits relative to the one ignifx
- * registers (`docs/plan/engineering-plan.md` Phase 1, `docs/architecture/00-overview.md` §3.1,
- * ADR-0003).
+ * Where Lite's own physics step callback sits relative to the one ignifx registers
+ * (`docs/architecture/00-overview.md` §3.1, ADR-0003).
  *
  * `@babylonjs/lite` and `@babylonjs/havok` are imported here rather than from `src/`: test files are
  * the documented exception to the adapter boundary (coding standards §4), because verifying the
@@ -55,7 +54,7 @@ async function loadHavok(): Promise<unknown> {
   return module.default({ wasmBinary });
 }
 
-describe("S1.2 · Havok step order against the ignifx callback", () => {
+describe("Havok step order against the ignifx callback", () => {
   beforeAll(async () => {
     havok = await loadHavok();
   }, 30_000);

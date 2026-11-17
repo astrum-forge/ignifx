@@ -431,7 +431,7 @@ export class Physics2DService {
   }
 
   /**
-   * Refuses a query that ran before Rapier built its broadphase (spike S6.2). In an edit-mode app,
+   * Refuses a query that ran before Rapier built its broadphase. In an edit-mode app,
    * which never steps, it brings the bodies in line with the world instead, so the query sees what
    * the editor shows (ADR-0028, amendment of 2026-10-20).
    *

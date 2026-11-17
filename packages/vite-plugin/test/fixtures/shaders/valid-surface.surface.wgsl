@@ -1,4 +1,4 @@
-// A SurfaceShader on Lite's PBR template, from docs/plan/2026-09-terrain-particles-shaders.md §3.2.
+// A SurfaceShader on Lite's PBR template.
 // @ignifx surface
 // @ignifx uniform amount: f32 = 0.6 range(0, 1)
 // @ignifx uniform snowColor: vec3<f32> = color(0.95, 0.97, 1.0)

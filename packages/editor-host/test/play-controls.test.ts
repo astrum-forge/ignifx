@@ -170,7 +170,7 @@ describe("startEditorPlayControls", () => {
   });
 });
 
-describe("playStats (engine ask E25)", () => {
+describe("playStats", () => {
   it("averages the newest second of frames, and counts every scene's entities", async () => {
     const { app, peer } = await playView();
     const parent = app.world.createEntity("Parent");
@@ -226,7 +226,7 @@ describe("playStats (engine ask E25)", () => {
   });
 });
 
-describe("playState and playStateChanged (engine ask E24)", () => {
+describe("playState and playStateChanged", () => {
   it("reads the game's state without changing it", async () => {
     const { app, peer } = await playView();
 
@@ -300,7 +300,7 @@ describe("playState and playStateChanged (engine ask E24)", () => {
   });
 });
 
-describe("listenForEditorPlayControls (engine ask E24)", () => {
+describe("listenForEditorPlayControls", () => {
   it("keeps a port that arrives before the app, and handshakes on it once attached", async () => {
     const target = new EventTarget();
     const connector = listenForEditorPlayControls({ editorOrigin: EDITOR_ORIGIN, messageTarget: target });
@@ -601,7 +601,7 @@ class FakeImageData {
   }
 }
 
-describe("screenshot in the play view (engine ask E47)", () => {
+describe("screenshot in the play view", () => {
   /** An 800 × 400 frame, as the game's canvas would present it. */
   const frame: RenderCapture = { width: 800, height: 400, data: new Uint8ClampedArray(800 * 400 * 4) };
 
@@ -731,7 +731,7 @@ describe("screenshot in the play view (engine ask E47)", () => {
   });
 });
 
-describe("queryRuntime in the play view (engine ask E48)", () => {
+describe("queryRuntime in the play view", () => {
   /** A component whose props the answer carries. */
   class Mover extends Script.define({ speed: f32(2) }) {
     static typeId = "test/Mover";
@@ -1017,7 +1017,7 @@ function read(app: App, path: string): readonly number[] {
     : [device.valueAt(control.offset)];
 }
 
-describe("sendInput in the play view (engine ask E49)", () => {
+describe("sendInput in the play view", () => {
   /**
    * Builds a game with `@ignifx/input` and play controls, handshaken.
    *

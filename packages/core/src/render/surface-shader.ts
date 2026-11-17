@@ -25,7 +25,7 @@ import type { ColorLike } from "../math/types.js";
 
 /**
  * Surface shaders: lit, shadowed, IBL-lit custom looks on a **PBR** material
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.2, ADR-0024).
+ * (ADR-0024).
  *
  * Three named hooks into the engine's own PBR shader, compiled into one Babylon Lite material
  * plugin, so a custom look keeps direct lighting, shadows, IBL, fog and tone mapping.

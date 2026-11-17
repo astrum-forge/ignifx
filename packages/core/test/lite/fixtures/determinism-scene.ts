@@ -1,7 +1,7 @@
 import { createNode, disposeNode, linkParent, readWorldMatrix } from "../../../src/lite/node.js";
 
 /**
- * The S1.3 determinism scene, shared by the Node run (`determinism.test.ts`) and the Chromium run
+ * The determinism scene, shared by the Node run (`determinism.test.ts`) and the Chromium run
  * (`determinism.browser.test.ts`) so the two hash exactly the same work.
  *
  * The per-frame mutation uses **only** integer arithmetic and additions of dyadic rationals
@@ -11,8 +11,8 @@ import { createNode, disposeNode, linkParent, readWorldMatrix } from "../../../s
  * avoided on purpose: the ECMAScript specification lets an implementation approximate the
  * transcendental functions, so a hash that depended on them would not be a fair Node-vs-Chromium
  * comparison. The rounding that remains happens where it matters — inside Lite's matrix compose and
- * multiply, and in its `Float32Array` world-matrix storage — and that is exactly what S1.3 is
- * testing.
+ * multiply, and in its `Float32Array` world-matrix storage — and that is exactly what the two
+ * runs test.
  */
 
 /**

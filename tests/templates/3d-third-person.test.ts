@@ -7,7 +7,7 @@ import { createThirdPersonApp, THIRD_PERSON } from "./third-person-app.js";
 import type { App, Entity, MemorySink } from "@ignifx/core";
 
 /**
- * `templates/3d-third-person` is editor-ready (ignifx-editor plan, engine ask E2): its level is
+ * `templates/3d-third-person` is editor-ready: its level is
  * `assets/scenes/main.scene.json`, loaded by a boilerplate `main.ts`. `entry-rules.test.ts` checks
  * the entry's imports for all four templates.
  */
@@ -85,9 +85,9 @@ describe("3d-third-person's scene file", () => {
     }
   });
 
-  // ignifx-editor plan, engine ask E15: `@ignifx/editor-host` builds the app from the extensions and
-  // the scripts and loads the scene, with no game code in between. `createThirdPersonApp` does the
-  // same, so every primitive has to come from a `.mesh.json` file the scene names.
+  // `@ignifx/editor-host` builds the app from the extensions and the scripts and loads the scene,
+  // with no game code in between. `createThirdPersonApp` does the same, so every primitive has to
+  // come from a `.mesh.json` file the scene names.
   it("resolves every MeshRenderer's mesh from a .mesh.json file, with no code publishing one first", async () => {
     const { entities } = await loadLevel();
 

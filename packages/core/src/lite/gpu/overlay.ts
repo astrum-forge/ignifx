@@ -25,8 +25,7 @@ import type { EngineContext, RenderTask, SceneContext } from "@babylonjs/lite";
  *
  * `createUtilityLayer` (`index.d.ts` 4109) builds its scene with Lite's default render task, and
  * `registerScene` (11268) then fixes that task up against the **last** registered rendering
- * context (`lib/scene/swapchain-overlay.js` 11). Two things go wrong in an ignifx app (editor spike
- * S0.2 §3.2):
+ * context (`lib/scene/swapchain-overlay.js` 11). Two things go wrong in an ignifx app:
  *
  * - When `@ignifx/ui`'s text renderer or `@ignifx/2d`'s sprite renderer was registered after the
  *   render scene, it is the last context. It has no frame graph, so Lite configures nothing and the

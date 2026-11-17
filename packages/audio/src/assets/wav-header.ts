@@ -1,6 +1,6 @@
 /**
  * A RIFF/WAVE header reader, so that a `.wav` clip knows its own duration under Node
- * (`docs/architecture/10-audio.md` §7: "the loader returns duration metadata only").
+ * (`docs/architecture/10-audio.md` §2: under Node only a `.wav` header is parsed).
  *
  * Why only WAV: a WAV header states the sample rate, the channel count, and the size of the sample
  * data outright, so duration is one division and forty lines of code. MP3, OGG, WebM, and FLAC all

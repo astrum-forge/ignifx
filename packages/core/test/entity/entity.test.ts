@@ -289,7 +289,7 @@ describe("components", () => {
   });
 
   it("counts a subclass of a required class as present, adding nothing", () => {
-    // The editor mirrors this rule from the host's schema `extends` (engine ask E44).
+    // The editor mirrors this rule from the host's schema `extends`.
     class ArmoredHealth extends Health {}
     const harness = createTestWorld();
     const entity = harness.world.createEntity("entity");

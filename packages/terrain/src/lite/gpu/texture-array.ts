@@ -3,7 +3,7 @@ import type { EngineContext, Texture2DArray } from "@babylonjs/lite";
 
 /**
  * The texture-array half of the terrain's Babylon Lite adapter
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §5.2).
+ * (ADR-0026).
  *
  * Core's `TextureAsset.fromPixels` creates only a `texture_2d`, so the layer array is created here
  * with `createTexture2DArrayFromPixels` (`@babylonjs/lite@1.27.0` `index.d.ts` 3323) and wrapped in

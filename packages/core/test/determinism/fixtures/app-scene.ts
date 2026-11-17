@@ -2,7 +2,7 @@ import { Script } from "../../../src/index.js";
 import type { App, Entity, Mat4Like } from "../../../src/index.js";
 
 /**
- * The S1.3 determinism scene, rebuilt on the ignifx kernel: 50 entities animated by a `Script` in
+ * The determinism scene, rebuilt on the ignifx kernel: 50 entities animated by a `Script` in
  * `fixedUpdate`, driven by `app.step(1 / 60)`. The Lite-level version of the same experiment lives
  * in `test/lite/fixtures/determinism-scene.ts`; this one adds the whole kernel — the scheduler, the
  * accumulator, the dispatch lists, and `Transform` — to what is being compared.
@@ -10,7 +10,7 @@ import type { App, Entity, Mat4Like } from "../../../src/index.js";
  * The animation uses only integer arithmetic and additions of multiples of `2^-12`, so it
  * introduces no rounding of its own. `Math.sin`, `Math.cos`, `Math.sqrt` and division are avoided
  * because the ECMAScript specification lets an implementation approximate them, which would make a
- * Node-versus-Chromium comparison unfair (ADR-0003 Validation, S1.3).
+ * Node-versus-Chromium comparison unfair (ADR-0003 Validation).
  */
 
 /** Entities in the scene. */

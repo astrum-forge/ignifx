@@ -24,11 +24,11 @@ import type {
 } from "@babylonjs/lite";
 
 /**
- * Shared scene inputs (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G4;
- * `docs/architecture/07-rendering.md` §2.12): one geometry pass that screen-space effects (TAA, GTAO,
- * contact shadows, SSGI) read instead of each drawing the scene again. Its own chunk: the renderer
- * imports it only when an effect asks for it, so a project with no such effect loads none of it and
- * its frame graph has none of these tasks (`CONSTITUTION.md` §2.5).
+ * Shared scene inputs (`docs/architecture/07-rendering.md` §2.12): one geometry pass that
+ * screen-space effects (TAA, GTAO, contact shadows, SSGI) read instead of each drawing the scene
+ * again. Its own chunk: the renderer imports it only when an effect asks for it, so a project with
+ * no such effect loads none of it and its frame graph has none of these tasks (`CONSTITUTION.md`
+ * §2.5).
  *
  * ```text
  * [shadow] → geometry ─→ normals copy ─→ velocity copy ─→ depth pyramid → scene → …
@@ -38,11 +38,12 @@ import type {
  * ```
  *
  * - **Depth** is a surface-sized `depth32float` target with a sampled facade
- *   (`withSampledDepthTexture`) handed to the geometry task as its depth (spike S2). Reverse-Z: 0 is
+ *   (`withSampledDepthTexture`) handed to the geometry task as its depth. Reverse-Z: 0 is
  *   the far plane. `depth24plus-stencil8`, the main pass's format, cannot be bound in compute.
  * - **Normals and velocity** are geometry attachments, which Lite exposes only as task-owned
  *   `RenderTarget`s; compute and effect bindings take a `Texture2D`, so each is copied into a target
- *   that has one (spike S2, upstream ask 3).
+ *   that has one (`docs/architecture/07-rendering.md` §8, upstream ask "geometry attachments as
+ *   `Texture2D`").
  * - **The depth pyramid** is Lite's `createDepthPyramid`: an `r32float` mip chain where each level
  *   keeps the `max` (in reverse-Z, the nearest surface) of its four children.
  * - **Ref-counted.** {@link SceneInputsHost.acquire} adds the tasks for the first user;

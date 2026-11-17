@@ -8,9 +8,10 @@ import type { Entity, Vec2Like } from "@ignifx/core";
 
 /**
  * `CharacterController2D` (`docs/architecture/11-2d-toolkit.md` §8): slopes, autostep,
- * snap-to-ground, and one-way platforms, each measured against the behaviour spike S6.2 pinned.
+ * snap-to-ground, and one-way platforms, each measured against the behaviour recorded in
+ * `src/lite/rapier/character.ts`.
  *
- * Every scene here follows the spike's geometry: the flat ground the character starts on and the
+ * Every scene here has the same geometry: the flat ground the character starts on and the
  * ramp or ledge it walks into are separate static bodies whose surfaces meet at `x = 0`.
  */
 

@@ -2,7 +2,7 @@
 // Below this comment it is byte-identical to that file, but for the link rule in `./index.ts`.
 /**
  * The handshake the editor runs with each host it embeds: the scene view (`@ignifx/editor-host`)
- * and the play view (`virtual:ignifx/editor`). Plan §3.3.
+ * and the play view (`virtual:ignifx/editor`).
  *
  * The editor sends `hello`; the host answers with its `ready` result, or with an
  * `RpcErrorCode.incompatibleProtocol` error when `protocolVersionIsCompatible` refuses the
@@ -80,8 +80,8 @@ export const HostCapability = {
   gizmos: "gizmos",
   /**
    * The host answers `screenshot`: the scene host captures its view, the play controls the game's
-   * canvas. The play controls list it from engine ask E47 (additive in 0.3); without it, the play
-   * view answers `screenshot` with `RpcErrorCode.methodNotFound`.
+   * canvas. The play controls list it additively in 0.3; without it, the play view answers
+   * `screenshot` with `RpcErrorCode.methodNotFound`.
    */
   screenshot: "screenshot",
   /** The scene host accepts `setViewMode` with `"2d"`: a 2D editor camera and planar gizmos. */
@@ -113,22 +113,22 @@ export const HostCapability = {
    */
   hotReloadDefaults: "hotReloadDefaults",
   /**
-   * The play controls answer `queryRuntime`: an entity's live state in the scene format. From engine
-   * ask E48 (additive in 0.3); without it, the play view answers `queryRuntime` with
+   * The play controls answer `queryRuntime`: an entity's live state in the scene format.
+   * Additive in 0.3; without it, the play view answers `queryRuntime` with
    * `RpcErrorCode.methodNotFound`.
    */
   queryRuntime: "queryRuntime",
   /**
    * The play controls answer `sendInput`: synthetic key and pointer events queued into the game's
    * own input system (`app.input` from `@ignifx/input`), never into the editor's window. Listed only
-   * when the game has `app.input`. From engine ask E49 (additive in 0.3); without it, the play view
-   * answers `sendInput` with `RpcErrorCode.methodNotFound`.
+   * when the game has `app.input`. Additive in 0.3; without it, the play view answers `sendInput`
+   * with `RpcErrorCode.methodNotFound`.
    */
   sendInput: "sendInput",
   /**
    * The scene host answers `setGameView` and `gameViewFrame`: the open scene through its own main
-   * camera, rendered beside the editor camera (`RenderViewMethod`). From engine ask E8 (additive in
-   * 0.3); without it, the host answers both with `RpcErrorCode.methodNotFound`.
+   * camera, rendered beside the editor camera (`RenderViewMethod`). Additive in 0.3; without it,
+   * the host answers both with `RpcErrorCode.methodNotFound`.
    */
   gameView: "gameView",
   /**
@@ -151,7 +151,7 @@ export const HostCapability = {
   gameView2d: "gameView2d",
   /**
    * The scene host answers `renderThumbnail`: a model or prefab asset rendered on its own
-   * (`RenderViewMethod`). From engine ask E8 (additive in 0.3); without it, the host answers it with
+   * (`RenderViewMethod`). Additive in 0.3; without it, the host answers it with
    * `RpcErrorCode.methodNotFound`.
    */
   thumbnails: "thumbnails",
@@ -177,8 +177,8 @@ export const HostCapability = {
   thumbnailTextures: "thumbnailTextures",
   /**
    * The scene host draws a grid in the view and answers `setGrid`: a ground grid at `y = 0` in 3D
-   * view mode and a unit grid (a pixel grid when zoomed in) over the 2D view. From engine ask E31
-   * (additive in 0.3); without it, the scene host answers `setGrid` with
+   * view mode and a unit grid (a pixel grid when zoomed in) over the 2D view. Additive in
+   * 0.3; without it, the scene host answers `setGrid` with
    * `RpcErrorCode.methodNotFound`.
    */
   grid: "grid",
@@ -204,8 +204,8 @@ export const HostCapability = {
   editorLines: "editorLines",
   /**
    * The scene host answers `sampleSpriteAnimation`: one frame of a clip on an entity's
-   * `SpriteAnimator` (`@ignifx/2d`), for the editor's sprite animation panel. From engine ask E51
-   * (additive in 0.3); without it, the scene host answers `sampleSpriteAnimation` with
+   * `SpriteAnimator` (`@ignifx/2d`), for the editor's sprite animation panel. Additive in
+   * 0.3; without it, the scene host answers `sampleSpriteAnimation` with
    * `RpcErrorCode.methodNotFound`.
    */
   spriteAnimation: "spriteAnimation",

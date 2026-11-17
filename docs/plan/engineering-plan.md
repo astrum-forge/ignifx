@@ -24,14 +24,14 @@ The planned 0.x scope is on `main` and on npm as one fixed version line: the ker
 
 - Seams devtools and 2D ask for: `unregisterSystem`, `world.onHierarchyChanged`, `renderer.onSceneRegistered`, a listing of asset handles.
 - A scene's `settings` block is read by `@ignifx/2d` only; a 3D scene cannot set clear colour, environment or gravity.
-- `Camera` has no culling mask. glTF cameras and lights are not imported.
+- `Camera` has no culling mask. glTF cameras and lights are not imported. `Environment` has no scene ambient colour (Lite has no scene-level ambient term).
 - `MeshRenderer` draws `materials[0]` only, and ignores `onReplaced` (a hot-reloaded `.mesh.json` is not redrawn).
 - `.basis` textures are refused (`IGX-0509`): Lite exposes no transcoder URL.
 - Storage: a 512-character key can encode past the 255-byte file-name limit; no codec caps it, and `packages/core/src/storage/names.ts` says otherwise.
 - The umbrella re-exports two `@internal` classes (`Particle2DUpdateSystem`, `Particle2DWriteSystem`); no test holds the rule.
 - `isWebGpuAvailable()` tests `"gpu" in navigator`, so `navigator.gpu = undefined` gives a `TypeError`, not `IGX-0701`.
 - `npx @ignifx/cli <dir>` cannot pick an executable: the package has two bins and neither is named `cli`. The documented form is `npx --package=@ignifx/cli create-ignifx <dir>`; a `create-ignifx` package or a `cli` bin would restore the short form.
-- CLI commands designed and not built: `rename-layer`, `rename-sorting-layer`, `schemas`, `migrate`, `bake navmesh`, an atlas import, manifest validation against the runtime.
+- CLI commands designed and not built: `rename-layer`, `rename-sorting-layer`, `schemas`, `migrate`, `bake` and `bake navmesh`, an atlas import, manifest validation against the runtime. `packages/2d/src/atlas/definition.ts` prints a hint naming `ignifx import atlas`, which does not exist.
 
 ### Rendering and lighting
 
@@ -41,7 +41,7 @@ The planned 0.x scope is on `main` and on npm as one fixed version line: the ker
 - TAA: no per-object velocity for PBR meshes, no floating-origin handling. Ambient occlusion: no history of its own; a render-to-texture camera samples the main view's.
 - Shadows: the technique cannot change at run time and a `Light`'s `shadows` record is read once. Soft shadows, area lights and point-light shadows wait on Lite.
 - One camera draws to the screen (no split view). The material format has no emissive strength.
-- Particles: trails, soft particles (ADR-0025); no `particles-2d` benchmark scene. Terrain: lit foliage and time-driven `displace` (blocked upstream), holes, LOD morphing, more than eight layers, streaming (ADR-0026). Surface shaders on Standard hosts (ADR-0024). `captureCompositeScreenshot` (ADR-0008).
+- Particles: trails, soft particles (ADR-0025); no `particles-2d` benchmark scene. Terrain: lit foliage and time-driven `displace` (blocked upstream), holes, LOD morphing, more than eight layers, streaming (ADR-0026). Sub-emitters (ADR-0025). Surface shaders on Standard hosts (ADR-0024); the pinned Lite makes `roughness` and `metallic` writable, so letting a surface shader write them is engine work now (untested whether a plugin write lands before lighting). `captureCompositeScreenshot` (ADR-0008).
 
 ### 2D, 3D and physics
 
@@ -50,7 +50,7 @@ The planned 0.x scope is on `main` and on npm as one fixed version line: the ker
 - 3D: `CameraBrain`, `VirtualCamera`, camera shake; root motion; `Animator` has no playhead seek and drops parameter writes made before its state machine exists.
 - 3D characters: `ThirdPersonController.isGrounded` returns the raw value, not the slope-classified one; only `ThirdPersonController` has `stepHeight`.
 - Navigation: Lite has no navmesh serialization and no `removeAgent`; `NavMeshSurface.prebaked` bakes at run time.
-- 3D physics: child colliders do not join an ancestor `Rigidbody` as a compound body; shape identity in `shapeCast`/`overlap`, per-body damping, gravity factor and sleep control wait on Lite.
+- 3D physics: child colliders do not join an ancestor `Rigidbody` as a compound body; gravity is one global vector (no regional gravity); shape identity in `shapeCast`/`overlap`, per-body damping, gravity factor and sleep control wait on Lite.
 
 ### Input, UI, audio and devtools
 
@@ -64,7 +64,7 @@ The planned 0.x scope is on `main` and on npm as one fixed version line: the ker
 - `onApplicationPause` has no desktop path: core has no seam for an extension to dispatch it.
 - The Electron suite runs on macOS only; Windows and Linux are packaged, never launched; installers, signing, notarization and auto-update are unexercised.
 - `style-src 'unsafe-inline'` needs nonces through `@ignifx/ui`; ASAR integrity is off until a signing identity exists.
-- Electron is 44; the quarterly bump (ADR-0018) is next due in December 2026.
+- Electron is 44; the quarterly bump (ADR-0018) is next due in December 2026. The desktop log has no file sink.
 - `@ignifx/editor-protocol` is not on npm, so `packages/editor-host/src/protocol/` is a hand-synchronised copy.
 - Editor host: planar 2D gizmos, a sprite selection outline, thumbnails for sprite animations, tilemaps and compressed textures, box selection of entities that draw nothing, multi-selection pivots, live scene settings; in the game view post-processing, parallax, off-screen tilemap chunks and UI text.
 
@@ -94,9 +94,9 @@ The planned 0.x scope is on `main` and on npm as one fixed version line: the ker
 
 Feature wishes with no code behind them.
 
-Compute shaders for game code; screen-space reflections; motion blur, FXAA; volumetric fog; subsurface scattering; water; decals; video and texture-array assets; CSG; procedural sky; joints, ragdoll, cloth, vehicles; inverse kinematics, retargeting, morph-target weights; Gaussian splats; runtime auto-tiling; nine-slice and masks for world sprites; 2D skeletal animation; replays; captions and other accessibility helpers; a mobile template; Steam and portal adapters; dialogue, behaviour trees, a cutscene timeline; pooling and hit-stop helpers; pseudo-localisation and right-to-left text; adaptive music; a production error overlay; achievements; mod support; photo mode.
+Compute shaders for game code; screen-space reflections; depth of field, chromatic aberration, motion blur, FXAA; volumetric fog; subsurface scattering; water; decals; video and texture-array assets; CSG; procedural sky; joints, ragdoll, cloth, vehicles; inverse kinematics, retargeting, morph-target weights; Gaussian splats; runtime auto-tiling; nine-slice and masks for world sprites; 2D skeletal animation; replays; captions and other accessibility helpers; a mobile template; Steam and portal adapters; dialogue, behaviour trees, a cutscene timeline; pooling and hit-stop helpers; pseudo-localisation and right-to-left text; adaptive music; a production error overlay; achievements; mod support; photo mode.
 
-Not goals before 1.0 (`docs/architecture/00-overview.md` §7): multiple worlds or viewports, networking, WebXR, worker rendering, asset packs and level streaming.
+Out of scope (`docs/architecture/00-overview.md` §7): an editor inside the engine, multiple worlds or on-screen viewports, networking, WebXR. Also not planned before 1.0: worker rendering, asset packs and level streaming.
 
 ## Decisions waiting for the owner
 
@@ -127,4 +127,4 @@ Proposed by an API review in September 2026 and undecided; nothing here is a rul
 
 ## Upstream asks (Babylon Lite)
 
-`docs/architecture/07-rendering.md` §8 lists each ask with what it unblocks. Absent from the pinned typings: a public physics step; a disposer for `onBeforeRender`; per-body damping and gravity factor; navmesh serialization and `removeAgent`; removal of a text renderable; soft shadows, area lights, point-light shadows; a `time` system uniform; a dispose for probe sets; a transcoder URL for `.basis`. Not re-checked: linear HDR output; one post-composition plugin point; geometry attachments as `Texture2D`; TAA for a moving camera; a vertex-data plugin bridge; writable `roughness` and `metallic`; vertex-stage plugin uniforms; light and shadow bindings for shader materials; a `composite` slot for Standard materials.
+`docs/architecture/07-rendering.md` §8, "Upstream asks", is the list: each ask by name, checked against the pinned typings, with the workaround in use. Other Lite gaps this plan names are outside that list: navmesh serialization, `removeAgent`, removal of a text renderable, and shape identity in `shapeCast`/`overlap` (see the navigation, `WorldText` and 3D physics items above). None has a tracked issue.

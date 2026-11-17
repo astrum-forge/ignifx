@@ -3,7 +3,7 @@
  *
  * `NavMeshSurface.addSource` takes world-space positions and indices, so a headless test can bake a
  * navmesh with no GPU, no `MeshAsset`, and no glTF anywhere in sight — which is exactly what makes
- * the Phase 7 navigation exit criteria runnable in plain Node.
+ * the navigation tests runnable in plain Node.
  */
 
 /** One piece of world-space geometry. */

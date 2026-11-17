@@ -736,16 +736,16 @@ export class RendererImpl implements Renderer {
   /** The GTAO pass (`../lite/gpu/gtao.ts`), when `rendering.ambientOcclusion` is on. */
   #ambientOcclusion: AmbientOcclusion | null = null;
 
-  /** The reflection probes' host, created on the first frame of a canvas-backed app (GI B1). */
+  /** The reflection probes' host, created on the first frame of a canvas-backed app. */
   #reflectionProbes: ReflectionProbeHost | null = null;
 
   /** Detaches the reflection probes' `onDeviceLost` and `onDeviceRecovered` handlers. */
   #disconnectProbeDeviceLoss: Disconnect | null = null;
 
-  /** The light probes' host, created with the reflection probes' one (GI B2). */
+  /** The light probes' host, created with the reflection probes' one. */
   #lightProbes: LightProbeHost | null = null;
 
-  /** The lightmaps' host, created when the first renderer with a clone asks for its material (GI B3). */
+  /** The lightmaps' host, created when the first renderer with a clone asks for its material. */
   #lightmaps: LightmapHost | null = null;
 
   /** The TAA passes (`../lite/gpu/taa.ts`), when `rendering.taa` installed them. */
@@ -909,7 +909,7 @@ export class RendererImpl implements Renderer {
   }
 
   /**
-   * Installs temporal anti-aliasing when `rendering.taa.enabled` is on (GI plan steps G5–G6).
+   * Installs temporal anti-aliasing when `rendering.taa.enabled` is on.
    *
    * @remarks
    * Loads the `taa` chunk and leases the scene inputs only then. TAA needs the HDR render path;
@@ -1732,12 +1732,11 @@ export class RendererImpl implements Renderer {
   }
 
   /**
-   * The baked-lighting components' per-frame work (GI Phase 2): `ReflectionProbe` (B1) captures
-   * what is due and points each lit PBR material at its probe; `LightProbeVolume` (B2) keeps the
-   * winning grid on every lit PBR material; lightmaps (B3) rebuild the material copies the
-   * `MeshRenderer`s took this frame. Each loads its own chunk the first time a world has one
-   * of its components. The `PreRender` system calls it every frame; it does nothing on a headless
-   * app.
+   * The baked-lighting components' per-frame work: `ReflectionProbe` captures what is due and
+   * points each lit PBR material at its probe; `LightProbeVolume` keeps the winning grid on every
+   * lit PBR material; lightmaps rebuild the material copies the `MeshRenderer`s took this frame.
+   * Each loads its own chunk the first time a world has one of its components. The `PreRender`
+   * system calls it every frame; it does nothing on a headless app.
    *
    * @param world - The world being reconciled.
    * @param probes - Every `ReflectionProbe` in it.
@@ -1795,7 +1794,7 @@ export class RendererImpl implements Renderer {
 
   /**
    * The material a `MeshRenderer` draws with this frame: its own lightmapped copy of `base` when it
-   * samples a lightmap (GI B3), else `base`'s. Only a renderer with a clone in the scene asks, so
+   * samples a lightmap, else `base`'s. Only a renderer with a clone in the scene asks, so
    * never a headless one.
    *
    * @param owner - The renderer.

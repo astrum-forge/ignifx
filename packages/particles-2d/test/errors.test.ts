@@ -53,7 +53,7 @@ describe("the particles-2d error table", () => {
     expect(Object.keys(PARTICLES_2D_ERROR_MESSAGES)).toHaveLength(Object.values(Particles2DErrorCode).length);
   });
 
-  it("keeps every code inside the 1750-1799 range the plan assigned", () => {
+  it("keeps every code inside the 1750-1799 range", () => {
     for (const code of Object.values(Particles2DErrorCode)) {
       const number = Number(code.slice(CODE_PREFIX_LENGTH));
       expect(number).toBeGreaterThanOrEqual(1750);

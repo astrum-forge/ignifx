@@ -19,7 +19,7 @@ import {
 import { centredLayerView } from "../src/scene/view-2d.js";
 
 /**
- * The render-view protocol's guards (engine ask E8) and the thumbnail subject's typing, without a
+ * The render-view protocol's guards and the thumbnail subject's typing, without a
  * device. `render-views.browser.test.ts` renders them.
  */
 

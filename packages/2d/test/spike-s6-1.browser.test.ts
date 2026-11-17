@@ -12,7 +12,7 @@ import type { SpriteAtlasAsset } from "../src/atlas/sprite-atlas-asset.js";
 import type { TilemapInput } from "../src/tilemap/definition.js";
 
 /**
- * **Spike S6.1 — sprite sync at scale** (`docs/plan/engineering-plan.md` Phase 6).
+ * **Sprite sync at scale.**
  *
  * 10 000 static tiles (a 100x100 `Tilemap`) plus 1 000 moving `SpriteRenderer`s. The question is
  * the **CPU cost of the sync system**, not the GPU cost: the CI adapter is SwiftShader and would
@@ -20,7 +20,7 @@ import type { TilemapInput } from "../src/tilemap/definition.js";
  * sync itself. The budget is the one coding standards §7 sets for a 2D template: the sync stays
  * under 2 ms per frame for the 1 000 movers.
  *
- * The second half of the spike is the chunking claim: a static tilemap must cost **zero** per-frame
+ * The second half is the chunking claim: a static tilemap must cost **zero** per-frame
  * sync work once its chunks are up. `app.twoD.syncedLastFrame` is the counter that says so.
  */
 
@@ -31,10 +31,10 @@ afterEach(() => {
   harness = null;
 });
 
-/** How many cells the spike's map spans on each axis. */
+/** How many cells the map spans on each axis. */
 const MAP_EDGE = 100;
 
-/** How many moving sprites the spike drives. */
+/** How many moving sprites the test drives. */
 const MOVERS = 1000;
 
 /** The budget, in milliseconds of CPU per frame, coding standards §7 sets for a 2D template. */
@@ -53,7 +53,7 @@ function bigMap(): TilemapAsset {
   return new TilemapAsset("2d/big.tilemap.json", defineTilemap(input));
 }
 
-describe("S6.1 sprite sync at scale", () => {
+describe("sprite sync at scale", () => {
   it("keeps the sync under budget with 10 000 static tiles and 1 000 movers", async () => {
     const running = await createTwoDBrowserApp({
       width: 256,
@@ -90,7 +90,7 @@ describe("S6.1 sprite sync at scale", () => {
 
     const chunkedTiles = tiles.spriteCount;
 
-    // `app.step` is only legal with the render loop stopped, which is exactly what this spike
+    // `app.step` is only legal with the render loop stopped, which is exactly what this test
     // wants: the sample is CPU work with no presented frame and no SwiftShader rasterisation in it.
     running.app.stop();
 
@@ -123,7 +123,7 @@ describe("S6.1 sprite sync at scale", () => {
 
     // Reported, not just asserted, so a human can see the curve (benchmarks/README.md).
     globalThis.console.log(
-      `S6.1 movers=${String(MOVERS)} tiles=${String(MAP_EDGE * MAP_EDGE)} chunkedTiles=${String(chunkedTiles)} ` +
+      `sprite-sync movers=${String(MOVERS)} tiles=${String(MAP_EDGE * MAP_EDGE)} chunkedTiles=${String(chunkedTiles)} ` +
         `loadedMedianMs=${loaded.median.toFixed(4)} loadedWorstMs=${loaded.worst.toFixed(4)} ` +
         `idleMedianMs=${idle.median.toFixed(4)} idleWorstMs=${idle.worst.toFixed(4)} ` +
         `syncedWhileIdle=${String(syncedWhileIdle)}`,

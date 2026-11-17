@@ -4,17 +4,15 @@ import { expect, test } from "playwright/test";
 import type { Page } from "playwright/test";
 
 /**
- * The four Phase 2 exit-criterion scenes (`docs/plan/engineering-plan.md`, Phase 2): a hello cube,
- * a PBR model with image-based lighting and shadows, an orthographic camera, and a post-process
- * stack — each against a committed golden.
+ * Four scenes: a hello cube, a PBR model with image-based lighting and shadows, an orthographic
+ * camera, and a post-process stack — each against a committed golden.
  *
  * ## The defects the first rounds of goldens recorded are fixed
  *
  * The goldens generated on 2026-09-06 showed a scene lit from the wrong direction with no shadow
  * anywhere, and a post-process scene that was uniformly black. Both were engine defects, both are
  * fixed, and every golden here was regenerated afterwards: the hello cube casts a shadow across the
- * floor, and the post-process scene is a real image with a visible bloom. ADR-0002, "Corrections
- * after the visual suite", has the write-ups.
+ * floor, and the post-process scene is a real image with a visible bloom.
  *
  * The glTF viewer's model cast no shadow either — a separate defect, because `Model` declared
  * `castShadows` and nothing ever added its meshes to a generator's caster list (only `MeshRenderer`
@@ -66,7 +64,7 @@ async function openScene(page: Page, url: string): Promise<void> {
   expect(status, "the browser did not give the example a WebGPU device").toBe("ready");
 }
 
-test.describe("Phase 2 golden scenes", () => {
+test.describe("golden scenes", () => {
   test("hello cube", async ({ page }) => {
     await openScene(page, `${HELLO_CUBE}/?static=1`);
     await expect(page).toHaveScreenshot("hello-cube.png", { maxDiffPixelRatio: 0.02 });
@@ -90,9 +88,9 @@ test.describe("Phase 2 golden scenes", () => {
   });
 });
 
-// `rendering.hdr` (GI plan step G2): a scene of PBR materials only has to present the image the
-// plain path presents, so these compare against the same goldens. The tolerance covers half-float
-// rounding of the linear colour before the output pass encodes it.
+// `rendering.hdr`: a scene of PBR materials only has to present the image the plain path presents,
+// so these compare against the same goldens. The tolerance covers half-float rounding of the linear
+// colour before the output pass encodes it.
 test.describe("HDR output matches the plain goldens", () => {
   test("hello cube, HDR", async ({ page }) => {
     await openScene(page, `${HELLO_CUBE}/?static=1&hdr=1`);
@@ -110,8 +108,8 @@ test.describe("HDR output matches the plain goldens", () => {
   });
 });
 
-// HDR bloom (GI plan step G12): an emissive sphere glows through the downsample/upsample chain on
-// the linear scene colour, before the output pass tone maps it.
+// HDR bloom: an emissive sphere glows through the downsample/upsample chain on the linear scene
+// colour, before the output pass tone maps it.
 test.describe("HDR bloom", () => {
   test("hello cube, HDR bloom", async ({ page }) => {
     await openScene(page, `${HELLO_CUBE}/?static=1&hdr=1&bloom=1`);

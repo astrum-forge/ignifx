@@ -6,7 +6,7 @@ import type { ColorLike } from "../math/types.js";
 
 /**
  * What a `"shader"` material declares — which `.wgsl`, and what to set on it
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1).
+ * (ADR-0024).
  *
  * Plain data with no dependencies, so the barrel can export it without pulling the live material
  * state or the pragma parser into every entry chunk (`./shader-support.ts`).
@@ -14,7 +14,7 @@ import type { ColorLike } from "../math/types.js";
 
 /**
  * The properties a `"shader"` material declares: which shader, and what to set on it
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1).
+ * (ADR-0024).
  *
  * @public
  */

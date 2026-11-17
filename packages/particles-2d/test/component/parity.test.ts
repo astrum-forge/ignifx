@@ -6,8 +6,7 @@ import type { SpriteAtlasAsset } from "@ignifx/2d";
 import type { ParticleDefinitionInput } from "@ignifx/particles";
 
 /**
- * The claim `docs/plan/2026-09-terrain-particles-shaders.md` §4.3 makes about the two components:
- * "behaves identically to the 3D system for the same definition".
+ * A `ParticleSystem2D` behaves identically to the 3D `ParticleSystem` for the same definition.
  *
  * Both systems sit on one entity, so they share a transform and an emitter matrix, and both are
  * driven by the same stepped clock. The test then asserts that every sprite the 2D system wrote is

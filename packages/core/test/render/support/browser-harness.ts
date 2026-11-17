@@ -17,12 +17,12 @@ import type { World } from "../../../src/world/world.js";
  * A real `createApp({ canvas })` on a WebGPU device, for the render layer's browser suites.
  *
  * It is deliberately the *whole* app rather than a hand-built engine and scene: what the browser
- * project has to prove about Phase 2 is that the components, the settings, the feature opt-ins, the
- * warm-up, and the frame loop line up — and the only way to prove that is to start an app the way a
- * game does and read the pixels it presents.
+ * project has to prove about rendering is that the components, the settings, the feature opt-ins,
+ * the warm-up, and the frame loop line up — and the only way to prove that is to start an app the
+ * way a game does and read the pixels it presents.
  *
  * `msaaSamples: 1` throughout, so a single-pixel assertion is exact rather than a resolve of four
- * samples (ADR-0002 Validation).
+ * samples.
  */
 
 /** The canvas edge the harness uses when a test names none. Small keeps SwiftShader fast. */

@@ -17,7 +17,7 @@ import type { ColorLike } from "@ignifx/core";
 
 /**
  * `defineTerrain`: the one validator every `ignifx.terrain` document goes through
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §5.1).
+ * (ADR-0026).
  *
  * Addresses are resolved relative to the document, so a `.terrain.json` can sit beside its
  * heightmap and textures the way exporters lay them out.

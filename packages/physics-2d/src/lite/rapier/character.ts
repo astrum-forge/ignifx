@@ -7,7 +7,7 @@ import type { MutableVec2, Vec2Like } from "@ignifx/core";
  * Rapier's kinematic character controller (`control/character_controller.d.ts`), wrapped so the
  * runtime never imports the backend.
  *
- * ## Facts measured against `@dimforge/rapier2d-compat@0.20.0` (spike S6.2)
+ * ## Facts measured against `@dimforge/rapier2d-compat@0.20.0`
  *
  * - **Slopes work as documented.** `setMaxSlopeClimbAngle(radians)` blocks a slope steeper than the
  *   limit and lets a shallower one through, and `setMinSlopeSlideAngle` decides when the character

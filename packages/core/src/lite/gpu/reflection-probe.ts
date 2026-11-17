@@ -34,9 +34,9 @@ import type {
 } from "@babylonjs/lite";
 
 /**
- * Reflection probes (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B1). Its own chunk,
- * loaded only when a world has a `ReflectionProbe` (`CONSTITUTION.md` §2.5). Every Lite claim was
- * read from `@babylonjs/lite@1.34.0`.
+ * Reflection probes (`docs/architecture/07-rendering.md` §2.15). Its own chunk, loaded only when a
+ * world has a `ReflectionProbe` (`CONSTITUTION.md` §2.5). Every Lite claim was read from
+ * `@babylonjs/lite@1.34.0`.
  *
  * - **Capture.** Lite has no cube capture, so six render tasks (`createRenderTask`, each with its own
  *   `rgba16float` target and a `createBankedFreeCamera` looking down one axis, 90° field of view,
@@ -54,7 +54,7 @@ import type {
  *   resolved first; it is called when the chunk loads.
  * - **Culling mask.** Render tasks have no mesh filter, so each face task's `execute` hides the meshes
  *   the caller rejects and shows them again, as `./render-texture.ts` does for editor-only meshes.
- * - **Blending (B1b).** `createPbrLocalEnvironmentProbeSet` (`index.d.ts` 3411) **copies** every
+ * - **Blending.** `createPbrLocalEnvironmentProbeSet` (`index.d.ts` 3411) **copies** every
  *   probe's cube into one cube array when it is created (`lib/material/pbr/enable-pbr-local-cubemap.js`,
  *   `createProbeTexture`) and blends up to four candidates per voxel per fragment. It has no dispose:
  *   its buffers and texture are destroyed only when the scene is (`scene._disposables`), so a set

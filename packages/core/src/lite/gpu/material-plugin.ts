@@ -11,7 +11,7 @@ import type {
 
 /**
  * The Babylon Lite half of surface shaders and raw material plugins
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.2). Everything here is `@internal`.
+ * (ADR-0024). Everything here is `@internal`.
  *
  * A `MaterialPlugin` is plain data with function members, so nothing here needs a device, but the
  * `materialPlugins` rendering feature must have installed the bridges before the scene was
@@ -21,7 +21,7 @@ import type {
  *   key (`lib/material/plugin/plugin-bridge-shared.js` 21-34), so they must be **stable**; this
  *   module precomputes everything at attach time.
  * - `writeUbo(data, offsets)` gets **byte** offsets (`lib/material/pbr/pbr-renderable.js` 420,
- *   confirmed on a device in spike S0.2) — divide by four for a `Float32Array` index.
+ *   confirmed on a device) — divide by four for a `Float32Array` index.
  * - PBR fields join the material's own uniform block and need `markMaterialUboDirty`; Standard
  *   fields become a self-managed `pluginUbo` that is re-uploaded only when `dynamic` is set, so
  *   {@link createLiteMaterialPlugin} sets it for a Standard host alone.
@@ -162,7 +162,7 @@ export function createLiteMaterialPlugin(input: LiteMaterialPluginInput, state: 
   const samplers: PluginSamplerDecl[] = input.samplers.map((sampler) =>
     sampler.array
       ? // The declared type is wider than Lite's TypeScript literal, and the bind-group layout
-        // derives `viewDimension` from the string, so the cast is the documented route (spike S0.2).
+        // derives `viewDimension` from the string, so the cast is the documented route.
         // oxlint-disable-next-line typescript/no-unsafe-type-assertion
         ({
           texture: sampler.texture,

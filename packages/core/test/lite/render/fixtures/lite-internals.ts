@@ -1,11 +1,11 @@
 /* oxlint-disable no-underscore-dangle -- reading Lite's private mesh fields is the point of this
-   file: spike S2.4 proves that two clones share one geometry upload by object identity, and the
-   only handle on that upload is `Mesh._gpu`, which `index.d.ts` does not declare. Confining the
-   reads here keeps every test free of the pattern. */
+   file: `mesh.browser.test.ts` proves that two clones share one geometry upload by object
+   identity, and the only handle on that upload is `Mesh._gpu`, which `index.d.ts` does not
+   declare. Confining the reads here keeps every test free of the pattern. */
 import type { SceneContext, SceneNode } from "@babylonjs/lite";
 
 /**
- * The private mesh fields spike S2.4 inspects, as they are written in
+ * The private mesh fields the instancing tests inspect, as they are written in
  * `@babylonjs/lite@1.27.0`'s `lib/scene/transform-node.js`, `lib/mesh/mesh-dispose.js`, and
  * `lib/resource/ref-count.js`.
  */

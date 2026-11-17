@@ -2016,10 +2016,10 @@ Binds an entity to an action document and one device slot.
 
 #### Remarks
 
-The schema field `actions` holds the *asset*; the resolved lookup is `playerInput.input`, which
-is the same [InputActionsView](#inputactionsview) `app.input.actions` exposes. `08-input.md` §7 spells the
-lookup `player.input.actions`; the two cannot both be called `actions` on one class, and the
-serialized field is the one whose name the file format fixes.
+The schema field `actions` holds the *asset*; the resolved lookup is `playerInput.input`
+(`08-input.md` §7), which is the same [InputActionsView](#inputactionsview) `app.input.actions` exposes. The
+two cannot both be called `actions` on one class, and the serialized field is the one whose name
+the file format fixes.
 
 #### Example
 

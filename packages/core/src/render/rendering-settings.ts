@@ -11,16 +11,16 @@ import type { Schema } from "../schema/types.js";
  * `07-rendering.md` §1 and §1.1): the engine options the swapchain is created with, and the feature
  * opt-ins that have to be applied before the scene is registered.
  *
- * Three decisions the documents left open, and one place they are wrong:
+ * Four decisions this section makes:
  *
- * - **There is no `powerPreference`.** `07-rendering.md` §1 lists it among "engine options exposed
- *   by `createApp`". Babylon Lite 1.27.0 has no such option — `lib/engine/engine.js` hard-codes
+ * - **There is no `powerPreference`** (`07-rendering.md` §1). Babylon Lite 1.27.0 has no such
+ *   option — `lib/engine/engine.js` hard-codes
  *   `requestAdapter({ powerPreference: "high-performance" })` and neither `EngineOptions`
  *   (`index.d.ts` 4709) nor `SurfaceOptions` (12622) declares it — so ignifx does not expose one.
- *   The correction is recorded in `src/lite/render-diagnostics.ts` as well.
- * - **`maxDevicePixelRatio` defaults to `0`, not `Infinity`.** §1 says the default is "`Infinity`,
- *   i.e. native DPR", and that is the behaviour; but a settings section is validated JSON, and
- *   `Infinity` is not a JSON number (`06-serialization-and-scene-format.md` §3 rejects non-finite
+ *   `src/lite/render-diagnostics.ts` records it as well.
+ * - **`maxDevicePixelRatio` defaults to `0`, not `Infinity`** (§1). The default behaviour is native
+ *   DPR; but a settings section is validated JSON, and `Infinity` is not a JSON number
+ *   (`06-serialization-and-scene-format.md` §3 rejects non-finite
  *   values with `IGX-0601`). `0` is the spelling of "do not clamp", and it is what the section
  *   documents.
  * - **`brdfLut` lives here.** Lite's `loadEnvironment` takes a **required** `brdfUrl`
@@ -226,8 +226,8 @@ export interface RenderingFeatureSettings {
 }
 
 /**
- * Auto exposure under `rendering.hdr` (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G14):
- * a compute pass meters the HDR scene and eases the exposure towards middle grey.
+ * Auto exposure under `rendering.hdr` (`docs/architecture/07-rendering.md` §2.7): a compute pass
+ * meters the HDR scene and eases the exposure towards middle grey.
  *
  * @remarks
  * EV here is `log2` of the scene's metered luminance (the average of a `log2` luminance histogram,

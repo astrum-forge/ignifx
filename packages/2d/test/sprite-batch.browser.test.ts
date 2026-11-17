@@ -6,8 +6,7 @@ import type { SpriteAtlasAsset } from "../src/atlas/sprite-atlas-asset.js";
 import type { SpriteBatch } from "../src/service/sprite-batch.js";
 
 /**
- * A `SpriteBatch` on a real WebGPU device
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §2.2).
+ * A `SpriteBatch` on a real WebGPU device.
  *
  * The node suite proves the arithmetic; this proves the pixels — that a thousand
  * entity-less sprites written by index actually reach the screen through the same Lite layer a

@@ -10,7 +10,7 @@ import type { ShaderMaterialAdapter } from "../lite/gpu/shader-material.js";
 
 /**
  * The gate the always-loaded render modules reach the custom-shader layers through
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1, "Bundle cost").
+ * (`docs/architecture/07-rendering.md` §2.8, "Bundle cost").
  *
  * The material loader, the post-process stack and the `PreRender` uniform writer are in every app's
  * static graph. A static import of `./shader-material.ts` or `./surface-shader.ts` from them would

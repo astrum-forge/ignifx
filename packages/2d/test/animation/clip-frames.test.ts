@@ -6,8 +6,8 @@ import { resolveClipFrames } from "../../src/animation/definition.js";
  *
  * The pair is an **inclusive range over atlas indices**, not two endpoints joined by name, so a
  * range whose endpoints are not adjacent in the sheet plays everything the packer put between them.
- * Phase 12 read it the other way round and got frames it did not ask for; these are the assertions
- * the TSDoc and the generated format page now describe.
+ * A template once read it the other way round and got frames it did not ask for; these are the
+ * assertions the TSDoc and the generated format page describe.
  */
 
 /** An atlas whose `run` frames are deliberately not contiguous. */

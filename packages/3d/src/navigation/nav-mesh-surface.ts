@@ -42,16 +42,16 @@ import type { ComponentHooks, LiteSceneNode, MutableVec3, Schema, Vec3Like } fro
  *
  * - {@link NavMeshSurface.addSource} takes world-space `{ positions, indices }` directly. This is
  *   the path a procedural level uses, and the only one that works under a headless app — which is
- *   what makes the navigation tests of Phase 7 run in plain Node.
+ *   what makes the navigation tests run in plain Node.
  * - Otherwise the surface collects the Lite meshes of every enabled `MeshRenderer` whose entity's
  *   layer is in {@link NavMeshSurface.layerMask} and lets Lite transform and merge them.
  *
  * ## Pre-baked navmeshes
  *
- * `12-3d-toolkit.md` §5 also describes loading a `.navmesh.bin` produced by `ignifx bake navmesh`.
- * Babylon Lite 1.27.0 declares no navmesh serialization at all — there is no `getNavMeshData` and
- * no `buildFromNavMeshData` in `index.d.ts` — so a surface that names one reports `IGX-1210` and
- * bakes at runtime instead. `docs/adr/0017-navigation-wasm.md` records the finding.
+ * A pre-baked `.navmesh.bin` cannot be loaded (`12-3d-toolkit.md` §5). Babylon Lite 1.27.0 declares
+ * no navmesh serialization at all — there is no `getNavMeshData` and no `buildFromNavMeshData` in
+ * `index.d.ts` — so a surface that names one reports `IGX-1210` and bakes at runtime instead.
+ * `docs/adr/0017-navigation-wasm.md` records the finding.
  */
 
 /** Recast's default cell size, in metres. */

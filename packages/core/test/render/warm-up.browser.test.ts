@@ -28,11 +28,11 @@ import type { RenderHarness } from "../lite/render/fixtures/gpu-harness.js";
  * family undrawn.** Not dim — the scene's render pass presents nothing at all, clear colour
  * included.
  *
- * Measured on Chromium + SwiftShader, 2026-09-05. The spike behind ADR-0014 (`S2.2`,
- * `test/lite/render/warm-up.browser.test.ts`) never saw it because it always registered a light and
- * a camera before warming up, which is the shape a game that loads its scene before `start()` has.
- * The shape that breaks is an app that starts empty and builds its world afterwards — which is what
- * a test, an editor, and a loading screen all do.
+ * Measured on Chromium + SwiftShader, 2026-09-05. The measurement behind ADR-0014
+ * (`test/lite/render/warm-up.browser.test.ts`) never saw it because it always registered a light
+ * and a camera before warming up, which is the shape a game that loads its scene before `start()`
+ * has. The shape that breaks is an app that starts empty and builds its world afterwards — which is
+ * what a test, an editor, and a loading screen all do.
  *
  * The first suite pins the raw Lite behaviour so a version bump that fixes it fails loudly and the
  * guard can go. The second pins the guard: an app that starts empty renders.

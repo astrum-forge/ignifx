@@ -5,7 +5,7 @@ import type { ReflectionProbe } from "../reflection-probe.js";
 import type { RenderingQualityPreset } from "../rendering-settings.js";
 
 /**
- * The renderer's handle on reflection probes (GI B1): it loads the probe chunk
+ * The renderer's handle on reflection probes: it loads the probe chunk
  * (`./reflection-probes.ts`) the first frame a world has a probe and forwards every frame to it.
  * Device-only, like the rest of `src/render/gpu/`: a headless renderer never creates one.
  *

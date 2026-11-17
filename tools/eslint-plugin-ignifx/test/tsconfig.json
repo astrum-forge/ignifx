@@ -1,5 +1,5 @@
 {
-  // Discovery shim, not a build project (ADR-0009, "Phase 0 integration"). Type-aware Oxlint
+  // Discovery shim, not a build project (ADR-0009 Validation). Type-aware Oxlint
   // resolves the nearest `tsconfig.json` per file; `../tsconfig.json` covers only `src`, so without
   // this file the rule tests would be checked against the workspace root config and lose
   // `types: ["node"]`. `pnpm --filter eslint-plugin-ignifx run typecheck` still builds

@@ -13,7 +13,7 @@ import type { ShaderHarness } from "../fixtures/shaders/harness.js";
 
 /**
  * The `PreRender` system that writes the ignifx-provided uniforms
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1).
+ * (ADR-0024).
  *
  * Every assertion here reads the material's own CPU-side copy through `getUniform`, which is what
  * the system wrote and what the adapter forwarded to Babylon Lite. Whether the bytes reach the GPU

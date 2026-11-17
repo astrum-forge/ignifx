@@ -3,9 +3,9 @@ import type { HdrOutputHandle } from "../lite/gpu/render-path.js";
 import type { LiteEngine, LiteScene } from "../lite/scene.js";
 
 /**
- * The gate `PostProcessStack` reaches HDR bloom through (`docs/plan/2026-11-gi-phase-1-execution-plan.md`,
- * step G12). The chain is its own chunk, imported the first time a stack asks for bloom while
- * `rendering.hdr` is on, so a project without both loads none of it (`CONSTITUTION.md` §2.5).
+ * The gate `PostProcessStack` reaches HDR bloom through (`docs/architecture/07-rendering.md` §2.7).
+ * The chain is its own chunk, imported the first time a stack asks for bloom while `rendering.hdr`
+ * is on, so a project without both loads none of it (`CONSTITUTION.md` §2.5).
  */
 
 /** The part of `../lite/gpu/bloom-hdr.ts` the stack calls. */

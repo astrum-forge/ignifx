@@ -47,8 +47,7 @@ import type {
 
 /**
  * `Terrain`: the component that turns a {@link TerrainAsset} into chunk meshes and answers every
- * gameplay query about the ground (`docs/plan/2026-09-terrain-particles-shaders.md` §5.2–§5.4,
- * `docs/adr/0023-terrain-chunked-geomipmapping.md`).
+ * gameplay query about the ground (`docs/adr/0026-terrain-chunked-geomipmapping.md`).
  *
  * Queries read the **height field**, never a collider, so a terrain answers `heightAt` with no
  * physics registered and under a headless app. They honour the entity's translation and scale;
@@ -72,7 +71,7 @@ const SPLAT_PRIORITY = 500;
 
 /**
  * What a `HeightfieldCollider` needs, by data: `@ignifx/terrain` never imports `@ignifx/physics`
- * (plan §5.4), so this is the shape rather than the type.
+ * (ADR-0026), so this is the shape rather than the type.
  *
  * @public
  */

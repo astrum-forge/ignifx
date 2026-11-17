@@ -21,7 +21,7 @@
 // (`packages/2d/src/atlas/loader.ts`, `resolveAtlasImageUrl`), so a production build that
 // content-hashes the asset root still finds the sheet.
 //
-// It was not always so. In Phase 6 the loader resolved the reference against the document's own
+// It was not always so. The loader used to resolve the reference against the document's own
 // *URL*, which a hashed build breaks — `assets/tiles.a1b2c3d4.atlas.json` looked for
 // `assets/tiles.png`, a name that no longer exists, and the load failed with `IGX-0505` — so the
 // sheets were parked in Vite's unhashed `public/` directory and addressed root-relatively as

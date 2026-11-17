@@ -48,7 +48,7 @@ import type {
  * - `cloneTransformNode(mesh)` (`index.d.ts` 1776, `lib/scene/transform-node.js`) shallow-clones a
  *   mesh: the clone gets a fresh transform and **the same `_gpu` wrapper object**, with
  *   `retain(_gpu)` bumping a reference count. So N clones of one template share exactly one set of
- *   GPU buffers — that is spike S2.4's "instancing shares GPU buffers", and it is provable by
+ *   GPU buffers — instancing shares GPU buffers, and that is provable by
  *   object identity rather than by measuring memory.
  * - Disposal is driven entirely by scene membership. `removeFromScene` calls `unregisterMeshScene`,
  *   and only when the mesh has left its **last** scene does it queue `disposeMeshGpu`, which calls

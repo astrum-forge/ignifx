@@ -17,7 +17,7 @@ import type { CapturedFrame } from "../../../src/lite/screenshot.js";
 import type { Material } from "@babylonjs/lite";
 
 /**
- * Spike S2.2: how long a mesh added **after** `registerScene` takes to appear, with and without its
+ * How long a mesh added **after** `registerScene` takes to appear, with and without its
  * material family already built, and what a warm-up therefore has to do.
  *
  * The measurement subtracts a baseline, because `captureScreenshot` is itself served at the end of a
@@ -39,8 +39,8 @@ const FRAME_BUDGET = 240;
  *
  * @remarks
  * Lite compiles the family's pipelines asynchronously, alongside the frames, so the count depends
- * on the machine: SwiftShader measured 3 locally (ADR-0002, S2.2), and a loaded GitHub runner measured
- * 10 (2026-11-09). 20 still proves what S2.2 is about, that an unwarmed family appears on its own
+ * on the machine: SwiftShader measured 3 locally (ADR-0002 Validation), and a loaded GitHub runner
+ * measured 10 (2026-11-09). 20 still proves the point, that an unwarmed family appears on its own
  * within a few frames rather than never or after a stall, while the warmed-up cases below keep
  * the tight bound of 2 that shows what a warm-up buys.
  */
@@ -129,7 +129,7 @@ function redStandard(): Material {
   return createStandardMaterialFromProps({ diffuse: [1, 0, 0], specular: [0, 0, 0] });
 }
 
-describe("S2.2 · a mesh added after registerScene", () => {
+describe("a mesh added after registerScene", () => {
   it("appears within a handful of frames when its family was never built", async () => {
     const harness = await emptyScene();
     const measured = await measureFramesToVisible(harness, redPbr());
@@ -158,7 +158,7 @@ describe("S2.2 · a mesh added after registerScene", () => {
   });
 });
 
-describe("S2.2 · what a warm-up installs", () => {
+describe("what a warm-up installs", () => {
   it("adds one hidden probe per material and nothing else", async () => {
     const harness = await createRenderHarness({ size: 32, msaaSamples: 1 });
     current = harness;

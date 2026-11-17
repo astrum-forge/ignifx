@@ -8,9 +8,9 @@ import type { Capture, ThreeDBrowserApp } from "../support/browser-harness.js";
 import type { ModelAsset } from "@ignifx/core";
 
 /**
- * Spike S7.1 of `docs/plan/engineering-plan.md`, as a test: a loaded model's clips are detached from
- * the scene's own ticking, ignifx's `Animator` advances them on ignifx's clock, and the pose that
- * reaches the device changes with the state machine and freezes with `app.pause()`.
+ * A loaded model's clips are detached from the scene's own ticking, ignifx's `Animator` advances
+ * them on ignifx's clock, and the pose that reaches the device changes with the state machine and
+ * freezes with `app.pause()`.
  *
  * The pose is asserted from the **frame**, not from a bone: Babylon Lite's `Bone` exposes only its
  * name (`index.d.ts` 1324-1326) and the joint transforms live in a GPU bone texture, so what a

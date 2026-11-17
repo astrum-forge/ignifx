@@ -304,7 +304,7 @@ describe("Terrain.colliderInit", () => {
   });
 
   it("matches the field names @ignifx/physics declares, without importing it", () => {
-    // The plan's §5.4 rule is coupling by data: this reads the sibling package's source rather than
+    // The rule is coupling by data (ADR-0026): this reads the sibling package's source rather than
     // depending on it, so a rename over there fails here.
     const source = readFileSync(new URL("../../../physics/src/components/colliders.ts", import.meta.url), "utf8");
     const body = source.slice(source.indexOf("class HeightfieldCollider"));

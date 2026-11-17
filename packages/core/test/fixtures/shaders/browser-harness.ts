@@ -20,11 +20,9 @@ import type { World } from "../../../src/world/world.js";
  * A real `createApp({ canvas })` with the shader layer registered, for the custom-WGSL browser
  * suite.
  *
- * It builds its own app rather than reusing `test/render/support/browser-harness.ts` because the
- * shader layer needs one extra thing that harness cannot pass: the `PreRender` uniform system, which
- * `src/extension/core-extension.ts` will register once this wave is integrated but which this brief
- * does not own. Shaders are supplied as strings and published straight into the asset cache, so no
- * fixture file and no network are involved.
+ * It builds its own app rather than reusing `test/render/support/browser-harness.ts`. Shaders are
+ * supplied as strings and published straight into the asset cache, so no fixture file and no
+ * network are involved.
  */
 
 /** The canvas edge the harness uses. Small keeps SwiftShader fast. */

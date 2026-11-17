@@ -14,8 +14,8 @@ import type { LightProbeAsset } from "../light-probe-asset.js";
 import type { LightProbeVolume } from "../light-probe-volume.js";
 
 /**
- * The render layer's half of light probes (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step
- * B2): which volume lights the scene, and keeping its plugin on every lit PBR material. Loaded with
+ * The render layer's half of light probes (`docs/architecture/07-rendering.md` §2.15): which volume
+ * lights the scene, and keeping its plugin on every lit PBR material. Loaded with
  * `../../lite/gpu/light-probes.ts` as one chunk, only once a world has a `LightProbeVolume`.
  */
 

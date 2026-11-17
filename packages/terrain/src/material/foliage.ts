@@ -12,8 +12,8 @@ import type {
 } from "@ignifx/core";
 
 /**
- * Foliage materials (`docs/plan/2026-09-terrain-particles-shaders.md` §5.5): a lit, alpha-tested,
- * wind-blown shader material for grass cards, leaves, and every `TerrainScatter` mesh.
+ * Foliage materials: a lit, alpha-tested, wind-blown shader material for grass cards, leaves, and
+ * every `TerrainScatter` mesh.
  *
  * `./foliage.wgsl.ts` says why this is a shader material rather than PBR plus a surface shader.
  */

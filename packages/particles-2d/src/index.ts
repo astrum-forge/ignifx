@@ -1,7 +1,6 @@
 /**
  * `@ignifx/particles-2d` public barrel: the `ParticleSystem2D` component, the `particles2D()`
- * extension, and the service that shares `app.particles`' budget with the 3D systems
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §4.3).
+ * extension, and the service that shares `app.particles`' budget with the 3D systems.
  *
  * Explicit named re-exports only — no `export *` (coding standards §4). The package imports nothing
  * from `@babylonjs/lite`: it draws through `@ignifx/2d`'s `SpriteBatch` and simulates with

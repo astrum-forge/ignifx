@@ -15,11 +15,10 @@ import type { SceneInputs } from "./scene-inputs.js";
 import type { EffectWrapper, EngineContext, RenderTargetTextureResult, SceneContext, Task } from "@babylonjs/lite";
 
 /**
- * Temporal anti-aliasing (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, steps G5 and G6;
- * `docs/architecture/07-rendering.md` §2.13). Its own chunk: the renderer imports it only when
- * `rendering.taa.enabled` is on, so a project without TAA loads none of it and its frame graph has
- * none of these tasks (`CONSTITUTION.md` §2.5). HDR only: it runs on linear `rgba16float` colour,
- * between the scene pass and the HDR output pass.
+ * Temporal anti-aliasing (`docs/architecture/07-rendering.md` §2.13). Its own chunk: the renderer
+ * imports it only when `rendering.taa.enabled` is on, so a project without TAA loads none of it and
+ * its frame graph has none of these tasks (`CONSTITUTION.md` §2.5). HDR only: it runs on linear
+ * `rgba16float` colour, between the scene pass and the HDR output pass.
  *
  * ```text
  * scene-inputs (depth, velocity) → scene (jittered) → taa-jitter → taa-resolve → resolved

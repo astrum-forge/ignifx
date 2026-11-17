@@ -34,7 +34,7 @@ import type { Transform } from "../../transform/transform.js";
 
 /**
  * One `InstancedMeshRenderer`'s near mesh and its optional LOD partner, and everything that writes
- * to them (`docs/plan/2026-09-terrain-particles-shaders.md` §3.5).
+ * to them (`docs/architecture/07-rendering.md` §2.9).
  *
  * Every line needs a WebGPU device, which is why it sits in `src/render/gpu/` — excluded from the
  * Node coverage floor and measured by the browser project — and why the component reaches it through

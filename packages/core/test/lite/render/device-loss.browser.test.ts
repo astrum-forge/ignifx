@@ -20,10 +20,10 @@ import type { LiteEngine, LiteScene } from "../../../src/lite/scene.js";
 import type { PixelRgba } from "../../../src/lite/screenshot.js";
 
 /**
- * Spike S2.3, device-loss half (`docs/architecture/07-rendering.md` §4): recovery enabled **before**
- * any resource exists survives a forced loss and draws the same image again; recovery enabled after
- * the fact is recorded for what it actually does; and forcing a loss with no strategy enabled is a
- * hard error rather than a silent no-op.
+ * Device loss (`docs/architecture/07-rendering.md` §4): recovery enabled **before** any resource
+ * exists survives a forced loss and draws the same image again; recovery enabled after the fact is
+ * recorded for what it actually does; and forcing a loss with no strategy enabled is a hard error
+ * rather than a silent no-op.
  *
  * The engine here is built by hand rather than through the shared harness, because the ordering of
  * `enableDeviceLostSceneRecovery` against resource creation is the whole point.
@@ -209,7 +209,7 @@ async function within<T>(promise: Promise<T>, what: string): Promise<T> {
   }
 }
 
-describe("S2.3 · device loss with recovery enabled first", () => {
+describe("device loss with recovery enabled first", () => {
   it("reports the loss, recovers, and draws the same image again", async () => {
     const fixture = await buildFixture("before");
     try {
@@ -229,7 +229,7 @@ describe("S2.3 · device loss with recovery enabled first", () => {
   }, 30_000);
 });
 
-describe("S2.3 · device loss with recovery enabled after the resources exist", () => {
+describe("device loss with recovery enabled after the resources exist", () => {
   it("still recovers the scene: Lite rebuilds meshes from the CPU copies it always keeps", async () => {
     // `docs/architecture/07-rendering.md` §4 requires the call before any resource is created. That
     // rule protects *textures*, whose recovery source is only stamped on textures created after the
@@ -253,7 +253,7 @@ describe("S2.3 · device loss with recovery enabled after the resources exist", 
   }, 30_000);
 });
 
-describe("S2.3 · forcing a loss with no recovery strategy", () => {
+describe("forcing a loss with no recovery strategy", () => {
   it("throws rather than destroying the device silently", async () => {
     const fixture = await buildFixture("never");
     try {

@@ -15,8 +15,8 @@ import { Quat } from "../../src/math/quat.js";
 import { Vec3 } from "../../src/math/vec3.js";
 
 /**
- * The adapter helpers the kernel's `Transform` and `Entity` needed on top of the S1.1 spike
- * (`docs/architecture/02-scene-graph.md` §5, §5.1).
+ * The adapter helpers the kernel's `Transform` and `Entity` needed on top of what `node.test.ts`
+ * covers (`docs/architecture/02-scene-graph.md` §5, §5.1).
  */
 
 describe("live TRS views", () => {

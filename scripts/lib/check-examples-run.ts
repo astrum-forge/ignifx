@@ -1,6 +1,6 @@
 /**
  * The `examples-run` check of the documentation harness
- * (`docs/architecture/16-docs-harness-and-skill.md` §4, row "Examples run"). Every fenced block
+ * (`docs/architecture/16-docs-harness-and-skill.md` §4, the `examples-run` check). Every fenced block
  * whose info string is `ts run` is executed as a real program: a block that is documented as
  * headless has to actually reach the end of itself under Node.
  *

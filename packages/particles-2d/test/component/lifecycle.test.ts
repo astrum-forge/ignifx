@@ -8,8 +8,7 @@ import type { Entity } from "@ignifx/core";
 import type { ParticleDefinitionInput } from "@ignifx/particles";
 
 /**
- * `ParticleSystem2D`'s lifecycle: the same play/stop/pause/emit contract as the 3D component
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §4.3).
+ * `ParticleSystem2D`'s lifecycle: the same play/stop/pause/emit contract as the 3D component.
  */
 
 /** A steady emitter with no forces, so a particle sits where it was born. */

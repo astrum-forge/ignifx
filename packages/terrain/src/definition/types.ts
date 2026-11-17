@@ -2,8 +2,7 @@ import type { ColorLike } from "@ignifx/core";
 
 /**
  * The `ignifx.terrain` document and its resolved form
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §5.1,
- * `docs/architecture/06-serialization-and-scene-format.md` §6).
+ * (ADR-0026, `docs/architecture/06-serialization-and-scene-format.md` §6).
  *
  * `defineTerrain` turns the document, where every defaulted field is optional, into a
  * {@link TerrainDefinition} where every field is present; nothing downstream reads the raw document.

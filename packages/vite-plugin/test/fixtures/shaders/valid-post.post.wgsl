@@ -1,4 +1,4 @@
-// A full-screen PostEffect, from docs/plan/2026-09-terrain-particles-shaders.md §3.3.
+// A full-screen PostEffect.
 // `mainFragment` is a plain function: ignifx generates the `@fragment fn effectFragment` entry
 // point Lite calls by name and makes it forward here (packages/core/src/render/post-effect.ts).
 // @ignifx post

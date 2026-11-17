@@ -126,7 +126,7 @@ const NUL = "\u0000";
  * code and could in principle change:
  *
  * 1. The `standard` privilege makes Chromium normalise `..` segments away before the request is
- *    dispatched — measured on Electron 44.2.0 (S9.1), `fetch("ignifx://app/../outside.txt")`
+ *    dispatched — measured on Electron 44.2.0, `fetch("ignifx://app/../outside.txt")`
  *    reached the handler as `ignifx://app/outside.txt` and 404ed rather than escaping.
  * 2. This function resolves the path anyway and refuses anything that does not land inside `root`,
  *    which is what catches an encoded separator, a request that never went through Chromium, and

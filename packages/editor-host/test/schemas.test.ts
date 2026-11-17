@@ -8,9 +8,9 @@ import type { LiveHost, Wire } from "./support/scene-project.js";
 import type { App, AssetTypeToken, ConcreteComponentType, Extension } from "@ignifx/core";
 
 /**
- * Engine ask E12b: the host describes the live registry with core's `describeRegisteredSchemas`,
- * so a project's own scripts reach the editor with their inspector metadata, and a hot reload that
- * changes a script's fields is announced with `schemasChanged`.
+ * The host describes the live registry with core's `describeRegisteredSchemas`, so a project's own
+ * scripts reach the editor with their inspector metadata, and a hot reload that changes a script's
+ * fields is announced with `schemasChanged`.
  */
 
 /** A texture's asset type token. */
@@ -132,7 +132,7 @@ describe("the host's schema descriptions", () => {
     expect(description).toEqual(describeRegisteredSchemas(app.world.registry)["game/Turret"]);
     // Neither `Script` nor the class `Script.define` makes is registered.
     expect(ancestry).toEqual([]);
-    // Engine ask E33: `requires` reaches the editor, which adds the required components itself.
+    // `requires` reaches the editor, which adds the required components itself.
     expect(turret).toMatchObject({
       title: "Turret",
       format: "components",
@@ -160,7 +160,7 @@ describe("the host's schema descriptions", () => {
     expect(member(schemas, "game/Health")).not.toHaveProperty("requires");
   });
 
-  it("lists the registered classes a component extends, nearest first, as engine ask E44 asks", async () => {
+  it("lists the registered classes a component extends, nearest first", async () => {
     const { app, schemas } = await started([TitanHealth]);
     // `PlatedHealth` inherits `game/ArmoredHealth` as its typeId but is not that registration.
     expect(member(schemas, "game/TitanHealth")["extends"]).toEqual(["game/ArmoredHealth", "game/Health"]);

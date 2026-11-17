@@ -22,9 +22,9 @@ import type { TSESTree } from "@typescript-eslint/utils";
  * `find(name: string)` methods exist in the engine — `Entity.find` and `@ignifx/input`'s
  * `InputActionsView.find` (`packages/input/src/actions/actions-view.ts`) — and the second is the
  * documented way for a script to resolve an action, so `actions.find("jump")` in a template's
- * `src/scripts/` was reported as a scene-graph mistake (recorded as a Phase 7 follow-up in
- * `docs/plan/engineering-plan.md`). {@link Options.allowedReceivers} names the receivers whose
- * `find` is a by-name lookup rather than a path lookup, and an array literal is skipped outright.
+ * `src/scripts/` was reported as a scene-graph mistake. {@link Options.allowedReceivers} names the
+ * receivers whose `find` is a by-name lookup rather than a path lookup, and an array literal is
+ * skipped outright.
  *
  * ## Why the exclude list no longer carries `scripts/`
  *

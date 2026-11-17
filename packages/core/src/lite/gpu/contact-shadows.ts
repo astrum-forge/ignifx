@@ -10,10 +10,10 @@ import type {
 } from "@babylonjs/lite";
 
 /**
- * Screen-space contact shadows (GI plan step G10): Lite's
- * `createScreenSpaceContactShadowsPostProcessTask` (`index.d.ts` 3672), fed the shared scene-input
- * depth and run as a scene-colour pass (`./scene-color-passes.ts`). Its own chunk, loaded only while
- * a `PostProcessStack` enables `contactShadows` (`CONSTITUTION.md` §2.5).
+ * Screen-space contact shadows: Lite's `createScreenSpaceContactShadowsPostProcessTask`
+ * (`index.d.ts` 3672), fed the shared scene-input depth and run as a scene-colour pass
+ * (`./scene-color-passes.ts`). Its own chunk, loaded only while a `PostProcessStack` enables
+ * `contactShadows` (`CONSTITUTION.md` §2.5).
  *
  * Lite marches from each pixel towards one light through the depth buffer and multiplies the colour
  * by the occlusion it finds, so the light is the scene's main directional light: the first one that

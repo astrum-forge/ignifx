@@ -66,11 +66,11 @@ import type { MutableVec3, Vec3Like } from "@ignifx/core";
  * ## What Lite does not give us
  *
  * There is **no navmesh serialization** in 1.27.0: `index.d.ts` declares no `getNavMeshData`, no
- * `buildFromNavMeshData`, and nothing else that turns a baked navmesh into bytes or back. The
- * `.navmesh.bin` asset and the `ignifx bake navmesh` CLI command of `12-3d-toolkit.md` §5 are
- * therefore not implementable against this version, and `NavMeshSurface` reports `IGX-1210` rather
- * than pretending. There is also no `removeAgent`: an agent joins a crowd for the crowd's lifetime,
- * so a destroyed `NavMeshAgent` is parked rather than removed.
+ * `buildFromNavMeshData`, and nothing else that turns a baked navmesh into bytes or back. A
+ * pre-baked `.navmesh.bin` asset is therefore not implementable against this version
+ * (`12-3d-toolkit.md` §5), and `NavMeshSurface` reports `IGX-1210` rather than pretending. There is
+ * also no `removeAgent`: an agent joins a crowd for the crowd's lifetime, so a destroyed
+ * `NavMeshAgent` is parked rather than removed.
  */
 
 /** How many components a Lite `Vec3` has, for the scratch conversions. */

@@ -20,7 +20,7 @@ const MATRIX = [
   ["Node 24 LTS (headless)", "Supported — no WebGPU, use createApp({ headless: true })"],
 ];
 
-/** Chromium flags measured in ADR-0009 §"WebGPU flags (S0.1)". */
+/** Chromium flags measured in ADR-0009, "WebGPU flags". */
 const FLAGS = [
   [
     "--enable-unsafe-webgpu",

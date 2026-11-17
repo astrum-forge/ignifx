@@ -3,8 +3,8 @@ import { particleAssetFromDefinition, ParticleSystem, defineParticles, particles
 import type { BenchScene } from "./types.ts";
 
 /**
- * One stateless particle system holding 10,000 live particles at 2,000 emitted per second — the
- * plan's §6.3 `particles-10k` row.
+ * One stateless particle system holding 10,000 live particles at 2,000 emitted per second: the
+ * `particles-10k` row of `benchmarks/baselines.json`.
  *
  * ## What it is measuring
  *

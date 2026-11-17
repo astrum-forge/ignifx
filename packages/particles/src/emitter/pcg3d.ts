@@ -1,6 +1,6 @@
 // `pcg3d` (Jarzynski & Olano, JCGT 2020), the randomness both evaluators share
-// (`docs/plan/2026-09-terrain-particles-shaders.md` §4.1). `Math.imul` and `>>> 0` keep every
-// intermediate a `u32`, so this and the WGSL copy in `src/gpu/wgsl.ts` produce identical bits.
+// (ADR-0025). `Math.imul` and `>>> 0` keep every intermediate a `u32`, so this and the WGSL copy in
+// `src/gpu/wgsl.ts` produce identical bits.
 
 /** The LCG multiplier. */
 const MULTIPLIER = 1664525;

@@ -1,6 +1,6 @@
 // The CPU mirror of the storage buffer the vertex shader indexes
-// (`docs/plan/2026-09-terrain-particles-shaders.md` §4.4). A record is 48 bytes in the byte order
-// the WGSL `Particle` struct declares, so it uploads unchanged.
+// (ADR-0025). A record is 48 bytes in the byte order the WGSL `Particle` struct declares, so it
+// uploads unchanged.
 
 /**
  * Floats per record.

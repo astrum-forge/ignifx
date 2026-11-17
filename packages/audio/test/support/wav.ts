@@ -1,8 +1,7 @@
 /**
- * A RIFF/WAVE writer, so the audio tests have a real audio file without downloading one
- * (`docs/plan/engineering-plan.md` Phase 5: "no downloads"). Half a second of an 8 kHz mono sine is
- * 8,044 bytes — small enough to build in memory on every test and real enough that a browser
- * decodes it and Lite reports the same duration the header claims.
+ * A RIFF/WAVE writer, so the audio tests have a real audio file without downloading one. Half a
+ * second of an 8 kHz mono sine is 8,044 bytes — small enough to build in memory on every test and
+ * real enough that a browser decodes it and Lite reports the same duration the header claims.
  */
 
 /** Bytes in the RIFF header before the first chunk. */

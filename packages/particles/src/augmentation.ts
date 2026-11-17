@@ -8,8 +8,8 @@ import type { ExtensionContext } from "@ignifx/core";
 declare module "@ignifx/core" {
   interface App {
     /**
-     * Particles (`docs/plan/2026-09-terrain-particles-shaders.md` §4.3): the budget, the quality
-     * multiplier, the gravity, the counters, and the live list of `ParticleSystem` components.
+     * Particles: the budget, the quality multiplier, the gravity, the counters, and the live list
+     * of `ParticleSystem` components.
      */
     readonly particles: ParticlesService;
   }

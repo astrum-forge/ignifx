@@ -11,9 +11,9 @@ import type { MaterialAsset } from "../material-asset.js";
 import type { LightmapMode, MeshRendererLightmap } from "../mesh-renderer.js";
 
 /**
- * The render layer's half of lightmaps (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B3):
- * one material clone per lightmapped renderer. Loaded with `../../lite/gpu/lightmap.ts` as one
- * chunk, only once a static `MeshRenderer` names a loaded lightmap.
+ * The render layer's half of lightmaps (`docs/architecture/07-rendering.md` §2.15): one material
+ * clone per lightmapped renderer. Loaded with `../../lite/gpu/lightmap.ts` as one chunk, only once
+ * a static `MeshRenderer` names a loaded lightmap.
  *
  * `MaterialAsset`s are shared, and a lightmap is per renderer, so each renderer draws with
  * `MaterialAsset.clone` of its material carrying the lightmap. The clone is rebuilt when the

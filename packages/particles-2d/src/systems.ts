@@ -2,8 +2,7 @@ import type { Particles2DService } from "./service/particles-2d-service.js";
 import type { System, SystemContext } from "@ignifx/core";
 
 /**
- * The two frame systems that drive every `ParticleSystem2D`
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §4.3, "Lifecycle").
+ * The two frame systems that drive every `ParticleSystem2D`.
  *
  * | System                    | Phase       | Order  | Why there                                                                    |
  * | ------------------------- | ----------- | ------ | ---------------------------------------------------------------------------- |

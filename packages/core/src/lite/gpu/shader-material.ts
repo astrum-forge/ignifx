@@ -23,7 +23,7 @@ import type {
 /**
  * The custom-WGSL half of the Babylon Lite adapter: `createShaderMaterial`, the `setShader*`
  * setters, and the 1x1 fallback textures a declared sampler falls back to
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1, ADR-0024). Everything here is `@internal`.
+ * (ADR-0024). Everything here is `@internal`.
  *
  * Lite exports one barrel, so a static import of `createShaderMaterial` anywhere in the reachable
  * graph pulls `lib/material/shader/**` into every entry chunk. This module is therefore reached with
@@ -189,7 +189,7 @@ const WRAPPED_FRAGMENT = "ignifxDisplayFragment";
 
 /**
  * Wraps a custom shader's `mainFragment` so that, under `rendering.hdr`, it writes linear colour
- * (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G3).
+ * (`docs/architecture/07-rendering.md` §2.7).
  *
  * @remarks
  * A custom shader writes the colour that is displayed: with HDR off it lands on the swapchain as

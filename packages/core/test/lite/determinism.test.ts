@@ -12,8 +12,8 @@ import {
 } from "./fixtures/determinism-scene.js";
 
 /**
- * Spike S1.3 — headless determinism (`docs/plan/engineering-plan.md` Phase 1). The Chromium half of
- * the same comparison lives in `determinism.browser.test.ts` and asserts the same constant.
+ * Headless determinism. The Chromium half of the same comparison lives in
+ * `determinism.browser.test.ts` and asserts the same constant.
  */
 
 /** One complete run: a null-engine scene driving one ignifx callback over 50 transform nodes. */
@@ -60,7 +60,7 @@ function dispose(run: Run): void {
   disposeSceneOnly(run.runtime.scene);
 }
 
-describe("S1.3 · headless determinism", () => {
+describe("headless determinism", () => {
   it("produces identical hashes from two independent runs in one process", () => {
     const first = createRun();
     const second = createRun();

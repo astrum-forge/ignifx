@@ -11,9 +11,9 @@ import type { PixelRgba } from "../../src/lite/screenshot.js";
 import type { ToneMappingCurve } from "../../src/render/environment.js";
 
 /**
- * AgX on a real device (`docs/plan/2026-11-gi-phase-1-execution-plan.md`, step G13): Lite bakes the
- * curve into every PBR fragment on the plain path, and the HDR output pass runs the same WGSL once,
- * so the two present the same pixel.
+ * AgX on a real device (`docs/architecture/07-rendering.md` §2.5): Lite bakes the curve into every
+ * PBR fragment on the plain path, and the HDR output pass runs the same WGSL once, so the two
+ * present the same pixel.
  */
 
 /** The canvas edge. Small keeps SwiftShader fast. */

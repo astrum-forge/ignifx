@@ -25,7 +25,7 @@ import type { RenderHarness } from "./fixtures/gpu-harness.js";
 import type { Mesh } from "@babylonjs/lite";
 
 /**
- * Spike S2.4, the half that does not need a memory profiler: `cloneTransformNode` shares GPU
+ * Instancing, the half that does not need a memory profiler: `cloneTransformNode` shares GPU
  * buffers, and a template that never joins a scene keeps them alive however many clones come and
  * go.
  *
@@ -70,7 +70,7 @@ describe("primitives", () => {
   });
 });
 
-describe("S2.4 · cloning shares GPU buffers", () => {
+describe("cloning shares GPU buffers", () => {
   it("gives every clone the identical buffer wrapper the template owns", () => {
     const template = createBoxMesh(harness.engine, 1);
     const first = cloneMeshUnderNode(template, null);

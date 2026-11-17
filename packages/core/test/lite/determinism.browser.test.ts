@@ -12,8 +12,7 @@ import {
 } from "./fixtures/determinism-scene.js";
 
 /**
- * Spike S1.3, Chromium half — "identical transforms across Node and Chromium"
- * (`docs/plan/engineering-plan.md` Phase 1).
+ * Determinism, Chromium half: identical transforms across Node and Chromium.
  *
  * This is the same 50-node scene, the same 600 steps, the same one ignifx frame callback and the
  * same hash function as `determinism.test.ts`, driven this time on a **real WebGPU engine's scene**
@@ -38,7 +37,7 @@ function createCanvas(): HTMLCanvasElement {
   return canvas;
 }
 
-describe("S1.3 · determinism across Node and Chromium", () => {
+describe("determinism across Node and Chromium", () => {
   it("reproduces the committed baseline hash on a real WebGPU scene", async () => {
     const canvas = createCanvas();
     let runtime: LiteEngine | null = null;

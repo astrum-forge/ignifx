@@ -6,7 +6,7 @@ import type { RenderHarness } from "./support/render-harness.js";
 
 /**
  * `TextureAsset.fromPixels` and `TextureAsset.update` without a device
- * (`docs/architecture/05-assets-and-loading.md` §5, the plan's §2.2).
+ * (`docs/architecture/05-assets-and-loading.md` §5, `07-rendering.md` §2.9).
  *
  * A headless app uploads nothing, so what is asserted is everything that happens **before** the
  * upload: the byte-count and region arithmetic, the sampler defaults a data map wants, the

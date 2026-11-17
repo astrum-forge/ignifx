@@ -23,7 +23,7 @@ import type { SurfaceShaderInit } from "../surface-shader.js";
 
 /**
  * The device-only half of surface shaders: the Lite plugin a compiled `.surface.wgsl` becomes, and
- * the host-material writes that follow it (`docs/plan/2026-09-terrain-particles-shaders.md` §3.2).
+ * the host-material writes that follow it (ADR-0024).
  *
  * Each entry point takes the app or the host as a nullable and returns early when it is `null`, so
  * `../surface-shader.ts` keeps no headless branch of its own.
@@ -50,7 +50,7 @@ export function resolveSurfaceHost(material: MaterialAsset, isHeadless: boolean)
  * Re-uploads the host material's uniform block after a value write.
  *
  * @remarks
- * Lite ignores `dynamic` for a PBR host and re-reads the plugin slice only after this (spike S0.2);
+ * Lite ignores `dynamic` for a PBR host and re-reads the plugin slice only after this;
  * a Standard host re-uploads every frame because the plugin sets `dynamic`.
  *
  * @param host - The host material, or `null`.

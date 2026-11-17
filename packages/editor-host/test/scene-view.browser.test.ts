@@ -533,7 +533,7 @@ describe("the scene view on a WebGPU canvas", () => {
       fields: { turnsPerSecond: { kind: "f32", default: 0.5, step: 0.05, group: "Motion" } },
       allowMultiple: true,
       package: "game",
-      // Engine ask E44: a script's registered ancestors; `Script` is not one.
+      // A script's registered ancestors; `Script` is not one.
       extends: [],
       propsSchema: expect.objectContaining({ type: "object" }) as unknown,
     });

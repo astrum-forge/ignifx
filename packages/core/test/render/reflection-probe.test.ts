@@ -12,7 +12,7 @@ import type { RenderHarness } from "./support/render-harness.js";
 import type { ReflectionProbeCandidate } from "../../src/render/reflection-probe.js";
 
 /**
- * `ReflectionProbe` (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B1): the settings, the
+ * `ReflectionProbe` (`docs/architecture/07-rendering.md` §2.15): the settings, the
  * refresh request, the face size, and which probe a point reflects. The capture itself needs a
  * device and is covered by `reflection-probe.browser.test.ts`.
  */

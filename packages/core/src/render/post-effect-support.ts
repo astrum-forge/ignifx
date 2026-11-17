@@ -7,7 +7,7 @@ import type { LiteEngine, LiteScene } from "../lite/scene.js";
 
 /**
  * The gate `PostProcessStack` and its frame-graph half reach custom post effects through
- * (`docs/plan/2026-09-terrain-particles-shaders.md` §3.3, "Bundle cost" in §3.1).
+ * (`docs/architecture/07-rendering.md` §2.8, "Bundle cost").
  *
  * Every app registers a `PostProcessStack`, so the WGSL generator and Babylon Lite's fullscreen
  * effect path are loaded by the `.wgsl` loader when it parses a `post` file, not imported statically.

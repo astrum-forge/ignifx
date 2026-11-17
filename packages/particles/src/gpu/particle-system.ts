@@ -23,9 +23,9 @@ import type { ParticleEvaluationInputs, ParticleState } from "../evaluate/partic
 import type { ParticleDefinitionResources } from "../service/particles-service.js";
 import type { AssetHandle, ComponentHooks, MaterialAsset, Schema, StorageBufferAsset } from "@ignifx/core";
 
-// The `ParticleSystem` component (`docs/plan/2026-09-terrain-particles-shaders.md` §4.3). It owns
-// an emitter core, a storage buffer for the records, a material built from the definition's shared
-// shader, and an `InstancedMeshRenderer` it adds to its own entity.
+// The `ParticleSystem` component. It owns an emitter core, a storage buffer for the records, a
+// material built from the definition's shared shader, and an `InstancedMeshRenderer` it adds to its
+// own entity.
 
 /**
  * Where the update system sits in `Update`: after every script, so a script's `emit()` is drawn in

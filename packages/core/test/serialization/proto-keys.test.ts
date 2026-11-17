@@ -11,7 +11,7 @@ import type { TestWorld } from "../support/create-test-world.js";
 
 /**
  * `__proto__`, `constructor`, and `prototype` keys in a scene file stay data: expanding an instance,
- * applying its overrides, and decoding a `map` field never change a prototype (engine backlog E42).
+ * applying its overrides, and decoding a `map` field never change a prototype.
  */
 
 let worlds: TestWorld[] = [];

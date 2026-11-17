@@ -3,7 +3,7 @@ import type { LiteEngine, LiteScene } from "../../lite/scene.js";
 import type { LightProbeVolume } from "../light-probe-volume.js";
 
 /**
- * The renderer's handle on light probes (GI B2): it loads the light-probe chunk (`./light-probes.ts`)
+ * The renderer's handle on light probes: it loads the light-probe chunk (`./light-probes.ts`)
  * the first frame a world has a `LightProbeVolume` and forwards every frame to it. Device-only, like
  * the rest of `src/render/gpu/`: a headless renderer never creates one.
  *

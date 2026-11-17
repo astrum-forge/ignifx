@@ -2,7 +2,7 @@
 
 `@ignifx/terrain` public barrel: heightmap and procedural terrains with chunked geomipmapped LOD,
 a splat surface shader on PBR, gameplay queries, sculpting, and seeded foliage
-(`docs/plan/2026-09-terrain-particles-shaders.md` §5, `docs/adr/0023-terrain-chunked-geomipmapping.md`).
+(`docs/adr/0026-terrain-chunked-geomipmapping.md`).
 
 Explicit named re-exports only — no `export *` (coding standards §4). Everything the adapter owns
 (`src/lite/**`) stays internal apart from the type aliases the `.lite` escape hatches name.
@@ -2859,7 +2859,7 @@ How far, in metres, every LOD mesh's edges hang down to hide cracks between leve
 ### TerrainColliderInit
 
 What a `HeightfieldCollider` needs, by data: `@ignifx/terrain` never imports `@ignifx/physics`
-(plan §5.4), so this is the shape rather than the type.
+(ADR-0026), so this is the shape rather than the type.
 
 #### Properties
 

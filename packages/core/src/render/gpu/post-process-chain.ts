@@ -487,7 +487,7 @@ export class PostProcessChain {
 
   /**
    * Under `rendering.hdr`, records the custom effects ordered before any built-in one ahead of the
-   * output pass, where they read and write linear `rgba16float` colour (GI plan step G3).
+   * output pass, where they read and write linear `rgba16float` colour.
    *
    * @remarks
    * The first reads the scene's HDR texture directly, which is already a sampled `Texture2D`, so no

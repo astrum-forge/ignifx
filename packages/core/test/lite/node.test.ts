@@ -15,7 +15,7 @@ import { compose, identity, multiply, transformPoint } from "./fixtures/matrix.j
 import type { IWorldMatrixProvider, Mat4 } from "@babylonjs/lite";
 
 /**
- * Spike S1.1 — Transform on Lite nodes (`docs/plan/engineering-plan.md` Phase 1).
+ * Transform on Lite nodes.
  *
  * Every expected value here is computed with the plain arithmetic in `fixtures/matrix.ts`, never
  * with Babylon Lite's math, so the assertions test Lite rather than restate it.
@@ -52,7 +52,7 @@ function worldMatrixOf(node: ReturnType<typeof createNode>): number[] {
   return out;
 }
 
-describe("S1.1 · transform nodes on Babylon Lite", () => {
+describe("transform nodes on Babylon Lite", () => {
   it("computes a valid world matrix without ever adding the node to a scene", () => {
     // `docs/architecture/02-scene-graph.md` §5.1: pure transform nodes are matrix providers only.
     // No `createSceneContext`, no `addToScene` anywhere in this test.

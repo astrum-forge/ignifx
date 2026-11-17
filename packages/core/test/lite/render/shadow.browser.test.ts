@@ -25,9 +25,9 @@ import type { CapturedFrame } from "../../../src/lite/screenshot.js";
 import type { DirectionalLight, Mesh } from "@babylonjs/lite";
 
 /**
- * Spike S2.3, shadow half: a scene registered through `registerSceneWithShadowSupport` really does
- * grow a shadow pass, and attaching a PCF generator to a directional light darkens the ground where
- * the caster blocks the light.
+ * The feature opt-ins, shadow half: a scene registered through `registerSceneWithShadowSupport`
+ * really does grow a shadow pass, and attaching a PCF generator to a directional light darkens the
+ * ground where the caster blocks the light.
  *
  * The assertion is **differential and position-independent**: the same scene is captured before and
  * after the generator is attached, and the test counts how many pixels got materially darker. That
@@ -161,7 +161,7 @@ async function settleAndCapture(harness: RenderHarness): Promise<CapturedFrame> 
   return captureFrame(harness.engine);
 }
 
-describe("S2.3 · PCF directional shadows", () => {
+describe("PCF directional shadows", () => {
   it("darkens the ground once a generator is attached, and nothing gets brighter", async () => {
     const { harness, light, caster } = await buildShadowScene();
     const unshadowed = await settleAndCapture(harness);

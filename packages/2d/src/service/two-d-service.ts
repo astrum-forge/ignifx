@@ -228,8 +228,8 @@ export class TwoDService {
    * How many sprites the last frame actually wrote to Lite.
    *
    * @remarks
-   * This is the number spike S6.1 watches: on a steady frame with a static tilemap it is the count
-   * of sprites that genuinely moved, not the count that exist.
+   * This is the number the sprite-sync test watches: on a steady frame with a static tilemap it is
+   * the count of sprites that genuinely moved, not the count that exist.
    *
    * @returns The count.
    */
@@ -421,8 +421,7 @@ export class TwoDService {
   }
 
   /**
-   * Claims a fixed-capacity crowd of sprites that no entity owns
-   * (`docs/plan/2026-09-terrain-particles-shaders.md` §2.2).
+   * Claims a fixed-capacity crowd of sprites that no entity owns.
    *
    * @remarks
    * Use it when the sprites are not *things* — bullets, sparks, debris, 2D particles — and the

@@ -6,8 +6,8 @@ import type { App, ErrorReport, MemorySink, RenderCapture, World } from "@ignifx
 /**
  * A real `createApp({ canvas })` with `@ignifx/particles` registered, on a WebGPU device.
  *
- * `msaaSamples: 1` throughout, so a readback is one sample rather than a resolve of four
- * (ADR-0002). CI renders on SwiftShader, so nothing here asserts a GPU time.
+ * `msaaSamples: 1` throughout, so a readback is one sample rather than a resolve of four.
+ * CI renders on SwiftShader, so nothing here asserts a GPU time.
  */
 
 /** The canvas edge the harness uses when a test names none. Small keeps SwiftShader fast. */

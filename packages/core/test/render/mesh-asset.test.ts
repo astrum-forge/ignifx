@@ -7,7 +7,7 @@ import type { MeshGeometryData } from "../../src/render/mesh-asset.js";
 
 /**
  * `MeshAsset.fromData`'s extra attributes and the four `update*` methods, without a device
- * (the plan's §2.2, `07-rendering.md` §6).
+ * (`07-rendering.md` §2.9, §6).
  *
  * A headless app uploads nothing, so what is asserted is the range arithmetic, the counts, and the
  * copy into the array Lite would have retained — the half a terrain sculpt depends on and the half

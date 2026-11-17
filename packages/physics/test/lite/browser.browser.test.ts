@@ -20,15 +20,15 @@ import { HAVOK_WASM_FILE_NAME } from "../../src/lite/havok-module.js";
 import type { App, Coroutine, ErrorReport, RenderCapture, ScriptCallbacks } from "@ignifx/core";
 
 /**
- * The GPU half of Phase 4, on a real WebGPU device in Chromium:
+ * The GPU half of physics, on a real WebGPU device in Chromium:
  *
  * - Havok's `.wasm` is served through the **asset manifest**, which is how the Vite plugin's
- *   `ignifx.assets.public` copy is reached at runtime (spike S4.1, `09-physics.md` §7).
+ *   `ignifx.assets.public` copy is reached at runtime (`09-physics.md` §7).
  * - A `MeshRenderer` on a falling `Rigidbody` really moves on screen, because the body and the
  *   renderer share one `SceneNode` (ADR-0003).
  * - A forced device loss with active bodies and a running coroutine recovers with the simulation
  *   intact: the poses continue from where they were, matching a headless twin stepped the same
- *   number of times (Phase 4 exit criterion).
+ *   number of times.
  * - `app.physics.debugViewer.enabled` toggles Lite's wireframe viewer without throwing, and in an
  *   edit-mode app it draws the bodies, which follow the transforms an editor moves (ADR-0028).
  *

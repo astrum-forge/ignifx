@@ -14,9 +14,9 @@ import type { RenderHarness } from "./support/render-harness.js";
 import type { LightProbeAsset, LightProbeData } from "../../src/render/light-probe-asset.js";
 
 /**
- * Light probes (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B2): the `.probes.json`
- * format, the CPU sampling the shader mirrors, the texel packing, and the component headless. The
- * shader itself is covered by `light-probe.browser.test.ts`.
+ * Light probes (`docs/architecture/07-rendering.md` §2.15): the `.probes.json` format, the CPU
+ * sampling the shader mirrors, the texel packing, and the component headless. The shader itself is
+ * covered by `light-probe.browser.test.ts`.
  */
 
 let harness: RenderHarness | null = null;

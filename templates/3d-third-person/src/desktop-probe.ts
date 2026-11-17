@@ -8,18 +8,17 @@ import type { App, Coroutine, Entity } from "@ignifx/core";
  * opened with `?probe=1`. A shipped game never sees it: nothing below runs without the flag, and
  * the flag is not something a player types.
  *
- * It exists for one exit criterion in `docs/plan/engineering-plan.md` Phase 9 — *a forced device
- * loss in a running desktop template recovers with physics, coroutines and audio intact* — which
- * needs two things a game has no business exposing: a way to break the GPU device on purpose, and a
- * way to read the three subsystems back afterwards.
+ * It exists for one check — a forced device loss in a running desktop template recovers with
+ * physics, coroutines and audio intact — which needs two things a game has no business exposing: a
+ * way to break the GPU device on purpose, and a way to read the three subsystems back afterwards.
  *
  * ## How the device loss is forced
  *
  * `@babylonjs/lite` exports `forceWebGpuDeviceLossForTesting(engine)`, but nothing outside
  * `packages/core/src/lite/**` may import Lite (`CONSTITUTION.md` §3.4). `@ignifx/core` wraps it as
- * `forceRendererDeviceLossForTesting(app.renderer)` — an `@internal` seam added in
- * Phase 9 for exactly this probe — which marks the next loss as real (otherwise Lite treats a
- * `"destroyed"` device as a deliberate teardown and does not recover) and then destroys the device.
+ * `forceRendererDeviceLossForTesting(app.renderer)` — an `@internal` seam for exactly
+ * this probe — which marks the next loss as real (otherwise Lite treats a `"destroyed"` device as a
+ * deliberate teardown and does not recover) and then destroys the device.
  *
  * ## Why the probe sets the sun's shadow technique
  *

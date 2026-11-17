@@ -56,7 +56,7 @@ describe("generated sources", () => {
     expect(source).toBe("export function attachEditorPlayControls() {\n  return () => {};\n}\n");
   });
 
-  it("writes a development play-controls module that listens before the game attaches (E24)", () => {
+  it("writes a development play-controls module that listens before the game attaches", () => {
     const source = playControlsModuleSource({
       editorOrigin: "ignifx-editor://app",
       engineVersion: null,

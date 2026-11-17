@@ -13,7 +13,7 @@ import type { ShaderUniformType } from "./shader-declaration.js";
 
 /**
  * Turns a `// @ignifx post` file into the fragment module and uniform layout Babylon Lite's
- * fullscreen-effect path needs (`docs/plan/2026-09-terrain-particles-shaders.md` §3.3).
+ * fullscreen-effect path needs (ADR-0024).
  *
  * `mainFragment` is a plain function, not an entry point: Lite hard-codes the entry-point names
  * `effectFullscreenVertex` and `effectFragment` (`lib/effect/effect-renderer.js` 7, 258-260), so the
@@ -183,7 +183,7 @@ interface UniformLayout {
  * The rules are the WGSL specification's: a member's offset is its predecessor's end rounded up to
  * the member's alignment, and the struct's size is the last member's end rounded up to the struct's
  * alignment — the largest member alignment, and in the **uniform** address space never less than
- * 16. `vec3<f32>` is the one that catches people out: 16-aligned, 12 wide (plan §3.4).
+ * 16. `vec3<f32>` is the one that catches people out: 16-aligned, 12 wide.
  *
  * @param members - The members, in declaration order.
  * @returns The layout.

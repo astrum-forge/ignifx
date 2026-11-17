@@ -1070,7 +1070,7 @@ The union of the diagnostic codes this package can report.
 > **WgslShaderKind** = `"post"` \| `"shader"` \| `"surface"`
 
 The three forms a `.wgsl` file can declare with its `// @ignifx shader|surface|post` line
-(`docs/plan/2026-09-terrain-particles-shaders.md` §3.1–§3.3).
+(ADR-0024).
 
 ## Variables
 
@@ -1391,8 +1391,8 @@ The project settings data file auto-detected at the Vite root: the JSON form of 
 > `const` **IGNIFX\_SYSTEM\_UNIFORMS**: readonly `string`[]
 
 The uniforms ignifx supplies on top of Lite's, uploaded once per frame per material that declares
-them (`docs/plan/2026-09-terrain-particles-shaders.md` §3.1). They live beside a shader's own
-custom uniforms, so a shader reads them as `shaderUniforms.time`, not `shaderSystem.time`.
+them (ADR-0024). They live beside a shader's own custom uniforms, so a shader reads them as
+`shaderUniforms.time`, not `shaderSystem.time`.
 
 ***
 

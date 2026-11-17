@@ -12,10 +12,10 @@ import type { ColorLike } from "../../src/math/types.js";
 import type { EnvironmentAsset } from "../../src/render/environment-asset.js";
 
 /**
- * `ReflectionProbe` (`docs/plan/2026-11-gi-phase-2-execution-plan.md`, step B1): a mirror sphere in
+ * `ReflectionProbe` (`docs/architecture/07-rendering.md` §2.15): a mirror sphere in
  * front of the camera reflects the wall behind the camera, red on the left half and blue on the
  * right, once a probe has captured it. This checks the capture, the cube faces' orientation and the
- * material assignment end to end. Two overlapping box probes with a `blendDistance` (step B1b),
+ * material assignment end to end. Two overlapping box probes with a `blendDistance`,
  * each capturing only one coloured wall, make one mirror red at one end, blue at the other and both
  * in between.
  */
