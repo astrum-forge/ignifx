@@ -181,26 +181,41 @@ export interface ContactShadowsEffectSettings {
 
 /**
  * The `ssgi` record a `PostProcessStack` declares (`docs/architecture/07-rendering.md` §2.7):
- * Lite's `@beta` screen-space global illumination, one bounce of the lit scene colour. Desktop
- * tier.
+ * screen-space global illumination, one bounce of the lit scene colour. Rays traced by Lite find
+ * the light arriving at each pixel from the surfaces on screen; the engine filters it and adds it
+ * times the surface's own diffuse colour, so a red wall lit by a white floor stays red, a white
+ * wall beside it picks up red, and a metal gains nothing. Desktop tier.
+ *
+ * @remarks
+ * The diffuse colour is that of a PBR material. A Standard material counts by its diffuse texture,
+ * or as white without one: its `diffuse` colour does not dim or tint the bounce. An unlit PBR
+ * material receives the bounce like a lit one unless its `metallic` is 1.
  *
  * @beta
  */
 export interface SsgiEffectSettings {
   /** Whether the pass runs. */
   enabled: boolean;
-  /** How strongly the bounce is added, 0 to 4. */
+  /** How strongly the bounce is added, 0 to 4. At 1 a surface reflects what reaches it. */
   intensity: number;
   /** How far each ray marches, in world units. */
   radius: number;
-  /** March steps per ray, 1 to 64. */
+  /** March steps per ray, 1 to 64. More steps find thinner occluders; they do not reduce grain. */
   samples: number;
-  /** Whether rays are traced at half resolution. A change rebuilds the pass. */
+  /** Rays traced per pixel, 1 to 8. More rays reduce grain, at a cost that grows with the count. */
+  rays: number;
+  /**
+   * How many edge-aware blur passes smooth the bounce, 0 to 4. Each pass doubles the reach; 0
+   * shows the traced result as it is. A change rebuilds the pass.
+   */
+  denoisePasses: number;
+  /** Whether rays are traced, and the bounce filtered, at half resolution. A change rebuilds the pass. */
   halfResolution: boolean;
   /**
-   * How much of the environment's diffuse light remains while SSGI runs, 0 to 1, so the bounce is
-   * not counted twice. Needs `rendering.hdr` or the `materialPlugins` feature; without either the
-   * environment is left as it is.
+   * How much of the environment's diffuse light remains while SSGI runs, 0 to 1. The default of 1
+   * leaves it whole; lower it when the environment stands in for light SSGI now adds. Needs
+   * `rendering.hdr` or the `materialPlugins` feature; without either the environment is left as it
+   * is.
    */
   environmentDiffuse: number;
 }
@@ -801,20 +816,32 @@ function postProcessSchema(): Schema {
     ssgi: record(
       {
         enabled: bool(false, { tooltip: "Whether screen-space global illumination runs (beta, desktop tier)." }),
-        intensity: f32(1, { min: 0, max: 4, tooltip: "How strongly the bounced light is added." }),
+        intensity: f32(1, {
+          min: 0,
+          max: 4,
+          tooltip: "How strongly the bounced light is added. At 1 a surface reflects what reaches it.",
+        }),
         radius: f32(2, { min: 0.001, tooltip: "How far each ray marches, in world units." }),
-        samples: u32(8, { min: 1, max: 64, tooltip: "March steps per ray." }),
-        halfResolution: bool(true, { tooltip: "Trace at half resolution. A change rebuilds the pass." }),
-        environmentDiffuse: f32(0.5, {
+        samples: u32(8, { min: 1, max: 64, tooltip: "March steps per ray. More steps do not reduce grain." }),
+        rays: u32(2, { min: 1, max: 8, tooltip: "Rays traced per pixel. More rays reduce grain and cost more." }),
+        denoisePasses: u32(4, {
+          min: 0,
+          max: 4,
+          tooltip: "Edge-aware blur passes over the bounce; each doubles the reach. A change rebuilds the pass.",
+        }),
+        halfResolution: bool(true, {
+          tooltip: "Trace and filter at half resolution. A change rebuilds the pass.",
+        }),
+        environmentDiffuse: f32(1, {
           min: 0,
           max: 1,
           tooltip:
-            "How much of the environment's diffuse light remains while SSGI runs, so the bounce is not counted twice. Needs rendering.hdr or the materialPlugins feature.",
+            "How much of the environment's diffuse light remains while SSGI runs. Needs rendering.hdr or the materialPlugins feature.",
         }),
       },
       {
         tooltip:
-          "One bounce of the lit scene colour (beta, desktop tier). Runs on the scene colour before the chain; needs rendering.features.postProcessing.",
+          "One bounce of the lit scene colour, reflected in each surface's own colour (beta, desktop tier). Runs on the scene colour before the chain; needs rendering.features.postProcessing.",
       },
     ),
   });

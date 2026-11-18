@@ -15,8 +15,17 @@ import type { RenderingQualityPreset } from "../../src/render/rendering-settings
 
 const gpu = vi.hoisted(() => ({
   contact: [] as { update: ReturnType<typeof vi.fn> }[],
-  ssgi: [] as { update: ReturnType<typeof vi.fn>; dispose: ReturnType<typeof vi.fn>; usePlugin: boolean }[],
+  ssgi: [] as {
+    update: ReturnType<typeof vi.fn>;
+    dispose: ReturnType<typeof vi.fn>;
+    usePlugin: boolean;
+    denoisePasses: number;
+    isLinear: boolean;
+    inputs: unknown;
+  }[],
   installed: [] as { taskCount: number; dispose: ReturnType<typeof vi.fn> }[],
+  /** What a teardown disposed, in order. */
+  disposed: [] as string[],
   failInstall: false,
 }));
 
@@ -29,8 +38,23 @@ vi.mock("../../src/lite/gpu/contact-shadows.js", () => ({
 }));
 
 vi.mock("../../src/lite/gpu/ssgi.js", () => ({
-  createSsgiPass: (_e: unknown, _s: unknown, _d: unknown, _c: unknown, options: { usePlugin: boolean }) => {
-    const pass = { update: vi.fn(), dispose: vi.fn(), usePlugin: options.usePlugin };
+  createSsgiPass: (
+    _e: unknown,
+    _s: unknown,
+    inputs: unknown,
+    _c: unknown,
+    options: { usePlugin: boolean; denoisePasses: number; isLinear: boolean },
+  ) => {
+    const pass = {
+      update: vi.fn(),
+      dispose: vi.fn(() => {
+        gpu.disposed.push("ssgi");
+      }),
+      usePlugin: options.usePlugin,
+      denoisePasses: options.denoisePasses,
+      isLinear: options.isLinear,
+      inputs,
+    };
     gpu.ssgi.push(pass);
     return pass;
   },
@@ -41,7 +65,12 @@ vi.mock("../../src/lite/gpu/scene-color-passes.js", () => ({
     if (gpu.failInstall) {
       throw new Error("install failed");
     }
-    const installed = { taskCount: passes.length, dispose: vi.fn() };
+    const installed = {
+      taskCount: passes.length,
+      dispose: vi.fn(() => {
+        gpu.disposed.push("tasks");
+      }),
+    };
     gpu.installed.push(installed);
     return installed;
   },
@@ -55,13 +84,14 @@ afterEach(() => {
   gpu.contact.length = 0;
   gpu.ssgi.length = 0;
   gpu.installed.length = 0;
+  gpu.disposed.length = 0;
   gpu.failInstall = false;
 });
 
 /** A renderer with only what `ScreenSpaceEffects` reads. */
 interface FakeRenderer {
   isHeadless: boolean;
-  presenter: object | null;
+  presenter: { hdr: object | null } | null;
   scene: { camera: object | null };
   engine: object;
   isSceneRegistered: boolean;
@@ -71,8 +101,10 @@ interface FakeRenderer {
   errors: string[];
   releases: number;
   inputsAvailable: boolean;
+  /** The options of every `acquireSceneInputs` call. */
+  acquired: ({ albedo?: boolean } | undefined)[];
   app: { log: { error: (message: string) => void } };
-  acquireSceneInputs: () => Promise<{ depthTarget: object; release: () => void } | null>;
+  acquireSceneInputs: (options?: { albedo?: boolean }) => Promise<{ depthTarget: object; release: () => void } | null>;
 }
 
 /**
@@ -83,7 +115,7 @@ interface FakeRenderer {
 function fakeRenderer(): FakeRenderer {
   const fake: FakeRenderer = {
     isHeadless: false,
-    presenter: {},
+    presenter: { hdr: null },
     scene: { camera: {} },
     engine: {},
     isSceneRegistered: true,
@@ -93,6 +125,7 @@ function fakeRenderer(): FakeRenderer {
     errors: [],
     releases: 0,
     inputsAvailable: true,
+    acquired: [],
     app: {
       log: {
         error: (message: string): void => {
@@ -100,8 +133,9 @@ function fakeRenderer(): FakeRenderer {
         },
       },
     },
-    acquireSceneInputs: () =>
-      Promise.resolve(
+    acquireSceneInputs: (options) => {
+      fake.acquired.push(options);
+      return Promise.resolve(
         fake.inputsAvailable
           ? {
               depthTarget: {},
@@ -110,7 +144,8 @@ function fakeRenderer(): FakeRenderer {
               },
             }
           : null,
-      ),
+      );
+    },
   };
   return fake;
 }
@@ -156,7 +191,7 @@ describe("ScreenSpaceEffects", () => {
     fake.isHeadless = false;
     fake.presenter = null;
     effects.sync(asRenderer(fake), contactShadows, ssgi, true);
-    fake.presenter = {};
+    fake.presenter = { hdr: null };
     fake.scene.camera = null;
     effects.sync(asRenderer(fake), contactShadows, ssgi, true);
     await settle();
@@ -209,12 +244,15 @@ describe("ScreenSpaceEffects", () => {
     expect(effects.isBuilt).toBe(false);
     expect(gpu.installed[0]?.dispose).toHaveBeenCalledOnce();
     expect(fake.releases).toBe(1);
+    // Contact shadows read depth alone: the inputs are not asked to draw albedo.
+    expect(fake.acquired).toEqual([{ albedo: false }]);
   });
 
   it("builds both, and rebuilds when SSGI's resolution or the camera changes", async () => {
     const effects = new ScreenSpaceEffects();
     const fake = fakeRenderer();
     fake.settings.hdr = true;
+    fake.presenter = { hdr: {} };
     const { contactShadows, ssgi } = records();
     contactShadows.enabled = true;
     ssgi.enabled = true;
@@ -223,12 +261,18 @@ describe("ScreenSpaceEffects", () => {
     await settle();
     expect(effects.taskCount).toBe(2);
     expect(gpu.ssgi[0]?.usePlugin).toBe(true);
+    expect(gpu.ssgi[0]?.isLinear).toBe(true);
+    // SSGI's composite reads albedo, and gets the whole lease, not the depth target alone.
+    expect(fake.acquired).toEqual([{ albedo: true }]);
+    expect(gpu.ssgi[0]?.inputs).toHaveProperty("depthTarget");
     effects.sync(asRenderer(fake), contactShadows, ssgi, true);
     expect(gpu.ssgi[0]?.update).toHaveBeenLastCalledWith(ssgi, true);
 
     ssgi.halfResolution = false;
     effects.sync(asRenderer(fake), contactShadows, ssgi, true);
     expect(gpu.ssgi[0]?.dispose).toHaveBeenCalledWith(true);
+    // The tasks leave the frame graph before the pass frees what they draw with.
+    expect(gpu.disposed).toEqual(["tasks", "ssgi"]);
     await settle();
     expect(gpu.installed).toHaveLength(2);
 
@@ -249,9 +293,30 @@ describe("ScreenSpaceEffects", () => {
     await settle();
     expect(gpu.contact).toHaveLength(0);
     expect(gpu.ssgi[0]?.usePlugin).toBe(false);
+    // No HDR render path: the pass is told the colour is display-encoded.
+    expect(gpu.ssgi[0]?.isLinear).toBe(false);
     // Nothing in the key changed, so the pass is only re-tuned.
+    ssgi.rays = 6;
+    ssgi.intensity = 2;
     effects.sync(asRenderer(fake), contactShadows, ssgi, true);
     expect(gpu.installed).toHaveLength(1);
+    expect(gpu.ssgi[0]?.update).toHaveBeenLastCalledWith(ssgi, true);
+    effects.dispose(false);
+  });
+
+  it("rebuilds SSGI when the denoise pass count changes", async () => {
+    const effects = new ScreenSpaceEffects();
+    const fake = fakeRenderer();
+    const { contactShadows, ssgi } = records();
+    ssgi.enabled = true;
+    effects.sync(asRenderer(fake), contactShadows, ssgi, true);
+    await settle();
+    expect(gpu.ssgi[0]?.denoisePasses).toBe(ssgi.denoisePasses);
+    ssgi.denoisePasses = 0;
+    effects.sync(asRenderer(fake), contactShadows, ssgi, true);
+    await settle();
+    expect(gpu.installed).toHaveLength(2);
+    expect(gpu.ssgi[1]?.denoisePasses).toBe(0);
     effects.dispose(false);
   });
 
@@ -292,6 +357,25 @@ describe("ScreenSpaceEffects", () => {
     await settle();
     expect(effects.isBuilt).toBe(false);
     expect(fake.errors).toEqual(["PostProcessStack could not build contact shadows or SSGI: install failed"]);
+    // Nothing of the failed build stays: the lease goes back.
+    expect(fake.releases).toBe(1);
+  });
+
+  it("frees the SSGI pass and the lease when the install throws", async () => {
+    gpu.failInstall = true;
+    const effects = new ScreenSpaceEffects();
+    const fake = fakeRenderer();
+    const { contactShadows, ssgi } = records();
+    ssgi.enabled = true;
+    effects.sync(asRenderer(fake), contactShadows, ssgi, true);
+    await settle();
+    expect(effects.isBuilt).toBe(false);
+    expect(gpu.ssgi[0]?.dispose).toHaveBeenCalledOnce();
+    expect(fake.releases).toBe(1);
+    // The key is unchanged, so the next sync does not try again.
+    effects.sync(asRenderer(fake), contactShadows, ssgi, true);
+    await settle();
+    expect(gpu.ssgi).toHaveLength(1);
   });
 });
 

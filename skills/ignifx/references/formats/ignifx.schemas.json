@@ -4012,8 +4012,8 @@
         },
         "ssgi": {
           "kind": "record",
-          "default": "{\"enabled\":false,\"intensity\":1,\"radius\":2,\"samples\":8,\"halfResolution\":true,\"environmentDiffuse\":0.5}",
-          "description": "One bounce of the lit scene colour (beta, desktop tier). Runs on the scene colour before the chain; needs rendering.features.postProcessing.",
+          "default": "{\"enabled\":false,\"intensity\":1,\"radius\":2,\"samples\":8,\"rays\":2,\"denoisePasses\":4,\"halfResolution\":true,\"environmentDiffuse\":1}",
+          "description": "One bounce of the lit scene colour, reflected in each surface's own colour (beta, desktop tier). Runs on the scene colour before the chain; needs rendering.features.postProcessing.",
           "fields": {
             "enabled": {
               "kind": "bool",
@@ -4023,7 +4023,7 @@
             "intensity": {
               "kind": "f32",
               "default": "1",
-              "description": "How strongly the bounced light is added.",
+              "description": "How strongly the bounced light is added. At 1 a surface reflects what reaches it.",
               "min": 0,
               "max": 4
             },
@@ -4036,19 +4036,33 @@
             "samples": {
               "kind": "u32",
               "default": "8",
-              "description": "March steps per ray.",
+              "description": "March steps per ray. More steps do not reduce grain.",
               "min": 1,
               "max": 64
+            },
+            "rays": {
+              "kind": "u32",
+              "default": "2",
+              "description": "Rays traced per pixel. More rays reduce grain and cost more.",
+              "min": 1,
+              "max": 8
+            },
+            "denoisePasses": {
+              "kind": "u32",
+              "default": "4",
+              "description": "Edge-aware blur passes over the bounce; each doubles the reach. A change rebuilds the pass.",
+              "min": 0,
+              "max": 4
             },
             "halfResolution": {
               "kind": "bool",
               "default": "true",
-              "description": "Trace at half resolution. A change rebuilds the pass."
+              "description": "Trace and filter at half resolution. A change rebuilds the pass."
             },
             "environmentDiffuse": {
               "kind": "f32",
-              "default": "0.5",
-              "description": "How much of the environment's diffuse light remains while SSGI runs, so the bounce is not counted twice. Needs rendering.hdr or the materialPlugins feature.",
+              "default": "1",
+              "description": "How much of the environment's diffuse light remains while SSGI runs. Needs rendering.hdr or the materialPlugins feature.",
               "min": 0,
               "max": 1
             }

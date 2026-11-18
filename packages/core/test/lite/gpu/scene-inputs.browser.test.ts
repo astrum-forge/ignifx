@@ -33,7 +33,11 @@ import type { Texture2D } from "@babylonjs/lite";
 /** The canvas edge. Small keeps SwiftShader fast. */
 const SIZE = 48;
 
-const INPUT_NAMES: readonly string[] = Object.values(SCENE_INPUT_TASK_NAMES);
+/** Every task the inputs can add, albedo's copy included. */
+const ALL_INPUT_NAMES: readonly string[] = Object.values(SCENE_INPUT_TASK_NAMES);
+
+/** The tasks a user that asks for nothing extra gets. */
+const INPUT_NAMES: readonly string[] = ALL_INPUT_NAMES.filter((name) => name !== SCENE_INPUT_TASK_NAMES.albedo);
 
 let harness: BrowserApp | null = null;
 
@@ -155,10 +159,58 @@ async function readTexel(
   return [...new Float32Array(await readStorageBuffer(out))];
 }
 
+/**
+ * Counts, on the GPU, the frames in which the centre texel of the depth input is empty.
+ *
+ * @param running - The running app.
+ * @param depth - The depth input.
+ * @returns A function that reads `[frames counted, frames with no depth]` and stops counting.
+ */
+async function watchCentreDepth(running: BrowserApp, depth: Texture2D): Promise<() => Promise<number[]>> {
+  const engine = running.renderer.engine;
+  const centre = String(SIZE >> 1);
+  const shader = createComputeShader(engine, {
+    name: "test:scene-inputs-watch",
+    computeSource: `
+@group(0) @binding(0) var depthTex: texture_depth_2d;
+@group(0) @binding(1) var<storage, read_write> outBuf: array<f32>;
+@compute @workgroup_size(1) fn main() {
+  outBuf[0] = outBuf[0] + 1.0;
+  if (textureLoad(depthTex, vec2<i32>(${centre}, ${centre}), 0) <= 0.0) {
+    outBuf[1] = outBuf[1] + 1.0;
+  }
+}`,
+    bindings: [
+      computeTextureBinding("depthTex", { group: 0, binding: 0, sampleType: "depth" }),
+      computeStorageBufferBinding("outBuf", { group: 0, binding: 1, access: "read-write" }),
+    ],
+  });
+  const out = createStorageBuffer(engine, 8, { label: "test:scene-inputs-watch-out", writable: true });
+  const task = createComputeTask(engine, "test:scene-inputs-watch");
+  addComputeDispatch(
+    task,
+    createComputeDispatch(
+      shader,
+      createComputeBindingSet(shader, {
+        depthTex: await createComputeTextureResource(engine, depth, { sampleType: "depth" }),
+        outBuf: out,
+      }),
+      { size: { x: 1 } },
+    ),
+  );
+  // Appended: it runs after the scene inputs, which sit at the start of the graph.
+  addTask(running.renderer.scene, task);
+  buildFrameGraphTask(getFrameGraph(running.renderer.scene), task);
+  return async (): Promise<number[]> => {
+    task.executionEnabled = false;
+    return [...new Float32Array(await readStorageBuffer(out))];
+  };
+}
+
 describe("scene inputs", () => {
   it("adds no task and loads nothing until an effect asks", async () => {
     const { running } = await buildCubeScene();
-    expect(taskNames(running).filter((name) => INPUT_NAMES.includes(name))).toEqual([]);
+    expect(taskNames(running).filter((name) => ALL_INPUT_NAMES.includes(name))).toEqual([]);
     expect(running.renderer.sceneInputsUserCount).toBe(0);
   }, 60_000);
 
@@ -168,7 +220,8 @@ describe("scene inputs", () => {
       const { running } = await buildCubeScene();
       const inputs = await acquire(running);
       await settle(running);
-      expect(taskNames(running).filter((name) => INPUT_NAMES.includes(name))).toEqual(INPUT_NAMES);
+      expect(taskNames(running).filter((name) => ALL_INPUT_NAMES.includes(name))).toEqual(INPUT_NAMES);
+      expect(inputs.albedo).toBeNull();
       const width = running.canvas.width;
       const height = running.canvas.height;
       expect(inputs.depth.texture.format).toBe(SCENE_INPUT_FORMATS.depth);
@@ -257,8 +310,74 @@ describe("scene inputs", () => {
     // A new user after the last release gets a fresh pass.
     const third = await acquire(running);
     await settle(running);
-    expect(taskNames(running).filter((name) => INPUT_NAMES.includes(name))).toEqual(INPUT_NAMES);
+    expect(taskNames(running).filter((name) => ALL_INPUT_NAMES.includes(name))).toEqual(INPUT_NAMES);
     third.release();
+  }, 60_000);
+
+  it("draws albedo once a user asks for it, keeping what the other users hold", async () => {
+    const device = gpuDeviceErrors();
+    try {
+      const { running } = await buildCubeScene();
+      const first = await acquire(running);
+      await settle(running);
+      const { depth, depthTarget, normals, velocity } = first;
+
+      const stopWatching = await watchCentreDepth(running, depth);
+      await running.advance(2);
+      const second = await running.renderer.acquireSceneInputs({ albedo: true });
+      if (second === null) {
+        throw new Error("the renderer returned no scene inputs");
+      }
+      // The target is there at once; the tasks that fill it replace the old ones once the new
+      // geometry task can draw.
+      expect(second.albedo).not.toBeNull();
+      await settle(running);
+      // The cube covered the centre texel in every frame across the swap.
+      const [frames = 0, empty = -1] = await stopWatching();
+      expect(frames).toBeGreaterThan(SETTLE_FRAMES);
+      expect(empty).toBe(0);
+      // One geometry task still, now followed by a third copy; the pyramid stays behind them.
+      expect(taskNames(running).filter((name) => ALL_INPUT_NAMES.includes(name))).toEqual(ALL_INPUT_NAMES);
+      expect([first.depth, first.depthTarget, first.normals, first.velocity]).toEqual([
+        depth,
+        depthTarget,
+        normals,
+        velocity,
+      ]);
+      const albedo = second.albedo;
+      if (albedo === null) {
+        throw new Error("the lease that asked for albedo has none");
+      }
+      // The first lease sees it too: the inputs are shared.
+      expect(first.albedo).toBe(albedo);
+      expect(albedo.texture.format).toBe(SCENE_INPUT_FORMATS.albedo);
+      expect([albedo.texture.width, albedo.texture.height]).toEqual([running.canvas.width, running.canvas.height]);
+
+      const centre = SIZE >> 1;
+      // A white dielectric: the base colour less the 4% it reflects specularly.
+      const [cubeDepth = 0, r = 0, g = 0, b = 0] = await readTexel(running, depth, albedo, centre, centre);
+      expect(cubeDepth).toBeGreaterThan(0.01);
+      for (const channel of [r, g, b]) {
+        expect(channel).toBeGreaterThan(0.9);
+        expect(channel).toBeLessThanOrEqual(1);
+      }
+      const [, br = 1, bg = 1, bb = 1] = await readTexel(running, depth, albedo, 0, 0);
+      expect([br, bg, bb]).toEqual([0, 0, 0]);
+      // The inputs the first user reads are still drawn by the replaced geometry task.
+      const [, , , nz = 0] = await readTexel(running, depth, normals, centre, centre);
+      expect(nz * 2 - 1).toBeLessThan(-0.9);
+
+      // Albedo stays while any lease is live, and goes with the last one.
+      second.release();
+      expect(first.albedo).toBe(albedo);
+      first.release();
+      expect(taskNames(running).filter((name) => ALL_INPUT_NAMES.includes(name))).toEqual([]);
+      await settle(running);
+      expect(running.errors).toEqual([]);
+      expect(device.errors).toEqual([]);
+    } finally {
+      device.stop();
+    }
   }, 60_000);
 
   it("rebuilds at the new size when the canvas grows", async () => {

@@ -67,7 +67,7 @@ import type { ImageProcessingState } from "../lite/gpu/environment.js";
 import type { AmbientOcclusion } from "../lite/gpu/gtao.js";
 import type { LiteGpuPicker } from "../lite/gpu/picker.js";
 import type { ScenePresenter } from "../lite/gpu/render-path.js";
-import type { SceneInputs, SceneInputsHost } from "../lite/gpu/scene-inputs.js";
+import type { SceneInputs, SceneInputsHost, SceneInputsOptions } from "../lite/gpu/scene-inputs.js";
 import type { TaaHandle } from "../lite/gpu/taa.js";
 import type { MaterialWarmUp } from "../lite/gpu/warm-up.js";
 import type { LiteMaterial } from "../lite/material.js";
@@ -887,17 +887,20 @@ export class RendererImpl implements Renderer {
    * The first call loads the `scene-inputs` chunk and adds the pass to the frame graph; the last
    * `release()` removes it. Nothing is loaded or added until an effect calls this.
    *
+   * @param options - What the user needs beyond depth, normals, velocity and the depth pyramid.
    * @returns The lease, or `null` under the null engine or once the renderer is disposed.
    *
    * @internal
    */
-  async acquireSceneInputs(): Promise<SceneInputs | null> {
+  async acquireSceneInputs(options?: SceneInputsOptions): Promise<SceneInputs | null> {
     if (this.isHeadless || this.#isDisposed) {
       return null;
     }
     const { engine, scene } = this;
     this.#sceneInputs ??= import("../lite/gpu/scene-inputs.js").then((module) => {
-      const host = module.createSceneInputsHost(engine, scene);
+      const host = module.createSceneInputsHost(engine, scene, (message) => {
+        this.#app.log.error(message);
+      });
       this.#sceneInputsHost = host;
       if (this.#isDisposed) {
         // The renderer went away while the chunk loaded; a disposed host hands out nothing.
@@ -905,7 +908,7 @@ export class RendererImpl implements Renderer {
       }
       return host;
     });
-    return (await this.#sceneInputs).acquire(this.#isSceneRegistered);
+    return (await this.#sceneInputs).acquire(this.#isSceneRegistered, options);
   }
 
   /**

@@ -69,11 +69,11 @@ scaled by the material's `occlusion`, the same value GTAO darkens. When several 
 enabled the one created last wins; `intensity` scales the probes' light without a rebuild.
 Reflections still come from the `Environment` or a `ReflectionProbe`.
 
-With a `PostProcessStack`'s `ssgi` on, which removes `1 − environmentDiffuse` of the environment's
-diffuse light, the diffuse term becomes `P − (1 − environmentDiffuse)·E` (`P − 0.5·E` at the
-default) plus the screen-space bounce, where `P` is the probes' light and `E` the environment's.
-The probes are not discounted, so a dim volume under a bright environment can read darker than the
-environment alone.
+With a `PostProcessStack`'s `ssgi` on, the screen-space bounce is added to the probes' light. Its
+`environmentDiffuse` (default 1, which changes nothing) removes `1 − environmentDiffuse` of the
+environment's diffuse light: the diffuse term is then `P − (1 − environmentDiffuse)·E` plus the
+bounce, where `P` is the probes' light and `E` the environment's. The probes are not discounted,
+so below 1 a dim volume under a bright environment can read darker than the environment alone.
 
 The file (`format: "ignifx-probes"`, `formatVersion: 1`; generated table:
 [`../formats/ignifx-probes.md`](../formats/ignifx-probes.md)):

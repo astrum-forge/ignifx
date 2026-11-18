@@ -30533,10 +30533,27 @@ Ring count; higher is smoother. Lite defaults to 32.
 **`Beta`**
 
 The `ssgi` record a `PostProcessStack` declares (`docs/architecture/07-rendering.md` §2.7):
-Lite's `@beta` screen-space global illumination, one bounce of the lit scene colour. Desktop
-tier.
+screen-space global illumination, one bounce of the lit scene colour. Rays traced by Lite find
+the light arriving at each pixel from the surfaces on screen; the engine filters it and adds it
+times the surface's own diffuse colour, so a red wall lit by a white floor stays red, a white
+wall beside it picks up red, and a metal gains nothing. Desktop tier.
+
+#### Remarks
+
+The diffuse colour is that of a PBR material. A Standard material counts by its diffuse texture,
+or as white without one: its `diffuse` colour does not dim or tint the bounce. An unlit PBR
+material receives the bounce like a lit one unless its `metallic` is 1.
 
 #### Properties
+
+##### denoisePasses
+
+> **denoisePasses**: `number`
+
+**`Beta`**
+
+How many edge-aware blur passes smooth the bounce, 0 to 4. Each pass doubles the reach; 0
+shows the traced result as it is. A change rebuilds the pass.
 
 ##### enabled
 
@@ -30552,9 +30569,10 @@ Whether the pass runs.
 
 **`Beta`**
 
-How much of the environment's diffuse light remains while SSGI runs, 0 to 1, so the bounce is
-not counted twice. Needs `rendering.hdr` or the `materialPlugins` feature; without either the
-environment is left as it is.
+How much of the environment's diffuse light remains while SSGI runs, 0 to 1. The default of 1
+leaves it whole; lower it when the environment stands in for light SSGI now adds. Needs
+`rendering.hdr` or the `materialPlugins` feature; without either the environment is left as it
+is.
 
 ##### halfResolution
 
@@ -30562,7 +30580,7 @@ environment is left as it is.
 
 **`Beta`**
 
-Whether rays are traced at half resolution. A change rebuilds the pass.
+Whether rays are traced, and the bounce filtered, at half resolution. A change rebuilds the pass.
 
 ##### intensity
 
@@ -30570,7 +30588,7 @@ Whether rays are traced at half resolution. A change rebuilds the pass.
 
 **`Beta`**
 
-How strongly the bounce is added, 0 to 4.
+How strongly the bounce is added, 0 to 4. At 1 a surface reflects what reaches it.
 
 ##### radius
 
@@ -30580,13 +30598,21 @@ How strongly the bounce is added, 0 to 4.
 
 How far each ray marches, in world units.
 
+##### rays
+
+> **rays**: `number`
+
+**`Beta`**
+
+Rays traced per pixel, 1 to 8. More rays reduce grain, at a cost that grows with the count.
+
 ##### samples
 
 > **samples**: `number`
 
 **`Beta`**
 
-March steps per ray, 1 to 64.
+March steps per ray, 1 to 64. More steps find thinner occluders; they do not reduce grain.
 
 ***
 
