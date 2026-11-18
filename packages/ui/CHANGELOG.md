@@ -1,5 +1,18 @@
 # @ignifx/ui
 
+## 0.21.1
+
+### Patch Changes
+
+- cd97af6: Every package ships a README, so its npm page says what the package is, how to install it and where its skill page is. The `@ignifx/cli` README gives the scaffold command that works, `npx --package=@ignifx/cli create-ignifx <dir>`, and the `@ignifx/vite-plugin` README lists every asset type and points to the shipped `@ignifx/vite-plugin/client` types.
+- eb2ba35: Correct the shipped agent skills and halve the entry skill, from 72.6 KB to 34.9 KB: the commands a scaffolded project really has, the complete error-code ranges and file-format index, and CSM shadows surviving device loss.
+  Skill pages name other skills by package and path inside it, so the pointers resolve from `node_modules`. The editor-host protocol method reference moves to `references/protocol.md` in that skill.
+- Updated dependencies [0be954f]
+- Updated dependencies [cd97af6]
+- Updated dependencies [eb2ba35]
+  - @ignifx/core@0.21.1
+  - @ignifx/input@0.21.1
+
 ## 0.21.0
 
 ### Patch Changes
