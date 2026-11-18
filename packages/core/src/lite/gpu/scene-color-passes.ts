@@ -2,13 +2,13 @@ import {
   addTaskAfter,
   buildFrameGraphTask,
   createCopyToTextureTask,
-  createRenderTarget,
-  disposeRenderTarget,
+  createSurfaceRenderTargetTexture,
+  disposeRenderTargetTexture,
   getFrameGraph,
 } from "@babylonjs/lite";
 import { frameGraphTasks } from "./scene-inputs.js";
 import type { ScenePresenter } from "./render-path.js";
-import type { EngineContext, RenderTarget, SceneContext, Task } from "@babylonjs/lite";
+import type { EngineContext, RenderTarget, RenderTargetTextureResult, SceneContext, Task } from "@babylonjs/lite";
 
 /**
  * Scene-colour passes (`docs/architecture/07-rendering.md` §2.7): Lite screen-space effects that
@@ -28,6 +28,19 @@ import type { EngineContext, RenderTarget, SceneContext, Task } from "@babylonjs
  * passes ping-pong between two scratch targets and the copy always runs. Every task sits right after
  * the scene task, ahead of the present blit, the HDR output pass and a `PostProcessStack` chain
  * alike, which therefore need no change.
+ *
+ * A pass may instead add to the colour it reads through the blend unit
+ * ({@link SceneColorPass.inPlace}, SSGI): it gets one target as both. Under HDR that is `S` itself,
+ * or the scratch an earlier pass wrote. On the plain path, where `S` cannot be written, a copy
+ * stages `S` into a scratch first:
+ *
+ * ```text
+ * scene ─→ S ─ copy ─→ scratch ─ in-place pass ─→ scratch ─ copy ─→ S
+ * ```
+ *
+ * The scratch targets are eager surface targets (`createSurfaceRenderTargetTexture`), the kind the
+ * HDR target is: a task that writes one in `record()` does not reallocate it, so several tasks can
+ * write the same scratch, and a resize is followed by the frame graph's rebuild.
  */
 
 /**
@@ -37,13 +50,20 @@ import type { EngineContext, RenderTarget, SceneContext, Task } from "@babylonjs
  */
 export interface SceneColorPass {
   /**
-   * Creates the effect's task.
+   * `true` for a pass that blends its result onto the colour it reads instead of writing a second
+   * target. Its {@link SceneColorPass.create} is then called with the same target twice, one an
+   * effect task may write.
+   */
+  readonly inPlace?: boolean;
+  /**
+   * Creates the effect's tasks.
    *
    * @param source - The colour it reads.
-   * @param target - The colour it writes; never `source`.
-   * @returns The task.
+   * @param target - The colour it writes: never `source`, unless the pass is
+   * {@link SceneColorPass.inPlace}, when it is `source`.
+   * @returns The task, or the tasks in the order they run.
    */
-  create(source: RenderTarget, target: RenderTarget): Task;
+  create(source: RenderTarget, target: RenderTarget): Task | readonly Task[];
 }
 
 /**
@@ -79,18 +99,37 @@ export function installSceneColorPasses(
 ): InstalledSceneColorPasses {
   const { task: sceneTask, target: sceneTarget, format, isTargetWritable } = presenter.scenePass;
   const scratches: RenderTarget[] = [];
+  const scratchTextures: RenderTargetTextureResult[] = [];
+  const createScratch = (index: number): RenderTarget => {
+    const scratch = createSurfaceRenderTargetTexture(engine, {
+      lbl: index === 0 ? "ignifx:scene-color-scratch" : "ignifx:scene-color-scratch-2",
+      format,
+      samples: 1,
+      size: engine,
+    });
+    scratchTextures.push(scratch);
+    return scratch.rt;
+  };
   const tasks: Task[] = [];
   let source = sceneTarget;
   for (const pass of passes) {
-    const target = sceneColorPassTarget(source, sceneTarget, isTargetWritable, scratches, (index) =>
-      createRenderTarget({
-        lbl: index === 0 ? "ignifx:scene-color-scratch" : "ignifx:scene-color-scratch-2",
-        format,
-        samples: 1,
-        size: engine,
-      }),
-    );
-    tasks.push(pass.create(source, target));
+    if (pass.inPlace === true) {
+      if (source === sceneTarget && !isTargetWritable) {
+        const staged = sceneColorPassTarget(source, sceneTarget, isTargetWritable, scratches, createScratch);
+        tasks.push(
+          createCopyToTextureTask(
+            { name: "ignifx:scene-color-stage", sourceTexture: source, targetTexture: staged },
+            engine,
+            scene,
+          ),
+        );
+        source = staged;
+      }
+      appendTasks(tasks, pass.create(source, source));
+      continue;
+    }
+    const target = sceneColorPassTarget(source, sceneTarget, isTargetWritable, scratches, createScratch);
+    appendTasks(tasks, pass.create(source, target));
     source = target;
   }
   if (source !== sceneTarget) {
@@ -131,11 +170,35 @@ export function installSceneColorPasses(
         }
         task.dispose();
       }
-      for (const scratch of scratches) {
-        disposeRenderTarget(scratch);
+      for (const scratch of scratchTextures) {
+        disposeRenderTargetTexture(scratch);
       }
     },
   };
+}
+
+/**
+ * Appends what a pass created to the task list.
+ *
+ * @param tasks - The list.
+ * @param created - One task or several.
+ */
+function appendTasks(tasks: Task[], created: Task | readonly Task[]): void {
+  if (isTaskList(created)) {
+    tasks.push(...created);
+  } else {
+    tasks.push(created);
+  }
+}
+
+/**
+ * Whether a pass returned several tasks.
+ *
+ * @param created - What `create` returned.
+ * @returns `true` for a list.
+ */
+function isTaskList(created: Task | readonly Task[]): created is readonly Task[] {
+  return Array.isArray(created);
 }
 
 /**

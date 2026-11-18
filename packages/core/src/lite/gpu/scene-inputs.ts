@@ -31,10 +31,11 @@ import type {
  * §2.5).
  *
  * ```text
- * [shadow] → geometry ─→ normals copy ─→ velocity copy ─→ depth pyramid → scene → …
+ * [shadow] → geometry ─→ normals copy ─→ velocity copy ─→ [albedo copy] ─→ depth pyramid → scene → …
  *              ├ depth (depth32float, sampled)
  *              ├ world normal ─(copy)─→ normals
- *              └ velocity ─(copy)─→ velocity
+ *              ├ velocity ─(copy)─→ velocity
+ *              └ [albedo ─(copy)─→ albedo]
  * ```
  *
  * - **Depth** is a surface-sized `depth32float` target with a sampled facade
@@ -44,6 +45,10 @@ import type {
  *   `RenderTarget`s; compute and effect bindings take a `Texture2D`, so each is copied into a target
  *   that has one (`docs/architecture/07-rendering.md` §8, upstream ask "geometry attachments as
  *   `Texture2D`").
+ * - **Albedo** is a third attachment only while a user asked for it ({@link SceneInputsOptions.albedo},
+ *   SSGI): the first such acquire replaces the geometry task and its copies with ones that also
+ *   write albedo, in place, keeping every target the other users hold. It stays until the last
+ *   lease of any kind is released.
  * - **The depth pyramid** is Lite's `createDepthPyramid`: an `r32float` mip chain where each level
  *   keeps the `max` (in reverse-Z, the nearest surface) of its four children.
  * - **Ref-counted.** {@link SceneInputsHost.acquire} adds the tasks for the first user;
@@ -63,6 +68,7 @@ export const SCENE_INPUT_TASK_NAMES = {
   geometry: "ignifx:scene-inputs",
   normals: "ignifx:scene-inputs-normals",
   velocity: "ignifx:scene-inputs-velocity",
+  albedo: "ignifx:scene-inputs-albedo",
   depthPyramid: "ignifx:scene-inputs-depth-pyramid",
 } as const;
 
@@ -75,8 +81,25 @@ export const SCENE_INPUT_FORMATS: {
   readonly depth: "depth32float";
   readonly normals: "rgba16float";
   readonly velocity: "rgba16float";
+  readonly albedo: "rgba8unorm";
   readonly depthPyramid: "r32float";
-} = { depth: "depth32float", normals: "rgba16float", velocity: "rgba16float", depthPyramid: "r32float" };
+} = {
+  depth: "depth32float",
+  normals: "rgba16float",
+  velocity: "rgba16float",
+  albedo: "rgba8unorm",
+  depthPyramid: "r32float",
+};
+
+/**
+ * What a user needs beyond depth, normals, velocity and the depth pyramid.
+ *
+ * @internal
+ */
+export interface SceneInputsOptions {
+  /** Whether the user reads {@link SceneInputs.albedo}. Default `false`. */
+  readonly albedo?: boolean;
+}
 
 /**
  * One user's lease on the shared scene inputs.
@@ -107,6 +130,13 @@ export interface SceneInputs {
    * so a moving PBR mesh under a still camera reads 0.
    */
   readonly velocity: Texture2D;
+  /**
+   * The diffuse albedo of the nearest surface, `rgba8unorm`, linear: Lite's `surfaceAlbedo` for a
+   * PBR material (base colour without the metallic and specular share), the base colour for a
+   * Standard one, 0 where nothing was drawn. `null` until a lease asked for it
+   * ({@link SceneInputsOptions.albedo}); read it again after such a lease was acquired.
+   */
+  readonly albedo: Texture2D | null;
   /**
    * The depth pyramid, `r32float`, every mip level; level `n` is the `max` of its four children in
    * level `n - 1`. Read with `textureLoad(tex, coord, mip)`. A resize or recovered device replaces
@@ -139,9 +169,10 @@ export interface SceneInputsHost {
    *
    * @param isFrameGraphBuilt - Whether the scene is registered, so new tasks must be recorded now;
    * before registration `registerScene` records them.
+   * @param options - What the user needs beyond the default inputs.
    * @returns A lease; call its `release()` when done. `null` once the host is disposed.
    */
-  acquire(isFrameGraphBuilt: boolean): SceneInputs | null;
+  acquire(isFrameGraphBuilt: boolean, options?: SceneInputsOptions): SceneInputs | null;
   /** How many leases are live. */
   readonly userCount: number;
   /** Ends every lease and frees everything. Idempotent. */
@@ -153,7 +184,11 @@ interface SharedInputs {
   readonly depth: RenderTargetTextureResult;
   readonly normals: RenderTargetTextureResult;
   readonly velocity: RenderTargetTextureResult;
-  readonly tasks: readonly Task[];
+  /** The albedo target, once a user asked for it. */
+  albedo: RenderTargetTextureResult | null;
+  /** The geometry task and its copies; replaced when albedo is added. */
+  geometryTasks: readonly Task[];
+  readonly pyramidTask: Task;
   readonly pyramid: { current: DepthPyramid };
   readonly listeners: Set<() => void>;
   readonly stopResizeWatch: () => void;
@@ -183,12 +218,16 @@ export function createSceneInputsHost(engine: EngineContext, scene: SceneContext
   };
 
   return {
-    acquire(isFrameGraphBuilt: boolean): SceneInputs | null {
+    acquire(isFrameGraphBuilt: boolean, options?: SceneInputsOptions): SceneInputs | null {
       if (isDisposed) {
         return null;
       }
-      shared ??= buildSharedInputs(engine, scene, isFrameGraphBuilt);
+      const wantsAlbedo = options?.albedo === true;
+      shared ??= buildSharedInputs(engine, scene, isFrameGraphBuilt, wantsAlbedo);
       const inputs = shared;
+      if (wantsAlbedo && inputs.albedo === null) {
+        addAlbedo(engine, scene, inputs, isFrameGraphBuilt);
+      }
       let isReleased = false;
       const own = new Set<() => void>();
       const lease: SceneInputs = {
@@ -196,6 +235,9 @@ export function createSceneInputsHost(engine: EngineContext, scene: SceneContext
         depthTarget: inputs.depth.rt,
         normals: inputs.normals.texture,
         velocity: inputs.velocity.texture,
+        get albedo(): Texture2D | null {
+          return inputs.albedo?.texture ?? null;
+        },
         get depthPyramid(): Texture2D {
           return inputs.pyramid.current.texture;
         },
@@ -249,9 +291,15 @@ export function createSceneInputsHost(engine: EngineContext, scene: SceneContext
  * @param engine - The engine.
  * @param scene - The scene.
  * @param isFrameGraphBuilt - Whether each task must be recorded now.
+ * @param withAlbedo - Whether the geometry pass also writes albedo.
  * @returns The shared state.
  */
-function buildSharedInputs(engine: EngineContext, scene: SceneContext, isFrameGraphBuilt: boolean): SharedInputs {
+function buildSharedInputs(
+  engine: EngineContext,
+  scene: SceneContext,
+  isFrameGraphBuilt: boolean,
+  withAlbedo: boolean,
+): SharedInputs {
   const depth = createSurfaceRenderTargetTexture(
     engine,
     { lbl: "ignifx:scene-inputs-depth", dFormat: SCENE_INPUT_FORMATS.depth, samples: 1, size: engine },
@@ -269,37 +317,8 @@ function buildSharedInputs(engine: EngineContext, scene: SceneContext, isFrameGr
     samples: 1,
     size: engine,
   });
-  const geometry = createGeometryRendererTask(
-    {
-      name: SCENE_INPUT_TASK_NAMES.geometry,
-      size: engine,
-      depthTexture: depth.rt,
-      textureDescriptions: [
-        { type: GeometryTextureType.WORLD_NORMAL, format: SCENE_INPUT_FORMATS.normals },
-        { type: GeometryTextureType.LINEAR_VELOCITY, format: SCENE_INPUT_FORMATS.velocity },
-      ],
-    },
-    engine,
-    scene,
-  );
-  const copyNormals = createCopyToTextureTask(
-    {
-      name: SCENE_INPUT_TASK_NAMES.normals,
-      sourceTexture: requireAttachment(geometry.geometryWorldNormalTexture, "world normal"),
-      targetTexture: normals.rt,
-    },
-    engine,
-    scene,
-  );
-  const copyVelocity = createCopyToTextureTask(
-    {
-      name: SCENE_INPUT_TASK_NAMES.velocity,
-      sourceTexture: requireAttachment(geometry.geometryLinearVelocityTexture, "linear velocity"),
-      targetTexture: velocity.rt,
-    },
-    engine,
-    scene,
-  );
+  const albedo = withAlbedo ? createAlbedoTarget(engine) : null;
+  const geometryTasks = createGeometryTasks(engine, scene, { depth, normals, velocity, albedo });
   const depthFacade = requireDepthFacade(depth);
   const pyramid = { current: newPyramid(engine, depthFacade) };
   // The pyramid task adopts what it is given and disposes it with the graph; a forwarding object
@@ -321,19 +340,13 @@ function buildSharedInputs(engine: EngineContext, scene: SceneContext, isFrameGr
       pyramid.current.dispose();
     },
   };
-  const buildPyramid = createDepthPyramidTask(engine, scene, { pyramid: forward, source: () => depthFacade });
-  Reflect.set(buildPyramid, "name", SCENE_INPUT_TASK_NAMES.depthPyramid);
+  const pyramidTask = createDepthPyramidTask(engine, scene, { pyramid: forward, source: () => depthFacade });
+  Reflect.set(pyramidTask, "name", SCENE_INPUT_TASK_NAMES.depthPyramid);
 
-  const tasks: readonly Task[] = [geometry, copyNormals, copyVelocity, buildPyramid];
-  addTaskAtStart(scene, geometry);
-  addTaskAfter(scene, copyNormals, geometry);
-  addTaskAfter(scene, copyVelocity, copyNormals);
-  addTaskAfter(scene, buildPyramid, copyVelocity);
+  const last = insertGeometryTasks(scene, geometryTasks, isFrameGraphBuilt);
+  addTaskAfter(scene, pyramidTask, last);
   if (isFrameGraphBuilt) {
-    const graph = getFrameGraph(scene);
-    for (const task of tasks) {
-      buildFrameGraphTask(graph, task);
-    }
+    buildFrameGraphTask(getFrameGraph(scene), pyramidTask);
   }
 
   const listeners = new Set<() => void>();
@@ -344,7 +357,142 @@ function buildSharedInputs(engine: EngineContext, scene: SceneContext, isFrameGr
       listener();
     }
   });
-  return { depth, normals, velocity, tasks, pyramid, listeners, stopResizeWatch };
+  return { depth, normals, velocity, albedo, geometryTasks, pyramidTask, pyramid, listeners, stopResizeWatch };
+}
+
+/**
+ * Creates the albedo target.
+ *
+ * @param engine - The engine, which is also the surface.
+ * @returns The target and its sampled facade.
+ */
+function createAlbedoTarget(engine: EngineContext): RenderTargetTextureResult {
+  return createSurfaceRenderTargetTexture(engine, {
+    lbl: "ignifx:scene-inputs-albedo",
+    format: SCENE_INPUT_FORMATS.albedo,
+    samples: 1,
+    size: engine,
+  });
+}
+
+/**
+ * Creates the geometry task and one copy per colour attachment.
+ *
+ * @param engine - The engine.
+ * @param scene - The scene.
+ * @param targets - The depth the pass writes and the targets its attachments are copied into.
+ * @param targets.depth - The depth target.
+ * @param targets.normals - The normals target.
+ * @param targets.velocity - The velocity target.
+ * @param targets.albedo - The albedo target, or `null` to leave albedo out of the pass.
+ * @returns The tasks, in the order they run.
+ */
+function createGeometryTasks(
+  engine: EngineContext,
+  scene: SceneContext,
+  targets: {
+    readonly depth: RenderTargetTextureResult;
+    readonly normals: RenderTargetTextureResult;
+    readonly velocity: RenderTargetTextureResult;
+    readonly albedo: RenderTargetTextureResult | null;
+  },
+): readonly Task[] {
+  const textureDescriptions: { type: GeometryTextureType; format: GPUTextureFormat }[] = [
+    { type: GeometryTextureType.WORLD_NORMAL, format: SCENE_INPUT_FORMATS.normals },
+    { type: GeometryTextureType.LINEAR_VELOCITY, format: SCENE_INPUT_FORMATS.velocity },
+  ];
+  if (targets.albedo !== null) {
+    textureDescriptions.push({ type: GeometryTextureType.ALBEDO, format: SCENE_INPUT_FORMATS.albedo });
+  }
+  const geometry = createGeometryRendererTask(
+    { name: SCENE_INPUT_TASK_NAMES.geometry, size: engine, depthTexture: targets.depth.rt, textureDescriptions },
+    engine,
+    scene,
+  );
+  const tasks: Task[] = [
+    geometry,
+    createCopyToTextureTask(
+      {
+        name: SCENE_INPUT_TASK_NAMES.normals,
+        sourceTexture: requireAttachment(geometry.geometryWorldNormalTexture, "world normal"),
+        targetTexture: targets.normals.rt,
+      },
+      engine,
+      scene,
+    ),
+    createCopyToTextureTask(
+      {
+        name: SCENE_INPUT_TASK_NAMES.velocity,
+        sourceTexture: requireAttachment(geometry.geometryLinearVelocityTexture, "linear velocity"),
+        targetTexture: targets.velocity.rt,
+      },
+      engine,
+      scene,
+    ),
+  ];
+  if (targets.albedo !== null) {
+    tasks.push(
+      createCopyToTextureTask(
+        {
+          name: SCENE_INPUT_TASK_NAMES.albedo,
+          sourceTexture: requireAttachment(geometry.geometryAlbedoTexture, "albedo"),
+          targetTexture: targets.albedo.rt,
+        },
+        engine,
+        scene,
+      ),
+    );
+  }
+  return tasks;
+}
+
+/**
+ * Puts the geometry task at the start of the frame graph and its copies right after it.
+ *
+ * @param scene - The scene.
+ * @param tasks - What {@link createGeometryTasks} made.
+ * @param isFrameGraphBuilt - Whether each task must be recorded now.
+ * @returns The last task inserted.
+ */
+function insertGeometryTasks(scene: SceneContext, tasks: readonly Task[], isFrameGraphBuilt: boolean): Task {
+  const [geometry, ...copies] = tasks;
+  if (geometry === undefined) {
+    throw new Error("The scene inputs have no geometry task.");
+  }
+  addTaskAtStart(scene, geometry);
+  let after = geometry;
+  for (const copy of copies) {
+    addTaskAfter(scene, copy, after);
+    after = copy;
+  }
+  if (isFrameGraphBuilt) {
+    const graph = getFrameGraph(scene);
+    for (const task of tasks) {
+      buildFrameGraphTask(graph, task);
+    }
+  }
+  return after;
+}
+
+/**
+ * Replaces the geometry task and its copies with ones that also write albedo.
+ *
+ * @remarks
+ * Lite fixes a geometry task's attachments at creation. The depth, normals and velocity targets,
+ * and the pyramid task that reads the depth, stay as they are, so no other user has to rebind; the
+ * new geometry task has no previous frame, so the velocity it writes this frame holds camera motion
+ * only from the next one on.
+ *
+ * @param engine - The engine.
+ * @param scene - The scene.
+ * @param shared - The shared state, updated in place.
+ * @param isFrameGraphBuilt - Whether each new task must be recorded now.
+ */
+function addAlbedo(engine: EngineContext, scene: SceneContext, shared: SharedInputs, isFrameGraphBuilt: boolean): void {
+  removeTasks(scene, shared.geometryTasks);
+  shared.albedo = createAlbedoTarget(engine);
+  shared.geometryTasks = createGeometryTasks(engine, scene, shared);
+  insertGeometryTasks(scene, shared.geometryTasks, isFrameGraphBuilt);
 }
 
 /**
@@ -356,15 +504,28 @@ function buildSharedInputs(engine: EngineContext, scene: SceneContext, isFrameGr
 function teardown(scene: SceneContext, shared: SharedInputs): void {
   shared.stopResizeWatch();
   shared.listeners.clear();
-  for (const task of shared.tasks) {
+  removeTasks(scene, [...shared.geometryTasks, shared.pyramidTask]);
+  disposeRenderTargetTexture(shared.depth);
+  disposeRenderTargetTexture(shared.normals);
+  disposeRenderTargetTexture(shared.velocity);
+  if (shared.albedo !== null) {
+    disposeRenderTargetTexture(shared.albedo);
+  }
+}
+
+/**
+ * Takes tasks out of the frame graph and disposes them.
+ *
+ * @param scene - The scene.
+ * @param tasks - The tasks.
+ */
+function removeTasks(scene: SceneContext, tasks: readonly Task[]): void {
+  for (const task of tasks) {
     // Disable first: a disposed task that still executes is a use-after-free.
     task.executionEnabled = false;
     removeFrameGraphTask(scene, task);
     task.dispose();
   }
-  disposeRenderTargetTexture(shared.depth);
-  disposeRenderTargetTexture(shared.normals);
-  disposeRenderTargetTexture(shared.velocity);
 }
 
 /**

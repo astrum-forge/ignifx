@@ -13,9 +13,9 @@ import type { SsgiPass } from "../lite/gpu/ssgi.js";
  * `../lite/gpu/scene-color-passes.ts` and the shared scene inputs — so a stack that enables neither
  * loads none of them (`CONSTITUTION.md` §2.5).
  *
- * What a recorded pass cannot change — which of the two run, SSGI's `halfResolution`, and the camera
- * Lite's tasks were created with — is the build's key; any change to it rebuilds. Everything else is
- * written onto the tasks every frame.
+ * What a recorded pass cannot change — which of the two run, SSGI's `halfResolution` and
+ * `denoisePasses`, and the camera Lite's tasks were created with — is the build's key; any change to
+ * it rebuilds. Everything else is written onto the tasks every frame.
  */
 
 /** What one build holds. */
@@ -83,7 +83,7 @@ export class ScreenSpaceEffects {
     const tier = renderer.qualityPreset;
     const runsContact = contact.enabled && (tier === null || tier.contactShadows);
     const runsSsgi = ssgi.enabled && (tier === null || tier.ssgi);
-    const key = buildKey(renderer, runsContact, runsSsgi, ssgi.halfResolution, isEnabled);
+    const key = buildKey(renderer, runsContact, runsSsgi ? ssgi : null, isEnabled);
     if (key !== this.#key) {
       this.#key = key;
       this.#teardown(renderer.isSceneRegistered);
@@ -128,8 +128,9 @@ export class ScreenSpaceEffects {
     if (built === null) {
       return;
     }
-    built.ssgi?.dispose(isSceneRegistered);
+    // The tasks leave the frame graph before what they draw with is freed.
     built.installed.dispose();
+    built.ssgi?.dispose(isSceneRegistered);
     built.inputs.release();
   }
 
@@ -148,7 +149,8 @@ export class ScreenSpaceEffects {
     generation: number,
   ): Promise<void> {
     const [inputs, wiring, contactModule, ssgiModule] = await Promise.all([
-      renderer.acquireSceneInputs(),
+      // SSGI's composite reads the surface albedo, which the inputs draw only when asked.
+      renderer.acquireSceneInputs({ albedo: ssgi !== null }),
       import("../lite/gpu/scene-color-passes.js"),
       contact === null ? null : import("../lite/gpu/contact-shadows.js"),
       ssgi === null ? null : import("../lite/gpu/ssgi.js"),
@@ -171,9 +173,11 @@ export class ScreenSpaceEffects {
     const ssgiPass =
       ssgi === null
         ? null
-        : (ssgiModule?.createSsgiPass(engine, scene, inputs.depthTarget, camera, {
+        : (ssgiModule?.createSsgiPass(engine, scene, inputs, camera, {
             tuning: ssgi,
             halfResolution: ssgi.halfResolution,
+            denoisePasses: ssgi.denoisePasses,
+            isLinear: presenter.hdr !== null,
             usePlugin: renderer.settings.hdr || renderer.features.materialPlugins,
           }) ?? null);
     if (ssgiPass !== null) {
@@ -191,23 +195,22 @@ export class ScreenSpaceEffects {
 }
 
 /**
- * The build's identity: which passes run, SSGI's resolution, and the camera; `""` for none.
+ * The build's identity: which passes run, SSGI's resolution and denoise pass count, and the camera;
+ * `""` for none.
  *
  * @param renderer - The rendering service.
  * @param runsContact - Whether contact shadows run.
- * @param runsSsgi - Whether SSGI runs.
- * @param ssgiHalf - SSGI's `halfResolution`.
+ * @param ssgi - The `ssgi` record when SSGI runs, else `null`.
  * @param isEnabled - Whether the stack is enabled in the hierarchy.
  * @returns The key.
  */
 function buildKey(
   renderer: RendererImpl,
   runsContact: boolean,
-  runsSsgi: boolean,
-  ssgiHalf: boolean,
+  ssgi: SsgiEffectSettings | null,
   isEnabled: boolean,
 ): string {
-  if (!isEnabled || (!runsContact && !runsSsgi) || renderer.isHeadless || renderer.presenter === null) {
+  if (!isEnabled || (!runsContact && ssgi === null) || renderer.isHeadless || renderer.presenter === null) {
     return "";
   }
   const camera = renderer.scene.camera;
@@ -221,6 +224,7 @@ function buildKey(
     nextCameraId += 1;
     cameraIds.set(camera, id);
   }
-  const gi = runsSsgi ? `ssgi:${ssgiHalf ? "half" : "full"}` : "";
+  // Not clamped here: the pass clamps, and two values that clamp alike only cost one rebuild.
+  const gi = ssgi === null ? "" : `ssgi:${ssgi.halfResolution ? "half" : "full"}:${String(ssgi.denoisePasses)}`;
   return `${runsContact ? "contact" : ""}|${gi}|camera:${String(id)}`;
 }
