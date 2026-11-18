@@ -632,13 +632,15 @@ Bloom, SMAA, image processing, and custom .post.wgsl effects, inserted into the 
 | `contactShadows.length` | `f32` | `0.3` | How far each ray marches towards the light, in world units. |
 | `contactShadows.thickness` | `f32` | `0.35` | Assumed thickness behind each depth sample, in world units. |
 | `contactShadows.samples` | `u32` | `8` | March steps per pixel. |
-| `ssgi` | `record` | `{"enabled":false,"intensity":1,"radius":2,"samples":8,"halfResolution":true,"environmentDiffuse":0.5}` | One bounce of the lit scene colour (beta, desktop tier). Runs on the scene colour before the chain; needs rendering.features.postProcessing. |
+| `ssgi` | `record` | `{"enabled":false,"intensity":1,"radius":2,"samples":8,"rays":2,"denoisePasses":4,"halfResolution":true,"environmentDiffuse":1}` | One bounce of the lit scene colour, reflected in each surface's own colour (beta, desktop tier). Runs on the scene colour before the chain; needs rendering.features.postProcessing. |
 | `ssgi.enabled` | `bool` | `false` | Whether screen-space global illumination runs (beta, desktop tier). |
-| `ssgi.intensity` | `f32` | `1` | How strongly the bounced light is added. |
+| `ssgi.intensity` | `f32` | `1` | How strongly the bounced light is added. At 1 a surface reflects what reaches it. |
 | `ssgi.radius` | `f32` | `2` | How far each ray marches, in world units. |
-| `ssgi.samples` | `u32` | `8` | March steps per ray. |
-| `ssgi.halfResolution` | `bool` | `true` | Trace at half resolution. A change rebuilds the pass. |
-| `ssgi.environmentDiffuse` | `f32` | `0.5` | How much of the environment's diffuse light remains while SSGI runs, so the bounce is not counted twice. Needs rendering.hdr or the materialPlugins feature. |
+| `ssgi.samples` | `u32` | `8` | March steps per ray. More steps do not reduce grain. |
+| `ssgi.rays` | `u32` | `2` | Rays traced per pixel. More rays reduce grain and cost more. |
+| `ssgi.denoisePasses` | `u32` | `4` | Edge-aware blur passes over the bounce; each doubles the reach. A change rebuilds the pass. |
+| `ssgi.halfResolution` | `bool` | `true` | Trace and filter at half resolution. A change rebuilds the pass. |
+| `ssgi.environmentDiffuse` | `f32` | `1` | How much of the environment's diffuse light remains while SSGI runs. Needs rendering.hdr or the materialPlugins feature. |
 
 ## Projectile (`ignifx/Projectile`)
 

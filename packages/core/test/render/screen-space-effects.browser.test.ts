@@ -178,8 +178,8 @@ describe("PostProcessStack scene-colour passes", () => {
   it("SSGI lights a surface by its own colour: a white box gains, a black one does not", async () => {
     const device = gpuDeviceErrors();
     try {
-      // Lite's own composite added the bounce without the surface's colour, which lit a black
-      // surface like a white one and washed the frame out.
+      // The bounce is multiplied by the surface's albedo. Without that term a black surface is lit
+      // like a white one and the frame washes out.
       const white = await buildScene(true);
       const whiteBefore = await meanLuminance(white.running, BOX_HALF);
       Object.assign(white.stack.ssgi, { enabled: true, intensity: 3, radius: 3 });
@@ -209,7 +209,8 @@ describe("PostProcessStack scene-colour passes", () => {
       await settle(running, SETTLE_FRAMES * 6);
       const taskCount = (): number => frameGraphTasks(running.renderer.scene)?.length ?? 0;
       const withFourPasses = taskCount();
-      // Each of these rebuilds the pass; a rebuild once freed the scene colour its composite wrote.
+      // Each of these rebuilds the pass, and the scene colour its composite draws into has to
+      // outlive the tasks that are torn down.
       stack.ssgi.denoisePasses = 0;
       await settle(running, SETTLE_FRAMES * 6);
       expect(taskCount()).toBe(withFourPasses - 4);

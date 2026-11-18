@@ -3795,11 +3795,13 @@ export interface SphereMeshOptions {
 
 // @beta
 export interface SsgiEffectSettings {
+    denoisePasses: number;
     enabled: boolean;
     environmentDiffuse: number;
     halfResolution: boolean;
     intensity: number;
     radius: number;
+    rays: number;
     samples: number;
 }
 

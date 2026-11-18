@@ -225,11 +225,29 @@ freed — set `stack.enabled = false` to bypass the whole chain, and the plain s
 Two screen-space records run on the scene colour **before** the chain, and both are off by
 default: `contactShadows` (`enabled`, `intensity`, `length`, `thickness`, `samples`) darkens
 short contacts towards the main directional light (the first that casts shadows), and `ssgi`
-(`@beta`, desktop tier: `enabled`, `intensity`, `radius`, `samples`, `halfResolution`,
-`environmentDiffuse`) adds one bounce of the lit scene. `environmentDiffuse` (default 0.5) is how
-much of the environment's diffuse light stays while SSGI runs, so the bounce is not counted twice;
-it needs `rendering.hdr` or the `materialPlugins` feature. Both read depth from one shared geometry
-pass and load their code only when enabled; under `rendering.hdr` they work on linear colour.
+(`@beta`, desktop tier: `enabled`, `intensity`, `radius`, `samples`, `rays`, `denoisePasses`,
+`halfResolution`, `environmentDiffuse`) adds one bounce of the lit scene. Both read depth from one
+shared geometry pass and load their code only when enabled; under `rendering.hdr` they work on
+linear colour, which SSGI is designed for.
+
+SSGI traces rays through the depth buffer and adds the light they reach, multiplied by the colour
+of the surface it lands on: a white wall beside a sunlit red one turns pink, a red wall stays red,
+and a metal or an unlit surface gains nothing. It only sees what is on screen, so the bounce from a
+surface fades as that surface leaves the frame.
+
+| Field | Default | What it does |
+| --- | --- | --- |
+| `intensity` | 1 | Scales the bounce; at 1 a surface reflects what reaches it |
+| `radius` | 2 | How far a ray marches, in world units |
+| `samples` | 8 | March steps per ray; more find thinner occluders, they do not reduce grain |
+| `rays` | 2 | Rays per pixel, 1 to 8; more reduce grain, at a cost that grows with the count |
+| `denoisePasses` | 4 | Edge-aware blur passes, 0 to 4; a change rebuilds the pass |
+| `halfResolution` | `true` | Trace and filter at half size; a change rebuilds the pass |
+| `environmentDiffuse` | 1 | How much of the environment's diffuse light stays; needs `rendering.hdr` or the `materialPlugins` feature |
+
+The environment already lights every surface as if nothing stood near it. Add ambient occlusion
+(`rendering.ambientOcclusion`) to darken the creases SSGI then fills with bounced colour, or lower
+`environmentDiffuse` when the environment stands in for light SSGI now adds.
 
 ```ts
 import { PostProcessStack } from "@ignifx/core";
