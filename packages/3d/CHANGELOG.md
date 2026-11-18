@@ -1,5 +1,14 @@
 # @ignifx/3d
 
+## 0.22.0
+
+### Patch Changes
+
+- Updated dependencies [1450e58]
+  - @ignifx/core@0.22.0
+  - @ignifx/input@0.22.0
+  - @ignifx/physics@0.22.0
+
 ## 0.21.1
 
 ### Patch Changes
