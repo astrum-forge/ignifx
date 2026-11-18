@@ -110,36 +110,31 @@ export function installSceneColorPasses(
     scratchTextures.push(scratch);
     return scratch.rt;
   };
+  const steps = planSceneColorPasses(
+    passes.map((pass) => pass.inPlace === true),
+    sceneTarget,
+    isTargetWritable,
+    scratches,
+    createScratch,
+  );
   const tasks: Task[] = [];
-  let source = sceneTarget;
-  for (const pass of passes) {
-    if (pass.inPlace === true) {
-      if (source === sceneTarget && !isTargetWritable) {
-        const staged = sceneColorPassTarget(source, sceneTarget, isTargetWritable, scratches, createScratch);
-        tasks.push(
-          createCopyToTextureTask(
-            { name: "ignifx:scene-color-stage", sourceTexture: source, targetTexture: staged },
-            engine,
-            scene,
-          ),
-        );
-        source = staged;
-      }
-      appendTasks(tasks, pass.create(source, source));
+  for (const step of steps) {
+    const pass = step.pass === null ? undefined : passes[step.pass];
+    if (pass === undefined) {
+      tasks.push(
+        createCopyToTextureTask(
+          {
+            name: step.target === sceneTarget ? "ignifx:scene-color-copy" : "ignifx:scene-color-stage",
+            sourceTexture: step.source,
+            targetTexture: step.target,
+          },
+          engine,
+          scene,
+        ),
+      );
       continue;
     }
-    const target = sceneColorPassTarget(source, sceneTarget, isTargetWritable, scratches, createScratch);
-    appendTasks(tasks, pass.create(source, target));
-    source = target;
-  }
-  if (source !== sceneTarget) {
-    tasks.push(
-      createCopyToTextureTask(
-        { name: "ignifx:scene-color-copy", sourceTexture: source, targetTexture: sceneTarget },
-        engine,
-        scene,
-      ),
-    );
+    appendTasks(tasks, pass.create(step.source, step.target));
   }
   let after = sceneTask;
   for (const task of tasks) {
@@ -175,6 +170,67 @@ export function installSceneColorPasses(
       }
     },
   };
+}
+
+/**
+ * One step of the plan: a pass, or a copy when `pass` is `null`.
+ *
+ * @internal
+ */
+export interface SceneColorStep<T> {
+  /** The index of the pass that runs, or `null` for a copy. */
+  readonly pass: number | null;
+  /** The colour the step reads. */
+  readonly source: T;
+  /** The colour it writes; `source` for an in-place pass. */
+  readonly target: T;
+}
+
+/**
+ * Plans the steps that take the scene colour through every pass and back into the scene target.
+ *
+ * @remarks
+ * A pass that writes a second target goes where {@link sceneColorPassTarget} says. An in-place pass
+ * gets the colour it reads as its target; when that is a scene target no pass may write, a copy
+ * moves the colour into a scratch first. A last copy brings the result back when it is not already
+ * in the scene target.
+ *
+ * @param inPlace - For each pass, whether it is {@link SceneColorPass.inPlace}.
+ * @param sceneTarget - The scene's colour target.
+ * @param isTargetWritable - Whether a pass may write `sceneTarget` (`ScenePass.isTargetWritable` in `./render-path.ts`).
+ * @param scratches - The scratch targets made so far; new ones are appended as needed.
+ * @param createScratch - Makes the scratch target at an index, 0 or 1.
+ * @returns The steps, in the order they run.
+ *
+ * @internal
+ */
+export function planSceneColorPasses<T>(
+  inPlace: readonly boolean[],
+  sceneTarget: T,
+  isTargetWritable: boolean,
+  scratches: T[],
+  createScratch: (index: number) => T,
+): SceneColorStep<T>[] {
+  const steps: SceneColorStep<T>[] = [];
+  let source = sceneTarget;
+  for (let pass = 0; pass < inPlace.length; pass += 1) {
+    if (inPlace[pass] === true) {
+      if (source === sceneTarget && !isTargetWritable) {
+        const staged = sceneColorPassTarget(source, sceneTarget, isTargetWritable, scratches, createScratch);
+        steps.push({ pass: null, source, target: staged });
+        source = staged;
+      }
+      steps.push({ pass, source, target: source });
+      continue;
+    }
+    const target = sceneColorPassTarget(source, sceneTarget, isTargetWritable, scratches, createScratch);
+    steps.push({ pass, source, target });
+    source = target;
+  }
+  if (source !== sceneTarget) {
+    steps.push({ pass: null, source, target: sceneTarget });
+  }
+  return steps;
 }
 
 /**

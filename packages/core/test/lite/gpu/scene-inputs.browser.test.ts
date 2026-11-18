@@ -33,7 +33,11 @@ import type { Texture2D } from "@babylonjs/lite";
 /** The canvas edge. Small keeps SwiftShader fast. */
 const SIZE = 48;
 
-const INPUT_NAMES: readonly string[] = Object.values(SCENE_INPUT_TASK_NAMES);
+/** Every task the inputs can add, albedo's copy included. */
+const ALL_INPUT_NAMES: readonly string[] = Object.values(SCENE_INPUT_TASK_NAMES);
+
+/** The tasks a user that asks for nothing extra gets. */
+const INPUT_NAMES: readonly string[] = ALL_INPUT_NAMES.filter((name) => name !== SCENE_INPUT_TASK_NAMES.albedo);
 
 let harness: BrowserApp | null = null;
 
@@ -158,7 +162,7 @@ async function readTexel(
 describe("scene inputs", () => {
   it("adds no task and loads nothing until an effect asks", async () => {
     const { running } = await buildCubeScene();
-    expect(taskNames(running).filter((name) => INPUT_NAMES.includes(name))).toEqual([]);
+    expect(taskNames(running).filter((name) => ALL_INPUT_NAMES.includes(name))).toEqual([]);
     expect(running.renderer.sceneInputsUserCount).toBe(0);
   }, 60_000);
 
@@ -168,7 +172,8 @@ describe("scene inputs", () => {
       const { running } = await buildCubeScene();
       const inputs = await acquire(running);
       await settle(running);
-      expect(taskNames(running).filter((name) => INPUT_NAMES.includes(name))).toEqual(INPUT_NAMES);
+      expect(taskNames(running).filter((name) => ALL_INPUT_NAMES.includes(name))).toEqual(INPUT_NAMES);
+      expect(inputs.albedo).toBeNull();
       const width = running.canvas.width;
       const height = running.canvas.height;
       expect(inputs.depth.texture.format).toBe(SCENE_INPUT_FORMATS.depth);
@@ -257,8 +262,65 @@ describe("scene inputs", () => {
     // A new user after the last release gets a fresh pass.
     const third = await acquire(running);
     await settle(running);
-    expect(taskNames(running).filter((name) => INPUT_NAMES.includes(name))).toEqual(INPUT_NAMES);
+    expect(taskNames(running).filter((name) => ALL_INPUT_NAMES.includes(name))).toEqual(INPUT_NAMES);
     third.release();
+  }, 60_000);
+
+  it("draws albedo once a user asks for it, keeping what the other users hold", async () => {
+    const device = gpuDeviceErrors();
+    try {
+      const { running } = await buildCubeScene();
+      const first = await acquire(running);
+      await settle(running);
+      const { depth, depthTarget, normals, velocity } = first;
+
+      const second = await running.renderer.acquireSceneInputs({ albedo: true });
+      if (second === null) {
+        throw new Error("the renderer returned no scene inputs");
+      }
+      await settle(running);
+      // One geometry task still, now followed by a third copy; the pyramid stays behind them.
+      expect(taskNames(running).filter((name) => ALL_INPUT_NAMES.includes(name))).toEqual(ALL_INPUT_NAMES);
+      expect([first.depth, first.depthTarget, first.normals, first.velocity]).toEqual([
+        depth,
+        depthTarget,
+        normals,
+        velocity,
+      ]);
+      const albedo = second.albedo;
+      if (albedo === null) {
+        throw new Error("the lease that asked for albedo has none");
+      }
+      // The first lease sees it too: the inputs are shared.
+      expect(first.albedo).toBe(albedo);
+      expect(albedo.texture.format).toBe(SCENE_INPUT_FORMATS.albedo);
+      expect([albedo.texture.width, albedo.texture.height]).toEqual([running.canvas.width, running.canvas.height]);
+
+      const centre = SIZE >> 1;
+      // A white dielectric: the base colour less the 4% it reflects specularly.
+      const [cubeDepth = 0, r = 0, g = 0, b = 0] = await readTexel(running, depth, albedo, centre, centre);
+      expect(cubeDepth).toBeGreaterThan(0.01);
+      for (const channel of [r, g, b]) {
+        expect(channel).toBeGreaterThan(0.9);
+        expect(channel).toBeLessThanOrEqual(1);
+      }
+      const [, br = 1, bg = 1, bb = 1] = await readTexel(running, depth, albedo, 0, 0);
+      expect([br, bg, bb]).toEqual([0, 0, 0]);
+      // The inputs the first user reads are still drawn by the replaced geometry task.
+      const [, , , nz = 0] = await readTexel(running, depth, normals, centre, centre);
+      expect(nz * 2 - 1).toBeLessThan(-0.9);
+
+      // Albedo stays while any lease is live, and goes with the last one.
+      second.release();
+      expect(first.albedo).toBe(albedo);
+      first.release();
+      expect(taskNames(running).filter((name) => ALL_INPUT_NAMES.includes(name))).toEqual([]);
+      await settle(running);
+      expect(running.errors).toEqual([]);
+      expect(device.errors).toEqual([]);
+    } finally {
+      device.stop();
+    }
   }, 60_000);
 
   it("rebuilds at the new size when the canvas grows", async () => {
