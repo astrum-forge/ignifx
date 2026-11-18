@@ -118,34 +118,55 @@ export function installSceneColorPasses(
     createScratch,
   );
   const tasks: Task[] = [];
-  for (const step of steps) {
-    const pass = step.pass === null ? undefined : passes[step.pass];
-    if (pass === undefined) {
-      tasks.push(
-        createCopyToTextureTask(
-          {
-            name: step.target === sceneTarget ? "ignifx:scene-color-copy" : "ignifx:scene-color-stage",
-            sourceTexture: step.source,
-            targetTexture: step.target,
-          },
-          engine,
-          scene,
-        ),
-      );
-      continue;
-    }
-    appendTasks(tasks, pass.create(step.source, step.target));
-  }
-  let after = sceneTask;
-  for (const task of tasks) {
-    addTaskAfter(scene, task, after);
-    after = task;
-  }
-  if (isFrameGraphBuilt) {
-    const graph = getFrameGraph(scene);
+  const free = (): void => {
+    const list = frameGraphTasks(scene);
     for (const task of tasks) {
-      buildFrameGraphTask(graph, task);
+      // Disable first: a disposed task that still executes is a use-after-free.
+      task.executionEnabled = false;
+      const index = list?.indexOf(task) ?? -1;
+      if (list !== null && index >= 0) {
+        list.splice(index, 1);
+      }
+      task.dispose();
     }
+    for (const scratch of scratchTextures) {
+      disposeRenderTargetTexture(scratch);
+    }
+  };
+  try {
+    for (const step of steps) {
+      const pass = step.pass === null ? undefined : passes[step.pass];
+      if (pass === undefined) {
+        tasks.push(
+          createCopyToTextureTask(
+            {
+              name: step.target === sceneTarget ? "ignifx:scene-color-copy" : "ignifx:scene-color-stage",
+              sourceTexture: step.source,
+              targetTexture: step.target,
+            },
+            engine,
+            scene,
+          ),
+        );
+        continue;
+      }
+      appendTasks(tasks, pass.create(step.source, step.target));
+    }
+    let after = sceneTask;
+    for (const task of tasks) {
+      addTaskAfter(scene, task, after);
+      after = task;
+    }
+    if (isFrameGraphBuilt) {
+      const graph = getFrameGraph(scene);
+      for (const task of tasks) {
+        buildFrameGraphTask(graph, task);
+      }
+    }
+  } catch (failure) {
+    // A pass that could not be created or recorded leaves nothing behind in the frame graph.
+    free();
+    throw failure;
   }
   let isDisposed = false;
   return {
@@ -155,19 +176,7 @@ export function installSceneColorPasses(
         return;
       }
       isDisposed = true;
-      const list = frameGraphTasks(scene);
-      for (const task of tasks) {
-        // Disable first: a disposed task that still executes is a use-after-free.
-        task.executionEnabled = false;
-        const index = list?.indexOf(task) ?? -1;
-        if (list !== null && index >= 0) {
-          list.splice(index, 1);
-        }
-        task.dispose();
-      }
-      for (const scratch of scratchTextures) {
-        disposeRenderTargetTexture(scratch);
-      }
+      free();
     },
   };
 }

@@ -40,18 +40,19 @@ import type {
  *    └──────────────── colour += bounce · albedo · intensity ←───────┘
  * ```
  *
- * - **Trace.** Lite's `@beta` `createScreenSpaceGlobalIlluminationPostProcessTask` (`index.d.ts`
- *   3681) with `composition: "none"`: it marches `rays` rays per pixel through the shared
+ * - **Trace.** Lite's `createScreenSpaceGlobalIlluminationPostProcessTask` (`index.d.ts` 3681)
+ *   with `composition: "none"`: it marches `rays` rays per pixel through the shared
  *   scene-input depth, averages the lit colour they reach over 64 frames, and leaves the result in
  *   its `illuminationTexture`. That is the light arriving at each pixel, not yet reflected.
  * - **Why not Lite's composite.** Its additive composite is `colour + bounce · intensity`, with no
  *   term for the surface the light lands on: a black surface is lit like a white one, and the frame
  *   washes out. The composite here multiplies by the surface's diffuse albedo, a scene input
- *   (`./scene-inputs.ts`), so a surface reflects the bounce in its own colour and a metal reflects
- *   none.
+ *   (`./scene-inputs.ts`), so a PBR surface reflects the bounce in its own colour and a metal
+ *   reflects none. That input has two limits, both Lite's: a Standard material's `diffuse` colour
+ *   is not in it, and an unlit PBR material has an albedo like a lit one.
  * - **Copy.** Lite exposes its result as a `RenderTarget`, which an effect cannot sample, so it is
  *   copied into a target that has a `Texture2D`, as the scene inputs copy their attachments.
- * - **Denoise.** One ray per pixel leaves grain the temporal average does not remove. Each pass is
+ * - **Denoise.** A few rays per pixel leave grain the temporal average does not remove. Each pass is
  *   a 3×3 filter whose taps are `stride` texels apart, the stride doubling per pass (à-trous,
  *   Dammertz et al., "Edge-avoiding À-Trous wavelet transform for fast global illumination
  *   filtering", HPG 2010). A tap counts by how close it lies to the centre pixel's surface plane
@@ -59,7 +60,9 @@ import type {
  *   surface and stops at its edges.
  * - **Composite.** Additive through the blend unit, into the colour the trace read
  *   (`SceneColorPass.inPlace`). At half resolution it takes the four bounce texels around the
- *   pixel, weighted the same way, so a low-resolution texel does not bleed across an edge.
+ *   pixel, weighted the same way, so a low-resolution texel does not bleed across an edge. The
+ *   bounce targets are `floor(size / 2)` and Lite's result `round(size / 2)`, so on an odd canvas
+ *   the copy resamples by one texel instead of copying texel for texel.
  *
  * **The environment plugin.** The environment's irradiance (`finalIrradiance`,
  * `lib/material/pbr/fragments/ibl-fragment.js` line 6) stands in for all indirect light, so a
@@ -154,8 +157,8 @@ const BOUNCE_FORMAT: GPUTextureFormat = "rgba16float";
 const UNIFORM_FLOATS = 24;
 
 /**
- * How far off the centre pixel's surface plane a tap may lie before it stops counting, as a
- * fraction of the pixel's distance from the eye: 1.2 cm a metre away.
+ * The distance off the centre pixel's surface plane at which a tap's weight has fallen to `1 / e`,
+ * as a fraction of the pixel's distance from the eye: 1.2 cm a metre away.
  */
 const PLANE_TOLERANCE = 0.012;
 
@@ -300,34 +303,43 @@ export function clampSsgiDenoisePasses(passes: number): number {
 }
 
 /**
- * Writes one effect's uniform block.
- *
- * @param inverseViewProjection - The inverse of the camera's view-projection, 16 floats.
- * @param eye - The camera's world matrix, whose translation is the eye.
- * @param first - `params.x`: the tap stride of a denoise pass, the intensity of the composite.
- * @param isDisplayEncoded - `params.w`: whether the colour the pass works on is display-encoded.
- * @param out - {@link UNIFORM_FLOATS} floats, overwritten.
+ * What one effect's uniform block is written from.
  *
  * @internal
  */
-export function writeSsgiFilterUniforms(
-  inverseViewProjection: ArrayLike<number>,
-  eye: ArrayLike<number>,
-  first: number,
-  isDisplayEncoded: boolean,
-  out: Float32Array,
-): void {
+export interface SsgiFilterUniforms {
+  /** The inverse of the camera's view-projection, 16 floats. */
+  readonly inverseViewProjection: ArrayLike<number>;
+  /** The camera's world matrix, whose translation is the eye. */
+  readonly cameraWorld: ArrayLike<number>;
+  /** `params.x`: the tap stride of a denoise pass, the intensity of the composite. */
+  readonly first: number;
+  /** `params.w`: whether the colour the pass works on is display-encoded. */
+  readonly isDisplayEncoded: boolean;
+}
+
+/**
+ * Writes one effect's uniform block.
+ *
+ * @param values - What to write.
+ * @param out - {@link UNIFORM_FLOATS} floats, overwritten.
+ * @returns `out`.
+ *
+ * @internal
+ */
+export function writeSsgiFilterUniforms(values: SsgiFilterUniforms, out: Float32Array): Float32Array {
   for (let index = 0; index < 16; index += 1) {
-    out[index] = inverseViewProjection[index] ?? 0;
+    out[index] = values.inverseViewProjection[index] ?? 0;
   }
-  out[16] = eye[12] ?? 0;
-  out[17] = eye[13] ?? 0;
-  out[18] = eye[14] ?? 0;
+  out[16] = values.cameraWorld[12] ?? 0;
+  out[17] = values.cameraWorld[13] ?? 0;
+  out[18] = values.cameraWorld[14] ?? 0;
   out[19] = 1;
-  out[20] = first;
+  out[20] = values.first;
   out[21] = PLANE_TOLERANCE;
   out[22] = NORMAL_POWER;
-  out[23] = isDisplayEncoded ? 1 : 0;
+  out[23] = values.isDisplayEncoded ? 1 : 0;
+  return out;
 }
 
 /** What `create` built, kept for the per-frame update and the teardown. */
@@ -472,8 +484,8 @@ export function createSsgiPass(
         }
       };
       bind();
-      // A resize or a recovered device swaps the textures behind the facades; a wrapper's cached
-      // bind group keeps the old view until a texture write marks it dirty.
+      // A resize swaps the textures behind the facades; a wrapper's cached bind group keeps the old
+      // view until a texture write marks it dirty.
       const stops = [inputs.onChange(bind), ...targets.map((target) => onRenderTargetTextureResize(target, bind))];
 
       const viewProjection = new Mat4();
@@ -508,8 +520,18 @@ export function createSsgiPass(
               continue;
             }
             const first = effect === composite ? Math.min(4, Math.max(0, tuning.intensity)) : 2 ** index;
-            writeSsgiFilterUniforms(inverse.elements, camera.worldMatrix, first, !options.isLinear, uniforms);
-            setEffectUniforms(effect, uniforms);
+            setEffectUniforms(
+              effect,
+              writeSsgiFilterUniforms(
+                {
+                  inverseViewProjection: inverse.elements,
+                  cameraWorld: camera.worldMatrix,
+                  first,
+                  isDisplayEncoded: !options.isLinear,
+                },
+                uniforms,
+              ),
+            );
           }
           return 0;
         },
@@ -580,9 +602,8 @@ export function createSsgiPass(
  *
  * @remarks
  * Lite's effect task frees its target on `dispose` (`lib/effect/effect-renderer.js`,
- * `disposeRenderTarget(task._rt)`), and a surface target, unlike a fixed-size one, lets it. The
- * composite's target is the scene colour, which the rest of the frame graph keeps drawing into, and
- * the bounce targets are freed by the pass.
+ * `disposeRenderTarget(task._rt)`). The composite's target is the scene colour, which the rest of
+ * the frame graph keeps drawing into, and the bounce targets are freed by the pass.
  *
  * @param engine - The engine.
  * @param scene - The scene.

@@ -357,6 +357,25 @@ describe("ScreenSpaceEffects", () => {
     await settle();
     expect(effects.isBuilt).toBe(false);
     expect(fake.errors).toEqual(["PostProcessStack could not build contact shadows or SSGI: install failed"]);
+    // Nothing of the failed build stays: the lease goes back.
+    expect(fake.releases).toBe(1);
+  });
+
+  it("frees the SSGI pass and the lease when the install throws", async () => {
+    gpu.failInstall = true;
+    const effects = new ScreenSpaceEffects();
+    const fake = fakeRenderer();
+    const { contactShadows, ssgi } = records();
+    ssgi.enabled = true;
+    effects.sync(asRenderer(fake), contactShadows, ssgi, true);
+    await settle();
+    expect(effects.isBuilt).toBe(false);
+    expect(gpu.ssgi[0]?.dispose).toHaveBeenCalledOnce();
+    expect(fake.releases).toBe(1);
+    // The key is unchanged, so the next sync does not try again.
+    effects.sync(asRenderer(fake), contactShadows, ssgi, true);
+    await settle();
+    expect(gpu.ssgi).toHaveLength(1);
   });
 });
 

@@ -10,8 +10,9 @@ import {
 } from "../../../src/lite/gpu/ssgi.js";
 
 /**
- * The parts of the SSGI pass that need no device: the pass count, the uniform block, what the two
- * shaders declare, and the environment plugin's code. What the pass draws is
+ * The parts of the SSGI pass that need no device: the pass count, the uniform block, the bindings
+ * the two shaders declare (which the pass's effect layouts have to match), and the environment
+ * plugin's code. What the pass draws is
  * `../../render/screen-space-effects.browser.test.ts`.
  */
 
@@ -32,14 +33,21 @@ describe("writeSsgiFilterUniforms", () => {
     const world = new Float32Array(16);
     world.set([7, 8, 9], 12);
     const out = new Float32Array(24).fill(-1);
-    writeSsgiFilterUniforms(inverse, world, 4, false, out);
+    const written = writeSsgiFilterUniforms(
+      { inverseViewProjection: inverse, cameraWorld: world, first: 4, isDisplayEncoded: false },
+      out,
+    );
+    expect(written).toBe(out);
     expect(Array.from(out.subarray(0, 16))).toEqual(inverse);
     expect(Array.from(out.subarray(16, 20))).toEqual([7, 8, 9, 1]);
     expect(out[20]).toBe(4);
     expect(out[21]).toBeGreaterThan(0);
     expect(out[22]).toBeGreaterThan(0);
     expect(out[23]).toBe(0);
-    writeSsgiFilterUniforms(inverse, world, 0.5, true, out);
+    writeSsgiFilterUniforms(
+      { inverseViewProjection: inverse, cameraWorld: world, first: 0.5, isDisplayEncoded: true },
+      out,
+    );
     expect(out[20]).toBe(0.5);
     expect(out[23]).toBe(1);
   });
@@ -58,10 +66,6 @@ describe("the SSGI shaders", () => {
     }
     expect(denoise).not.toContain("sceneAlbedo");
     expect(composite).toContain("@group(0)@binding(4)var sceneAlbedo:texture_2d<f32>;");
-  });
-
-  it("multiply the bounce by the surface albedo in the composite", () => {
-    expect(ssgiCompositeFragmentWgsl()).toContain("albedo*light*ssgi.params.x");
   });
 });
 

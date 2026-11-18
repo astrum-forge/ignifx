@@ -159,6 +159,54 @@ async function readTexel(
   return [...new Float32Array(await readStorageBuffer(out))];
 }
 
+/**
+ * Counts, on the GPU, the frames in which the centre texel of the depth input is empty.
+ *
+ * @param running - The running app.
+ * @param depth - The depth input.
+ * @returns A function that reads `[frames counted, frames with no depth]` and stops counting.
+ */
+async function watchCentreDepth(running: BrowserApp, depth: Texture2D): Promise<() => Promise<number[]>> {
+  const engine = running.renderer.engine;
+  const centre = String(SIZE >> 1);
+  const shader = createComputeShader(engine, {
+    name: "test:scene-inputs-watch",
+    computeSource: `
+@group(0) @binding(0) var depthTex: texture_depth_2d;
+@group(0) @binding(1) var<storage, read_write> outBuf: array<f32>;
+@compute @workgroup_size(1) fn main() {
+  outBuf[0] = outBuf[0] + 1.0;
+  if (textureLoad(depthTex, vec2<i32>(${centre}, ${centre}), 0) <= 0.0) {
+    outBuf[1] = outBuf[1] + 1.0;
+  }
+}`,
+    bindings: [
+      computeTextureBinding("depthTex", { group: 0, binding: 0, sampleType: "depth" }),
+      computeStorageBufferBinding("outBuf", { group: 0, binding: 1, access: "read-write" }),
+    ],
+  });
+  const out = createStorageBuffer(engine, 8, { label: "test:scene-inputs-watch-out", writable: true });
+  const task = createComputeTask(engine, "test:scene-inputs-watch");
+  addComputeDispatch(
+    task,
+    createComputeDispatch(
+      shader,
+      createComputeBindingSet(shader, {
+        depthTex: await createComputeTextureResource(engine, depth, { sampleType: "depth" }),
+        outBuf: out,
+      }),
+      { size: { x: 1 } },
+    ),
+  );
+  // Appended: it runs after the scene inputs, which sit at the start of the graph.
+  addTask(running.renderer.scene, task);
+  buildFrameGraphTask(getFrameGraph(running.renderer.scene), task);
+  return async (): Promise<number[]> => {
+    task.executionEnabled = false;
+    return [...new Float32Array(await readStorageBuffer(out))];
+  };
+}
+
 describe("scene inputs", () => {
   it("adds no task and loads nothing until an effect asks", async () => {
     const { running } = await buildCubeScene();
@@ -274,11 +322,21 @@ describe("scene inputs", () => {
       await settle(running);
       const { depth, depthTarget, normals, velocity } = first;
 
+      const stopWatching = await watchCentreDepth(running, depth);
+      await running.advance(2);
       const second = await running.renderer.acquireSceneInputs({ albedo: true });
       if (second === null) {
         throw new Error("the renderer returned no scene inputs");
       }
+      // The target is there at once; the tasks that fill it replace the old ones only when the
+      // new geometry task can draw, so the tasks in the graph are still the old ones.
+      expect(second.albedo).not.toBeNull();
+      expect(taskNames(running).filter((name) => ALL_INPUT_NAMES.includes(name))).toEqual(INPUT_NAMES);
       await settle(running);
+      // The cube covered the centre texel in every frame across the swap.
+      const [frames = 0, empty = -1] = await stopWatching();
+      expect(frames).toBeGreaterThan(SETTLE_FRAMES);
+      expect(empty).toBe(0);
       // One geometry task still, now followed by a third copy; the pyramid stays behind them.
       expect(taskNames(running).filter((name) => ALL_INPUT_NAMES.includes(name))).toEqual(ALL_INPUT_NAMES);
       expect([first.depth, first.depthTarget, first.normals, first.velocity]).toEqual([

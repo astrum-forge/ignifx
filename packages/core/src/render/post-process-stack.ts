@@ -181,11 +181,15 @@ export interface ContactShadowsEffectSettings {
 
 /**
  * The `ssgi` record a `PostProcessStack` declares (`docs/architecture/07-rendering.md` §2.7):
- * screen-space global illumination, one bounce of the lit scene colour. Rays traced by Lite's
- * `@beta` task find the light arriving at each pixel from the surfaces on screen; the engine
- * filters it and adds it times the surface's own diffuse colour, so a red wall lit by a white floor
- * stays red, a white wall beside it picks up red, and a metal or an unlit surface gains nothing.
- * Desktop tier.
+ * screen-space global illumination, one bounce of the lit scene colour. Rays traced by Lite find
+ * the light arriving at each pixel from the surfaces on screen; the engine filters it and adds it
+ * times the surface's own diffuse colour, so a red wall lit by a white floor stays red, a white
+ * wall beside it picks up red, and a metal gains nothing. Desktop tier.
+ *
+ * @remarks
+ * The diffuse colour is that of a PBR material. A Standard material counts by its diffuse texture,
+ * or as white without one: its `diffuse` colour does not dim or tint the bounce. An unlit PBR
+ * material receives the bounce like a lit one unless its `metallic` is 1.
  *
  * @beta
  */

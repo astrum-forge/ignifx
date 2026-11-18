@@ -232,8 +232,10 @@ linear colour, which SSGI is designed for.
 
 SSGI traces rays through the depth buffer and adds the light they reach, multiplied by the colour
 of the surface it lands on: a white wall beside a sunlit red one turns pink, a red wall stays red,
-and a metal or an unlit surface gains nothing. It only sees what is on screen, so the bounce from a
-surface fades as that surface leaves the frame.
+and a metal gains nothing. It only sees what is on screen, so the bounce from a surface fades as
+that surface leaves the frame. The surface colour is a PBR material's. A Standard material counts
+by its diffuse texture, or as white without one, and an unlit PBR material receives the bounce like
+a lit one unless its `metallic` is 1.
 
 | Field | Default | What it does |
 | --- | --- | --- |

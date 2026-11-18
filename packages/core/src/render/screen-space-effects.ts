@@ -183,7 +183,15 @@ export class ScreenSpaceEffects {
     if (ssgiPass !== null) {
       passes.push(ssgiPass);
     }
-    const installed = wiring.installSceneColorPasses(engine, scene, presenter, passes, renderer.isSceneRegistered);
+    let installed: InstalledSceneColorPasses;
+    try {
+      installed = wiring.installSceneColorPasses(engine, scene, presenter, passes, renderer.isSceneRegistered);
+    } catch (failure) {
+      // The installer took its tasks out again; free what the SSGI pass made and give the lease back.
+      ssgiPass?.dispose(renderer.isSceneRegistered);
+      inputs.release();
+      throw failure;
+    }
     this.#built = { inputs, installed, contact: contactPass, ssgi: ssgiPass };
     if (contact !== null) {
       contactPass?.update(contact);
