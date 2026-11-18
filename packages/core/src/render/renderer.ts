@@ -898,7 +898,9 @@ export class RendererImpl implements Renderer {
     }
     const { engine, scene } = this;
     this.#sceneInputs ??= import("../lite/gpu/scene-inputs.js").then((module) => {
-      const host = module.createSceneInputsHost(engine, scene);
+      const host = module.createSceneInputsHost(engine, scene, (message) => {
+        this.#app.log.error(message);
+      });
       this.#sceneInputsHost = host;
       if (this.#isDisposed) {
         // The renderer went away while the chunk loaded; a disposed host hands out nothing.

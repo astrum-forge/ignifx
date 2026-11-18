@@ -491,6 +491,13 @@ export function createSsgiPass(
       const viewProjection = new Mat4();
       const inverse = new Mat4();
       const uniforms = new Float32Array(UNIFORM_FLOATS);
+      // One object for every effect and frame: nothing is allocated while drawing.
+      const values = {
+        inverseViewProjection: inverse.elements,
+        cameraWorld: camera.worldMatrix,
+        first: 0,
+        isDisplayEncoded: !options.isLinear,
+      };
       const uniformsTask: Task & { readonly _passes: unknown[] } = {
         name: SSGI_TASK_NAMES.uniforms,
         engine,
@@ -519,19 +526,8 @@ export function createSsgiPass(
             if (effect === undefined) {
               continue;
             }
-            const first = effect === composite ? Math.min(4, Math.max(0, tuning.intensity)) : 2 ** index;
-            setEffectUniforms(
-              effect,
-              writeSsgiFilterUniforms(
-                {
-                  inverseViewProjection: inverse.elements,
-                  cameraWorld: camera.worldMatrix,
-                  first,
-                  isDisplayEncoded: !options.isLinear,
-                },
-                uniforms,
-              ),
-            );
+            values.first = effect === composite ? Math.min(4, Math.max(0, tuning.intensity)) : 2 ** index;
+            setEffectUniforms(effect, writeSsgiFilterUniforms(values, uniforms));
           }
           return 0;
         },

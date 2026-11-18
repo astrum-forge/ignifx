@@ -208,11 +208,16 @@ interface SharedInputs {
  *
  * @param engine - The engine, which is also the primary surface.
  * @param scene - The render scene.
+ * @param report - Called with a message when work the host does after `acquire` returned fails.
  * @returns The host.
  *
  * @internal
  */
-export function createSceneInputsHost(engine: EngineContext, scene: SceneContext): SceneInputsHost {
+export function createSceneInputsHost(
+  engine: EngineContext,
+  scene: SceneContext,
+  report: (message: string) => void,
+): SceneInputsHost {
   let shared: SharedInputs | null = null;
   const leases = new Set<SceneInputs>();
   let isDisposed = false;
@@ -234,7 +239,7 @@ export function createSceneInputsHost(engine: EngineContext, scene: SceneContext
       shared ??= buildSharedInputs(engine, scene, isFrameGraphBuilt, wantsAlbedo);
       const inputs = shared;
       if (wantsAlbedo && inputs.albedo === null) {
-        addAlbedo(engine, scene, inputs, isFrameGraphBuilt);
+        addAlbedo(engine, scene, inputs, isFrameGraphBuilt, report);
       }
       let isReleased = false;
       const own = new Set<() => void>();
@@ -501,7 +506,8 @@ function insertGeometryTasks(scene: SceneContext, tasks: readonly Task[], isFram
  * and the pyramid task that reads the depth, stay as they are, so no other user has to rebind.
  *
  * A geometry task draws nothing until its `_preload` has imported the code for the scene's
- * material families, which Lite runs at scene registration only
+ * material families. Lite awaits that at scene registration (`lib/scene/scene-core.js`); for a
+ * task added later it only starts on the first draw, which leaves that frame empty
  * (`lib/frame-graph/geometry-renderer-task.js`, `resolveSourceMaterial`). So in a registered scene
  * the new tasks are created first and swapped in once that promise settles, and the old ones draw
  * until then. The albedo target exists from the start and holds nothing until the swap.
@@ -510,19 +516,43 @@ function insertGeometryTasks(scene: SceneContext, tasks: readonly Task[], isFram
  * @param scene - The scene.
  * @param shared - The shared state, updated in place.
  * @param isFrameGraphBuilt - Whether the scene is registered.
+ * @param report - Called with a message when the swap fails; the old tasks then stay.
  */
-function addAlbedo(engine: EngineContext, scene: SceneContext, shared: SharedInputs, isFrameGraphBuilt: boolean): void {
-  shared.albedo = createAlbedoTarget(engine);
+function addAlbedo(
+  engine: EngineContext,
+  scene: SceneContext,
+  shared: SharedInputs,
+  isFrameGraphBuilt: boolean,
+  report: (message: string) => void,
+): void {
+  const albedo = createAlbedoTarget(engine);
+  shared.albedo = albedo;
   const next = createGeometryTasks(engine, scene, shared);
   const swap = (): void => {
     if (shared.isTornDown) {
       disposeTasks(next);
       return;
     }
-    carryPreviousViewProjection(shared.geometryTasks[0], next[0]);
-    removeTasks(scene, shared.geometryTasks);
+    const previous = shared.geometryTasks;
+    const textureBefore = albedo.texture.texture;
+    carryPreviousViewProjection(previous[0], next[0]);
+    try {
+      // The new tasks go in before the old ones leave, so a failure keeps the inputs drawn.
+      insertGeometryTasks(scene, next, isFrameGraphBuilt);
+    } catch (failure) {
+      removeTasks(scene, next);
+      report(`The scene inputs could not add albedo: ${failure instanceof Error ? failure.message : String(failure)}`);
+      return;
+    }
+    removeTasks(scene, previous);
     shared.geometryTasks = next;
-    insertGeometryTasks(scene, next, isFrameGraphBuilt);
+    if (albedo.texture.texture !== textureBefore) {
+      // No task kept the albedo target at the surface's size while the swap was pending, so a
+      // resize in between is only caught up with now, by the copy's `record`. Users rebind.
+      for (const listener of shared.listeners) {
+        listener();
+      }
+    }
   };
   const preload: unknown = isFrameGraphBuilt ? Reflect.get(next[0] ?? {}, "_preload") : undefined;
   if (typeof preload !== "function") {
@@ -537,7 +567,9 @@ function addAlbedo(engine: EngineContext, scene: SceneContext, shared: SharedInp
 
 /**
  * Hands the previous frame's view-projection from one geometry task to its replacement, so the
- * velocity the new task writes in its first frame is measured from the last frame drawn.
+ * velocity the new task writes for PBR meshes in its first frame is measured from the last frame
+ * drawn. A Standard mesh tracks its own previous matrix per geometry view and writes no velocity
+ * for that one frame (`lib/material/standard/standard-geometry-output-shader.js`).
  *
  * @remarks
  * The field is private to Lite (`_previousViewProjection`, `lib/frame-graph/geometry-renderer-task.js`)

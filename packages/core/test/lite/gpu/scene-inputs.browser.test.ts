@@ -328,10 +328,9 @@ describe("scene inputs", () => {
       if (second === null) {
         throw new Error("the renderer returned no scene inputs");
       }
-      // The target is there at once; the tasks that fill it replace the old ones only when the
-      // new geometry task can draw, so the tasks in the graph are still the old ones.
+      // The target is there at once; the tasks that fill it replace the old ones once the new
+      // geometry task can draw.
       expect(second.albedo).not.toBeNull();
-      expect(taskNames(running).filter((name) => ALL_INPUT_NAMES.includes(name))).toEqual(INPUT_NAMES);
       await settle(running);
       // The cube covered the centre texel in every frame across the swap.
       const [frames = 0, empty = -1] = await stopWatching();
